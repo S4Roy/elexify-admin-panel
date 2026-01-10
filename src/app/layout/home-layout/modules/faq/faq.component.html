@@ -1,0 +1,73 @@
+<div class="action-btns">
+  <button
+    (click)="addItem()"
+    *ngIf="permissions.includes('add')"
+    matTooltip="Add New Brand"
+    class="btn-add"
+  >
+    <mat-icon class="text-xs">add</mat-icon>
+    Add New
+  </button>
+</div>
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="">
+      <tr class="">
+        <th scope="col"></th>
+        <th scope="col">Category</th>
+        <th scope="col">Question</th>
+        <th scope="col">Answer</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td>
+            <img
+              *ngIf="item?.image?.url"
+              [src]="item?.image?.url"
+              alt="Image"
+            />
+          </td>
+          <td>{{ item?.category }}</td>
+
+          <td>{{ item?.question }}</td>
+          <td>
+            <div
+              [innerHTML]="item.answer"
+              [appReadMoreClamp]="95"
+              readMoreLabel="Read More"
+              readLessLabel="Read Less"
+            ></div>
+          </td>
+          <td class="text-center">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu
+              [modalItem]="permissions.includes('edit') ? item : null"
+              (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? item : null"
+            ></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="5">No Items Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

@@ -1,0 +1,114 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"
+    >
+      <div class="pointer-events-auto relative w-screen max-w-md">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <h2 class="header" id="slide-over-title">
+            {{ data ? "Update" : "New" }} FAQ
+            <button color="warn" mat-dialog-close mat-icon-button>
+              <mat-icon class="text-red-700">close</mat-icon>
+            </button>
+          </h2>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <form class="space-y-4" [formGroup]="formGroup">
+              <!-- FAQ Question -->
+              <mat-form-field class="w-full">
+                <mat-label>
+                  Question
+                  <span
+                    class="text-red-500"
+                    *ngIf="
+                      Global.isInputRuleAvailable(
+                        formGroup,
+                        'question',
+                        'required'
+                      )
+                    "
+                    >*</span
+                  >
+                </mat-label>
+                <input
+                  formControlName="question"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(formGroup, 'question')
+                  "
+                  placeholder="Enter FAQ Question"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'question', 'required')
+                  "
+                >
+                  Question is required
+                </mat-error>
+              </mat-form-field>
+
+              <!-- FAQ Answer -->
+              <mat-form-field class="w-full">
+                <mat-label>
+                  Answer
+                  <span
+                    class="text-red-500"
+                    *ngIf="
+                      Global.isInputRuleAvailable(
+                        formGroup,
+                        'answer',
+                        'required'
+                      )
+                    "
+                    >*</span
+                  >
+                </mat-label>
+                <textarea
+                  formControlName="answer"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'answer')"
+                  placeholder="Type FAQ Answer here"
+                  rows="4"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'answer', 'required')
+                  "
+                >
+                  Answer is required
+                </mat-error>
+              </mat-form-field>
+
+              <!-- Optional: Category -->
+              <mat-form-field class="w-full">
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="category">
+                  <mat-option *ngFor="let c of faqCategories" [value]="c">
+                    {{ c }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Optional: Status -->
+              <mat-form-field class="w-full">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="active">Active</mat-option>
+                  <mat-option value="inactive">Inactive</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </form>
+          </div>
+          <div class="p-1">
+            <button
+              (click)="onSubmit()"
+              [disabled]="formGroup.disabled"
+              class="btn-primary"
+            >
+              {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

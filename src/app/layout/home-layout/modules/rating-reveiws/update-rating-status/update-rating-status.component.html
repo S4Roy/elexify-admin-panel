@@ -1,0 +1,20 @@
+<h2 class="bg-white" mat-dialog-title>Update Status</h2>
+<mat-dialog-content class="bg-white" [formGroup]="formGroup">
+  <div class="px-5">
+    <mat-form-field>
+      <mat-select placeholder="Select Status" formControlName="status">
+        <ng-container
+          *ngFor="let status of ['pending', 'approved', 'rejected']"
+        >
+          <mat-option [value]="status">
+            {{ status | uppercase }}
+          </mat-option>
+        </ng-container>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions class="bg-white" align="end">
+  <button mat-stroked-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSubmit()">Update</button>
+</mat-dialog-actions>

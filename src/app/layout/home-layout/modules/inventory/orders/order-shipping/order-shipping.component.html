@@ -1,0 +1,322 @@
+<mat-dialog-content class="bg-white">
+  <!-- Header -->
+  <div class="flex justify-between items-center border-b px-4 pt-2">
+    <div>
+      <h2 class="text-2xl font-bold">Order #{{ data?.id }}</h2>
+      <p class="text-sm text-gray-500">
+        Placed on {{ data?.created_at | date }}
+      </p>
+    </div>
+    <!-- <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+      >
+        Paid
+      </span> -->
+  </div>
+  <div class="flex p-5">
+    <div class="w-3/4">
+      <!-- Customer Info -->
+      <div class="mb-6 grid sm:grid-cols-3 gap-6">
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Customer</h3>
+          <p class="text-gray-700">{{ data?.user?.name }}</p>
+          <p class="text-gray-500 text-sm">{{ data?.user?.email }}</p>
+          <p class="text-gray-500 text-sm">{{ data?.user?.mobile }}</p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Billing Address</h3>
+
+          <p class="text-gray-700" *ngIf="data?.billing_address">
+            {{ data?.billing_address?.address_line_1 }}<br />
+            {{ data?.billing_address?.city?.name }},
+            {{ data?.billing_address?.state?.name }},
+            {{ data?.billing_address?.postcode }},
+            {{ data?.billing_address?.country?.name }}
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Shipping Address</h3>
+          <p class="text-gray-700" *ngIf="data?.shipping_address">
+            {{ data?.shipping_address?.address_line_1 }}<br />
+            {{ data?.shipping_address?.city?.name }},
+            {{ data?.shipping_address?.state?.name }},
+            {{ data?.shipping_address?.postcode }},
+            {{ data?.shipping_address?.country?.name }}
+          </p>
+        </div>
+      </div>
+      <!-- Products Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="px-4 py-2 font-medium text-gray-500">Product</th>
+              <th class="px-4 py-2 font-medium text-gray-500">Qty</th>
+              <th class="px-4 py-2 font-medium text-gray-500">Price</th>
+              <th class="px-4 py-2 font-medium text-gray-500 text-right">
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Example Row -->
+            <tr class="border-b" *ngFor="let item of data?.order_items">
+              <td class="px-4 py-3">
+                <div class="flex items-center space-x-4">
+                  <img
+                    *ngIf="item?.images[0]?.url"
+                    [src]="item?.images[0]?.url"
+                    alt="Product"
+                    class="w-10 h-10 rounded"
+                  />
+                  <div>
+                    <p class="font-medium text-gray-800">
+                      {{ item?.display_name }}
+                    </p>
+                    <p class="text-xs text-gray-500">SKU: {{ item?.sku }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3">{{ item?.quantity }}</td>
+              <td class="px-4 py-3">
+                {{ item?.unit_price | currency : item?.currency ?? "INR" }}
+              </td>
+              <td class="px-4 py-3 text-right">
+                {{ item?.total_price | currency : item?.currency ?? "INR" }}
+              </td>
+            </tr>
+
+            <!-- More rows... -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Summary -->
+      <div class="mt-6 flex justify-end">
+        <div class="w-full sm:w-1/2 lg:w-1/3 space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Subtotal</span>
+            <span class="text-gray-800 font-medium">{{
+              data?.total_amount | currency : data?.currency ?? "INR"
+            }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Shipping</span>
+            <span class="text-gray-800 font-medium">
+              {{ data?.shipping | currency : data?.currency ?? "INR" }}</span
+            >
+          </div>
+          <!-- <div class="flex justify-between">
+        <span class="text-gray-600">Tax</span>
+        <span class="text-gray-800 font-medium">{{
+          data?.discount | currency : data?.currency ?? "INR"
+        }}</span>
+      </div> -->
+          <div class="border-t pt-2 flex justify-between font-bold text-lg">
+            <span>Total</span>
+            <span>{{
+              data?.grand_total | currency : data?.currency ?? "INR"
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="w-1/4 px-5">
+      <div class="grid grid-cols-1 gap-4" [formGroup]="formGroup">
+        <!-- Weight -->
+        <mat-form-field>
+          <mat-label>Weight (KG)</mat-label>
+          <input
+            matInput
+            amountNumber
+            formControlName="weight"
+            placeholder="Weight"
+          />
+          <mat-error
+            *ngIf="!Global.isInputRuleValid(formGroup, 'weight', 'required')"
+            >This field is required</mat-error
+          >
+        </mat-form-field>
+        <!-- Lenght -->
+        <mat-form-field>
+          <mat-label>Length (CM)</mat-label>
+          <input
+            matInput
+            amountNumber
+            formControlName="length"
+            placeholder="Length"
+          />
+          <mat-error
+            *ngIf="!Global.isInputRuleValid(formGroup, 'length', 'required')"
+            >This field is required</mat-error
+          >
+        </mat-form-field>
+        <!-- Width -->
+        <mat-form-field>
+          <mat-label>Width (CM)</mat-label>
+          <input
+            matInput
+            amountNumber
+            formControlName="width"
+            placeholder="Width"
+          />
+          <mat-error
+            *ngIf="!Global.isInputRuleValid(formGroup, 'width', 'required')"
+            >This field is required</mat-error
+          >
+        </mat-form-field>
+        <!-- Height -->
+        <mat-form-field>
+          <mat-label>Height (CM)</mat-label>
+          <input
+            matInput
+            amountNumber
+            formControlName="height"
+            placeholder="Height"
+          />
+          <mat-error
+            *ngIf="!Global.isInputRuleValid(formGroup, 'height', 'required')"
+            >This field is required</mat-error
+          >
+        </mat-form-field>
+      </div>
+      <div class="pt-4">
+        <button mat-stroked-button (click)="shippingDetails()">
+          Send To ShipRocket
+        </button>
+      </div>
+    </div>
+    <div hidden class="max-w-7xl mx-auto p-4">
+      <div class="bg-white rounded-lg shadow px-4 py-4">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">
+          Check Shipping Options
+        </h2>
+      </div>
+
+      <!-- Results -->
+      <div class="mt-4">
+        <div
+          *ngIf="error"
+          class="bg-red-50 border border-red-200 text-red-700 rounded p-3"
+        >
+          {{ error }}
+        </div>
+
+        <div
+          *ngIf="!loading && shipping_data?.couriers?.length === 0 && !error"
+          class="text-gray-600 py-6"
+        >
+          No couriers available for the selected pincodes/weight.
+        </div>
+
+        <div *ngIf="loading" class="mt-6">
+          <div class="animate-pulse space-y-3">
+            <div class="h-10 bg-gray-100 rounded w-full"></div>
+            <div class="h-10 bg-gray-100 rounded w-full"></div>
+            <div class="h-10 bg-gray-100 rounded w-full"></div>
+          </div>
+        </div>
+
+        <div *ngIf="shipping_data?.couriers?.length" class="grid gap-4 mt-4">
+          <!-- Cheapest banner -->
+          <div
+            class="bg-green-50 border border-green-100 text-green-800 px-4 py-3 rounded flex items-center justify-between"
+          >
+            <div>
+              <div class="text-sm">Cheapest Option</div>
+              <div class="text-base font-semibold">
+                {{ shipping_data.cheapest.courier_name }} —
+                {{ shipping_data.cheapest.service || "" }}
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm">Total</div>
+              <div class="text-lg font-bold">
+                ₹ {{ shipping_data.cheapest.total_charge | number : "1.2-2" }}
+              </div>
+              <div class="text-xs text-gray-500">
+                ETA: {{ shipping_data.cheapest.eta || "N/A" }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Carrier list -->
+          <div class="bg-white rounded-lg shadow divide-y">
+            <div
+              *ngFor="let c of shipping_data.couriers"
+              class="flex items-center gap-4 p-4 hover:bg-gray-50"
+            >
+              <!-- left: logo placeholder -->
+              <div class="w-20 flex-shrink-0">
+                <div
+                  class="h-12 w-12 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500"
+                >
+                  <!-- You can replace with actual courier logos if you have them -->
+                  {{ c.courier_name?.split(" ")[0]?.slice(0, 2) }}
+                </div>
+              </div>
+
+              <div class="flex-1">
+                <div class="flex items-center gap-3">
+                  <div class="font-semibold text-gray-800">
+                    {{ c.courier_name }}
+                  </div>
+                  <div
+                    *ngIf="c.service"
+                    class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded"
+                  >
+                    {{ c.service }}
+                  </div>
+                  <div class="ml-auto text-xs text-gray-500">
+                    ETA: {{ c.eta || "N/A" }}
+                  </div>
+                </div>
+                <div class="text-sm text-gray-600 mt-1">
+                  Rate: ₹{{ c.rate | number : "1.2-2" }} &nbsp; • &nbsp; GST:
+                  ₹{{ c.gst | number : "1.2-2" }}
+                </div>
+              </div>
+
+              <div class="text-right">
+                <div class="text-sm text-gray-500">Total</div>
+                <div class="text-xl font-semibold">
+                  ₹ {{ c.total_charge | number : "1.2-2" }}
+                </div>
+
+                <div class="mt-2 flex items-center gap-2">
+                  <button class="bg-white border px-3 py-1 rounded text-sm">
+                    Details
+                  </button>
+                  <button
+                    class="bg-teal-800 text-white px-3 py-1 rounded text-sm"
+                    [class.opacity-50]="c === shipping_data.cheapest"
+                    (click)="selectCourier(c)"
+                    [disabled]="selecting && selected === c"
+                  >
+                    {{ selected === c ? "Selected" : "Select" }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- raw debug (collapsible) -->
+          <div class="mt-3">
+            <button
+              class="text-xs text-gray-500 underline"
+              (click)="toggleRaw()"
+            >
+              {{ showRaw ? "Hide" : "Show" }} raw response
+            </button>
+
+            <pre
+              *ngIf="showRaw"
+              class="mt-2 p-3 bg-gray-50 border rounded text-xs overflow-auto"
+              >{{ shipping_data.raw | json }}</pre
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>

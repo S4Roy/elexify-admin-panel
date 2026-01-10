@@ -1,0 +1,59 @@
+<div class="space-y-4" [formGroup]="formGroup">
+  <mat-form-field class="w-full">
+    <mat-label> Title </mat-label>
+    <input
+      matInput
+      formControlName="title"
+      [class.is-invalid]="!Global.isInputValid(formGroup, 'title')"
+      placeholder="Type Here"
+    />
+    <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'title', 'required')">
+      This field is required
+    </mat-error>
+  </mat-form-field>
+  <!-- Editor Container -->
+  <div
+    class="border rounded-md outline outline-1 -outline-offset-1"
+    [ngClass]="{
+      'outline-gray-300': Global.isInputValid(formGroup, 'content'),
+      'outline-red-500': !Global.isInputValid(formGroup, 'content')
+    }"
+  >
+    <!-- Toolbar -->
+    <ngx-editor-menu
+      [editor]="shortEditor"
+      [toolbar]="Global.toolbar"
+    ></ngx-editor-menu>
+
+    <!-- Editor -->
+    <div class="max-h-[52vh] overflow-y-auto p-2">
+      <ngx-editor
+        class="page"
+        [editor]="shortEditor"
+        formControlName="content"
+        placeholder="Add content..."
+      ></ngx-editor>
+    </div>
+  </div>
+
+  <!-- Validation Error -->
+  <mat-error
+    *ngIf="!Global.isInputRuleValid(formGroup, 'content', 'required')"
+    class="text-sm text-red-600"
+  >
+    This field is required.
+  </mat-error>
+
+  <!-- Save Button -->
+  <div class="flex justify-end">
+    <button
+      mat-stroked-button
+      [disabled]="formGroup.disabled"
+      (click)="onSubmit()"
+      color="primary"
+      type="submit"
+    >
+      Save Content
+    </button>
+  </div>
+</div>

@@ -1,0 +1,22 @@
+.actionlink {
+  margin: 0px 0px;
+  padding: 0px 0px;
+  list-style: none;
+  background-color: white;
+}
+.actionlink li button {
+  padding: 2px 10px;
+  margin: 0px 0px;
+  min-height: 20px !important;
+}
+.actionlink li button span {
+  font-size: 14px !important;
+  color: gray;
+}
+.material-icons {
+  font-size: 18px;
+  // line-height: 26px;
+}
+.actionlink li .mat-mdc-menu-item .mat-icon {
+  margin-right: 0px !important;
+}

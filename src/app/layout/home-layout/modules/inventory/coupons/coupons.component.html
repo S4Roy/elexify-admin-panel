@@ -1,0 +1,143 @@
+<div class="action-btns">
+  <button
+    (click)="addItem()"
+    *ngIf="permissions.includes('add')"
+    matTooltip="Add New Coupon"
+    class="btn-add"
+  >
+    <mat-icon class="text-xs">add</mat-icon>
+    Add New
+  </button>
+</div>
+
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Title</th>
+        <th>Discount</th>
+        <th>Applicable For</th>
+        <th>Scope</th>
+        <th>Validity</th>
+        <th class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <!-- Coupon Code -->
+          <td>
+            <strong>{{ item?.code }}</strong>
+          </td>
+
+          <!-- Title -->
+          <td>
+            {{ item?.title }}
+          </td>
+
+          <!-- Discount -->
+          <td>
+            <ng-container *ngIf="item?.discount_type === 'percentage'">
+              {{ item?.discount_value }}%
+              <span *ngIf="item?.max_discount_amount">
+                (Max ₹{{ item?.max_discount_amount }})
+              </span>
+            </ng-container>
+
+            <ng-container *ngIf="item?.discount_type === 'fixed'">
+              ₹{{ item?.discount_value }}
+            </ng-container>
+          </td>
+
+          <!-- Applicable For -->
+          <td>
+            <span class="badge">
+              {{ Global.humanize(item?.applicable_for) | titlecase }}
+            </span>
+          </td>
+
+          <!-- Scope -->
+          <td>
+            <span class="badge badge-outline">
+              {{ Global.humanize(item?.applicable_scope) | titlecase }}
+            </span>
+
+            <div class="mt-1 text-xs">
+              <!-- ALL -->
+              <span *ngIf="item?.applicable_scope === 'all'">All items</span>
+
+              <!-- CATEGORY -->
+              <span
+                *ngIf="item?.applicable_scope === 'category'"
+                [truncateList]="item?.applicable_categories"
+                labelKey="name"
+              ></span>
+
+              <!-- BRAND -->
+              <span
+                *ngIf="item?.applicable_scope === 'brand'"
+                [truncateList]="item?.applicable_brands"
+                labelKey="name"
+              ></span>
+
+              <!-- PRODUCT -->
+              <span
+                *ngIf="item?.applicable_scope === 'product'"
+                [truncateList]="item?.applicable_products"
+                labelKey="name"
+              ></span>
+
+              <!-- VARIATION -->
+              <span
+                *ngIf="item?.applicable_scope === 'variation'"
+                [truncateList]="item?.applicable_variations"
+                labelKey="sku"
+              ></span>
+            </div>
+          </td>
+
+          <!-- Validity -->
+          <td>
+            {{ item?.start_date | date : "dd MMM yyyy" }}
+            <br />
+            <small class="text-gray-500">
+              to {{ item?.end_date | date : "dd MMM yyyy" }}
+            </small>
+          </td>
+
+          <!-- Status -->
+          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="text-center">
+            <app-menu
+              [modalItem]="permissions.includes('edit') ? item : null"
+              (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? item : null"
+            ></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+
+      <!-- Empty State -->
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="8">No Coupons Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<pagination
+  [pagination]="paginationOption"
+  (pageChange)="onPageChange($event)"
+></pagination>

@@ -1,0 +1,24 @@
+<div class="flex gap-3">
+  <div class="w-2/5 grow ">
+    <app-thumbnail></app-thumbnail>
+  </div>
+  <div class="w-3/5 bg-white p-3 rounded">
+    <form class="space-y-6" [formGroup]="formGroup">
+      <div class="">
+        <input formControlName="email" type="text" [placeholder]="'Add heading here'"
+          class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
+      </div>
+      <div class="">
+        <input formControlName="password" type="text" [placeholder]="'Add sub heading here'"
+          class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
+      </div>
+      <div
+        class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+        <ngx-editor-menu [editor]="editor"> </ngx-editor-menu>
+        <div class="h-28">
+          <ngx-editor [editor]="editor" [placeholder]="'Add content'"></ngx-editor>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

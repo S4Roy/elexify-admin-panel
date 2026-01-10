@@ -1,0 +1,54 @@
+<div class="action-btns"></div>
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="">
+      <tr class="">
+        <th scope="col"></th>
+        <th scope="col">Email</th>
+        <th scope="col">IP</th>
+        <th scope="col">Agent</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td></td>
+          <td>{{ item?.email }}</td>
+          <td>{{ item?.ip }}</td>
+          <td>
+            <div
+              [innerHTML]="item.user_agent"
+              [appReadMoreClamp]="60"
+              readMoreLabel="Read More"
+              readLessLabel="Read Less"
+            ></div>
+          </td>
+          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu
+              (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? item : null"
+            ></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="5">No Items Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

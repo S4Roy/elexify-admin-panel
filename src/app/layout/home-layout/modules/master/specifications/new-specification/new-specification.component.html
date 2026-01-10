@@ -1,0 +1,131 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"
+    >
+      <div class="pointer-events-auto relative w-screen max-w-md">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <h2 class="header" id="slide-over-title">
+            {{ data ? "Update" : "New" }} Specification
+            <button color="warn" mat-dialog-close mat-icon-button>
+              <mat-icon class="text-red-700">close</mat-icon>
+            </button>
+          </h2>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <form class="space-y-1" [formGroup]="formGroup">
+              <mat-form-field>
+                <mat-label>Label </mat-label>
+                <input
+                  formControlName="label"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'label')"
+                  placeholder="Type Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'label', 'required')
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Type </mat-label>
+
+                <mat-select
+                  placeholder="Select"
+                  formControlName="type"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'type')"
+                >
+                  <mat-option value="text">Text</mat-option>
+                  <mat-option value="number">Number</mat-option>
+                  <mat-option value="boolean">Yes/No</mat-option>
+                  <!-- <mat-option value="date">Date</mat-option>
+                  <mat-option value="dropdown">Dropdown</mat-option>
+                  <mat-option value="multiselect">Multi Select</mat-option> -->
+                  <mat-option value="richtext">Rich Text</mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'type', 'required')
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+
+              <mat-checkbox formControlName="required">Required</mat-checkbox>
+              <br />
+              <mat-checkbox formControlName="visible"
+                >Show on product</mat-checkbox
+              >
+              <div
+                *ngIf="
+                  formGroup.get('type')?.value === 'dropdown' ||
+                  formGroup.get('type')?.value === 'multiselect'
+                "
+              >
+                <mat-label class="mb-2">Options </mat-label>
+
+                <ng-select
+                  placeholder="Add / select options"
+                  formControlName="options"
+                  bindLabel="label"
+                  bindValue="value"
+                  [items]="options"
+                  [addTag]="true"
+                  [multiple]="true"
+                  [class.is-invalid]="
+                    !Global.isInputValid(formGroup, 'options')
+                  "
+                >
+                  <ng-template ng-option-tmp let-item="item">
+                    <div class="flex items-center">
+                      {{ item.label || item }}
+                    </div>
+                  </ng-template>
+
+                  <ng-template ng-tag-tmp let-item="item">
+                    <!-- show tag preview while adding -->
+                    <div class="flex items-center">
+                      {{ item }}
+                    </div>
+                  </ng-template>
+                </ng-select>
+              </div>
+              <mat-form-field>
+                <mat-label>Status </mat-label>
+                <mat-select
+                  placeholder="Select"
+                  formControlName="status"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'status')"
+                >
+                  <mat-option value="active">Active</mat-option>
+                  <mat-option value="inactive">Inactive</mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'status', 'required')
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </form>
+          </div>
+          <div class="p-1">
+            <button
+              (click)="onSubmit()"
+              [disabled]="formGroup.disabled"
+              class="btn-primary"
+            >
+              {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

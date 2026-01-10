@@ -1,0 +1,60 @@
+<form [formGroup]="settingsForm">
+  <div class="card-body">
+    <div class="grid md:grid-cols-2 gap-2" formArrayName="settings">
+      <div
+        *ngFor="
+          let item of Global.getFormGroupArray(settingsForm, 'settings');
+          let i = index
+        "
+        [formGroupName]="i"
+      >
+        <mat-form-field class="baseweb-mat-emphasized-affix">
+          <mat-label>
+            {{ item.get("label")?.value }}
+          </mat-label>
+
+          <ng-container *ngIf="item.get('type')?.value === 'consultation_fee'">
+            <mat-icon>currency_rupee</mat-icon>
+            <input
+              matInput
+              amountNumber
+              formControlName="value"
+              [class.is-invalid]="
+                !['VALID', 'DISABLED'].includes(item.get('value')!.status) &&
+                (item.get('value')!.dirty || item.get('value')!.touched)
+              "
+            />
+          </ng-container>
+          <ng-container *ngIf="item.get('type')?.value != 'consultation_fee'">
+            <input
+              matInput
+              formControlName="value"
+              [class.is-invalid]="
+                !['VALID', 'DISABLED'].includes(item.get('value')!.status) &&
+                (item.get('value')!.dirty || item.get('value')!.touched)
+              "
+            />
+          </ng-container>
+
+          <button
+            matSuffix
+            [disabled]="!item.valid"
+            (click)="submitSiteSettings($event, item.get('slug')?.value)"
+            mat-mini-fab
+            color="primary"
+            [attr.aria-label]="
+              'Save ' + (item.get('label')?.value || 'setting')
+            "
+          >
+            <mat-icon *ngIf="settingsForm.disable">save</mat-icon>
+            <mat-progress-spinner
+              *ngIf="!settingsForm.disable"
+              diameter="20"
+              mode="indeterminate"
+            ></mat-progress-spinner>
+          </button>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,47 @@
+@if (modalItem || edit || details|| delete || stockItem ) {
+
+<mat-icon class="cursor-pointer" [matMenuTriggerFor]="menu">more_vert</mat-icon>
+
+<mat-menu #menu="matMenu">
+  <ul class="actionlink">
+    @if (stockItem) {
+    <li>
+      <button mat-menu-item (click)="initStockModal.next(stockItem)">
+        <mat-icon>inventory_2</mat-icon>
+        <span class="ml-1">Stocks</span>
+      </button>
+    </li>
+
+    } @if (modalItem) {
+    <li>
+      <button mat-menu-item (click)="initModal.next(modalItem)">
+        <mat-icon>{{ modalButtonIcon ?? "edit" }}</mat-icon>
+        <span class="ml-1">{{ modalButtonText ?? "Edit" }}</span>
+      </button>
+    </li>
+
+    } @if (edit) {
+    <li>
+      <button mat-menu-item [routerLink]="edit">
+        <mat-icon>edit</mat-icon>
+        <span>Modify</span>
+      </button>
+    </li>
+    } @if (details) {
+    <li>
+      <button mat-menu-item [routerLink]="details">
+        <mat-icon>info</mat-icon>
+        <span>Details</span>
+      </button>
+    </li>
+    } @if (delete) {
+    <li>
+      <button mat-menu-item (click)="onDelete()">
+        <mat-icon style="color: red" class="text-red-600">delete</mat-icon>
+        <span>Delete</span>
+      </button>
+    </li>
+    }
+  </ul>
+</mat-menu>
+}

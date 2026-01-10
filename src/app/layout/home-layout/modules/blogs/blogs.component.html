@@ -1,0 +1,78 @@
+<div class="action-btns">
+  <button
+    (click)="addItem()"
+    *ngIf="permissions.includes('add')"
+    matTooltip="Add New Product"
+    class="btn-add"
+  >
+    <mat-icon class="text-xs">add</mat-icon>
+    Add New
+  </button>
+</div>
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="">
+      <tr class="">
+        <th scope="col"></th>
+        <th scope="col">Title</th>
+        <th scope="col">Description</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td>
+            <img
+              *ngIf="item?.feature_image?.url"
+              [src]="item?.feature_image?.url"
+              alt="Image"
+              height="40"
+            />
+          </td>
+          <td>
+            <a [routerLink]="'/blogs/details/' + item?.slug">
+              {{ item?.title }}
+            </a>
+          </td>
+          <td>
+            <div
+              [innerHTML]="item.short_description"
+              [appReadMoreClamp]="110"
+              readMoreLabel="Read More"
+              readLessLabel="Read Less"
+            ></div>
+          </td>
+          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu
+              [delete]="permissions.includes('delete') ? item : null"
+              (deleteItem)="deleteItem($event)"
+              [edit]="
+                permissions.includes('edit')
+                  ? '/blogs/update/' + item?._id
+                  : null
+              "
+            ></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="9">No Items Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

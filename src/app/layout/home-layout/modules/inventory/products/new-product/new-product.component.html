@@ -1,0 +1,874 @@
+<div class="flex flex-col h-full overflow-y-auto">
+  <form class="" [formGroup]="formGroup">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="space-y-3">
+        <!-- Name and Description-->
+        <div class="space-y-3 bg-white shadow-sm">
+          <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+            Name and Description
+          </h2>
+
+          <div class="px-3 pb-3">
+            <!-- Name -->
+            <mat-form-field>
+              <mat-label>Name </mat-label>
+              <input matInput formControlName="name" placeholder="Type Here" />
+              <mat-error
+                *ngIf="!Global.isInputRuleValid(formGroup, 'name', 'required')"
+                >This field is required</mat-error
+              >
+            </mat-form-field>
+            <p class="text-md font-semibold text-gray-500 pt-2">
+              Description
+              <span
+                *ngIf="
+                  Global.isInputRuleAvailable(
+                    formGroup,
+                    'description',
+                    'required'
+                  )
+                "
+                class=""
+                >*</span
+              >
+            </p>
+
+            <!-- Description -->
+            <div>
+              <div
+                class="border rounded-md outline outline-1 -outline-offset-1 outline-gray-300"
+                [class.outline-red-500]="
+                  !Global.isInputValid(formGroup, 'description')
+                "
+              >
+                <ngx-editor-menu
+                  [editor]="editor"
+                  [toolbar]="Global.toolbar"
+                ></ngx-editor-menu>
+                <div class="max-h-60 overflow-y-auto">
+                  <ngx-editor
+                    [editor]="editor"
+                    formControlName="description"
+                    placeholder="Add Description"
+                  ></ngx-editor>
+                </div>
+              </div>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(formGroup, 'description', 'required')
+                "
+                class="mt-1"
+                >This field is required</mat-error
+              >
+            </div>
+            <p class="text-md font-semibold text-gray-500 pt-2">
+              Short Description
+              <span
+                *ngIf="
+                  Global.isInputRuleAvailable(
+                    formGroup,
+                    'short_description',
+                    'required'
+                  )
+                "
+                class="text-red-500"
+                >*</span
+              >
+            </p>
+
+            <!-- Short Description -->
+            <div>
+              <div
+                class="border rounded-md outline outline-1 -outline-offset-1 outline-gray-300"
+                [class.outline-red-500]="
+                  !Global.isInputValid(formGroup, 'short_description')
+                "
+              >
+                <ngx-editor-menu
+                  [editor]="shortEditor"
+                  [toolbar]="Global.toolbar"
+                ></ngx-editor-menu>
+                <div class="max-h-60 overflow-y-auto">
+                  <ngx-editor
+                    [editor]="shortEditor"
+                    formControlName="short_description"
+                    placeholder="Add Description"
+                  ></ngx-editor>
+                </div>
+              </div>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    formGroup,
+                    'short_description',
+                    'required'
+                  )
+                "
+                class="mt-1"
+                >This field is required</mat-error
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Product Details-->
+      <div class="space-y-3">
+        <div class="space-y-3 bg-white shadow-sm">
+          <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+            Product Details
+          </h2>
+
+          <div class="px-3 pb-3">
+            <!-- Brand -->
+            <div>
+              <label>
+                Brand
+                <span
+                  *ngIf="
+                    Global.isInputRuleAvailable(formGroup, 'brand', 'required')
+                  "
+                  class="text-red-500"
+                  >*</span
+                >
+              </label>
+              <ng-select
+                placeholder="Select Brand"
+                formControlName="brand"
+                matInput
+                [class.is-invalid]="!Global.isInputValid(formGroup, 'brand')"
+                (scrollToEnd)="loadMoreBrands()"
+                (search)="brandsSearchSubject.next($event)"
+              >
+                <ng-option *ngFor="let brand of brands" [value]="brand?._id">
+                  <div class="flex items-center">
+                    <img
+                      *ngIf="brand?.image?.url"
+                      [src]="brand?.image?.url"
+                      class="h-6 w-6 mr-2 rounded object-cover"
+                    />
+                    {{ brand?.name }}
+                  </div>
+                </ng-option>
+              </ng-select>
+              <mat-error
+                *ngIf="!Global.isInputRuleValid(formGroup, 'brand', 'required')"
+                >This field is required</mat-error
+              >
+            </div>
+            <!-- Category -->
+            <div class="mt-4">
+              <label> Category </label>
+              <ng-select
+                placeholder="Select Category"
+                formControlName="category"
+                [multiple]="true"
+                matInput
+                (scrollToEnd)="loadMoreCategories()"
+                (search)="categorySearchSubject.next($event)"
+                [class.is-invalid]="!Global.isInputValid(formGroup, 'category')"
+              >
+                <ng-option
+                  *ngFor="let category of categories"
+                  [value]="category?._id"
+                >
+                  <div class="flex items-center">
+                    <img
+                      *ngIf="category?.image?.url"
+                      [src]="category?.image?.url"
+                      class="h-6 w-6 mr-2 rounded object-cover"
+                    />
+                    {{ category?.name }}
+                  </div>
+                </ng-option>
+              </ng-select>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(formGroup, 'category', 'required')
+                "
+                >This field is required</mat-error
+              >
+            </div>
+            <!--Sub Category -->
+            <div class="mt-4">
+              <label>
+                Sub Category
+                <span
+                  *ngIf="
+                    Global.isInputRuleAvailable(
+                      formGroup,
+                      'sub_category',
+                      'required'
+                    )
+                  "
+                  class="text-red-500"
+                  >*</span
+                >
+              </label>
+              <ng-select
+                placeholder="Select Sub Category"
+                formControlName="sub_category"
+                [multiple]="true"
+                matInput
+                (scrollToEnd)="loadMoreSubCategories()"
+                (search)="subCategorySearchSubject.next($event)"
+                [class.is-invalid]="
+                  !Global.isInputValid(formGroup, 'sub_category')
+                "
+              >
+                <ng-option
+                  *ngFor="let category of sub_categories"
+                  [value]="category?._id"
+                >
+                  <div class="flex items-center">
+                    <img
+                      *ngIf="category?.image?.url"
+                      [src]="category?.image?.url"
+                      class="h-6 w-6 mr-2 rounded object-cover"
+                    />
+                    {{ category?.name }}
+                  </div>
+                </ng-option>
+              </ng-select>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    formGroup,
+                    'sub_category',
+                    'required'
+                  )
+                "
+                >This field is required</mat-error
+              >
+            </div>
+            <!--Tags -->
+            <div class="mt-4">
+              <label>
+                Tags
+                <span
+                  *ngIf="
+                    Global.isInputRuleAvailable(formGroup, 'tags', 'required')
+                  "
+                  class="text-red-500"
+                  >*</span
+                >
+              </label>
+              <ng-select
+                placeholder="Select Tags"
+                formControlName="tags"
+                [multiple]="true"
+                matInput
+                (scrollToEnd)="loadMoreTags()"
+                (search)="tagSearchSubject.next($event)"
+                [class.is-invalid]="!Global.isInputValid(formGroup, 'tags')"
+              >
+                <ng-option *ngFor="let tag of tag_list" [value]="tag?._id">
+                  <div class="flex items-center">
+                    {{ tag?.name }}
+                  </div>
+                </ng-option>
+              </ng-select>
+              <mat-error
+                *ngIf="!Global.isInputRuleValid(formGroup, 'tags', 'required')"
+                >This field is required</mat-error
+              >
+            </div>
+
+            <!--Classifications -->
+            <div class="mt-4">
+              <label>
+                Classifications
+                <span
+                  *ngIf="
+                    Global.isInputRuleAvailable(
+                      formGroup,
+                      'classifications',
+                      'required'
+                    )
+                  "
+                  class="text-red-500"
+                  >*</span
+                >
+              </label>
+              <ng-select
+                placeholder="Select classifications"
+                formControlName="classifications"
+                [multiple]="true"
+                matInput
+                (scrollToEnd)="loadMoreClassifcation()"
+                (search)="categorySearchSubject.next($event)"
+                [class.is-invalid]="
+                  !Global.isInputValid(formGroup, 'classifications')
+                "
+              >
+                <ng-option
+                  *ngFor="let classification of classification_list"
+                  [value]="classification?._id"
+                >
+                  <div class="flex items-center">
+                    {{ classification?.name }}
+                  </div>
+                </ng-option>
+              </ng-select>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    formGroup,
+                    'classifications',
+                    'required'
+                  )
+                "
+                >This field is required</mat-error
+              >
+            </div>
+            <!-- RARITY -->
+            <div class="mt-4">
+              <label>
+                Rarity
+                <span
+                  *ngIf="
+                    Global.isInputRuleAvailable(formGroup, 'rarity', 'required')
+                  "
+                  class="text-red-500"
+                  >*</span
+                >
+              </label>
+              <ng-select
+                placeholder="Select Rarity"
+                formControlName="rarity"
+                [multiple]="false"
+                [class.is-invalid]="!Global.isInputValid(formGroup, 'rarity')"
+              >
+                <ng-option
+                  *ngFor="let rarity of Global.rarity_list"
+                  [value]="rarity?._id"
+                >
+                  <div class="flex items-center">
+                    {{ rarity?.name }}
+                  </div>
+                </ng-option>
+              </ng-select>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(formGroup, 'rarity', 'required')
+                "
+                >This field is required</mat-error
+              >
+            </div>
+            <!-- Power Level -->
+            <div class="mt-4">
+              <label>
+                Power Level
+                <span
+                  *ngIf="
+                    Global.isInputRuleAvailable(
+                      formGroup,
+                      'power_level',
+                      'required'
+                    )
+                  "
+                  class="text-red-500"
+                  >*</span
+                >
+              </label>
+              <mat-slider
+                min="0"
+                max="100"
+                step="1"
+                value="0"
+                thumbLabel
+                tickInterval="10"
+              >
+                <input formControlName="power_level" matSliderThumb />
+              </mat-slider>
+
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(formGroup, 'power_level', 'required')
+                "
+                >This field is required</mat-error
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Uploaded Images -->
+    <div class="space-y-3 bg-white shadow-sm mt-4">
+      <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+        Product Image
+      </h2>
+      <div class="px-3 pb-3">
+        <ng-container>
+          <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+            <div
+              class="border rounded-md h-36 relative flex items-center justify-center bg-gray-50"
+            >
+              <div class="text-center cursor-pointer" (click)="chooseFile()">
+                <img
+                  src="assets/placeholder-image-outline.png"
+                  alt="Upload"
+                  class="mx-auto h-16"
+                />
+                <p class="mt-2 text-sm">Choose Product Images</p>
+              </div>
+            </div>
+
+            <ng-container *ngFor="let img of images?.value; let i = index">
+              <div
+                class="relative group h-36 rounded-md overflow-hidden bg-gray-100"
+              >
+                <img
+                  [src]="img?.url"
+                  alt="Preview"
+                  class="w-full h-full object-contain"
+                />
+
+                <!-- Delete Button -->
+                <button
+                  (click)="removeImage(i)"
+                  class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </ng-container>
+          </div>
+        </ng-container>
+        <div class="text-xs text-center text-red-500 mt-2">
+          <b>Note:</b> Only .png, .jpg, .jpeg formats supported. Recommended
+          size: 500x500px.
+        </div>
+      </div>
+    </div>
+    <div class="space-y-3 shadow-sm my-4">
+      <!-- Product Data-->
+      <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+        Product Data --
+        <mat-form-field class="mx-3 w-56">
+          <mat-select
+            formControlName="product_type"
+            [class.is-invalid]="!Global.isInputValid(formGroup, 'product_type')"
+            (selectionChange)="onProductTypeChange($event)"
+          >
+            <mat-option value="simple">Simple Product</mat-option>
+            <mat-option value="variable">Variable Product</mat-option>
+            <!-- <mat-option value="grouped">Grouped Product</mat-option> -->
+            <!-- <mat-option value="external">External/Affiliate Product</mat-option> -->
+          </mat-select>
+          <mat-error
+            *ngIf="
+              !Global.isInputRuleValid(formGroup, 'product_type', 'required')
+            "
+            >This field is required</mat-error
+          >
+        </mat-form-field>
+      </h2>
+      <div class="pb-3 py-0 my-0">
+        <mat-tab-group
+          #productDataTabs
+          mat-stretch-tabs="false"
+          class="h-fit"
+          mat-align-tabs="start"
+        >
+          <ng-container
+            *ngIf="formGroup.getRawValue().product_type === 'simple'"
+          >
+            <!-- General -->
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="mr-4">settings</mat-icon>
+                General
+              </ng-template>
+
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Regular Price -->
+                <mat-form-field>
+                  <mat-label>Regular Price</mat-label>
+                  <input
+                    matInput
+                    amountNumber
+                    formControlName="regular_price"
+                    placeholder="Regular Price"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'regular_price',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field>
+                <!-- Sale Price -->
+                <mat-form-field>
+                  <mat-label>Sale Price</mat-label>
+                  <input
+                    matInput
+                    amountNumber
+                    formControlName="sale_price"
+                    placeholder="Sale Price"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'sale_price',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field>
+                <!-- SKU -->
+                <mat-form-field>
+                  <mat-label>SKU</mat-label>
+                  <input matInput formControlName="sku" placeholder="SKU" />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(formGroup, 'sku', 'required')
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field>
+                <!-- Stock Status -->
+                <!-- <mat-form-field>
+                  <mat-label>Stock Status</mat-label>
+                  <mat-select formControlName="stock_status">
+                    <mat-option value="in_stock">In Stock</mat-option>
+                    <mat-option value="out_of_stock">Out of Stock</mat-option>
+                    <mat-option value="on_backorder">On Backorder</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'stock_status',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field> -->
+                <!-- Stock Quantity -->
+                <mat-form-field>
+                  <mat-label>Stock Quantity</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    formControlName="stock_quantity"
+                    placeholder="Stock Quantity"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'stock_quantity',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field>
+                <!-- Allow Backorders -->
+                <!-- <mat-form-field>
+                  <mat-label>Allow Backorders</mat-label>
+                  <mat-select formControlName="allow_backorders">
+                    <mat-option value="no">No</mat-option>
+                    <mat-option value="notify">Notify Customer</mat-option>
+                    <mat-option value="yes">Yes</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'allow_backorders',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field> -->
+                <!-- Manage Stock -->
+                <!-- <mat-form-field>
+                  <mat-label>Manage Stock</mat-label>
+                  <mat-select formControlName="manage_stock">
+                    <mat-option value="yes">Yes</mat-option>
+                    <mat-option value="no">No</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'manage_stock',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field> -->
+                <!-- Sold Individually -->
+                <!-- <mat-form-field>
+                  <mat-label>Sold Individually</mat-label>
+                  <mat-select formControlName="sold_individually">
+                    <mat-option value="yes">Yes</mat-option>
+                    <mat-option value="no">No</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        formGroup,
+                        'sold_individually',
+                        'required'
+                      )
+                    "
+                    >This field is required</mat-error
+                  >
+                </mat-form-field> -->
+                <mat-checkbox formControlName="ask_for_price"
+                  >Ask for Price?</mat-checkbox
+                >
+                <!-- <mat-checkbox formControlName="enable_enquiry"
+                  >Enable Enquiry?</mat-checkbox
+                > -->
+              </div>
+            </mat-tab>
+            <!-- Shipping -->
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="mr-4">local_shipping</mat-icon>
+                Shipping
+              </ng-template>
+              <div class="w-1/2">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <!-- Weight -->
+                  <mat-form-field>
+                    <mat-label>Weight (KG)</mat-label>
+                    <input
+                      matInput
+                      amountNumber
+                      formControlName="weight"
+                      placeholder="Weight"
+                    />
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          formGroup,
+                          'weight',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <!-- Lenght -->
+                  <mat-form-field>
+                    <mat-label>Length (CM)</mat-label>
+                    <input
+                      matInput
+                      amountNumber
+                      formControlName="length"
+                      placeholder="Length"
+                    />
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          formGroup,
+                          'length',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <!-- Width -->
+                  <mat-form-field>
+                    <mat-label>Width (CM)</mat-label>
+                    <input
+                      matInput
+                      amountNumber
+                      formControlName="width"
+                      placeholder="Width"
+                    />
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(formGroup, 'width', 'required')
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <!-- Height -->
+                  <mat-form-field>
+                    <mat-label>Height (CM)</mat-label>
+                    <input
+                      matInput
+                      amountNumber
+                      formControlName="height"
+                      placeholder="Height"
+                    />
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          formGroup,
+                          'height',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <!-- Shipping Class -->
+                  <!-- <div class="col-span-1 lg:col-span-2">
+                    <mat-label>Shipping Class</mat-label>
+                    <ng-select
+                      formControlName="shipping_class"
+                      matInput
+                      [class.is-invalid]="
+                        !Global.isInputValid(formGroup, 'shipping_class')
+                      "
+                    >
+                      <ng-option
+                        *ngFor="let shipping of shipping_classes"
+                        [value]="shipping?._id"
+                      >
+                        {{ shipping?.name }}
+                      </ng-option>
+                    </ng-select>
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          formGroup,
+                          'shipping_class',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </div> -->
+                </div>
+              </div>
+            </mat-tab>
+          </ng-container>
+
+          <!-- SEO -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="mr-4">info</mat-icon>
+              SEO Fields
+            </ng-template>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <mat-form-field>
+                <mat-label>Meta Title</mat-label>
+                <input
+                  matInput
+                  formControlName="meta_title"
+                  placeholder="Meta Title"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'meta_title',
+                      'required'
+                    )
+                  "
+                  >This field is required</mat-error
+                >
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Meta Description</mat-label>
+                <textarea
+                  matInput
+                  formControlName="meta_description"
+                  placeholder="Meta Description"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'meta_description',
+                      'required'
+                    )
+                  "
+                  >This field is required</mat-error
+                >
+              </mat-form-field>
+
+              <mat-form-field class="lg:col-span-2">
+                <mat-label>Meta Keywords</mat-label>
+                <textarea
+                  matInput
+                  formControlName="meta_keywords"
+                  placeholder="Comma-separated keywords"
+                ></textarea>
+                <mat-hint
+                  >Example: rudraksha, 5 mukhi, certified rudraksha</mat-hint
+                >
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'meta_keywords',
+                      'required'
+                    )
+                  "
+                  >This field is required</mat-error
+                >
+              </mat-form-field>
+            </div>
+          </mat-tab>
+          <!-- Attributes -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="mr-4">label</mat-icon>
+              Attributes
+            </ng-template>
+
+            <app-product-attributes
+              [data]="data"
+              [formGroup]="formGroup"
+              (attributesChange)="onAttributesChange($event)"
+            ></app-product-attributes>
+          </mat-tab>
+          <!-- Variations -->
+          <ng-container
+            *ngIf="formGroup.getRawValue().product_type === 'variable'"
+          >
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon class="mr-4">label</mat-icon>
+                Variations
+              </ng-template>
+
+              <app-product-variations
+                [data]="data"
+                [formGroup]="formGroup"
+                (variationsChange)="onVariationsChange($event)"
+              ></app-product-variations>
+            </mat-tab>
+          </ng-container>
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="mr-4">label</mat-icon>
+              Specifications
+            </ng-template>
+
+            <app-product-specifications
+              [data]="data"
+              [formGroup]="formGroup"
+              (specificationsChange)="onSpecificationsChange($event)"
+            ></app-product-specifications>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="flex justify-end space-x-2 m-5">
+      <button mat-stroked-button color="primary" (click)="onSubmit()">
+        Save Product
+      </button>
+    </div>
+  </form>
+</div>

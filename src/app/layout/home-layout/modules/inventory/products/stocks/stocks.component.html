@@ -1,0 +1,145 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"
+    >
+      <div class="pointer-events-auto relative w-screen max-w-2xl">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <h2 class="header" id="slide-over-title">
+            {{ data?.name }}
+            <button color="warn" mat-dialog-close mat-icon-button>
+              <mat-icon class="text-red-700">close</mat-icon>
+            </button>
+          </h2>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <div class="table-wrapper">
+              <table class="table-base">
+                <thead>
+                  <tr class="sticky">
+                    <th scope="col">Type</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">MRP</th>
+                    <th scope="col">Cost price</th>
+                    <th scope="col">Selling price</th>
+                    <th scope="col">
+                      <div class="flex items-center justify-between">
+                        By
+                        <mat-icon
+                          class="text-red-700 cursor-pointer"
+                          (click)="initAddForm()"
+                          >add</mat-icon
+                        >
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <ng-container *ngIf="stockAddForm">
+                    <tr [formGroup]="formGroup" class="input-form">
+                      <td>
+                        <mat-form-field class="baseweb-no-border-table">
+                          <mat-select
+                            placeholder="Select"
+                            formControlName="type"
+                            matInput
+                            [class.is-invalid]="
+                              !Global.isInputValid(formGroup, 'type')
+                            "
+                          >
+                            <mat-option value="in">IN</mat-option>
+                            <mat-option value="out">OUT</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </td>
+                      <td>
+                        <mat-form-field class="baseweb-no-border-table">
+                          <input
+                            formControlName="quantity"
+                            matInput
+                            [class.is-invalid]="
+                              !Global.isInputValid(formGroup, 'quantity')
+                            "
+                            placeholder="Type Here"
+                          />
+                        </mat-form-field>
+                      </td>
+                      <td>
+                        <mat-form-field class="baseweb-no-border-table">
+                          <input
+                            formControlName="mrp"
+                            matInput
+                            [class.is-invalid]="
+                              !Global.isInputValid(formGroup, 'mrp')
+                            "
+                            placeholder="Type Here"
+                          />
+                        </mat-form-field>
+                      </td>
+                      <td>
+                        <mat-form-field class="baseweb-no-border-table">
+                          <input
+                            formControlName="cost_price"
+                            matInput
+                            [class.is-invalid]="
+                              !Global.isInputValid(formGroup, 'cost_price')
+                            "
+                            placeholder="Type Here"
+                          />
+                        </mat-form-field>
+                      </td>
+                      <td>
+                        <mat-form-field class="baseweb-no-border-table">
+                          <input
+                            formControlName="selling_price"
+                            matInput
+                            [class.is-invalid]="
+                              !Global.isInputValid(formGroup, 'selling_price')
+                            "
+                            placeholder="Type Here"
+                          />
+                        </mat-form-field>
+                      </td>
+                      <td>
+                        <button
+                          [disabled]="formGroup.disabled"
+                          (click)="onSubmit()"
+                          class="btn-primary p-0 py-2.5 text-xs uppercase"
+                        >
+                          {{
+                            formGroup.disabled ? "Please wait..." : " Add Stock"
+                          }}
+                        </button>
+                      </td>
+                    </tr>
+                  </ng-container>
+
+                  <ng-container *ngFor="let item of transactions">
+                    <tr>
+                      <td>{{ item?.type }}</td>
+                      <td>{{ item?.quantity }}</td>
+                      <td>{{ item?.mrp }}</td>
+                      <td>{{ item?.cost_price }}</td>
+                      <td>{{ item?.selling_price }}</td>
+                      <td>{{ item?.created_by?.name }}</td>
+                    </tr>
+                  </ng-container>
+                  <ng-container *ngIf="!transactions?.length">
+                    <tr>
+                      <td class="text-center" colspan="6">No Items Found</td>
+                    </tr>
+                  </ng-container>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="p-1">
+            <pagination
+              [pagination]="paginationOption"
+              (pageChange)="onPageChange($event)"
+            ></pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

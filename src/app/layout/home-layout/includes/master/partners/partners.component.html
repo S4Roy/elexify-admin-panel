@@ -1,0 +1,13 @@
+<div class="grid grid-cols-5 gap-4">
+    <button (click)="addItem()" class="border rounded flex justify-center items-center">
+      <mat-icon class="me-1">add</mat-icon>Add New
+    </button>
+    <ng-container *ngFor="let item of [1, 2, 3, 4]">
+      <div class="relative p-4 border rounded">
+        <span class="absolute top-0 right-0">
+          <app-menu [modalItem]="'h'" [delete]="'h'"></app-menu>
+        </span>
+        <img class="block" src="assets/air-india-express.png" alt="" />
+      </div>
+    </ng-container>
+</div>

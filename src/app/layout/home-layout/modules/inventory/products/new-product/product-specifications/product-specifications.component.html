@@ -1,0 +1,81 @@
+<div class="min-h-50 overflow-y-auto relative mb-4 product">
+  <table class="table-base">
+    <thead>
+      <tr>
+        <th scope="col">Sl. No.</th>
+        <th scope="col">Specifications</th>
+        <th scope="col">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container [formGroup]="formGroup">
+        <ng-container formArrayName="specifications">
+          <ng-container
+            *ngFor="let specification of specifications.controls; let i = index"
+          >
+            <tr [formGroupName]="i">
+              <td style="width: 70px; text-align: center">{{ i + 1 }}</td>
+              <td>
+                {{ specification.get("label")?.value }}
+              </td>
+
+              <td>
+                <ng-container [ngSwitch]="specification.get('type')?.value">
+                  <!-- the same view can be shown in more than one case -->
+
+                  <ng-container *ngSwitchCase="'richtext'">
+                    <ckeditor
+                      [editor]="Editor"
+                      [config]="config"
+                      formControlName="value"
+                    ></ckeditor>
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'text'">
+                    <mat-form-field class="baseweb-no-border-table">
+                      <input
+                        matInput
+                        (change)="emitChanges()"
+                        formControlName="value"
+                        placeholder="Value"
+                      />
+                    </mat-form-field>
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'number'">
+                    <mat-form-field class="baseweb-no-border-table">
+                      <input
+                        matInput
+                        type="number"
+                        (change)="emitChanges()"
+                        formControlName="value"
+                        placeholder="Value"
+                      />
+                    </mat-form-field>
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'boolean'">
+                    <mat-checkbox
+                      formControlName="value"
+                      (change)="emitChanges()"
+                      >Yes/No</mat-checkbox
+                    >
+                  </ng-container>
+                  <!--default case when there are no matches -->
+                  <ng-container *ngSwitchDefault>
+                    <mat-form-field class="baseweb-no-border-table">
+                      <textarea
+                        matInput
+                        (change)="emitChanges()"
+                        formControlName="value"
+                        placeholder="Value"
+                      ></textarea>
+                    </mat-form-field>
+                  </ng-container>
+                </ng-container>
+              </td>
+            </tr>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </tbody>
+  </table>
+  <!-- Product Variations -->
+</div>

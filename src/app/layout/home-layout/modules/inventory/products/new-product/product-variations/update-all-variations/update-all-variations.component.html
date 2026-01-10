@@ -1,0 +1,90 @@
+<button type="button" class="dialog-btn-close" (click)="closeModal()"></button>
+<mat-dialog-content>
+  <div class="relative rounded-lg bg-white text-left shadow-xl transition-all">
+    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+      <table [formGroup]="formGroup">
+        <thead>
+          <tr>
+            <th scope="col">Regular Price</th>
+            <th scope="col">Sale Price</th>
+            <!-- <th scope="col">SKU *</th> -->
+            <th scope="col" class="text-center">Stock</th>
+            <th scope="col" class="text-center">Weight(Kg)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <!-- Regular Price -->
+            <td style="width: 130px">
+              <mat-form-field class="baseweb-no-border-table">
+                <input
+                  matInput
+                  amountNumber
+                  formControlName="regular_price"
+                  placeholder="Regular Price"
+                />
+              </mat-form-field>
+            </td>
+            <!-- Sale Price -->
+            <td style="width: 120px">
+              <mat-form-field class="baseweb-no-border-table">
+                <input
+                  matInput
+                  amountNumber
+                  formControlName="sale_price"
+                  placeholder="Sale Price"
+                />
+              </mat-form-field>
+            </td>
+
+            <!-- SKU -->
+            <!-- <td>
+              <mat-form-field class="baseweb-no-border-table">
+                <input matInput formControlName="sku" placeholder="SKU" />
+              </mat-form-field>
+            </td> -->
+            <!-- Stock Quantity -->
+
+            <td style="width: 80px">
+              <mat-form-field class="baseweb-no-border-table">
+                <input
+                  matInput
+                  type="number"
+                  formControlName="stock_quantity"
+                  placeholder="Stock Quantity"
+                />
+              </mat-form-field>
+            </td>
+            <!-- Weight -->
+            <td style="width: 90px">
+              <mat-form-field class="baseweb-no-border-table">
+                <input
+                  matInput
+                  amountNumber
+                  formControlName="weight"
+                  placeholder="Weight"
+                />
+              </mat-form-field>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+      <button
+        (click)="onSubmit()"
+        type="button"
+        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+      >
+        Update All
+      </button>
+      <button
+        (click)="closeModal()"
+        type="button"
+        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>

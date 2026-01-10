@@ -1,0 +1,310 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"
+    >
+      <div class="pointer-events-auto relative w-screen max-w-4xl">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <h2 class="header" id="slide-over-title">
+            {{ data ? "Update" : "New" }} Attribute
+            <button mat-dialog-close mat-icon-button>
+              <mat-icon>close</mat-icon>
+            </button>
+          </h2>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <form class="space-y-1" [formGroup]="formGroup">
+              <mat-form-field>
+                <mat-label>Name </mat-label>
+                <input
+                  formControlName="name"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'name')"
+                  placeholder="Type Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'name', 'required')
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Description </mat-label>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(formGroup, 'description')
+                  "
+                  placeholder="Type Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+              <!-- Display type -->
+              <div class="space-y-1">
+                <label class="block text-sm font-medium">Display as</label>
+                <mat-radio-group
+                  formControlName="display_type"
+                  class="flex gap-4"
+                >
+                  <mat-radio-button value="dropdown">Dropdown</mat-radio-button>
+                  <mat-radio-button value="radio">Radio</mat-radio-button>
+                  <mat-radio-button value="image"
+                    >Image Swatches</mat-radio-button
+                  >
+                </mat-radio-group>
+              </div>
+              <div>
+                <mat-checkbox
+                  matTooltip="Visible in Product Listing"
+                  formControlName="visible_in_list"
+                  >Visible in Product Listing</mat-checkbox
+                ><mat-checkbox
+                  matTooltip="Size Meta"
+                  formControlName="size_meta"
+                  >Size Meta</mat-checkbox
+                >
+                <mat-checkbox
+                  matTooltip="Customized Mala Mukhi"
+                  formControlName="customized_mala_mukhi"
+                  >Customized Mala Mukhi</mat-checkbox
+                >
+                <mat-checkbox
+                  matTooltip="Customized Mala Design"
+                  formControlName="customized_mala_design"
+                  >Customized Mala Design</mat-checkbox
+                >
+                <mat-checkbox
+                  matTooltip="Customized Mala Type"
+                  formControlName="customized_mala_type"
+                  >Customized Mala Type</mat-checkbox
+                >
+              </div>
+              <div class="space-y-4 pt-3">
+                <h3 class="font-medium text-gray-700">Attribute Values</h3>
+
+                <table class="table-base">
+                  <thead>
+                    <tr>
+                      <th style="max-width: 10px"></th>
+                      <th style="max-width: 20px"></th>
+                      <th scope="col">Value *</th>
+                      <ng-container *ngIf="formGroup.value.size_meta">
+                        <th scope="col">Regular</th>
+                        <th scope="col">Medium</th>
+                        <th scope="col">Collector</th>
+                      </ng-container>
+                      <ng-container *ngIf="!formGroup.value.size_meta">
+                        <th scope="col">Type</th>
+                        <th scope="col">Price</th>
+                      </ng-container>
+
+                      <th
+                        style="max-width: 30px"
+                        *ngIf="formGroup.value.display_type === 'image'"
+                      >
+                        Image
+                      </th>
+                      <th scope="col">Description</th>
+                      <th scope="col" style="max-width: 20px"></th>
+                    </tr>
+                  </thead>
+                  <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                    <ng-container [formGroup]="formGroup">
+                      <ng-container formArrayName="values">
+                        <ng-container
+                          *ngFor="let val of values.controls; let i = index"
+                        >
+                          <tr [formGroupName]="i">
+                            <!-- Drag handle -->
+                            <td cdkDrag class="cursor-move text-center">
+                              {{ i + 1 }}
+                            </td>
+
+                            <!-- Visible in list -->
+                            <td style="max-width: 20px" class="text-center">
+                              <mat-checkbox
+                                formControlName="visible_in_list"
+                              ></mat-checkbox>
+                            </td>
+
+                            <!-- Name -->
+                            <td>
+                              <mat-form-field class="baseweb-no-border-table">
+                                <input
+                                  matInput
+                                  placeholder="e.g. Small"
+                                  formControlName="name"
+                                />
+                              </mat-form-field>
+                            </td>
+                            <ng-container
+                              *ngIf="formGroup.value.size_meta"
+                              formGroupName="meta"
+                            >
+                              <!-- Regular -->
+                              <td>
+                                <mat-form-field class="baseweb-no-border-table">
+                                  <input
+                                    matInput
+                                    type="number"
+                                    min="0"
+                                    formControlName="regular"
+                                    placeholder="0"
+                                  />
+                                </mat-form-field>
+                              </td>
+                              <!-- Medium -->
+                              <td>
+                                <mat-form-field class="baseweb-no-border-table">
+                                  <input
+                                    matInput
+                                    type="number"
+                                    min="0"
+                                    formControlName="medium"
+                                    placeholder="0"
+                                  />
+                                </mat-form-field>
+                              </td>
+                              <!-- Collector -->
+                              <td>
+                                <mat-form-field class="baseweb-no-border-table">
+                                  <input
+                                    matInput
+                                    type="number"
+                                    min="0"
+                                    formControlName="collector"
+                                    placeholder="0"
+                                  />
+                                </mat-form-field>
+                              </td>
+                            </ng-container>
+                            <ng-container *ngIf="!formGroup.value.size_meta">
+                              <td>
+                                <!-- Price Type -->
+                                <mat-form-field class="baseweb-no-border-table">
+                                  <mat-select formControlName="price_type">
+                                    <mat-option value="fixed">Fixed</mat-option>
+                                    <mat-option value="percent"
+                                      >Percent</mat-option
+                                    >
+                                  </mat-select>
+                                </mat-form-field>
+                              </td>
+                              <td>
+                                <!-- Price Modifier -->
+                                <mat-form-field class="baseweb-no-border-table">
+                                  <input
+                                    matInput
+                                    type="number"
+                                    min="0"
+                                    formControlName="price_modifier"
+                                    placeholder="0"
+                                  />
+                                </mat-form-field>
+                              </td>
+                            </ng-container>
+                            <!-- IMAGE (only when display_type === image) -->
+                            <td
+                              style="max-width: 30px"
+                              *ngIf="formGroup.value.display_type === 'image'"
+                            >
+                              <div
+                                *ngIf="!val?.value?.url"
+                                class="border rounded-md relative flex items-center justify-center bg-gray-50"
+                              >
+                                <div
+                                  class="text-center cursor-pointer"
+                                  (click)="chooseFile(i)"
+                                >
+                                  <img
+                                    src="assets/placeholder-image-outline.png"
+                                    alt="Upload"
+                                    class="mx-auto"
+                                  />
+                                </div>
+                              </div>
+
+                              <div
+                                *ngIf="val?.value?.url"
+                                class="relative group rounded-md overflow-hidden bg-gray-100"
+                              >
+                                <img
+                                  [src]="val?.value?.url"
+                                  class="w-full h-full object-center"
+                                />
+
+                                <button
+                                  (click)="removeImage(i)"
+                                  class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <mat-icon>delete</mat-icon>
+                                </button>
+                              </div>
+                            </td>
+
+                            <!-- Description -->
+                            <td>
+                              <mat-form-field class="baseweb-no-border-table">
+                                <input
+                                  matInput
+                                  formControlName="description"
+                                  placeholder="Description (Optional)"
+                                />
+                              </mat-form-field>
+                            </td>
+
+                            <!-- Delete Button -->
+                            <td style="max-width: 20px">
+                              <button
+                                mat-icon-button
+                                color="warn"
+                                (click)="removeValue(i)"
+                              >
+                                <mat-icon>delete</mat-icon>
+                              </button>
+                            </td>
+                          </tr>
+                        </ng-container>
+                      </ng-container>
+                    </ng-container>
+                  </tbody>
+                </table>
+
+                <button
+                  class="float-right"
+                  mat-stroked-button
+                  color="primary"
+                  (click)="addValue()"
+                >
+                  + Add Value
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="p-1">
+            <button
+              (click)="onSubmit()"
+              [disabled]="formGroup.disabled"
+              class="btn-primary"
+            >
+              {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

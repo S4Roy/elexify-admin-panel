@@ -1,0 +1,1844 @@
+<div class="bg-gray">
+  <div class="w-full bg-white p-3" [formGroup]="bannerForm">
+    <div>
+      <label class="block text-sm/6 font-medium text-gray-900"
+        >Banner Text
+        <span
+          class="text-red-500"
+          *ngIf="
+            Global.isInputRuleAvailable(bannerForm, 'display_text', 'required')
+          "
+        >
+          *</span
+        >
+      </label>
+      <div class="mt-2">
+        <mat-form-field>
+          <input
+            formControlName="display_text"
+            matInput
+            [class.is-invalid]="
+              !Global.isInputValid(bannerForm, 'display_text')
+            "
+            placeholder="Type Here"
+          />
+          <mat-error
+            *ngIf="
+              !Global.isInputRuleValid(bannerForm, 'display_text', 'required')
+            "
+          >
+            This field is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="h-60">
+      <div
+        class="w-full h-full rounded flex items-center justify-center relative"
+      >
+        <span
+          *ngIf="bannerForm.value.file_preview"
+          class="absolute right-2 top-2 bg-white rounded-sm"
+        >
+          <app-menu
+            [modalItem]="true"
+            (initModal)="bannerFile.click()"
+          ></app-menu>
+        </span>
+        <ng-container *ngIf="bannerForm.value.file_preview">
+          <img
+            class="rounded-md w-full bg-gray-200 object-cover h-60"
+            [src]="bannerForm.value.file_preview"
+            alt="Banner Image"
+          />
+        </ng-container>
+        <ng-container *ngIf="!bannerForm.value.file_preview">
+          <div
+            class="flex flex-col items-center justify-center"
+            (click)="bannerFile.click()"
+          >
+            <img src="assets/placeholder-image-outline.png" alt="" />
+            <div>Upload Banner Image Here</div>
+            <div class="text-center text-red-600 font-normal italic">
+              <!-- Mimimum size required 1920 width 640 height -->
+              Recommended file size: 1440 pixels in width and 440 pixels in height.
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      <div class="w-full text-sm pt-1" style="color: red"><b>Note:</b> Upload files in .png, .jpg, .jpeg formats only. 
+        Recommended file size: 1440 pixels in width and 440 pixels in height.
+      </div>
+      <input
+        type="file"
+        #bannerFile
+        hidden
+        (change)="
+          Global.onFileSelected(
+            bannerForm,
+            $event,
+            'file',
+            toastr,
+            ['image/jpeg', 'image/png'],
+            'file_preview'
+          )
+        "
+      />
+    </div>
+    <hr />
+    <div class="flex mt-3 justify-end">
+      <button
+        (click)="onBannerSubmit()"
+        [disabled]="bannerForm.disabled"
+        class="ai-button"
+      >
+        {{ bannerForm.disabled ? "Please wait..." : "Save & Continue" }}
+      </button>
+    </div>
+  </div>
+  <ng-container *ngIf="['contact_us'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="aboutTextForm">
+      <h3 class="text-center">Content</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <div class="space-y-1">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <input
+                    formControlName="heading_txt"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(aboutTextForm, 'heading_txt')
+                    "
+                    placeholder="Type Heading Here"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        aboutTextForm,
+                        'heading_txt',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="">
+              <mat-form-field>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(aboutTextForm, 'description')
+                  "
+                  placeholder="Type description Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      aboutTextForm,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onContactTextSubmit()"
+          [disabled]="aboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{ aboutTextForm.disabled ? "Please wait..." : "Save & Continue" }}
+        </button>
+      </div>
+    </form>
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="contactUsAboutTextForm">
+      <h3 class="text-center">Contact Info</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <div class="space-y-1">
+            <mat-form-field>
+              <input
+                formControlName="title"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'title')
+                "
+                placeholder="Type Heading Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'title',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="heading_txt"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'heading_txt')
+                "
+                placeholder="Type Heading Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'heading_txt',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="sub_heading_txt"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(
+                    contactUsAboutTextForm,
+                    'sub_heading_txt'
+                  )
+                "
+                placeholder="Type Sub Heading Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'sub_heading_txt',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="phone"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'phone')
+                "
+                placeholder="Type Phone Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'phone',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="mobile"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'mobile')
+                "
+                placeholder="Type Mobile Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'mobile',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="fax"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'fax')
+                "
+                placeholder="Type FAX Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'fax',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="email"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'email')
+                "
+                placeholder="Type Email Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'email',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <textarea
+                formControlName="main_office_address"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(
+                    contactUsAboutTextForm,
+                    'main_office_address'
+                  )
+                "
+                placeholder="Type Address Here"
+              ></textarea>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'main_office_address',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <textarea
+                formControlName="map_link"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(contactUsAboutTextForm, 'map_link')
+                "
+                placeholder="Type Link Here"
+              ></textarea>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    contactUsAboutTextForm,
+                    'map_link',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onContactUsInfoTextSubmit()"
+          [disabled]="contactUsAboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{
+            contactUsAboutTextForm.disabled
+              ? "Please wait..."
+              : "Save & Continue"
+          }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['faq'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="aboutTextForm">
+      <h3 class="text-center">Content</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <form class="space-y-1" [formGroup]="aboutTextForm">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <input
+                    formControlName="heading_txt"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(aboutTextForm, 'heading_txt')
+                    "
+                    placeholder="Type Heading Here"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        aboutTextForm,
+                        'heading_txt',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="">
+              <mat-form-field>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(aboutTextForm, 'description')
+                  "
+                  placeholder="Type description Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      aboutTextForm,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onFAQTextSubmit()"
+          [disabled]="aboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{ aboutTextForm.disabled ? "Please wait..." : "Save & Continue" }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['clientele'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="aboutTextForm">
+      <h3 class="text-center">Content</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <form class="space-y-1" [formGroup]="aboutTextForm">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <input
+                    formControlName="heading_txt"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(aboutTextForm, 'heading_txt')
+                    "
+                    placeholder="Type Heading Here"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        aboutTextForm,
+                        'heading_txt',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="">
+              <mat-form-field>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(aboutTextForm, 'description')
+                  "
+                  placeholder="Type description Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      aboutTextForm,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onClienteleTextSubmit()"
+          [disabled]="aboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{ aboutTextForm.disabled ? "Please wait..." : "Save & Continue" }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['gallery'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="aboutTextForm">
+      <h3 class="text-center">Content</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <form class="space-y-1" [formGroup]="aboutTextForm">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <textarea
+                    formControlName="heading_txt"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(aboutTextForm, 'heading_txt')
+                    "
+                    placeholder="Type Heading Here"
+                  ></textarea>
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        aboutTextForm,
+                        'heading_txt',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onGalleryTextSubmit()"
+          [disabled]="aboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{ aboutTextForm.disabled ? "Please wait..." : "Save & Continue" }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['awards', 'news_event'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="aboutTextForm">
+      <h3 class="text-center">Content</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <form class="space-y-1" [formGroup]="aboutTextForm">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <input
+                    formControlName="heading_txt"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(aboutTextForm, 'heading_txt')
+                    "
+                    placeholder="Type Heading Here"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        aboutTextForm,
+                        'heading_txt',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="">
+              <mat-form-field>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(aboutTextForm, 'description')
+                  "
+                  placeholder="Type description Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      aboutTextForm,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 p-3 gap-1">
+        <div class="h-52">
+          <div
+            class="w-full border h-full rounded flex items-center justify-center relative"
+          >
+            <span
+              *ngIf="aboutTextForm.value.file_preview"
+              class="absolute right-2 top-2 bg-white rounded-sm"
+            >
+              <app-menu
+                [modalItem]="true"
+                (initModal)="bottomAboutTextFormFile.click()"
+              ></app-menu>
+            </span>
+            <ng-container *ngIf="aboutTextForm.value.file_preview">
+              <img
+                class="rounded-md w-full bg-gray-200 object-cover h-52"
+                [src]="aboutTextForm.value.file_preview"
+                alt="Banner Image"
+              />
+            </ng-container>
+            <ng-container *ngIf="!aboutTextForm.value.file_preview">
+              <div
+                class="flex flex-col items-center justify-center"
+                (click)="bottomAboutTextFormFile.click()"
+              >
+                <img src="assets/placeholder-image-outline.png" alt="" />
+                <div>Upload Image Here</div>
+                <div class="text-center text-red-600 font-normal italic">
+                  Maximum file size is 15 MB.
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <input
+            type="file"
+            #bottomAboutTextFormFile
+            hidden
+            (change)="
+              Global.onFileSelected(
+                aboutTextForm,
+                $event,
+                'file',
+                toastr,
+                ['image/jpeg', 'image/png'],
+                'file_preview'
+              )
+            "
+          />
+        </div>
+        <div class="h-52">
+          <div
+            class="w-full border h-full rounded flex items-center justify-center relative"
+          >
+            <span
+              *ngIf="aboutTextForm.value.file_preview_1"
+              class="absolute right-2 top-2 bg-white rounded-sm"
+            >
+              <app-menu
+                [modalItem]="true"
+                (initModal)="bottomAboutTextFormFile1.click()"
+              ></app-menu>
+            </span>
+            <ng-container *ngIf="aboutTextForm.value.file_preview_1">
+              <img
+                class="rounded-md w-full bg-gray-200 object-cover h-52"
+                [src]="aboutTextForm.value.file_preview_1"
+                alt="Banner Image"
+              />
+            </ng-container>
+            <ng-container *ngIf="!aboutTextForm.value.file_preview_1">
+              <div
+                class="flex flex-col items-center justify-center"
+                (click)="bottomAboutTextFormFile1.click()"
+              >
+                <img src="assets/placeholder-image-outline.png" alt="" />
+                <div>Upload Image Here</div>
+                <div class="text-center text-red-600 font-normal italic">
+                  Maximum file size is 15 MB.
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <input
+            type="file"
+            #bottomAboutTextFormFile1
+            hidden
+            (change)="
+              Global.onFileSelected(
+                aboutTextForm,
+                $event,
+                'file_1',
+                toastr,
+                ['image/jpeg', 'image/png'],
+                'file_preview_1'
+              )
+            "
+          />
+        </div>
+      </div>
+      <!-- <hr /> -->
+      <div class="w-full text-sm pl-3" style="color: red"><b>Note:</b> Upload files in .png, .jpg, .jpeg formats only. 
+        Recommended file size: 110 pixels in width and 112 pixels in height.
+      </div>
+      
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onAwardsTextSubmit()"
+          [disabled]="aboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{ aboutTextForm.disabled ? "Please wait..." : "Save & Continue" }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['service'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="aboutTextForm">
+      <h3 class="text-center">Content</h3>
+      <div class="flex gap-3">
+        <div class="w-2/5 grow">
+          <div class="h-52">
+            <div
+              class="w-full h-full rounded flex items-center justify-center relative"
+            >
+              <span
+                *ngIf="aboutTextForm.value.file_preview"
+                class="absolute right-2 top-2 bg-white rounded-sm"
+              >
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="aboutTextFormFile.click()"
+                ></app-menu>
+              </span>
+              <ng-container *ngIf="aboutTextForm.value.file_preview">
+                <img
+                  class="rounded-md w-full bg-gray-200 object-cover h-52"
+                  [src]="aboutTextForm.value.file_preview"
+                  alt="Banner Image"
+                />
+              </ng-container>
+              <ng-container *ngIf="!aboutTextForm.value.file_preview">
+                <div
+                  class="flex flex-col items-center justify-center"
+                  (click)="aboutTextFormFile.click()"
+                >
+                  <img src="assets/placeholder-image-outline.png" alt="" />
+                  <div>Upload Image Here</div>
+                  <div class="text-center text-red-600 font-normal italic">
+                    Maximum file size is 15 MB.
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+            <input
+              type="file"
+              #aboutTextFormFile
+              hidden
+              (change)="
+                Global.onFileSelected(
+                  aboutTextForm,
+                  $event,
+                  'file',
+                  toastr,
+                  ['image/jpeg', 'image/png'],
+                  'file_preview'
+                )
+              "
+            />
+          </div>
+          <div class="w-full text-sm pt-1" style="color: red"><b>Note:</b> Upload files in .png, .jpg, .jpeg formats only. 
+            Recommended file size: 2121 pixels in width and 1414 pixels in height.
+          </div>
+        </div>
+        <div class="w-3/5 bg-white p-3 rounded">
+          <form class="space-y-1" [formGroup]="aboutTextForm">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <input
+                    formControlName="heading_txt"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(aboutTextForm, 'heading_txt')
+                    "
+                    placeholder="Type Heading Here"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        aboutTextForm,
+                        'heading_txt',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="">
+              <mat-form-field>
+                <input
+                  formControlName="heading_txt_1"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(aboutTextForm, 'heading_txt_1')
+                  "
+                  placeholder="Type Title Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      aboutTextForm,
+                      'heading_txt_1',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="">
+              <mat-form-field>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(aboutTextForm, 'description')
+                  "
+                  placeholder="Type description Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      aboutTextForm,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="grid mt-2 grid-cols-3 gap-1">
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="count_data"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(aboutTextForm, 'count_data')
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  aboutTextForm,
+                  'count_data',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="count_data_txt"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(aboutTextForm, 'count_data_txt')
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  aboutTextForm,
+                  'count_data_txt',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="count_data_1_data"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(aboutTextForm, 'count_data_1_data')
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  aboutTextForm,
+                  'count_data_1_data',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="count_data_1_txt"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(aboutTextForm, 'count_data_1_txt')
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  aboutTextForm,
+                  'count_data_1_txt',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="count_data_2_data"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(aboutTextForm, 'count_data_2_data')
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  aboutTextForm,
+                  'count_data_2_data',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="count_data_2_txt"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(aboutTextForm, 'count_data_2_txt')
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  aboutTextForm,
+                  'count_data_2_txt',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onTextSubmit()"
+          [disabled]="aboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{ aboutTextForm.disabled ? "Please wait..." : "Save & Continue" }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['service'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="middleAboutTextForm">
+      <h3 class="text-center">Middle Content</h3>
+      <div class="flex gap-3">
+        <div class="w-full bg-white p-3 rounded">
+          <div class="space-y-1">
+            <div>
+              <div class="">
+                <mat-form-field>
+                  <input
+                    formControlName="heading"
+                    matInput
+                    [class.is-invalid]="
+                      !Global.isInputValid(middleAboutTextForm, 'heading')
+                    "
+                    placeholder="Type Heading Here"
+                  />
+                  <mat-error
+                    *ngIf="
+                      !Global.isInputRuleValid(
+                        middleAboutTextForm,
+                        'heading',
+                        'required'
+                      )
+                    "
+                  >
+                    This field is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <mat-form-field>
+              <textarea
+                formControlName="description"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(middleAboutTextForm, 'description')
+                "
+                placeholder="Type description here"
+              ></textarea>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    middleAboutTextForm,
+                    'description',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <div class="">
+              <mat-form-field>
+                <input
+                  formControlName="button_name"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(middleAboutTextForm, 'button_name')
+                  "
+                  placeholder="Type Button Text Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      middleAboutTextForm,
+                      'button_name',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div class="">
+              <mat-form-field>
+                <input
+                  formControlName="details_link"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(middleAboutTextForm, 'details_link')
+                  "
+                  placeholder="Type Detail Link Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      middleAboutTextForm,
+                      'details_link',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onMiddleTextSubmit()"
+          [disabled]="middleAboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{
+            middleAboutTextForm.disabled ? "Please wait..." : "Save & Continue"
+          }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['service'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="bottomAboutTextForm">
+      <h3 class="text-center">Bottom Content</h3>
+      <div class="w-full bg-white p-3 rounded">
+        <div class="space-y-1">
+          <div>
+            <div class="">
+              <mat-form-field>
+                <input
+                  formControlName="heading"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(bottomAboutTextForm, 'heading')
+                  "
+                  placeholder="Type Heading Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      bottomAboutTextForm,
+                      'heading',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="">
+            <mat-form-field>
+              <textarea
+                formControlName="sub_heading_txt"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(bottomAboutTextForm, 'sub_heading_txt')
+                "
+                placeholder="Type Title Here"
+              ></textarea>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    bottomAboutTextForm,
+                    'sub_heading_txt',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      <div class="grid mt-2 grid-cols-4 p-3 gap-1">
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="list_content_title"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(bottomAboutTextForm, 'list_content_title')
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_title',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="list_content_text_1"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(bottomAboutTextForm, 'list_content_text_1')
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_text_1',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="list_content_1_title"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(
+                  bottomAboutTextForm,
+                  'list_content_1_title'
+                )
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_1_title',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="list_content_1_text_1"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(
+                  bottomAboutTextForm,
+                  'list_content_1_text_1'
+                )
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_1_text_1',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="list_content_2_title"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(
+                  bottomAboutTextForm,
+                  'list_content_2_title'
+                )
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_2_title',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="list_content_2_text_1"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(
+                  bottomAboutTextForm,
+                  'list_content_2_text_1'
+                )
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_2_text_1',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field>
+            <input
+              formControlName="list_content_3_title"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(
+                  bottomAboutTextForm,
+                  'list_content_3_title'
+                )
+              "
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_3_title',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              formControlName="list_content_3_text_1"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(
+                  bottomAboutTextForm,
+                  'list_content_3_text_1'
+                )
+              "
+              placeholder="Type Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  bottomAboutTextForm,
+                  'list_content_3_text_1',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="grid grid-cols-4 p-3 gap-1">
+          <div class="h-52">
+            <div
+              class="w-full border h-full rounded flex items-center justify-center relative"
+            >
+              <span
+                *ngIf="bottomAboutTextForm.value.file_preview"
+                class="absolute right-2 top-2 bg-white rounded-sm"
+              >
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="bottomAboutTextFormFile.click()"
+                ></app-menu>
+              </span>
+              <ng-container *ngIf="bottomAboutTextForm.value.file_preview">
+                <img
+                  class="rounded-md w-full bg-gray-200 object-cover h-52"
+                  [src]="bottomAboutTextForm.value.file_preview"
+                  alt="Banner Image"
+                />
+              </ng-container>
+              <ng-container *ngIf="!bottomAboutTextForm.value.file_preview">
+                <div
+                  class="flex flex-col items-center justify-center"
+                  (click)="bottomAboutTextFormFile.click()"
+                >
+                  <img src="assets/placeholder-image-outline.png" alt="" />
+                  <div>Upload Image Here</div>
+                  <div class="text-center text-red-600 font-normal italic">
+                    Maximum file size is 15 MB.
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+            <input
+              type="file"
+              #bottomAboutTextFormFile
+              hidden
+              (change)="
+                Global.onFileSelected(
+                  bottomAboutTextForm,
+                  $event,
+                  'file',
+                  toastr,
+                  ['image/jpeg', 'image/png'],
+                  'file_preview'
+                )
+              "
+            />
+          </div>
+          <div class="h-52">
+            <div
+              class="w-full border h-full rounded flex items-center justify-center relative"
+            >
+              <span
+                *ngIf="bottomAboutTextForm.value.file_preview_1"
+                class="absolute right-2 top-2 bg-white rounded-sm"
+              >
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="bottomAboutTextFormFile1.click()"
+                ></app-menu>
+              </span>
+              <ng-container *ngIf="bottomAboutTextForm.value.file_preview_1">
+                <img
+                  class="rounded-md w-full bg-gray-200 object-cover h-52"
+                  [src]="bottomAboutTextForm.value.file_preview_1"
+                  alt="Banner Image"
+                />
+              </ng-container>
+              <ng-container *ngIf="!bottomAboutTextForm.value.file_preview_1">
+                <div
+                  class="flex flex-col items-center justify-center"
+                  (click)="bottomAboutTextFormFile1.click()"
+                >
+                  <img src="assets/placeholder-image-outline.png" alt="" />
+                  <div>Upload Image Here</div>
+                  <div class="text-center text-red-600 font-normal italic">
+                    Maximum file size is 15 MB.
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+            <input
+              type="file"
+              #bottomAboutTextFormFile1
+              hidden
+              (change)="
+                Global.onFileSelected(
+                  bottomAboutTextForm,
+                  $event,
+                  'file_1',
+                  toastr,
+                  ['image/jpeg', 'image/png'],
+                  'file_preview_1'
+                )
+              "
+            />
+          </div>
+          <div class="h-52">
+            <div
+              class="w-full border h-full rounded flex items-center justify-center relative"
+            >
+              <span
+                *ngIf="bottomAboutTextForm.value.file_preview_2"
+                class="absolute right-2 top-2 bg-white rounded-sm"
+              >
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="bottomAboutTextFormFile2.click()"
+                ></app-menu>
+              </span>
+              <ng-container *ngIf="bottomAboutTextForm.value.file_preview_2">
+                <img
+                  class="rounded-md w-full bg-gray-200 object-cover h-52"
+                  [src]="bottomAboutTextForm.value.file_preview_2"
+                  alt="Banner Image"
+                />
+              </ng-container>
+              <ng-container *ngIf="!bottomAboutTextForm.value.file_preview_2">
+                <div
+                  class="flex flex-col items-center justify-center"
+                  (click)="bottomAboutTextFormFile2.click()"
+                >
+                  <img src="assets/placeholder-image-outline.png" alt="" />
+                  <div>Upload Image Here</div>
+                  <div class="text-center text-red-600 font-normal italic">
+                    Maximum file size is 15 MB.
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+            <input
+              type="file"
+              #bottomAboutTextFormFile2
+              hidden
+              (change)="
+                Global.onFileSelected(
+                  bottomAboutTextForm,
+                  $event,
+                  'file_2',
+                  toastr,
+                  ['image/jpeg', 'image/png'],
+                  'file_preview_2'
+                )
+              "
+            />
+          </div>
+          <div class="h-52">
+            <div
+              class="w-full border h-full rounded flex items-center justify-center relative"
+            >
+              <span
+                *ngIf="bottomAboutTextForm.value.file_preview_3"
+                class="absolute right-2 top-2 bg-white rounded-sm"
+              >
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="bottomAboutTextFormFile3.click()"
+                ></app-menu>
+              </span>
+              <ng-container *ngIf="bottomAboutTextForm.value.file_preview_3">
+                <img
+                  class="rounded-md w-full bg-gray-200 object-cover h-52"
+                  [src]="bottomAboutTextForm.value.file_preview_3"
+                  alt="Banner Image"
+                />
+              </ng-container>
+              <ng-container *ngIf="!bottomAboutTextForm.value.file_preview_3">
+                <div
+                  class="flex flex-col items-center justify-center"
+                  (click)="bottomAboutTextFormFile3.click()"
+                >
+                  <img src="assets/placeholder-image-outline.png" alt="" />
+                  <div>Upload Image Here</div>
+                  <div class="text-center text-red-600 font-normal italic">
+                    Maximum file size is 15 MB.
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+            <input
+              type="file"
+              #bottomAboutTextFormFile3
+              hidden
+              (change)="
+                Global.onFileSelected(
+                  bottomAboutTextForm,
+                  $event,
+                  'file_3',
+                  toastr,
+                  ['image/jpeg', 'image/png'],
+                  'file_preview_3'
+                )
+              "
+            />
+          </div>
+        </div>
+        <div class="w-full text-sm pl-3" style="color: red"><b>Note:</b> Upload files in .png, .jpg, .jpeg formats only. 
+          Recommended file size: 73 pixels in width and 73 pixels in height.
+        </div>
+      </div>
+      <!-- <hr /> -->
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onBottomTextSubmit()"
+          [disabled]="bottomAboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{
+            bottomAboutTextForm.disabled ? "Please wait..." : "Save & Continue"
+          }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+  <ng-container *ngIf="['career'].includes(page_type)">
+    <form class="w-full mt-3 bg-white p-3" [formGroup]="careerAboutTextForm">
+      <h3 class="text-center">Content</h3>
+
+      <div class="flex items-center">
+        <div class="w-[40%]">
+          <div class="flex justify-between">
+            <mat-form-field class="w-[30%]">
+              <input
+                formControlName="role_data"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(careerAboutTextForm, 'role_data')
+                "
+                placeholder="Type Data Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    careerAboutTextForm,
+                    'role_data',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="w-[67%]">
+              <input
+                formControlName="role_data_txt"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(careerAboutTextForm, 'role_data_txt')
+                "
+                placeholder="Type Text Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    careerAboutTextForm,
+                    'role_data_txt',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="flex justify-between">
+            <mat-form-field class="w-[30%]">
+              <input
+                formControlName="location_data"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(careerAboutTextForm, 'location_data')
+                "
+                placeholder="Type Data Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    careerAboutTextForm,
+                    'location_data',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="w-[67%]">
+              <input
+                formControlName="location_data_txt"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(careerAboutTextForm, 'location_data_txt')
+                "
+                placeholder="Type Heading Here"
+              />
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    careerAboutTextForm,
+                    'location_data_txt',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="w-[60%] ms-2">
+          <mat-form-field class="w-[100%]">
+            <input
+              formControlName="heading_txt"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(careerAboutTextForm, 'heading_txt')
+              "
+              placeholder="Type Heading Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  careerAboutTextForm,
+                  'heading_txt',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="w-[100%]">
+            <textarea
+              formControlName="sub_heading_txt"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(careerAboutTextForm, 'sub_heading_txt')
+              "
+              placeholder="Type Sub Heading Here"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  careerAboutTextForm,
+                  'sub_heading_txt',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="w-[40%]">
+          <div class="flex justify-between">
+            <mat-form-field class="w-[100%]">
+              <textarea
+                formControlName="txt_heading_1"
+                matInput
+                [class.is-invalid]="
+                  !Global.isInputValid(careerAboutTextForm, 'txt_heading_1')
+                "
+                placeholder="Type Heading Here"
+              ></textarea>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(
+                    careerAboutTextForm,
+                    'txt_heading_1',
+                    'required'
+                  )
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="w-[60%] ms-2">
+          <mat-form-field class="w-[100%]">
+            <input
+              formControlName="text_1"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(careerAboutTextForm, 'text_1')
+              "
+              placeholder="Type Text Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  careerAboutTextForm,
+                  'text_1',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="w-[100%]">
+            <input
+              formControlName="hr_email"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(careerAboutTextForm, 'hr_email')
+              "
+              placeholder="Type Email Here"
+            />
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  careerAboutTextForm,
+                  'hr_email',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <hr />
+      <div class="flex mt-3 justify-end">
+        <button
+          (click)="onCareerTextSubmit()"
+          [disabled]="careerAboutTextForm.disabled"
+          class="ai-button"
+        >
+          {{
+            careerAboutTextForm.disabled ? "Please wait..." : "Save & Continue"
+          }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+</div>

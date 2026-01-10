@@ -1,0 +1,79 @@
+<div class="action-btns">
+  <button
+    (click)="addItem()"
+    *ngIf="permissions.includes('add')"
+    matTooltip="Add New Brand"
+    class="btn-add"
+  >
+    <mat-icon class="text-xs">add</mat-icon>
+    Add New
+  </button>
+</div>
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="">
+      <tr class="">
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col">Description</th>
+        <th scope="col">Products</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td>
+            <img
+              *ngIf="item?.image?.url"
+              [src]="item?.image?.url"
+              alt="Image"
+            />
+          </td>
+          <td>
+            <a [routerLink]="'/inventory/brands/' + item?.slug">{{
+              item?.name
+            }}</a>
+          </td>
+          <td>{{ item?.description }}</td>
+          <td>
+            <a
+              [routerLink]="'/inventory/products/'"
+              [queryParams]="{ brand: item?.slug }"
+              >{{
+                item?.products
+                  ? item.products + " Product" + (item.products > 1 ? "s" : "")
+                  : ""
+              }}</a
+            >
+          </td>
+          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu
+              [modalItem]="permissions.includes('edit') ? item : null"
+              (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? item : null"
+            ></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="5">No Items Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

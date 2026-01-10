@@ -1,0 +1,223 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"
+    >
+      <div class="pointer-events-auto relative w-screen max-w-md">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <h2 class="header" id="slide-over-title">
+            {{ data ? "Update" : "New" }} Brand
+            <button color="warn" mat-dialog-close mat-icon-button>
+              <mat-icon class="text-red-700">close</mat-icon>
+            </button>
+          </h2>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <form class="space-y-1" [formGroup]="formGroup">
+              <div>
+                <mat-label
+                  >Parent Brand
+                  <span
+                    class="text-red-500"
+                    *ngIf="
+                      Global.isInputRuleAvailable(
+                        formGroup,
+                        'parent_brand',
+                        'required'
+                      )
+                    "
+                    >*</span
+                  >
+                </mat-label>
+                <ng-select
+                  placeholder="Select"
+                  formControlName="parent_brand"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(formGroup, 'parent_brand')
+                  "
+                  (scrollToEnd)="loadMoreItems()"
+                  (search)="searchSubject.next($event)"
+                >
+                  <ng-option
+                    *ngFor="let category of item_list"
+                    [value]="category?._id"
+                    >{{ category?.name }}</ng-option
+                  >
+                </ng-select>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'parent_brand',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </div>
+              <mat-form-field>
+                <mat-label
+                  >Name
+                  <span
+                    class="text-red-500"
+                    *ngIf="
+                      Global.isInputRuleAvailable(formGroup, 'name', 'required')
+                    "
+                    >*</span
+                  >
+                </mat-label>
+                <input
+                  formControlName="name"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'name')"
+                  placeholder="Type Here"
+                />
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'name', 'required')
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label
+                  >Description
+                  <span
+                    class="text-red-500"
+                    *ngIf="
+                      Global.isInputRuleAvailable(
+                        formGroup,
+                        'description',
+                        'required'
+                      )
+                    "
+                    >*</span
+                  >
+                </mat-label>
+                <textarea
+                  formControlName="description"
+                  matInput
+                  [class.is-invalid]="
+                    !Global.isInputValid(formGroup, 'description')
+                  "
+                  placeholder="Type Here"
+                ></textarea>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'description',
+                      'required'
+                    )
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label
+                  >Status
+                  <span
+                    class="text-red-500"
+                    *ngIf="
+                      Global.isInputRuleAvailable(
+                        formGroup,
+                        'status',
+                        'required'
+                      )
+                    "
+                    >*</span
+                  >
+                </mat-label>
+                <mat-select
+                  placeholder="Select"
+                  formControlName="status"
+                  matInput
+                  [class.is-invalid]="!Global.isInputValid(formGroup, 'status')"
+                >
+                  <mat-option value="active">Active</mat-option>
+                  <mat-option value="inactive">Inactive</mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(formGroup, 'status', 'required')
+                  "
+                >
+                  This field is required
+                </mat-error>
+              </mat-form-field>
+
+              <div class="h-60 border rounded">
+                <div
+                  class="w-full h-full rounded flex items-center justify-center relative"
+                >
+                  <span
+                    *ngIf="formGroup.value.file_preview"
+                    class="absolute right-2 top-2"
+                  >
+                    <app-menu
+                      [modalItem]="true"
+                      (initModal)="mediaFile.click()"
+                    ></app-menu>
+                  </span>
+                  <ng-container *ngIf="formGroup.value.file_preview">
+                    <img
+                      class="rounded-md w-full bg-gray-200 object-contain h-60"
+                      [src]="formGroup.value.file_preview"
+                      alt=" Media"
+                    />
+                  </ng-container>
+                  <ng-container *ngIf="!formGroup.value.file_preview">
+                    <div
+                      class="flex flex-col items-center justify-center"
+                      (click)="mediaFile.click()"
+                    >
+                      <img src="assets/placeholder-image-outline.png" alt="" />
+                      <div>Upload Media File Here</div>
+                      <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                    </div>
+                  </ng-container>
+                </div>
+                <div class="w-full text-sm pt-1 text-center text-red-500">
+                  <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  Recommended file size: 500 pixels in width and 500 pixels in
+                  height.
+                </div>
+                <input
+                  type="file"
+                  #mediaFile
+                  hidden
+                  (change)="
+                    Global.onFileSelected(
+                      formGroup,
+                      $event,
+                      'image',
+                      toastr,
+                      ['image/jpeg', 'image/png'],
+                      'file_preview'
+                    )
+                  "
+                />
+              </div>
+            </form>
+          </div>
+          <div class="p-1">
+            <button
+              (click)="onSubmit()"
+              [disabled]="formGroup.disabled"
+              class="btn-primary"
+            >
+              {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

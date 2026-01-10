@@ -1,0 +1,116 @@
+<nav class="bg-gray-100">
+  <div class="mx-auto max-w-7xl pl-2 sm:pl-6 lg:pl-2">
+    <div class="relative flex h-12 items-center justify-between">
+      <div class="h-[100%] flex items-center">
+        <ng-container *ngIf="!device.isDesktop()">
+          <button mat-icon-button (click)="toggleMenu()">
+            <mat-icon>menu</mat-icon>
+          </button>
+        </ng-container>
+      </div>
+
+      <div class="open-outlet flex justify-end items-center">
+        <div
+          class="max-w-md w-96 flex-1 flex items-center"
+          *ngIf="!device.isMobile()"
+        >
+          <mat-form-field class="search">
+            <mat-icon matPrefix>search</mat-icon>
+            <input
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange($event)"
+              matInput
+              placeholder="Enter your search keywords"
+            />
+
+            <mat-icon
+              class="cursor-pointer"
+              *ngIf="searchTerm"
+              (click)="clearSearch()"
+              matSuffix
+              >close</mat-icon
+            >
+          </mat-form-field>
+        </div>
+        <mat-icon class="mx-4 cursor-pointer">settings</mat-icon>
+        <mat-icon
+          matBadgeColor="warn"
+          [matBadgeHidden]="!total_unread_record"
+          [matBadge]="total_unread_record"
+          class="mr-4 cursor-pointer"
+          (click)="showNotifications()"
+          >notifications</mat-icon
+        >
+
+        <!-- Profile dropdown -->
+        <div class="h-12 flex items-center" [matMenuTriggerFor]="menu">
+          <button class="flex items-center justify-center">
+            <img
+              alt=""
+              src="assets/avatar.jpg"
+              class="inline-block size-7 rounded-full ring-1 ring-red-600"
+            /><span
+              *ngIf="!device.isMobile()"
+              class="mx-3 flex flex-col leading-3 items-start justify-start"
+            >
+              <span class="block text-sm text-black">{{
+                helperService.userDetails()?.name
+              }}</span>
+              <small class="block text-gray-500">{{
+                helperService.userDetails()?.display_role_name
+              }}</small>
+            </span>
+            <mat-icon class="ml-4">keyboard_arrow_down</mat-icon>
+          </button>
+        </div>
+        <mat-menu #menu="matMenu">
+          <div class="profile-menu">
+            <img
+              alt=""
+              src="assets/avatar.jpg"
+              class="inline-block size-7 rounded-full ring-1 ring-red-600"
+            />
+            <div class="right-side">
+              <div class="item">
+                {{ userDetails?.name }}
+              </div>
+              <div class="item email">{{ userDetails?.email }}</div>
+              <div class="item">
+                <a
+                  class="text-primary"
+                  routerLink="/settings/basic-information"
+                >
+                  My Account</a
+                >
+                <span class="dot mx-2"></span>
+                <a
+                  href="javascript:void(0)"
+                  (click)="signOut()"
+                  class="text-danger"
+                  >Sign Out</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+          <!-- <button mat-menu-item>
+              <mat-icon>security</mat-icon>
+              <span class="txt-spn">Change Password</span></button><button mat-menu-item>
+              <mat-icon>help</mat-icon>
+              <span class="txt-spn">Help & Support</span>
+            </button> -->
+
+          <!-- <button mat-menu-item>
+              <mat-icon>call</mat-icon>
+              <span class="txt-spn">Request a call</span>
+            </button> -->
+          <button mat-menu-item (click)="changePassword()">
+            <mat-icon>password</mat-icon>
+            <span class="txt-spn">Change Password</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,76 @@
+<div class="table-wrapper">
+  <table
+    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+  >
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <!-- <th scope="col" (click)="sort('country')" class="sortable">
+          Country <span [class]="getSortIcon('country')"></span>
+        </th> -->
+        <th scope="col" (click)="sort('flag')" class="sortable">
+          Country Code <span [class]="getSortIcon('flag')"></span>
+        </th>
+        <th scope="col" (click)="sort('name')" class="sortable">
+          Name <span [class]="getSortIcon('name')"></span>
+        </th>
+        <th scope="col" (click)="sort('phone_code')" class="sortable">
+          State Code <span [class]="getSortIcon('phone_code')"></span>
+        </th>
+
+        <th
+          scope="col"
+          (click)="sort('updated_at')"
+          class="sortable text-center"
+        >
+          Last Updated
+          <span [class]="getSortIcon('updated_at')"></span>
+        </th>
+        <th scope="col" (click)="sort('status')" class="sortable text-center">
+          Status
+          <span [class]="getSortIcon('status')"></span>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <!-- <td scope="row" class="font-medium text-gray-900 whitespace-nowrap">
+            {{ item?.country }}
+          </td> -->
+          <td scope="row" class="font-medium text-gray-900 whitespace-nowrap">
+            {{ item?.country_code }}
+          </td>
+          <td scope="row" class="font-medium text-gray-900 whitespace-nowrap">
+            {{ item?.name }}
+          </td>
+
+          <td>{{ item?.state_code }}</td>
+
+          <td class="text-center">
+            {{ item?.updated_at | date }}
+          </td>
+          <td
+            class="text-center cursor-pointer"
+            (click)="updateCurrencyStatus(item)"
+          >
+            <span [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="6">No Items Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

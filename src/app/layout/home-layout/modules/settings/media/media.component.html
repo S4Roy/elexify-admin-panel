@@ -1,0 +1,163 @@
+<ng-container *ngIf="data; else tableLayout">
+  <h2 mat-dialog-title class="bg-white">Media</h2>
+  <mat-dialog-content class="bg-white">
+    <mat-tab-group
+      [selectedIndex]="1"
+      #mediaTabs
+      mat-stretch-tabs="false"
+      class="h-fit"
+      mat-align-tabs="start"
+    >
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="mr-4">attach_file</mat-icon>
+          Upload Files
+        </ng-template>
+        <div
+          class="flex items-center justify-center w-full h-80 p-6 cursor-pointer"
+        >
+          <label
+            for="file-upload"
+            class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-2xl cursor-pointer transition duration-300 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+            :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+          >
+            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+              <mat-icon class="mb-4 text-gray-400 cursor-pointer"
+                >add_photo_alternate</mat-icon
+              >
+              <p
+                class="mb-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer"
+              >
+                <span class="font-semibold">Click to upload</span> or drag &
+                drop
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                PNG, JPG, WEBP (max 10MB)
+              </p>
+            </div>
+            <input
+              (change)="
+                Global.onFileSelected(
+                  formGroup,
+                  $event,
+                  'file',
+                  toastr,
+                  allowed_types,
+                  'file_name'
+                )
+              "
+              id="file-upload"
+              type="file"
+              class="hidden"
+              multiple
+            />
+          </label>
+        </div>
+      </mat-tab>
+
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="mr-4">image</mat-icon>
+          Media Library
+        </ng-template>
+        <div class="max-h-[49vh] overflow-y-auto">
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            <ng-container *ngFor="let item of item_list">
+              <!-- Image preview item -->
+              <div
+                class="relative border rounded overflow-hidden group cursor-pointer"
+              >
+                <label [for]="item?._id">
+                  <ng-container *ngIf="item.type == 'video'; else isImage">
+                    <video [src]="item?.url"></video>
+                  </ng-container>
+                  <ng-template #isImage>
+                    <img
+                      *ngIf="item?.url"
+                      [src]="item?.url"
+                      alt="media"
+                      class="object-cover w-full h-full"
+                    />
+                  </ng-template>
+                </label>
+
+                <input
+                  [disabled]="item.type == 'video' && !video_allow"
+                  id="{{ item?._id }}"
+                  (change)="onMediaSelect(item)"
+                  [checked]="selected.includes(item?._id)"
+                  type="checkbox"
+                  class="absolute top-2 right-2 w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-0"
+                />
+              </div>
+              <!-- Repeat for each media item -->
+            </ng-container>
+          </div>
+          <div class="mt-6 flex justify-center">
+            <!-- Load More Button -->
+            <ng-container *ngIf="paginationOption?.hasNextPage">
+              <button
+                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                (click)="onLoadMore()"
+              >
+                Load More
+              </button>
+            </ng-container>
+            <ng-container *ngIf="!paginationOption?.hasNextPage">
+              <span class="text-gray-500">No more products to load</span>
+            </ng-container>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+  <mat-dialog-actions class="bg-white" align="end">
+    <button mat-dialog-close mat-stroked-button>Cancel</button>
+    <button
+      [disabled]="!selectedMedia.length"
+      mat-stroked-button
+      color="primary"
+      (click)="addToGallery()"
+    >
+      Add to Gallery
+    </button>
+  </mat-dialog-actions>
+</ng-container>
+<ng-template #tableLayout>
+  <div class="action-btns">
+    <!-- <button
+      (click)="addItem()"
+      *ngIf="permissions.includes('add')"
+      matTooltip="Add New Brand"
+      class="btn-add"
+    >
+      <mat-icon class="text-xs">add</mat-icon>
+      Add New
+    </button> -->
+  </div>
+  <div class="table-wrapper">
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+      <ng-container *ngFor="let item of item_list">
+        <!-- Image preview item -->
+        <div
+          class="relative border rounded overflow-hidden group cursor-pointer"
+        >
+          <label [for]="item?._id">
+            <img
+              *ngIf="item?.url"
+              [src]="item?.url"
+              alt="media"
+              class="object-cover w-full h-full"
+          /></label>
+        </div>
+        <!-- Repeat for each media item -->
+      </ng-container>
+    </div>
+  </div>
+  <ng-container>
+    <pagination
+      [pagination]="paginationOption"
+      (pageChange)="onPageChange($event)"
+    ></pagination>
+  </ng-container>
+</ng-template>

@@ -1,0 +1,38 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div class="pointer-events-auto relative w-screen max-w-md">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <div class="p-1 add-new-title sm:px-6">
+            <h2 class="flex justify-between items-center font-semibold text-white" id="slide-over-title">
+              New Partner
+              <button color="warn" mat-dialog-close mat-icon-button>
+                <mat-icon class="text-red-700">close</mat-icon>
+              </button>
+            </h2>
+          </div>
+          <div class="relative  my-3 flex-1 px-4 sm:px-6">
+            <form class="space-y-6" [formGroup]="loginForm">
+              <div>
+                <label class="block text-sm/6 font-medium text-gray-900">Partner name</label>
+                <div class="mt-2">
+                  <input formControlName="email" type="text"
+                    class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
+                </div>
+              </div>
+              <div class="border">
+                <app-thumbnail></app-thumbnail>
+              </div>
+            </form>
+          </div>
+          <div>
+            <button (click)="submitLogin()" [disabled]="loginForm.disabled"
+              class="flex border w-full justify-center px-3 py-3 text-green-500">
+              {{ loginForm.disabled ? "Please wait..." : "Save & Continue" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

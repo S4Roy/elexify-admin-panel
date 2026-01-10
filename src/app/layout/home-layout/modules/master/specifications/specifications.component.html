@@ -1,0 +1,67 @@
+<div class="action-btns">
+  <button
+    (click)="addItem()"
+    *ngIf="permissions.includes('add')"
+    matTooltip="Add New Classification"
+    class="btn-add"
+  >
+    <mat-icon class="text-xs">add</mat-icon>
+    Add New
+  </button>
+</div>
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="">
+      <tr class="">
+        <th scope="col"></th>
+        <th scope="col">Label</th>
+        <th scope="col">Type</th>
+        <th scope="col">Required</th>
+        <th scope="col">Visiable</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td></td>
+          <td cdkDrag class="cursor-move">
+            {{ item?.label }}
+          </td>
+          <td>{{ item?.type }}</td>
+          <td>
+            {{ item?.required ? "Yes" : "No" }}
+          </td>
+          <td>
+            {{ item?.visible ? "Yes" : "No" }}
+          </td>
+          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu
+              [modalItem]="permissions.includes('edit') ? item : null"
+              (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? item : null"
+            ></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="7">No Items Found</td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

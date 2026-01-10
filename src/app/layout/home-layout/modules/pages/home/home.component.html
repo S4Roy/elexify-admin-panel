@@ -1,0 +1,44 @@
+<app-banners></app-banners>
+<div class="bg-gray">
+  <form class="w-full mt-3 bg-white p-3" [formGroup]="formGroup">
+    <div class="space-y-1">
+      <h3 class="text-center">Categories</h3>
+      <ng-select
+        [class.is-invalid]="!Global.isInputValid(formGroup, 'categories')"
+        formControlName="categories"
+        [multiple]="true"
+        [maxSelectedItems]="6"
+        placeholder="Select"
+        (scrollToEnd)="loadMoreItems()"
+        (search)="searchSubject.next($event)"
+      >
+        <ng-option *ngFor="let item of categories" [value]="item._id">
+          <div class="flex items-center">
+            <img
+              *ngIf="item?.image?.url"
+              [src]="item?.image?.url"
+              alt="Image"
+              style="width: 30px; height: 30px; margin-right: 10px"
+            />
+            {{ item.name }}
+          </div>
+        </ng-option>
+      </ng-select>
+      <mat-error
+        *ngIf="!Global.isInputRuleValid(formGroup, 'categories', 'required')"
+      >
+        This field is required
+      </mat-error>
+    </div>
+    <hr />
+    <div class="flex mt-3 justify-end">
+      <button
+        (click)="onSubmit()"
+        [disabled]="formGroup.disabled"
+        class="ai-button"
+      >
+        {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+      </button>
+    </div>
+  </form>
+</div>

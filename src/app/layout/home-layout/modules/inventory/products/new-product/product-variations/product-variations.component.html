@@ -1,0 +1,275 @@
+<div class="min-h-50 overflow-y-auto relative mb-4">
+  <div *ngIf="formGroup.getRawValue()?.attributes?.length" class="mb-2">
+    <div class="flex">
+      <button class="btn-add" (click)="generateVariations()">
+        Generate Variations
+      </button>
+      <button
+        *ngIf="variations.value.length"
+        class="btn-add mx-1"
+        (click)="updateAll()"
+      >
+        Update All
+      </button>
+    </div>
+  </div>
+  <table class="table-base">
+    <thead>
+      <tr>
+        <th style="max-width: 20px"></th>
+        <th scope="col">Variation</th>
+        <th scope="col">Rarity/Power</th>
+        <th scope="col">Images</th>
+        <th scope="col">Ask for Price?</th>
+        <!-- <th scope="col">Enable Enquiry?</th> -->
+        <th scope="col">Regular Price*</th>
+        <th scope="col">Sale Price *</th>
+        <th scope="col">SKU *</th>
+        <th scope="col" class="text-center">Stock *</th>
+        <th scope="col" class="text-center">Weight(Kg)</th>
+        <th scope="col" class="text-center">(L x W x H) in CM</th>
+        <!-- <th scope="col" class="text-center">Shipping Class</th> -->
+        <!-- <th class="text-center">Action</th> -->
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container [formGroup]="formGroup">
+        <ng-container formArrayName="variations">
+          <ng-container
+            *ngFor="
+              let attribute of variations.controls;
+              let i = index;
+              trackBy: trackByIndex
+            "
+          >
+            <tr [formGroupName]="i">
+              <td>
+                <mat-checkbox
+                  matTooltip="Visible in Product Listing"
+                  formControlName="visible_in_list"
+                ></mat-checkbox>
+              </td>
+              <td>
+                <ng-container formArrayName="attributes">
+                  <ng-container
+                    *ngFor="
+                      let combination of getVariationAttributes(i).controls;
+                      let j = index;
+                      let isLast = last
+                    "
+                  >
+                    <ng-container [formGroupName]="j">
+                      <ng-select
+                        [class]="isLast ? 'mb-1' : 'mb-1'"
+                        placeholder="Select Value"
+                        formControlName="value_id"
+                        clearable="false"
+                        [readonly]="data?._id"
+                      >
+                        <ng-option
+                          *ngFor="let value of attribute_values"
+                          [value]="value._id"
+                        >
+                          {{ value.name }}
+                        </ng-option>
+                      </ng-select>
+                    </ng-container>
+                  </ng-container>
+                </ng-container>
+              </td>
+              <td class="text-center">
+                <ng-select
+                  placeholder="Select Rarity"
+                  formControlName="rarity"
+                  [multiple]="false"
+                >
+                  <ng-option
+                    *ngFor="let rarity of Global.rarity_list"
+                    [value]="rarity?._id"
+                  >
+                    <div class="flex items-center">
+                      {{ rarity?.name }}
+                    </div>
+                  </ng-option>
+                </ng-select>
+                <mat-slider
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="0"
+                  thumbLabel
+                  tickInterval="10"
+                >
+                  <input formControlName="power_level" matSliderThumb />
+                </mat-slider>
+              </td>
+              <td style="width: 150px">
+                <ng-container>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div
+                      class="border rounded-md relative flex items-center justify-center bg-gray-50"
+                    >
+                      <div
+                        class="text-center cursor-pointer"
+                        (click)="chooseFile(i)"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt="Upload"
+                          class="mx-auto"
+                        />
+                      </div>
+                    </div>
+
+                    <ng-container
+                      *ngFor="let img of getImages(i).controls; let j = index"
+                    >
+                      <div
+                        class="relative group rounded-md overflow-hidden bg-gray-100"
+                      >
+                        <img
+                          [src]="
+                            img?.value?.url ||
+                            'assets/placeholder-image-outline.png'
+                          "
+                          alt="Preview"
+                          class="w-full h-full object-center"
+                        />
+
+                        <!-- Delete Button -->
+                        <button
+                          (click)="removeImage(i, j)"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </td>
+              <td class="text-center">
+                <mat-checkbox formControlName="ask_for_price"></mat-checkbox>
+              </td>
+              <!-- <td class="text-center">
+                <mat-checkbox formControlName="enable_enquiry"></mat-checkbox>
+              </td> -->
+              <!-- Regular Price -->
+              <td style="width: 130px">
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    matInput
+                    amountNumber
+                    (change)="emitChanges()"
+                    formControlName="regular_price"
+                    placeholder="Regular Price"
+                  />
+                </mat-form-field>
+              </td>
+              <!-- Sale Price -->
+              <td style="width: 120px">
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    matInput
+                    amountNumber
+                    (change)="emitChanges()"
+                    formControlName="sale_price"
+                    placeholder="Sale Price"
+                  />
+                </mat-form-field>
+              </td>
+
+              <!-- SKU -->
+              <td>
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    matInput
+                    (change)="emitChanges()"
+                    formControlName="sku"
+                    placeholder="SKU"
+                  />
+                </mat-form-field>
+              </td>
+              <!-- Stock Quantity -->
+
+              <td style="width: 80px">
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    matInput
+                    type="number"
+                    (change)="emitChanges()"
+                    formControlName="stock_quantity"
+                    placeholder="Stock Quantity"
+                  />
+                </mat-form-field>
+              </td>
+              <!-- Weight -->
+              <td style="width: 90px">
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    matInput
+                    amountNumber
+                    (change)="emitChanges()"
+                    formControlName="weight"
+                    placeholder="Weight"
+                  />
+                </mat-form-field>
+              </td>
+              <!-- Length -->
+              <td>
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    (change)="emitChanges()"
+                    matInput
+                    amountNumber
+                    formControlName="length"
+                    placeholder="L"
+                  />
+                  <input
+                    (change)="emitChanges()"
+                    matInput
+                    amountNumber
+                    formControlName="width"
+                    placeholder="W"
+                  />
+                  <input
+                    (change)="emitChanges()"
+                    matInput
+                    amountNumber
+                    formControlName="height"
+                    placeholder="H"
+                  />
+                </mat-form-field>
+              </td>
+
+              <!-- Shipping Class -->
+              <!-- <td>
+                <div class="col-span-1 lg:col-span-1">
+                  <ng-select
+                    (change)="emitChanges()"
+                    formControlName="shipping_class"
+                    matInput
+                  >
+                    <ng-option
+                      *ngFor="let shipping of shipping_classes"
+                      [value]="shipping?._id"
+                    >
+                      {{ shipping?.name }}
+                    </ng-option>
+                  </ng-select>
+                </div>
+              </td> -->
+              <!-- 
+              <td class="text-center">
+                <button mat-icon-button (click)="removeVariation(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td> -->
+            </tr>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </tbody>
+  </table>
+  <!-- Product Variations -->
+</div>

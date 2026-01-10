@@ -1,0 +1,25 @@
+@import "ckeditor5/ckeditor5.css";
+
+.cms {
+  input,
+  textarea {
+    // font-size: 1.1rem;
+    // font-weight: 500;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 0.4rem 0;
+    outline: none;
+    transition: all 0.2s ease;
+    // color: #374151;
+    background: transparent;
+    width: 100%;
+
+    &:focus {
+      border-color: #0ea5a4;
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+}

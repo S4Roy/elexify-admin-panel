@@ -1,0 +1,168 @@
+<div class="min-h-60 overflow-y-auto mb-4">
+  <!-- Product Attributes -->
+  <!-- Add New or choose existing attributes -->
+  <ng-container>
+    <ng-container [formGroup]="attributeFormGroup">
+      <div class="w-48 mb-4">
+        <label>
+          Attributes
+          <span
+            *ngIf="
+              Global.isInputRuleAvailable(
+                attributeFormGroup,
+                'attribute',
+                'required'
+              )
+            "
+            class="text-red-500"
+            >*</span
+          >
+        </label>
+        <ng-select
+          placeholder="Select Attributes"
+          formControlName="attribute"
+          matInput
+          [class.is-invalid]="
+            !Global.isInputValid(attributeFormGroup, 'attribute')
+          "
+          (change)="onAttributeSelect($event)"
+          (scrollToEnd)="loadMoreAttributes()"
+          (search)="attributesSearchSubject.next($event)"
+        >
+          <ng-option
+            *ngFor="let attribute of filter_attributes"
+            [value]="attribute"
+          >
+            <div class="flex items-center">
+              <img
+                *ngIf="attribute?.image?.url"
+                [src]="attribute?.image?.url"
+                class="h-6 w-6 mr-2 rounded object-cover"
+              />
+              {{ attribute?.name }}
+            </div>
+          </ng-option>
+        </ng-select>
+        <mat-error
+          *ngIf="
+            !Global.isInputRuleValid(
+              attributeFormGroup,
+              'attribute',
+              'required'
+            )
+          "
+          >This field is required</mat-error
+        >
+      </div>
+    </ng-container>
+  </ng-container>
+  <ng-container [formGroup]="formGroup">
+    <table class="table-base">
+      <thead>
+        <tr>
+          <th scope="col">Attributes</th>
+          <th scope="col">Values</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container>
+          <ng-container formArrayName="attributes">
+            <ng-container
+              *ngFor="let attribute of attributes.controls; let i = index"
+            >
+              <tr [formGroupName]="i">
+                <td>
+                  <ng-select
+                    placeholder="Select Attributes"
+                    formControlName="attribute"
+                    appendTo="body"
+                    [readonly]="true"
+                  >
+                    <ng-option
+                      *ngFor="let attribute of attributes_list"
+                      [value]="attribute?._id"
+                    >
+                      <div class="flex items-center">
+                        <!-- <img
+                          *ngIf="attribute?.image?.url"
+                          [src]="attribute?.image?.url"
+                          class="h-6 w-6 mr-2 rounded object-cover"
+                        /> -->
+                        {{ attribute?.name }}
+                      </div>
+                    </ng-option>
+                  </ng-select>
+                </td>
+
+                <td>
+                  <ng-select
+                    placeholder="Select values"
+                    formControlName="values"
+                    [multiple]="true"
+                    appendTo="body"
+                    [class.is-invalid]="
+                      !Global.isInputValidArray(
+                        formGroup,
+                        'attributes.' + i + '.values'
+                      )
+                    "
+                  >
+                    <ng-template ng-header-tmp>
+                      <div class="select-all">
+                        <input
+                          id="select-all"
+                          type="checkbox"
+                          [checked]="isAllSelected(i)"
+                          (change)="selectAllValues(i)"
+                        />
+                        <label for="select-all" class="mx-1 cursor-pointer"
+                          >Select All</label
+                        >
+                      </div>
+                    </ng-template>
+                    <ng-option
+                      *ngFor="let attr of values[attribute.value.attribute]"
+                      [value]="attr?._id"
+                    >
+                      <div class="flex items-center">
+                        <img
+                          *ngIf="attr?.image?.url"
+                          [src]="attr?.image?.url"
+                          class="h-6 w-6 mr-2 rounded object-cover"
+                        />
+                        {{ attr?.name }}
+                      </div>
+                    </ng-option>
+                  </ng-select>
+                  <!-- <div class="flex pt-1">
+                    <button
+                      (click)="selectAllValues(i)"
+                      type="button"
+                      class="px-3 py-2 text-xs font-medium text-blue-700 border border-blue-700 rounded-lg hover:bg-blue-700 hover:text-white"
+                    >
+                      Select All
+                    </button>
+
+                    <button
+                      (click)="deselectAllValues(i)"
+                      type="button"
+                      class="px-3 py-2 mx-2 text-xs font-medium text-blue-700 border border-blue-700 rounded-lg hover:bg-blue-700 hover:text-white"
+                    >
+                      Select None
+                    </button>
+                  </div> -->
+                </td>
+                <td class="text-center">
+                  <button mat-icon-button (click)="removeAttribute(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </tbody>
+    </table>
+  </ng-container>
+</div>

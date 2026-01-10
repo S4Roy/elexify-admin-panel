@@ -1,0 +1,1118 @@
+<div>
+  <form class="space-y-1" [formGroup]="formGroup">
+    <div>
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <div class="mb-3" *ngIf="data?.type != 'parent'">
+            <mat-label
+              >Parent Category
+              <span
+                class="text-red-500"
+                *ngIf="
+                  Global.isInputRuleAvailable(
+                    formGroup,
+                    'parent_category',
+                    'required'
+                  )
+                "
+                >*</span
+              >
+            </mat-label>
+            <ng-select
+              class="mt-2"
+              placeholder="Select"
+              formControlName="parent_category"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(formGroup, 'parent_category')
+              "
+              (scrollToEnd)="loadMoreItems()"
+              (search)="searchSubject.next($event)"
+            >
+              <ng-option
+                *ngFor="let category of categories"
+                [value]="category?._id"
+                >{{ category?.name }}</ng-option
+              >
+            </ng-select>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  formGroup,
+                  'parent_category',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </div>
+          <mat-form-field>
+            <mat-label
+              >Name
+              <span
+                class="text-red-500"
+                *ngIf="
+                  Global.isInputRuleAvailable(formGroup, 'name', 'required')
+                "
+                >*</span
+              >
+            </mat-label>
+            <input
+              formControlName="name"
+              matInput
+              [class.is-invalid]="!Global.isInputValid(formGroup, 'name')"
+              placeholder="Type Here"
+            />
+            <mat-error
+              *ngIf="!Global.isInputRuleValid(formGroup, 'name', 'required')"
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+
+          <div class="flex mt-2">
+            <mat-form-field class="w-1/2">
+              <mat-label
+                >Status
+                <span
+                  class="text-red-500"
+                  *ngIf="
+                    Global.isInputRuleAvailable(formGroup, 'status', 'required')
+                  "
+                  >*</span
+                >
+              </mat-label>
+              <mat-select
+                placeholder="Select"
+                formControlName="status"
+                matInput
+                [class.is-invalid]="!Global.isInputValid(formGroup, 'status')"
+              >
+                <mat-option value="active">Active</mat-option>
+                <mat-option value="inactive">Inactive</mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="
+                  !Global.isInputRuleValid(formGroup, 'status', 'required')
+                "
+              >
+                This field is required
+              </mat-error>
+            </mat-form-field>
+            <ng-container formGroupName="details">
+              <mat-checkbox class="mx-1 mt-3" formControlName="required"
+                >Details Required?</mat-checkbox
+              >
+            </ng-container>
+          </div>
+        </div>
+        <div>
+          <mat-form-field>
+            <mat-label
+              >Description
+              <span
+                class="text-red-500"
+                *ngIf="
+                  Global.isInputRuleAvailable(
+                    formGroup,
+                    'description',
+                    'required'
+                  )
+                "
+                >*</span
+              >
+            </mat-label>
+            <textarea
+              formControlName="description"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(formGroup, 'description')
+              "
+              placeholder="Type Here"
+              rows="3"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(formGroup, 'description', 'required')
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label
+              >Tag Line for Banner
+              <span
+                class="text-red-500"
+                *ngIf="
+                  Global.isInputRuleAvailable(
+                    formGroup,
+                    'banner_tag_line',
+                    'required'
+                  )
+                "
+                >*</span
+              >
+            </mat-label>
+            <textarea
+              formControlName="banner_tag_line"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(formGroup, 'banner_tag_line')
+              "
+              placeholder="Type Here"
+              rows="2"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  formGroup,
+                  'banner_tag_line',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="h-44 border rounded mt-6">
+          <div
+            class="w-full h-36 rounded flex items-center justify-center relative"
+          >
+            <span
+              *ngIf="formGroup.value.image_url"
+              class="absolute right-2 top-2"
+            >
+            </span>
+            <ng-container *ngIf="formGroup.value.image_url">
+              <div
+                class="relative group h-36 rounded-md overflow-hidden bg-gray-100 mt-2"
+              >
+                <img
+                  class="rounded-md w-full bg-gray-200 object-contain h-36"
+                  [src]="formGroup.value.image_url"
+                  alt=" Media"
+                />
+                <button
+                  (click)="removeImage()"
+                  class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </ng-container>
+            <ng-container *ngIf="!formGroup.value.image_url">
+              <div
+                class="flex flex-col items-center justify-center cursor-pointer"
+                (click)="chooseFile()"
+              >
+                <img src="assets/placeholder-image-outline.png" alt="" />
+                <div>Upload Media File Here</div>
+                <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+              </div>
+            </ng-container>
+          </div>
+          <div class="w-full text-sm py-1 text-center text-red-500">
+            <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+          </div>
+        </div>
+      </div>
+
+      <section class="my-5 cms border relative">
+        <h2
+          class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+        >
+          Banner
+        </h2>
+        <span class="absolute left-2 top-2 z-50 bg-white">
+          <app-menu
+            [modalItem]="true"
+            (initModal)="chooseFile('banner')"
+          ></app-menu>
+        </span>
+        <div
+          class="relative max-w-7xl h-60 mx-auto flex flex-col md:flex-row md:space-x-12 items-center md:items-start overflow-hidden"
+        >
+          <!-- VIDEO or IMAGE LAYER (absolute) -->
+          <ng-container
+            *ngIf="formGroup.value.banner_type === 'video'; else imageBanner"
+          >
+            <video
+              autoplay
+              muted
+              loop
+              playsinline
+              class="absolute inset-0 w-full h-full object-cover"
+              [poster]="formGroup.value.banner_url || ''"
+            >
+              <!-- bind SafeResourceUrl to source -->
+              <source [src]="formGroup.value.banner_url" />
+              <!-- fallback text -->
+              Your browser does not support the video tag.
+            </video>
+          </ng-container>
+
+          <ng-template #imageBanner>
+            <div
+              class="absolute inset-0 w-full h-full bg-center bg-cover"
+              [style.background-image]="formGroup.value.banner_url"
+            >
+              <img
+                *ngIf="formGroup.value.banner_url"
+                [src]="formGroup.value.banner_url"
+                class="w-full h-full object-cover"
+                alt=""
+              />
+            </div>
+          </ng-template>
+
+          <!-- overlay (optional dim) -->
+          <!-- <div class="absolute inset-0 bg-black" [style.opacity]="80"></div> -->
+
+          <!-- menu button -->
+
+          <!-- content (above background) -->
+          <div
+            class="relative z-10 p-5 text-2xl text-white text-center w-full drop-shadow-md"
+          >
+            {{ formGroup.value.name }}
+            {{
+              formGroup.value.parent_category === Global.RUDRAKSHA
+                ? "Rudraksha"
+                : ""
+            }}
+          </div>
+        </div>
+      </section>
+
+      <ng-container *ngIf="formGroup.value.details.required">
+        <ng-container formGroupName="details">
+          <section class="my-5 border cms" formGroupName="block_1">
+            <h2
+              class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+            >
+              Power & Significance
+            </h2>
+            <div
+              class="max-w-7xl p-5 flex flex-col md:flex-row md:space-x-12 items-start"
+            >
+              <!-- Text content left side -->
+              <div class="md:w-1/2">
+                <p
+                  class="uppercase text-xs font-semibold tracking-widest text-gray-700 mb-2"
+                >
+                  <input
+                    placeholder="Eg: Embrace the wisdom of the 4 Mukhi Rudraksha"
+                    formControlName="title"
+                    type="text"
+                  />
+                </p>
+                <h2
+                  class="text-4xl md:text-5xl font-extrabold leading-tight mb-4 text-gray-800"
+                >
+                  <input
+                    formControlName="heading"
+                    type="text"
+                    placeholder="Eg: Divine Influence and Spiritual Benefits of the 4 Mukhi Rudraksha"
+                  />
+                </h2>
+                <div
+                  class="w-16 h-1 bg-[rgba(181,152,100,1)] rounded mb-6"
+                ></div>
+                <ckeditor
+                  [editor]="Editor"
+                  [config]="config"
+                  formControlName="description"
+                ></ckeditor>
+                <ul class="mt-4 space-y-3 text-gray-800 mb-8">
+                  <li class="flex items-center gap-3">
+                    <span class="text-[rgba(181,152,100,1)]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 9l3 3-3 3"
+                        />
+                      </svg>
+                    </span>
+                    <strong>Ruling Planet :</strong>
+                    <input
+                      placeholder="Eg: Mercury"
+                      formControlName="ruling_planet"
+                      type="text"
+                    />
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <span class="text-[rgba(181,152,100,1)]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 9l3 3-3 3"
+                        />
+                      </svg>
+                    </span>
+                    <strong>Ruling Deity :</strong>
+                    <input
+                      placeholder="Eg: Lord Brahma"
+                      formControlName="lord_deity"
+                      type="text"
+                    />
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <span class="text-[rgba(181,152,100,1)]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 9l3 3-3 3"
+                        />
+                      </svg>
+                    </span>
+                    <strong>Chakra Activated :</strong>
+                    <input
+                      placeholder="Eg: Vishuddha Chakra (Throat Chakra)"
+                      formControlName="chakra_activated"
+                      type="text"
+                    />
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Video preview right side -->
+              <div class="md:w-1/2 mt-10 md:mt-0 flex justify-center">
+                <div
+                  class="rounded-xl shadow-xl overflow-hidden max-w-md w-full"
+                >
+                  <div class="cms p-4">
+                    <input
+                      placeholder="Iframe URL"
+                      formControlName="external_url"
+                      type="text"
+                      class="w-full px-3 py-2 border rounded"
+                    />
+                  </div>
+
+                  <!-- show a fallback/blocked message if url is invalid -->
+                  <ng-container *ngIf="iframeUrl; else blocked">
+                    <iframe
+                      class="w-full aspect-video"
+                      [src]="iframeUrl"
+                      title="Embedded content"
+                      frameborder="0"
+                      allowfullscreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    ></iframe>
+                  </ng-container>
+
+                  <ng-template #blocked>
+                    <div class="p-4 text-center text-sm text-red-600">
+                      This URL cannot be embedded.
+                    </div>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="my-5 border cms" formGroupName="block_2">
+            <h2
+              class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+            >
+              Power & Significance
+            </h2>
+            <div
+              class="max-w-7xl p-5 flex flex-col md:flex-row md:space-x-12 items-center md:items-start"
+            >
+              <!-- Left side: Image with annotations -->
+              <div class="md:w-1/2 flex justify-center mb-10 md:mb-0 relative">
+                <div class="h-60 border rounded mt-4">
+                  <div
+                    class="w-full h-full rounded flex items-center justify-center relative"
+                  >
+                    <span
+                      *ngIf="formGroup.value.details.block_2.image_url"
+                      class="absolute right-2 top-2"
+                    >
+                    </span>
+                    <ng-container
+                      *ngIf="formGroup.value.details.block_2.image_url"
+                    >
+                      <div
+                        class="relative group h-56 rounded-md overflow-hidden bg-gray-100 mt-2"
+                      >
+                        <img
+                          class="rounded-md w-full bg-gray-200 object-contain h-60"
+                          [src]="formGroup.value.details.block_2.image_url"
+                          alt=" Media"
+                        />
+                        <button
+                          (click)="removeImage('block_2')"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="!formGroup.value.details.block_2.image_url"
+                    >
+                      <div
+                        class="flex flex-col items-center justify-center cursor-pointer"
+                        (click)="chooseFile('block_2')"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt=""
+                        />
+                        <div>Upload Media File Here</div>
+                        <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div class="w-full text-sm pt-1 text-center text-red-500">
+                    <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right side: Text content -->
+              <div class="md:w-1/2">
+                <h2
+                  class="text-3xl md:text-4xl font-extrabold mb-3 text-gray-800"
+                >
+                  <input
+                    type="text"
+                    placeholder="Eg: Faces of 4 Mukhi Rudraksha"
+                    formControlName="heading"
+                  />
+                </h2>
+                <div class="w-16 h-1 bg-[#b59864] rounded mb-6"></div>
+                <ckeditor
+                  [editor]="Editor"
+                  [config]="config"
+                  formControlName="description"
+                ></ckeditor>
+                <ul class="mt-4 space-y-3 text-gray-900 mb-8 md:max-w-lg">
+                  <li class="flex items-center gap-3">
+                    <span class="text-[#b59864]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 9l3 3-3 3"
+                        />
+                      </svg>
+                    </span>
+                    <strong>Beej Mantra :</strong>
+                    <input
+                      placeholder="Eg: Om Hrim Namah"
+                      formControlName="beej_mantra"
+                      type="text"
+                    />
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <span class="text-[#b59864]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 9l3 3-3 3"
+                        />
+                      </svg>
+                    </span>
+                    <strong>Recommended Chalisa/Stotram :</strong>
+                    <input
+                      placeholder="Eg: The Brahma Stotra"
+                      formControlName="recommended_chalisa"
+                      type="text"
+                    />
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <span class="text-[#b59864]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 9l3 3-3 3"
+                        />
+                      </svg>
+                    </span>
+                    <strong>Energization Procedure :</strong>
+                    <input
+                      placeholder="Eg: Prana Pratistha Pooja with Brahma Beej Mantra"
+                      formControlName="energization_procedure"
+                      type="text"
+                    />
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section class="max-w-7xl my-5 border cms" formGroupName="block_3">
+            <h2
+              class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+            >
+              Product Specifications
+            </h2>
+            <!-- Grid -->
+            <div class="grid grid-cols-1 p-5 md:grid-cols-3 gap-6">
+              <!-- Benefits -->
+              <div
+                class="bg-green-900 text-white rounded-2xl p-6 flex flex-col items-center text-center"
+              >
+                <img
+                  src="benefits.jpg"
+                  alt="Benefits"
+                  class="w-24 h-24 rounded-full object-cover mb-4"
+                />
+                <h3 class="text-2xl font-semibold mb-2">Benefits</h3>
+                <textarea
+                  class="text-white"
+                  type="text"
+                  placeholder="Eg:Promotes growth, enhances intelligence, and fosters balance."
+                  formControlName="benefits"
+                ></textarea>
+              </div>
+
+              <!-- Quality and Size -->
+              <div
+                class="bg-white border rounded-2xl p-6 flex flex-col items-center text-center"
+              >
+                <img
+                  src="quality.jpg"
+                  alt="Quality"
+                  class="w-24 h-24 rounded-full object-cover mb-4"
+                />
+                <h3 class="text-2xl font-semibold mb-2">Quality and Size</h3>
+                <p class="text-base">
+                  Available in various sizes, each verified for authenticity.
+                </p>
+              </div>
+
+              <!-- Certification -->
+              <div
+                class="bg-green-900 text-white rounded-2xl p-6 flex flex-col items-center text-center"
+              >
+                <img
+                  src="certification.jpg"
+                  alt="Certification"
+                  class="w-24 h-24 rounded-full object-cover mb-4"
+                />
+                <h3 class="text-2xl font-semibold mb-2">Certification</h3>
+                <p class="text-base">
+                  Certified for authenticity and superior quality.
+                </p>
+              </div>
+
+              <!-- X-Ray -->
+              <div
+                class="bg-white border rounded-2xl p-6 flex flex-col items-center text-center"
+              >
+                <img
+                  src="xray.jpg"
+                  alt="X-Ray"
+                  class="w-24 h-24 rounded-full object-cover mb-4"
+                />
+                <h3 class="text-2xl font-semibold mb-2">X-Ray</h3>
+                <p class="text-base">
+                  Verified by X-ray with four compartments for quality.
+                </p>
+              </div>
+
+              <!-- Who should wear -->
+              <div
+                class="bg-green-900 text-white rounded-2xl p-6 flex flex-col items-center text-center"
+              >
+                <img
+                  src="who.jpg"
+                  alt="Who should wear"
+                  class="w-24 h-24 rounded-full object-cover mb-4"
+                />
+                <h3 class="text-2xl font-semibold mb-2">Who should wear</h3>
+                <textarea
+                  placeholder="Eg:Ideal for enhancing intellect, concentration, and clarity."
+                  formControlName="who_should_wear"
+                ></textarea>
+              </div>
+
+              <!-- Beej Mantra -->
+              <div
+                class="bg-white border rounded-2xl p-6 flex flex-col items-center text-center"
+              >
+                <img
+                  src="beej.jpg"
+                  alt="Beej Mantra"
+                  class="w-24 h-24 rounded-full object-cover mb-4"
+                />
+                <h3 class="text-2xl font-semibold mb-2">Beej Mantra</h3>
+                <p class="text-base">
+                  The Beej Mantra for the {{ formGroup.value.name }} Rudraksha
+                  is “{{ formGroup.value.details.block_2.beej_mantra }}.”
+                </p>
+              </div>
+            </div>
+          </section>
+          <section class="my-5 border cms" formGroupName="block_4">
+            <h2
+              class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+            >
+              Power & Significance
+            </h2>
+            <div
+              [style.background-image]="
+                'url(' + formGroup.value.details.block_4.bg_url + ')'
+              "
+              class="relative max-w-7xl p-5 flex flex-col md:flex-row md:space-x-12 items-center md:items-start bg-cover"
+            >
+              <span class="absolute left-2 top-2 bg-white z-40">
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="chooseFile('block_4_bg')"
+                >
+                </app-menu>
+              </span>
+              <!-- Left side: Image with annotations -->
+              <div class="md:w-1/2 flex justify-center mb-10 md:mb-0 relative">
+                <div class="h-64 rounded mt-4">
+                  <div
+                    class="w-full h-full rounded flex items-center justify-center relative"
+                  >
+                    <ng-container
+                      *ngIf="formGroup.value.details.block_4.image_url"
+                    >
+                      <div
+                        class="relative group h-60 rounded-md overflow-hidden bg-gray-100 mt-2"
+                      >
+                        <img
+                          class="rounded-md w-full bg-gray-200 object-contain h-60"
+                          [src]="formGroup.value.details.block_4.image_url"
+                          alt=" Media"
+                        />
+                        <button
+                          (click)="removeImage('block_4')"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="!formGroup.value.details.block_4.image_url"
+                    >
+                      <div
+                        class="flex flex-col items-center justify-center cursor-pointer"
+                        (click)="chooseFile('block_4')"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt=""
+                        />
+                        <div>Upload Media File Here</div>
+                        <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div class="w-full text-sm pt-1 text-center text-red-500">
+                    <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right side: Text content -->
+              <div class="md:w-1/2">
+                <h2
+                  class="text-3xl md:text-4xl font-extrabold mb-3 text-gray-800"
+                >
+                  <input
+                    class="text-white drop-shadow-2xl"
+                    type="text"
+                    placeholder="Eg: Faces of 4 Mukhi Rudraksha"
+                    formControlName="heading"
+                  />
+                </h2>
+                <div class="w-16 h-1 bg-[#b59864] rounded mb-6"></div>
+                <ckeditor
+                  [editor]="Editor"
+                  [config]="config"
+                  formControlName="description"
+                ></ckeditor>
+              </div>
+            </div>
+          </section>
+          <section class="max-w-7xl my-5 pb-5 border cms">
+            <h2
+              class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+            >
+              Rudraksha Relation
+            </h2>
+            <div class="p-5" formGroupName="block_5">
+              <textarea
+                placeholder="Eg: Astrological Harmony"
+                formControlName="title"
+              ></textarea>
+
+              <!-- Heading -->
+              <h2
+                class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6"
+              >
+                <textarea
+                  placeholder="Eg: Mukhi Rudraksha with Punarvasu Nakshatra and Mercury"
+                  formControlName="heading"
+                ></textarea>
+              </h2>
+
+              <!-- Main Image -->
+              <div class="flex justify-center mb-6">
+                <div class="h-60 border rounded mt-4">
+                  <div
+                    class="w-full h-full rounded flex items-center justify-center relative"
+                  >
+                    <ng-container
+                      *ngIf="formGroup.value.details.block_5.image_url"
+                    >
+                      <div
+                        class="relative group h-56 rounded-md overflow-hidden bg-gray-100 mt-2"
+                      >
+                        <img
+                          class="rounded-md w-full bg-gray-200 object-contain h-60"
+                          [src]="formGroup.value.details.block_5.image_url"
+                          alt=" Media"
+                        />
+                        <button
+                          (click)="removeImage('block_5')"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="!formGroup.value.details.block_5.image_url"
+                    >
+                      <div
+                        class="flex flex-col items-center justify-center cursor-pointer"
+                        (click)="chooseFile('block_5')"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt=""
+                        />
+                        <div>Upload Media File Here</div>
+                        <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div class="w-full text-sm pt-1 text-center text-red-500">
+                    <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <p class="my-5">
+                <ckeditor
+                  [editor]="Editor"
+                  [config]="config"
+                  formControlName="description"
+                ></ckeditor>
+              </p>
+            </div>
+            <!-- Two Column Grid -->
+            <div class="p-5 grid md:grid-cols-2 gap-10 items-start">
+              <!-- Ruling Deity -->
+              <div class="text-center md:text-left" formGroupName="block_6">
+                <h4 class="uppercase text-sm tracking-wider text-gray-500 mb-2">
+                  <input
+                    type="text"
+                    placeholder="Eg:Divine Ruler"
+                    formControlName="title"
+                  />
+                </h4>
+                <h3 class="text-2xl font-semibold text-gray-900 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Eg:Ruling Deity"
+                    formControlName="heading"
+                  />
+                </h3>
+                <p class="text-gray-700 mb-6">
+                  <ckeditor
+                    [editor]="Editor"
+                    [config]="config"
+                    formControlName="description"
+                  ></ckeditor>
+                </p>
+                <div class="h-60 border rounded mt-4">
+                  <div
+                    class="w-full h-full rounded flex items-center justify-center relative"
+                  >
+                    <ng-container
+                      *ngIf="formGroup.value.details.block_6.image_url"
+                    >
+                      <div
+                        class="relative group h-56 rounded-md overflow-hidden bg-gray-100 mt-2"
+                      >
+                        <img
+                          class="rounded-md w-full bg-gray-200 object-contain h-60"
+                          [src]="formGroup.value.details.block_6.image_url"
+                          alt=" Media"
+                        />
+                        <button
+                          (click)="removeImage('block_6')"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="!formGroup.value.details.block_6.image_url"
+                    >
+                      <div
+                        class="flex flex-col items-center justify-center cursor-pointer"
+                        (click)="chooseFile('block_6')"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt=""
+                        />
+                        <div>Upload Media File Here</div>
+                        <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div class="w-full text-sm pt-1 text-center text-red-500">
+                    <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sacred Connection -->
+              <div
+                formGroupName="block_7"
+                class="text-center md:text-left md:border-l md:pl-10 border-gray-300"
+              >
+                <h4 class="uppercase text-sm tracking-wider text-gray-500 mb-2">
+                  <input
+                    type="text"
+                    placeholder="Eg:  Brahma’s Divine Wisdom"
+                    formControlName="title"
+                  />
+                </h4>
+                <h3 class="text-2xl font-semibold text-gray-900 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Eg: Sacred Connection"
+                    formControlName="heading"
+                  />
+                </h3>
+                <p class="text-gray-700 mb-6">
+                  <ckeditor
+                    [editor]="Editor"
+                    [config]="config"
+                    formControlName="description"
+                  ></ckeditor>
+                </p>
+                <div class="h-60 border rounded mt-4">
+                  <div
+                    class="w-full h-full rounded flex items-center justify-center relative"
+                  >
+                    <ng-container
+                      *ngIf="formGroup.value.details.block_7.image_url"
+                    >
+                      <div
+                        class="relative group h-56 rounded-md overflow-hidden bg-gray-100 mt-2"
+                      >
+                        <img
+                          class="rounded-md w-full bg-gray-200 object-contain h-60"
+                          [src]="formGroup.value.details.block_7.image_url"
+                          alt=" Media"
+                        />
+                        <button
+                          (click)="removeImage('block_7')"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="!formGroup.value.details.block_7.image_url"
+                    >
+                      <div
+                        class="flex flex-col items-center justify-center cursor-pointer"
+                        (click)="chooseFile('block_7')"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt=""
+                        />
+                        <div>Upload Media File Here</div>
+                        <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div class="w-full text-sm pt-1 text-center text-red-500">
+                    <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="my-5 border cms" formGroupName="block_8">
+            <h2
+              class="text-md px-3 text-center py-2 font-normal text-gray-600 border-b pb-2"
+            >
+              Hanuman Chalisa
+            </h2>
+            <div
+              [style.background-image]="
+                'url(' + formGroup.value.details.block_8.bg_url + ')'
+              "
+              class="relative max-w-7xl p-5 flex flex-col md:flex-row md:space-x-12 items-center md:items-start"
+            >
+              <span class="absolute left-2 top-2 bg-white z-30">
+                <app-menu
+                  [modalItem]="true"
+                  (initModal)="chooseFile('block_8_bg')"
+                >
+                </app-menu>
+              </span>
+
+              <div class="p-5 text-center w-full">
+                <input
+                  class="text-white"
+                  placeholder="Eg: Title"
+                  formControlName="title"
+                  type="text"
+                />
+                <div class="h-60 rounded my-6">
+                  <div
+                    class="w-full h-full rounded flex items-center justify-center relative"
+                  >
+                    <ng-container
+                      *ngIf="formGroup.value.details.block_8.image_url"
+                    >
+                      <div
+                        class="relative group h-56 rounded-md overflow-hidden bg-gray-100 mt-2"
+                      >
+                        <img
+                          class="rounded-md w-full bg-gray-200 object-contain h-60"
+                          [src]="formGroup.value.details.block_8.image_url"
+                          alt=" Media"
+                        />
+                        <button
+                          (click)="removeImage('block_8')"
+                          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="!formGroup.value.details.block_8.image_url"
+                    >
+                      <div
+                        class="flex flex-col bg-white p-5 drop-shadow-2xl items-center justify-center cursor-pointer"
+                        (click)="chooseFile('block_8')"
+                      >
+                        <img
+                          src="assets/placeholder-image-outline.png"
+                          alt=""
+                        />
+                        <div>Upload Media File Here</div>
+                        <!-- <div class="text-center text-red-600 font-normal italic">
+                          Accepts the following image types: .png, .jpg.
+                        </div> -->
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div class="w-full text-sm pt-1 text-center text-red-500">
+                    <b>Note:</b> Upload files in .png, .jpg, .jpeg formats only.
+                  </div>
+                </div>
+                <div class="text-white">
+                  <ckeditor
+                    [editor]="Editor"
+                    [config]="config"
+                    formControlName="description"
+                  ></ckeditor>
+                </div>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+      </ng-container>
+    </div>
+  </form>
+</div>
+<div class="flex justify-end space-x-2 m-5">
+  <button (click)="location.back()" mat-stroked-button color="accent">
+    Back
+  </button>
+  <button
+    [disabled]="formGroup.disabled"
+    mat-stroked-button
+    color="primary"
+    (click)="onSubmit()"
+  >
+    {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+  </button>
+</div>

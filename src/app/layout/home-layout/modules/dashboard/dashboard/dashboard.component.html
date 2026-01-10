@@ -1,0 +1,94 @@
+<ng-container *ngIf="!isLoading">
+  <div class="p-6 bg-gray-100 space-y-6">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+      <button
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        + Add Product
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <a
+        class="bg-white p-5 rounded-2xl shadow"
+        [routerLink]="['/inventory/orders']"
+      >
+        <p class="text-sm text-gray-500">Total Orders</p>
+        <p class="text-2xl font-bold text-blue-600">
+          {{ product?.total_orders }}
+        </p>
+      </a>
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <p class="text-sm text-gray-500">Total Revenue</p>
+        <p class="text-2xl font-bold text-green-600">
+          {{ product?.total_revenue | currency : "INR" }}
+        </p>
+      </div>
+      <a class="bg-white p-5 rounded-2xl shadow" [routerLink]="['/customers']">
+        <p class="text-sm text-gray-500">Total Customers</p>
+        <p class="text-2xl font-bold text-indigo-600">
+          {{ product?.total_customers }}
+        </p>
+      </a>
+      <a
+        class="bg-white p-5 rounded-2xl shadow"
+        [routerLink]="['/inventory/products']"
+      >
+        <p class="text-sm text-gray-500">Total Products</p>
+        <p class="text-2xl font-bold text-purple-600">
+          {{ product?.total_products }}
+        </p>
+      </a>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl shadow">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Orders by Status</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        <a
+          *ngFor="let status of data?.status"
+          class="p-4 rounded-xl text-center"
+          [ngClass]="status?.order_status"
+          [routerLink]="'/inventory/orders/' + status?.order_status"
+        >
+          <p class="text-sm">
+            <span class="capitalize">{{ status?.order_status }}</span>
+          </p>
+          <p class="text-xl font-bold">{{ status?.count }}</p>
+        </a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <a
+        class="bg-white p-5 rounded-2xl shadow"
+        [routerLink]="['/inventory/products']"
+        [queryParams]="{ stock_status: 'low_stock' }"
+      >
+        <p class="text-sm text-gray-500">Low Stock Products</p>
+        <p class="text-2xl font-bold text-yellow-600">
+          {{ product?.low_stock }}
+        </p>
+      </a>
+      <a
+        class="bg-white p-5 rounded-2xl shadow"
+        [routerLink]="['/inventory/products']"
+        [queryParams]="{ stock_status: 'out_of_stock' }"
+      >
+        <p class="text-sm text-gray-500">Out of Stock</p>
+        <p class="text-2xl font-bold text-red-500">
+          {{ product?.out_of_stock }}
+        </p>
+      </a>
+      <a
+        class="bg-white p-5 rounded-2xl shadow"
+        [routerLink]="['/inventory/categories']"
+      >
+        <p class="text-sm text-gray-500">Total Categories</p>
+        <p class="text-2xl font-bold text-blue-500">
+          {{ product?.total_categories }}
+        </p>
+      </a>
+    </div>
+  </div>
+</ng-container>

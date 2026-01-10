@@ -1,0 +1,64 @@
+<div class="pagination-container">
+  <!-- Info Display -->
+  <div class="pagination-info" *ngIf="device.isDesktop()">
+    Showing {{ (pagination.page - 1) * pagination.limit + 1 }} -
+    {{
+      pagination.page === pagination.totalPages
+        ? pagination.totalDocs
+        : pagination.page * pagination.limit
+    }}
+    of <b>{{ pagination.totalDocs }}</b> records
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-controls" *ngIf="pagination.totalDocs > 10">
+    <button
+      mat-icon-button
+      matTooltip="First Page"
+      [disabled]="value === 1"
+      (click)="selectPage(1)"
+    >
+      <mat-icon>first_page</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      matTooltip="Previous Page"
+      [disabled]="value === 1"
+      (click)="selectPage(value - 1)"
+    >
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <!-- Only show page numbers on desktop -->
+    <ng-container *ngIf="device.isDesktop()">
+      <button
+        mat-mini-fab
+        *ngFor="let page of visiblePages"
+        [color]="value === page ? 'primary' : undefined"
+        [disabled]="value === page"
+        (click)="selectPage(page)"
+      >
+        {{ page }}
+      </button>
+    </ng-container>
+
+    <button
+      mat-icon-button
+      matTooltip="Next Page"
+      [disabled]="value === pagination.totalPages"
+      (click)="selectPage(value + 1)"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      matTooltip="Last Page"
+      [disabled]="value === pagination.totalPages"
+      (click)="selectPage(pagination.totalPages)"
+    >
+      <mat-icon>last_page</mat-icon>
+    </button>
+  </div>
+</div>

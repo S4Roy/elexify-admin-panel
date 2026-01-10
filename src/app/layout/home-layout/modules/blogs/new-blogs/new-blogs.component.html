@@ -1,0 +1,165 @@
+<div class="flex flex-col h-full overflow-y-auto">
+  <form class="" [formGroup]="formGroup">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <!-- Left: Title + Description (80%) -->
+      <div class="lg:col-span-4 space-y-3 bg-white shadow-sm">
+        <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+          Title and Description
+        </h2>
+
+        <div class="px-3 pb-3">
+          <!-- Title -->
+          <mat-form-field class="w-full">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title" placeholder="Type Here" />
+            <mat-error
+              *ngIf="!Global.isInputRuleValid(formGroup, 'title', 'required')"
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Description -->
+          <mat-form-field class="w-full">
+            <mat-label>Short Description</mat-label>
+            <textarea
+              matInput
+              formControlName="short_description"
+              placeholder="Type Here"
+              rows="3"
+            ></textarea>
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  formGroup,
+                  'short_description',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+          <!--Tags -->
+          <div class="mt-4">
+            <label>
+              Tags
+              <span
+                *ngIf="
+                  Global.isInputRuleAvailable(formGroup, 'tags', 'required')
+                "
+                class="text-red-500"
+                >*</span
+              >
+            </label>
+            <ng-select
+              placeholder="Select Tags"
+              [items]="tag_list"
+              formControlName="tags"
+              [addTag]="true"
+              [multiple]="true"
+              [class.is-invalid]="!Global.isInputValid(formGroup, 'tags')"
+            >
+              <ng-template ng-option-tmp let-item="item">
+                <div class="flex items-center">
+                  {{ item }}
+                </div>
+              </ng-template>
+            </ng-select>
+            <mat-error
+              *ngIf="!Global.isInputRuleValid(formGroup, 'tags', 'required')"
+              >This field is required</mat-error
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Feature Image (20%) -->
+      <div class="lg:col-span-1 space-y-3 bg-white shadow-sm">
+        <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+          Feature Image
+        </h2>
+        <div class="px-3 pb-3">
+          <div
+            *ngIf="!images?.value?.length"
+            class="border rounded-md h-56 relative flex items-center justify-center bg-gray-50"
+          >
+            <div class="text-center cursor-pointer" (click)="chooseFile()">
+              <img
+                src="assets/placeholder-image-outline.png"
+                alt="Upload"
+                class="mx-auto h-16"
+              />
+              <p class="mt-2 text-sm">Choose Image</p>
+            </div>
+          </div>
+
+          <ng-container *ngFor="let img of images?.value; let i = index">
+            <div
+              class="relative group h-56 rounded-md overflow-hidden bg-gray-100 mt-2"
+            >
+              <img
+                [src]="img?.url"
+                alt="Preview"
+                class="w-full h-full object-contain"
+              />
+              <button
+                (click)="removeImage(i)"
+                class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-3 shadow-sm my-4 pr-3">
+      <ckeditor
+        [editor]="Editor"
+        [config]="config"
+        formControlName="content"
+        (ready)="onEditorReady($event)"
+      ></ckeditor>
+    </div>
+    <!--Related Blogs -->
+    <div class="mt-4">
+      <label>
+        Related Blogs
+        <span
+          *ngIf="
+            Global.isInputRuleAvailable(formGroup, 'related_blogs', 'required')
+          "
+          class="text-red-500"
+          >*</span
+        >
+      </label>
+      <ng-select
+        placeholder="Select Blogs"
+        formControlName="related_blogs"
+        [multiple]="true"
+        matInput
+        (scrollToEnd)="loadMoreBlogs()"
+        (search)="blogSearchSubject.next($event)"
+        [class.is-invalid]="!Global.isInputValid(formGroup, 'related_blogs')"
+      >
+        <ng-option *ngFor="let blog of blog_list" [value]="blog?._id">
+          <div class="flex items-center">
+            {{ blog?.title }}
+          </div>
+        </ng-option>
+      </ng-select>
+      <mat-error
+        *ngIf="!Global.isInputRuleValid(formGroup, 'related_blogs', 'required')"
+        >This field is required</mat-error
+      >
+    </div>
+    <!-- Actions -->
+    <div class="flex justify-end space-x-2 m-5">
+      <button mat-stroked-button color="primary" (click)="onSubmit()">
+        Save Blog
+      </button>
+    </div>
+  </form>
+</div>

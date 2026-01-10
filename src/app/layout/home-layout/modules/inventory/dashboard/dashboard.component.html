@@ -1,0 +1,65 @@
+<div class="p-6 bg-gray-100 space-y-6">
+  <!-- Stats Section -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Inventory Stats -->
+    <a
+      class="bg-white p-5 rounded-2xl shadow"
+      [routerLink]="['/inventory/products']"
+    >
+      <p class="text-sm text-gray-500">Total Products</p>
+      <p class="text-2xl font-bold text-blue-600">
+        {{ product?.total_products || 0 }}
+      </p>
+    </a>
+
+    <a
+      class="bg-white p-5 rounded-2xl shadow"
+      [routerLink]="['/inventory/products']"
+      [queryParams]="{ stock_status: 'low_stock' }"
+    >
+      <p class="text-sm text-gray-500">Low Stock</p>
+      <p class="text-2xl font-bold text-yellow-500">
+        {{ product?.low_stock || 0 }}
+      </p>
+    </a>
+
+    <a
+      class="bg-white p-5 rounded-2xl shadow"
+      [routerLink]="['/inventory/products']"
+      [queryParams]="{ stock_status: 'out_of_stock' }"
+    >
+      <p class="text-sm text-gray-500">Out of Stock</p>
+      <p class="text-2xl font-bold text-red-500">
+        {{ product?.out_of_stock || 0 }}
+      </p>
+    </a>
+
+    <a
+      class="bg-white p-5 rounded-2xl shadow"
+      [routerLink]="['/inventory/categories']"
+    >
+      <p class="text-sm text-gray-500">Categories</p>
+      <p class="text-2xl font-bold text-green-500">
+        {{ product?.total_categories || 0 }}
+      </p>
+    </a>
+
+    <!-- Order Stats -->
+    <a class="bg-white p-5 rounded-2xl shadow" routerLink="/inventory/orders">
+      <p class="text-sm text-gray-500 uppercase">Total Orders</p>
+      <p class="text-2xl font-bold text-blue-600">{{ data?.total }}</p>
+    </a>
+
+    <a
+      *ngFor="let status of data?.status"
+      class="p-5 rounded-2xl shadow"
+      [ngClass]="status?.order_status"
+      [routerLink]="'/inventory/orders/' + status?.order_status"
+    >
+      <p class="text-sm">
+        <span class="uppercase">{{ status?.order_status }}</span>
+      </p>
+      <p class="text-2xl font-bold">{{ status?.count }}</p>
+    </a>
+  </div>
+</div>

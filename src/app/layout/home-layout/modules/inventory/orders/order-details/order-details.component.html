@@ -1,0 +1,166 @@
+<div class="p-6 bg-white shadow-xl rounded-2xl">
+  <!-- Header -->
+  <div class="flex justify-between items-center border-b pb-4 mb-4">
+    <div>
+      <h2 class="text-2xl font-bold">Order #{{ data?.id }}</h2>
+      <p class="text-sm text-gray-500">
+        Placed on {{ data?.created_at | date }}
+      </p>
+    </div>
+    <!-- <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+      >
+        Paid
+      </span> -->
+  </div>
+
+  <!-- Customer Info -->
+  <div class="mb-6 grid sm:grid-cols-3 gap-6">
+    <div>
+      <h3 class="text-lg font-semibold mb-1">Customer</h3>
+      <p class="text-gray-700">{{ data?.user?.name }}</p>
+      <p class="text-gray-500 text-sm">{{ data?.user?.email }}</p>
+      <p class="text-gray-500 text-sm">
+        <span class="block" *ngIf="data?.user?.mobile">
+          <span *ngIf="data?.user?.phone_code" class="mr-1">
+            +{{ data?.user?.phone_code }}
+          </span>
+          {{ data?.user?.mobile }}
+        </span>
+      </p>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold mb-1">Billing Address</h3>
+
+      <p class="text-gray-700" *ngIf="data?.billing_address">
+        {{ data?.billing_address?.address_line_1 }}<br />
+        {{ data?.billing_address?.city?.name }},
+        {{ data?.billing_address?.state?.name }},
+        {{ data?.billing_address?.postcode }},
+        {{ data?.billing_address?.country?.name }}
+        <span class="block" *ngIf="data?.billing_address?.phone">
+          <span *ngIf="data?.billing_address?.phone_code" class="mr-1">
+            +{{ data?.billing_address?.phone_code }}
+          </span>
+          {{ data?.billing_address?.phone }}
+        </span>
+      </p>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold mb-1">Shipping Address</h3>
+      <p class="text-gray-700" *ngIf="data?.shipping_address">
+        {{ data?.shipping_address?.address_line_1 }}<br />
+        {{ data?.shipping_address?.city?.name }},
+        {{ data?.shipping_address?.state?.name }},
+        {{ data?.shipping_address?.postcode }},
+        {{ data?.shipping_address?.country?.name }}
+        <span class="block" *ngIf="data?.shipping_address?.phone">
+          <span *ngIf="data?.shipping_address?.phone_code" class="mr-1">
+            +{{ data?.shipping_address?.phone_code }}
+          </span>
+          {{ data?.shipping_address?.phone }}
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm text-left">
+      <thead>
+        <tr class="bg-gray-50">
+          <th class="px-4 py-2 font-medium text-gray-500">Product</th>
+          <th class="px-4 py-2 font-medium text-gray-500">Qty</th>
+          <th class="px-4 py-2 font-medium text-gray-500">Price</th>
+          <th class="px-4 py-2 font-medium text-gray-500 text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Example Row -->
+        <tr class="border-b" *ngFor="let item of data?.order_items">
+          <td class="px-4 py-3">
+            <div class="flex items-center space-x-4">
+              <img
+                *ngIf="item?.images[0]?.url"
+                [src]="item?.images[0]?.url"
+                alt="Product"
+                class="w-10 h-10 rounded"
+              />
+              <div>
+                <p class="font-medium text-gray-800">
+                  {{ item?.display_name }}
+                </p>
+                <p class="text-xs text-gray-500">SKU: {{ item?.sku }}</p>
+                <div class="customization" *ngIf="item?.customization">
+                  <ng-container
+                    *ngFor="let custom of item?.customization?.mukhi_items"
+                  >
+                    <p class="text-xs text-gray-500">
+                      {{ custom?.mukhi }} ({{ custom?.bead_size | titlecase }})
+                      - {{ custom?.quantity }}
+                    </p>
+                  </ng-container>
+                  <ng-container
+                    *ngIf="item?.customization?.design_variation?.name"
+                  >
+                    <p class="text-xs text-gray-500">
+                      <b>Design</b>
+                      - {{ item?.customization?.design_variation?.name }}
+                    </p>
+                  </ng-container>
+                  <ng-container
+                    *ngIf="item?.customization?.combination_type?.name"
+                  >
+                    <p class="text-xs text-gray-500">
+                      <b>Combination Type</b>
+                      - {{ item?.customization?.combination_type?.name }}
+                    </p>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">{{ item?.quantity }}</td>
+          <td class="px-4 py-3">
+            {{ item?.unit_price | currency : item?.currency ?? "INR" }}
+          </td>
+          <td class="px-4 py-3 text-right">
+            {{ item?.total_price | currency : item?.currency ?? "INR" }}
+          </td>
+        </tr>
+
+        <!-- More rows... -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Summary -->
+  <div class="mt-6 flex justify-end">
+    <div class="w-full sm:w-1/2 lg:w-1/3 space-y-2 text-sm">
+      <div class="flex justify-between">
+        <span class="text-gray-600">Subtotal</span>
+        <span class="text-gray-800 font-medium">{{
+          data?.total_amount | currency : data?.currency ?? "INR"
+        }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Shipping</span>
+        <span class="text-gray-800 font-medium">
+          {{ data?.shipping | currency : data?.currency ?? "INR" }}</span
+        >
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Discount</span>
+        <span class="text-gray-800 font-medium">{{
+          data?.discount | currency : data?.currency ?? "INR"
+        }}</span>
+      </div>
+      <div class="border-t pt-2 flex justify-between font-bold text-lg">
+        <span>Total</span>
+        <span>{{
+          data?.grand_total | currency : data?.currency ?? "INR"
+        }}</span>
+      </div>
+    </div>
+  </div>
+</div>

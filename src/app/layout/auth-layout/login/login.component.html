@@ -1,0 +1,143 @@
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+    <img class="mx-auto h-16 w-auto" src="assets/logo.png" alt="Logo" />
+    <h2
+      class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900"
+    >
+      Sign in to your account
+    </h2>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+    <form class="space-y-1" [formGroup]="loginForm">
+      <mat-form-field>
+        <mat-label
+          >Email
+          <span
+            class="text-red-600"
+            *ngIf="Global.isInputRuleAvailable(loginForm, 'email', 'required')"
+            >*</span
+          ></mat-label
+        >
+        <input
+          formControlName="email"
+          matInput
+          [readonly]="otpSend"
+          [class.is-invalid]="!Global.isInputValid(loginForm, 'email')"
+          placeholder="Type Here"
+        />
+
+        <mat-error
+          *ngIf="!Global.isInputRuleValid(loginForm, 'email', 'required')"
+        >
+          This field is required
+        </mat-error>
+      </mat-form-field>
+
+      <div *ngIf="!otpSend">
+        <mat-form-field>
+          <mat-label
+            >Password
+            <span
+              class="text-red-600"
+              *ngIf="
+                Global.isInputRuleAvailable(loginForm, 'password', 'required')
+              "
+              >*</span
+            ></mat-label
+          >
+          <input
+            [type]="visibiltyToogle[1] ? 'text' : 'password'"
+            formControlName="password"
+            matInput
+            [class.is-invalid]="!Global.isInputValid(loginForm, 'password')"
+            placeholder="Type Here"
+          />
+          <mat-icon
+            (click)="visibiltyToogle[1] = !visibiltyToogle[1]"
+            matSuffix
+            >{{
+              !visibiltyToogle[1] ? "visibility_off" : "visibility"
+            }}</mat-icon
+          >
+          <mat-error
+            *ngIf="!Global.isInputRuleValid(loginForm, 'password', 'required')"
+          >
+            This field is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="otpSend">
+        <label for="email" class="block text-sm/6 font-medium text-gray-900"
+          >Verification Code
+          <span
+            class="text-red-600"
+            *ngIf="
+              Global.isInputRuleAvailable(
+                loginForm,
+                'verification_code',
+                'required'
+              )
+            "
+            >*</span
+          ></label
+        >
+        <div class="mt-2">
+          <mat-form-field>
+            <input
+              formControlName="verification_code"
+              matInput
+              [class.is-invalid]="
+                !Global.isInputValid(loginForm, 'verification_code')
+              "
+              placeholder="Type Here"
+            />
+
+            <mat-error
+              *ngIf="
+                !Global.isInputRuleValid(
+                  loginForm,
+                  'verification_code',
+                  'required'
+                )
+              "
+            >
+              This field is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- <div class="flex items-center justify-between"> -->
+      <div class="text-sm text-right" style="margin-bottom: 10px">
+        <a routerLink="/auth/forgot-password" class="text-primary"
+          >Forgot password?</a
+        >
+      </div>
+      <div *ngIf="!otpSend">
+        <button
+          (click)="submitLogin()"
+          [disabled]="loginForm.disabled"
+          class="btn-primary"
+        >
+          {{ loginForm.disabled ? "Please wait..." : "Sign In" }}
+        </button>
+      </div>
+      <div *ngIf="otpSend">
+        <button
+          (click)="submitLogin()"
+          [disabled]="loginForm.disabled"
+          class="btn-primary"
+        >
+          {{ loginForm.disabled ? "Please wait..." : "Sign In" }}
+        </button>
+      </div>
+    </form>
+
+    <!-- <p class="mt-10 text-center text-sm/6 text-gray-500">
+        Not a member?
+        <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Signup</a>
+      </p> -->
+  </div>
+</div>

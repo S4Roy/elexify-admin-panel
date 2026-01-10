@@ -1,0 +1,12 @@
+.customCheckBox.mat-mdc-checkbox-checked{
+    .mdc-checkbox__background{
+      border-color:#042547 !important;
+      background-color: #042547 !important;
+    }
+}
+.show-hide{
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  cursor: pointer;
+}
