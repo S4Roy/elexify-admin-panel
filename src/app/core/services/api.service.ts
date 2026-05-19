@@ -117,7 +117,7 @@ export class ApiService {
 
   specificationList(params: any) {
     return this.httpService.get(
-      `admin/master/specification/list?${params.toString()}`
+      `admin/master/specification/list?${params.toString()}`,
     );
   }
   submitSpecification(payload: any) {
@@ -130,7 +130,7 @@ export class ApiService {
   deleteSpecification(payload: any) {
     return this.httpService.delete(
       `admin/master/specification/delete`,
-      payload
+      payload,
     );
   }
   updateSpecSortOrder(payload: any) {
@@ -164,5 +164,19 @@ export class ApiService {
   }
   updateCityStatus(payload: any) {
     return this.httpService.put(`admin/city/edit`, payload);
+  }
+  getCountries() {
+    return this.httpService.get(`site/common/countries`);
+  }
+
+  addCustomer(payload: any) {
+    return this.httpService.post(`admin/customer/add`, payload);
+  }
+
+  editCustomer(payload: any) {
+    return this.httpService.put(`admin/customer/edit`, payload);
+  }
+  updateCustomerStatus(payload: any) {
+    return this.httpService.patch(`admin/customer/change-status`, payload);
   }
 }

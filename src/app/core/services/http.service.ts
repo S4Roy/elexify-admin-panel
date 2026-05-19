@@ -18,6 +18,9 @@ export class HttpService {
   put(uri: string, payload: any) {
     return this.http.put<any>(`${this.BASE_URL}${uri}`, payload);
   }
+  patch(uri: string, payload: any) {
+    return this.http.patch<any>(`${this.BASE_URL}${uri}`, payload);
+  }
   postFormData(uri: string, payload: any) {
     let formData: FormData = new FormData();
     for (let key in payload) {
@@ -59,7 +62,7 @@ export class HttpService {
           const pagingData = paginationInfo ? JSON.parse(paginationInfo) : null;
           const data = response.body;
           return { pagingData, data };
-        })
+        }),
       );
   }
   postList(uri: string, payload: any): Observable<any> {
@@ -76,7 +79,7 @@ export class HttpService {
         const pagingData = paginationInfo ? JSON.parse(paginationInfo) : null;
         const data = response.body;
         return { pagingData, data };
-      })
+      }),
     );
   }
   downloadFile(uri: string) {

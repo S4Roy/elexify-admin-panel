@@ -11,9 +11,20 @@ import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
 import { MenuComponent } from '../../includes/menu/menu.component';
 import PaginationOptions from 'app/core/models/PaginationOptions';
+import { NewCustomerComponent } from './new-customer/new-customer.component';
+import { MatIconModule } from '@angular/material/icon';
+import { DialogService } from 'app/core/services/dialog.service';
+import { ConfirmDialogData } from '../../includes/confirm-dialog/confirm-dialog.component';
 @Component({
   selector: 'app-customers',
-  imports: [MenuComponent, NgFor, NgIf, PaginationComponent, DatePipe],
+  imports: [
+    MenuComponent,
+    NgFor,
+    NgIf,
+    PaginationComponent,
+    DatePipe,
+    MatIconModule,
+  ],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.scss',
 })
@@ -31,7 +42,8 @@ export class CustomersComponent {
     private route: ActivatedRoute,
     private toastr: ToastrService,
     private router: Router,
-    private helperService: HelpersService
+    private helperService: HelpersService,
+    private dialogService: DialogService,
   ) {
     this.paginationOption = Global.resetPaginationOptions();
     this.filterOption = Global.resetTableFilterOptions();
@@ -66,7 +78,19 @@ export class CustomersComponent {
     if (this.sortKey !== field) return 'sort-icon';
     return this.sortDirection === 'asc' ? 'sort-icon-up' : 'sort-icon-down';
   }
-  addItem(data: any = null) {}
+  addItem(data: any = null) {
+    this.dialog
+      .open(NewCustomerComponent, {
+        data: data,
+        disableClose: true,
+      })
+      .afterClosed()
+      .subscribe((res: any) => {
+        if (res) {
+          this.fetchCutomerList();
+        }
+      });
+  }
   fetchCutomerList() {
     let params = new URLSearchParams({
       sort_by: this.sortKey,
@@ -111,5 +135,42 @@ export class CustomersComponent {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+  updateStatus(item: any) {
+    const currentStatus = item?.status;
+    if (!item?._id || !currentStatus) {
+      this.toastr.error('Invalid Customer data');
+      return;
+    }
+
+    // Toggle status
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+    const dialogData: ConfirmDialogData = {
+      title: 'Are you sure?',
+      message: `Do you want to ${
+        newStatus === 'active' ? 'activate' : 'deactivate'
+      } the Customer ${item?.name ?? ''}?`,
+      cancelText: 'Cancel',
+      saveText: 'Confirm',
+    };
+
+    this.dialogService.confirmDialog(dialogData).subscribe((result: any) => {
+      if (result?.confirm) {
+        this.apiService
+          .updateCustomerStatus({ _id: item._id, status: newStatus })
+          .subscribe({
+            next: (res: any) => {
+              this.toastr.success(
+                `Customer ${
+                  newStatus === 'active' ? 'activated' : 'deactivated'
+                } successfully`,
+              );
+              this.fetchCutomerList();
+            },
+            error: (err: any) => {},
+          });
+      }
+    });
   }
 }

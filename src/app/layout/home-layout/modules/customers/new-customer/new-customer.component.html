@@ -1,0 +1,107 @@
+<div class="fixed inset-0 overflow-hidden">
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+            <div class="pointer-events-auto relative w-screen max-w-md">
+                <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+                    <h2 class="header" id="slide-over-title">
+                        {{ data ? "Update" : "New" }} Customer
+                        <button color="warn" mat-dialog-close mat-icon-button>
+                            <mat-icon class="text-red-700">close</mat-icon>
+                        </button>
+                    </h2>
+
+                    <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+                        <form class="space-y-4" [formGroup]="formGroup">
+
+                            <!-- Name -->
+                            <mat-form-field class="w-full">
+                                <mat-label>
+                                    Name
+                                    <span class="text-red-500"
+                                        *ngIf="Global.isInputRuleAvailable(formGroup, 'name', 'required')">*</span>
+                                </mat-label>
+                                <input formControlName="name" matInput
+                                    [class.is-invalid]="!Global.isInputValid(formGroup, 'name')"
+                                    placeholder="Enter customer name" />
+                                <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'name', 'required')">
+                                    Name is required
+                                </mat-error>
+                            </mat-form-field>
+
+                            <!-- Email -->
+                            <mat-form-field class="w-full">
+                                <mat-label>Email</mat-label>
+                                <input formControlName="email" matInput type="email"
+                                    [class.is-invalid]="!Global.isInputValid(formGroup, 'email')"
+                                    placeholder="Enter email address" />
+                                <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'email', 'email')">
+                                    Enter a valid email address
+                                </mat-error>
+                            </mat-form-field>
+
+                            <!-- Phone Code + Mobile -->
+                            <div class="flex gap-3">
+                                <mat-form-field class="w-28 flex-shrink-0">
+                                    <mat-label>Code</mat-label>
+                                    <mat-select formControlName="phone_code">
+                                        <mat-option *ngFor="let c of countries" [value]="c.phone_code">
+                                            +{{ c.phone_code }} {{ c.iso2?.toUpperCase() }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <mat-form-field class="flex-1">
+                                    <mat-label>Mobile Number</mat-label>
+                                    <input formControlName="mobile" matInput type="tel"
+                                        [class.is-invalid]="!Global.isInputValid(formGroup, 'mobile')"
+                                        placeholder="98XXXXXXXX" />
+                                    <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'mobile', 'pattern')">
+                                        Enter a valid mobile number
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+
+                            <!-- Password (optional on edit) -->
+                            <mat-form-field class="w-full">
+                                <mat-label>
+                                    Password
+                                    <span class="text-gray-400 text-xs ml-1" *ngIf="data">(leave blank to keep
+                                        current)</span>
+                                </mat-label>
+                                <input formControlName="password" matInput type="password"
+                                    [class.is-invalid]="!Global.isInputValid(formGroup, 'password')"
+                                    placeholder="••••••••" />
+                                <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'password', 'minlength')">
+                                    Password must be at least 6 characters
+                                </mat-error>
+                            </mat-form-field>
+
+                            <!-- Status -->
+                            <mat-form-field class="w-full">
+                                <mat-label>
+                                    Status
+                                    <span class="text-red-500"
+                                        *ngIf="Global.isInputRuleAvailable(formGroup, 'status', 'required')">*</span>
+                                </mat-label>
+                                <mat-select formControlName="status">
+                                    <mat-option value="active">Active</mat-option>
+                                    <mat-option value="inactive">Inactive</mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'status', 'required')">
+                                    Status is required
+                                </mat-error>
+                            </mat-form-field>
+
+                        </form>
+                    </div>
+
+                    <div class="p-1">
+                        <button (click)="onSubmit()" [disabled]="formGroup.disabled" class="btn-primary">
+                            {{ formGroup.disabled ? "Please wait..." : "Save & Continue" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

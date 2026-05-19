@@ -1,7 +1,11 @@
+<div class="action-btns">
+  <button (click)="addItem()" *ngIf="permissions.includes('add')" matTooltip="Add New Brand" class="btn-add">
+    <mat-icon class="text-xs">add</mat-icon>
+    Add New
+  </button>
+</div>
 <div class="table-wrapper">
-  <table
-    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
-  >
+  <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
       <tr class="sticky">
         <th scope="col" (click)="sort('name')" class="sortable">
@@ -13,11 +17,7 @@
         <th scope="col" (click)="sort('mobile')" class="sortable">
           Mobile <span [class]="getSortIcon('mobile')"></span>
         </th>
-        <th
-          scope="col"
-          (click)="sort('created_at')"
-          class="sortable text-center"
-        >
+        <th scope="col" (click)="sort('created_at')" class="sortable text-center">
           Date of Registered
           <span [class]="getSortIcon('created_at')"></span>
         </th>
@@ -41,18 +41,14 @@
           <td class="text-center">
             {{ item?.created_at | date }}
           </td>
-          <td class="text-center">
+          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
             <span [class]="item?.status">
               {{ item?.status }}
             </span>
           </td>
           <td class="text-center">
-            <app-menu
-              [modalItem]="permissions.includes('edidt') ? item : null"
-              (initModal)="addItem($event)"
-              (deleteItem)="deleteItem($event)"
-              [delete]="permissions.includes('deledte') ? item : null"
-            ></app-menu>
+            <app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('deledte') ? item : null"></app-menu>
           </td>
         </tr>
       </ng-container>
@@ -66,8 +62,5 @@
 </div>
 
 <ng-container>
-  <pagination
-    [pagination]="paginationOption"
-    (pageChange)="onPageChange($event)"
-  ></pagination>
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
 </ng-container>
