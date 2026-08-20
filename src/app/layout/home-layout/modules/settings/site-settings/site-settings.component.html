@@ -1,59 +1,97 @@
 <form [formGroup]="settingsForm">
-  <div class="card-body">
-    <div class="grid md:grid-cols-2 gap-2" formArrayName="settings">
+  <div class="space-y-5" formArrayName="settings">
+    <div
+      *ngFor="let section of sections; trackBy: trackSection"
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
       <div
-        *ngFor="
-          let item of Global.getFormGroupArray(settingsForm, 'settings');
-          let i = index
-        "
-        [formGroupName]="i"
+        class="flex items-center gap-2 mb-4 pb-3"
+        style="border-bottom: 1px solid var(--border-color)"
       >
-        <mat-form-field class="baseweb-mat-emphasized-affix">
-          <mat-label>
-            {{ item.get("label")?.value }}
-          </mat-label>
+        <mat-icon
+          class="!text-[20px] !w-5 !h-5"
+          style="color: var(--text-secondary)"
+          >{{ section.icon }}</mat-icon
+        >
+        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+          {{ section.label }}
+        </h2>
+      </div>
 
-          <ng-container *ngIf="item.get('type')?.value === 'consultation_fee'">
-            <mat-icon>currency_rupee</mat-icon>
-            <input
-              matInput
-              amountNumber
-              formControlName="value"
-              [class.is-invalid]="
-                !['VALID', 'DISABLED'].includes(item.get('value')!.status) &&
-                (item.get('value')!.dirty || item.get('value')!.touched)
-              "
-            />
-          </ng-container>
-          <ng-container *ngIf="item.get('type')?.value != 'consultation_fee'">
-            <input
-              matInput
-              formControlName="value"
-              [class.is-invalid]="
-                !['VALID', 'DISABLED'].includes(item.get('value')!.status) &&
-                (item.get('value')!.dirty || item.get('value')!.touched)
-              "
-            />
-          </ng-container>
-
-          <button
-            matSuffix
-            [disabled]="!item.valid"
-            (click)="submitSiteSettings($event, item.get('slug')?.value)"
-            mat-mini-fab
-            color="primary"
-            [attr.aria-label]="
-              'Save ' + (item.get('label')?.value || 'setting')
-            "
+      <div class="grid md:grid-cols-2 gap-x-4 gap-y-1">
+        <div
+          *ngFor="let entry of section.items; trackBy: trackEntry"
+          [formGroupName]="entry.index"
+        >
+          <mat-form-field
+            *ngIf="entry.control as item"
+            class="baseweb-mat-emphasized-affix w-full"
           >
-            <mat-icon *ngIf="settingsForm.disable">save</mat-icon>
-            <mat-progress-spinner
-              *ngIf="!settingsForm.disable"
-              diameter="20"
-              mode="indeterminate"
-            ></mat-progress-spinner>
-          </button>
-        </mat-form-field>
+            <mat-label>
+              {{ item.get("label")?.value
+              }}<span
+                *ngIf="isOptionalSetting(item.get('slug')?.value)"
+                style="color: var(--text-secondary)"
+                class="font-normal"
+              >
+                (optional)</span
+              >
+            </mat-label>
+
+            <ng-container *ngIf="isMediaSetting(item.get('slug')?.value)">
+              <!-- Value still lives in the same `value` control (a CDN URL) —
+                   read-only here since it's set via the picker, not typed. -->
+              <input
+                matInput
+                formControlName="value"
+                readonly
+                placeholder="No file selected"
+                [class.is-invalid]="
+                  !['VALID', 'DISABLED'].includes(item.get('value')!.status) &&
+                  (item.get('value')!.dirty || item.get('value')!.touched)
+                "
+              />
+              <button
+                matSuffix
+                type="button"
+                mat-icon-button
+                (click)="chooseFile(item)"
+                aria-label="Choose file"
+              >
+                <mat-icon>upload</mat-icon>
+              </button>
+            </ng-container>
+            <ng-container *ngIf="!isMediaSetting(item.get('slug')?.value)">
+              <input
+                matInput
+                formControlName="value"
+                [class.is-invalid]="
+                  !['VALID', 'DISABLED'].includes(item.get('value')!.status) &&
+                  (item.get('value')!.dirty || item.get('value')!.touched)
+                "
+              />
+            </ng-container>
+
+            <button
+              matSuffix
+              [disabled]="!item.valid"
+              (click)="submitSiteSettings($event, item.get('slug')?.value)"
+              mat-icon-button
+              color="primary"
+              [attr.aria-label]="
+                'Save ' + (item.get('label')?.value || 'setting')
+              "
+            >
+              <mat-icon *ngIf="!settingsForm.disabled">save</mat-icon>
+              <mat-progress-spinner
+                *ngIf="settingsForm.disabled"
+                diameter="20"
+                mode="indeterminate"
+              ></mat-progress-spinner>
+            </button>
+          </mat-form-field>
+        </div>
       </div>
     </div>
   </div>

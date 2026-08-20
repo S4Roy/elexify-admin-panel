@@ -11,6 +11,7 @@ import {
 import { provideToastr } from 'ngx-toastr';
 import { httpInterceptor } from './core/services/http.interceptor';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { provideHighcharts } from 'highcharts-angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,5 +28,12 @@ export const appConfig: ApplicationConfig = {
     provideNativeDateAdapter(),
     { provide: MAT_DATE_LOCALE, useValue: 'en-IN' },
     NgxSpinnerModule,
+    // Map module included app-wide (not just on the dashboard route) since
+    // provideHighcharts() is only usable at the root — it's the one page
+    // that needs it, but the module itself is small and lazy-loaded here
+    // via dynamic import, so there's no real cost to the rest of the app.
+    provideHighcharts({
+      modules: () => [import('highcharts/esm/modules/map')],
+    }),
   ],
 };

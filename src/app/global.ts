@@ -434,3 +434,60 @@ export function YEARS() {
 export function getFileExtension(filePath: string) {
   return filePath.split('.').pop();
 }
+
+// Order status is shipping-partner-driven (order_status on Order, not a
+// fixed admin-defined list) with no single enforced enum — real values seen
+// in this DB include hyphenated multi-word ones like "out-for-delivery" /
+// "pickup-exception" / "return-in-transit". A hardcoded status->color map
+// silently falls back to "no color" for anything it doesn't enumerate. This
+// covers the known statuses with a sensible semantic color and hashes
+// anything unrecognized to a stable color from a fixed palette, so it's
+// never unstyled.
+const SEMANTIC_STATUS_COLORS: Record<string, string> = {
+  pending: '#f59e0b',
+  processing: '#0ea5e9',
+  confirmed: '#0ea5e9',
+  packed: '#6366f1',
+  'picked-up': '#6366f1',
+  'out-for-pickup': '#6366f1',
+  'pickup-exception': '#f97316',
+  shipped: '#8b5cf6',
+  intransit: '#8b5cf6',
+  'in-transit': '#8b5cf6',
+  'reached-at-destin': '#8b5cf6',
+  'out-for-delivery': '#a855f7',
+  delivered: '#22c55e',
+  'rto-delivered': '#22c55e',
+  cancelled: '#ef4444',
+  canceled: '#ef4444',
+  failed: '#ef4444',
+  undelivered: '#ef4444',
+  'return-initiated': '#f97316',
+  'return-in-transit': '#f97316',
+  'order-returned': '#f97316',
+  returned: '#f97316',
+};
+const STATUS_HASH_PALETTE = [
+  '#2563eb',
+  '#10b981',
+  '#f59e0b',
+  '#6366f1',
+  '#ef4444',
+  '#0ea5e9',
+  '#a855f7',
+  '#f97316',
+  '#14b8a6',
+  '#84cc16',
+];
+
+export function statusColor(status: string | undefined | null): string {
+  const key = (status || '').trim().toLowerCase();
+  if (SEMANTIC_STATUS_COLORS[key]) return SEMANTIC_STATUS_COLORS[key];
+
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i);
+    hash |= 0;
+  }
+  return STATUS_HASH_PALETTE[Math.abs(hash) % STATUS_HASH_PALETTE.length];
+}

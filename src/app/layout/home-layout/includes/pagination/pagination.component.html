@@ -1,6 +1,8 @@
 <div class="pagination-container">
-  <!-- Info Display -->
-  <div class="pagination-info" *ngIf="device.isDesktop(); else pageOfTotal">
+  <!-- Info Display — desktop only. On mobile the "Page X of Y" text was
+       redundant with the prev/next controls right below it and just ate
+       vertical space, so it's dropped rather than shown. -->
+  <div class="pagination-info" *ngIf="device.isDesktop()">
     Showing
     <b>{{ (pagination.page - 1) * pagination.limit + 1 }}</b>
     –
@@ -11,11 +13,6 @@
     }}</b>
     of <b>{{ pagination.totalDocs }}</b> records
   </div>
-  <ng-template #pageOfTotal>
-    <div class="pagination-info" *ngIf="pagination.totalDocs > 10">
-      Page <b>{{ value }}</b> of <b>{{ pagination.totalPages }}</b>
-    </div>
-  </ng-template>
 
   <!-- Pagination Controls -->
   <div class="pagination-controls" *ngIf="pagination.totalDocs > 10">

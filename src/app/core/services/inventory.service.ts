@@ -162,6 +162,26 @@ export class InventoryService {
       `admin/inventory/product/stats?${params.toString()}`
     );
   }
+  orderTrend(params: any) {
+    return this.httpService.get(
+      `admin/inventory/order/trend?${params.toString()}`
+    );
+  }
+  orderPerformance(params: any) {
+    return this.httpService.get(
+      `admin/inventory/order/performance?${params.toString()}`
+    );
+  }
+  orderLeaderboard(params: any) {
+    return this.httpService.get(
+      `admin/inventory/order/leaderboard?${params.toString()}`
+    );
+  }
+  orderGeoStats(params: any) {
+    return this.httpService.get(
+      `admin/inventory/order/geo-stats?${params.toString()}`
+    );
+  }
 
   tagList(params: any) {
     return this.httpService.get(

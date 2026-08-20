@@ -1,65 +1,139 @@
-<div class="p-6 bg-gray-100 space-y-6">
-  <!-- Stats Section -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Inventory Stats -->
-    <a
-      class="bg-white p-5 rounded-2xl shadow"
-      [routerLink]="['/inventory/products']"
-    >
-      <p class="text-sm text-gray-500">Total Products</p>
-      <p class="text-2xl font-bold text-blue-600">
-        {{ product?.total_products || 0 }}
-      </p>
+<div class="space-y-5 p-6">
+  <h1 class="text-2xl font-bold" style="color: var(--text-primary)">
+    Inventory Dashboard
+  </h1>
+
+  <!-- KPI cards -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <a class="kpi-card" [routerLink]="['/inventory/products']">
+      <div class="kpi-icon bg-blue-50 text-blue-600">
+        <mat-icon>inventory_2</mat-icon>
+      </div>
+      <div>
+        <p class="kpi-label">Total Products</p>
+        <p class="kpi-value text-blue-600">{{ product?.total_products || 0 }}</p>
+      </div>
     </a>
 
     <a
-      class="bg-white p-5 rounded-2xl shadow"
+      class="kpi-card"
       [routerLink]="['/inventory/products']"
       [queryParams]="{ stock_status: 'low_stock' }"
     >
-      <p class="text-sm text-gray-500">Low Stock</p>
-      <p class="text-2xl font-bold text-yellow-500">
-        {{ product?.low_stock || 0 }}
-      </p>
+      <div class="kpi-icon bg-yellow-50 text-yellow-600">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div>
+        <p class="kpi-label">Low Stock</p>
+        <p class="kpi-value text-yellow-600">{{ product?.low_stock || 0 }}</p>
+      </div>
     </a>
 
     <a
-      class="bg-white p-5 rounded-2xl shadow"
+      class="kpi-card"
       [routerLink]="['/inventory/products']"
       [queryParams]="{ stock_status: 'out_of_stock' }"
     >
-      <p class="text-sm text-gray-500">Out of Stock</p>
-      <p class="text-2xl font-bold text-red-500">
-        {{ product?.out_of_stock || 0 }}
-      </p>
+      <div class="kpi-icon bg-red-50 text-red-500">
+        <mat-icon>block</mat-icon>
+      </div>
+      <div>
+        <p class="kpi-label">Out of Stock</p>
+        <p class="kpi-value text-red-500">{{ product?.out_of_stock || 0 }}</p>
+      </div>
     </a>
 
-    <a
-      class="bg-white p-5 rounded-2xl shadow"
-      [routerLink]="['/inventory/categories']"
-    >
-      <p class="text-sm text-gray-500">Categories</p>
-      <p class="text-2xl font-bold text-green-500">
-        {{ product?.total_categories || 0 }}
-      </p>
+    <a class="kpi-card" [routerLink]="['/inventory/categories']">
+      <div class="kpi-icon bg-green-50 text-green-600">
+        <mat-icon>category</mat-icon>
+      </div>
+      <div>
+        <p class="kpi-label">Categories</p>
+        <p class="kpi-value text-green-600">
+          {{ product?.total_categories || 0 }}
+        </p>
+      </div>
     </a>
+  </div>
 
-    <!-- Order Stats -->
-    <a class="bg-white p-5 rounded-2xl shadow" routerLink="/inventory/orders">
-      <p class="text-sm text-gray-500 uppercase">Total Orders</p>
-      <p class="text-2xl font-bold text-blue-600">{{ data?.total }}</p>
-    </a>
+  <!-- At-a-glance charts -->
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 items-start">
+    <div class="chart-card">
+      <h2 class="chart-title mb-2">Stock Health</h2>
+      <highcharts-chart
+        *ngIf="stockChartOptions.series?.length"
+        [options]="stockChartOptions"
+        style="display: block; width: 100%; height: 220px"
+      ></highcharts-chart>
+      <ul class="mt-1 space-y-0.5">
+        <li *ngFor="let row of stockBreakdown">
+          <div class="status-row">
+            <span class="status-dot" [style.background-color]="row.color"></span>
+            <span style="color: var(--text-secondary)">{{ row.label }}</span>
+            <span class="ml-auto font-semibold" style="color: var(--text-primary)">{{
+              row.count
+            }}</span>
+          </div>
+        </li>
+      </ul>
+    </div>
 
-    <a
-      *ngFor="let status of data?.status"
-      class="p-5 rounded-2xl shadow"
-      [ngClass]="status?.order_status"
-      [routerLink]="'/inventory/orders/' + status?.order_status"
-    >
-      <p class="text-sm">
-        <span class="uppercase">{{ status?.order_status }}</span>
+    <div class="chart-card">
+      <h2 class="chart-title mb-2">Simple vs Variable</h2>
+      <highcharts-chart
+        *ngIf="productTypeChartOptions.series?.length"
+        [options]="productTypeChartOptions"
+        style="display: block; width: 100%; height: 220px"
+      ></highcharts-chart>
+      <ul class="mt-1 space-y-0.5">
+        <li *ngFor="let row of productTypeBreakdown">
+          <div class="status-row">
+            <span class="status-dot" [style.background-color]="row.color"></span>
+            <span style="color: var(--text-secondary)">{{ row.label }}</span>
+            <span class="ml-auto font-semibold" style="color: var(--text-primary)">{{
+              row.count
+            }}</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="chart-card">
+      <div class="mb-2 flex items-center justify-between">
+        <h2 class="chart-title">Orders by Status</h2>
+        <a
+          class="text-xs font-semibold text-blue-600 hover:underline"
+          routerLink="/inventory/orders"
+          >Total: {{ data?.total }}</a
+        >
+      </div>
+      <highcharts-chart
+        *ngIf="statusChartOptions.series?.length"
+        [options]="statusChartOptions"
+        style="display: block; width: 100%; height: 220px"
+      ></highcharts-chart>
+      <ul class="mt-1 space-y-0.5">
+        <li *ngFor="let status of topOrderStatuses">
+          <a
+            class="status-row"
+            [routerLink]="'/inventory/orders/' + status?.order_status"
+          >
+            <span
+              class="status-dot"
+              [style.background-color]="Global.statusColor(status?.order_status)"
+            ></span>
+            <span style="color: var(--text-secondary)">{{
+              toTitleCase(status?.order_status)
+            }}</span>
+            <span class="ml-auto font-semibold" style="color: var(--text-primary)">{{
+              status?.count
+            }}</span>
+          </a>
+        </li>
+      </ul>
+      <p class="leaderboard-more" *ngIf="orderStatusMoreCount">
+        + {{ orderStatusMoreCount }} more not shown
       </p>
-      <p class="text-2xl font-bold">{{ status?.count }}</p>
-    </a>
+    </div>
   </div>
 </div>

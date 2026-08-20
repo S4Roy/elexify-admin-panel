@@ -44,7 +44,13 @@ $white: #ffffff;
   --bg-page: #10141d;
   --bg-surface: #1a1f2b;
   --bg-surface-alt: #232937;
-  --bg-header: #232937;
+  // Header must read as *recessed* below the card surface (matching the
+  // light-theme relationship: #f3f4f6 is a shade darker than the white
+  // --bg-surface), not lighter than it — #232937 here was identical to
+  // --bg-surface-alt (the row-hover color), so the thead blended into the
+  // body and even looked like a hovered row. --bg-page reproduces the
+  // same "sunk one level" look dark-mode-side.
+  --bg-header: #10141d;
   --text-primary: #e5e7eb;
   --text-secondary: #9ca3af;
   --border-color: #2d3344;
@@ -71,6 +77,12 @@ body {
 
 ::-webkit-scrollbar {
   width: 6px;
+  // `width` only sets the vertical scrollbar's thickness — without an
+  // explicit `height` too, horizontal scrollbars (e.g. the leaderboard/
+  // table scroll containers on mobile) fall back to the browser's default
+  // (much thicker) size, making them look like a different, chunkier
+  // control instead of the same slim scrollbar rotated 90°.
+  height: 6px;
   background-color: var(--bg-page);
 }
 
@@ -644,6 +656,45 @@ div.previous-image {
   }
 }
 
+// Covers phones AND tablets/iPad-portrait (768-1024px) — a 768px viewport
+// is *outside* the 767px breakpoint above, so without this the Products
+// table's fixed `w-96` Stock/Price column (384px, sized for desktop) goes
+// right back to eating half of a 768px-wide table, wrapping every product
+// name across 6-7 lines exactly like on a phone.
+@media (max-width: 1024px) {
+  // Without this, `table-layout: auto` (the default) shrinks every column
+  // to fit the viewport, which for a long product/customer name means
+  // wrapping across many lines per cell — rows balloon in height and the
+  // table becomes unscannable. Giving the table a min-width wider than a
+  // phone/tablet viewport keeps columns at a sane width instead, and
+  // .table-wrapper's existing `overflow: auto` (already wired for the
+  // sticky-header case) picks up the resulting horizontal scroll for free.
+  .table-base {
+    min-width: 760px;
+  }
+
+  // Products' Stock/Price column carries a fixed `w-96` (384px, sized for
+  // desktop so price/sale-badge/stock can sit in one row) — at 760px table
+  // width that alone claims half the table, starving Name down to ~115px
+  // and forcing every product name to wrap across 6-7 lines. Capping it
+  // lets the price box's own flex layout wrap internally instead (it
+  // already handles narrow widths fine) and gives Name the room back.
+  .table-base td.w-96 {
+    width: 200px;
+    max-width: 200px;
+  }
+
+  // Desktop's 0.875rem body / 0.75rem head sizes leave less usable width
+  // per character on a phone/tablet — dropping both a step lets more of
+  // each cell's real content (names, SKUs, prices) fit before wrapping.
+  .table-base {
+    font-size: 0.8rem;
+  }
+  .table-base thead {
+    font-size: 0.7rem;
+  }
+}
+
 .table-base img {
   width: 2.5rem;
   height: auto;
@@ -871,6 +922,14 @@ button.cursor-pointer {
   .bg-white {
     background-color: var(--bg-surface) !important;
   }
+  // bg-gray-100 is used as a page-level backdrop (the top header nav,
+  // page wrappers around forms/cards) — maps to --bg-page rather than
+  // --bg-surface since it sits a level below cards, not as one itself.
+  // Was unpatched, so the header nav stayed light gray while everything
+  // else went dark.
+  .bg-gray-100 {
+    background-color: var(--bg-page) !important;
+  }
   .text-gray-900,
   .text-gray-800,
   .text-gray-700 {
@@ -918,6 +977,47 @@ button.cursor-pointer {
     border-color: var(--border-color) !important;
   }
 
+  // The container itself is covered above, but the library's default
+  // theme also hardcodes a light-blue background on each selected chip
+  // (.ng-value) and on hovered/selected dropdown rows — those stayed
+  // near-white against the now-dark container, looking like a stray
+  // unthemed box. Re-tinted with the same --active-tint-bg token the
+  // sidebar/breadcrumb already use for "currently selected".
+  .ng-select .ng-value-container .ng-value {
+    background-color: var(--active-tint-bg) !important;
+    color: var(--text-primary) !important;
+  }
+  .ng-select .ng-value-container .ng-value .ng-value-icon:hover {
+    background-color: var(--bg-surface-alt) !important;
+  }
+  .ng-select .ng-value-container .ng-value .ng-value-icon.left {
+    border-right-color: var(--border-color) !important;
+  }
+  .ng-select .ng-value-container .ng-value .ng-value-icon.right {
+    border-left-color: var(--border-color) !important;
+  }
+  .ng-select .ng-value-container .ng-placeholder,
+  .ng-select .ng-clear-wrapper,
+  .ng-select .ng-arrow-wrapper .ng-arrow {
+    color: var(--text-secondary) !important;
+  }
+  // Unlike Material's select/autocomplete panels, ng-select renders its
+  // dropdown inline next to the control rather than into the CDK overlay
+  // container, so the `.cdk-overlay-container .ng-dropdown-panel` rule
+  // above never matches it — needs its own unscoped rule.
+  .ng-dropdown-panel {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border-color) !important;
+  }
+  .ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+  }
+  .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-marked,
+  .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected {
+    background-color: var(--active-tint-bg) !important;
+  }
+
   // logo.png has dark wordmark text baked into the PNG with no dark-mode
   // variant — give it a light backing so the text stays legible instead
   // of commissioning/guessing a recolored asset.
@@ -946,4 +1046,241 @@ button.cursor-pointer {
 .truncate-list {
   font-size: 12px;
   color: #4b5563; /* gray-600 */
+}
+
+// -----------------------------------------------------------------------
+// @ Dashboard KPI cards / charts — shared across dashboard pages, not
+// duplicated per component.
+// -----------------------------------------------------------------------
+.kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+a.kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+  transform: translateY(-1px);
+}
+
+// Both dashboards' KPI grid is forced to grid-cols-1 below `sm`, so all 4
+// cards stack full-width — desktop-sized padding/gap on top of that meant
+// a lot of scrolling just to get past the KPI row. `:has()` keeps this
+// scoped to the KPI grid specifically rather than touching every other
+// `.gap-4` grid in the app.
+@media (max-width: 1024px) {
+  .space-y-5.p-6 {
+    padding: 0.85rem;
+  }
+  // Matches Tailwind's own generated `.space-y-5 > :not([hidden]) ~
+  // :not([hidden])` selector shape (plain `* + *` has lower specificity
+  // and would silently lose to it) — the extra `.p-6` class is what
+  // gives this override priority.
+  .space-y-5.p-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.85rem;
+  }
+  .grid.gap-4:has(.kpi-card) {
+    gap: 0.6rem;
+  }
+  .kpi-card {
+    padding: 0.75rem 0.9rem;
+    gap: 0.65rem;
+  }
+}
+
+.kpi-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+
+  mat-icon {
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+  }
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.kpi-delta {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  vertical-align: middle;
+
+  &.delta-positive {
+    background-color: #dcfce7;
+    color: #16a34a;
+  }
+
+  &.delta-negative {
+    background-color: #fee2e2;
+    color: #dc2626;
+  }
+}
+
+.chart-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.chart-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--bg-surface-alt);
+  }
+}
+
+.status-dot {
+  // Color is set inline per-instance via [style.background-color] from
+  // Global.statusColor() (app/global.ts) — order_status is free-text with
+  // no fixed enum (multi-word/hyphenated real values like "out-for-delivery"
+  // can't be CSS class names anyway), so it's computed in TS rather than
+  // matched against a fixed set of modifier classes here.
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background-color: var(--text-secondary);
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.leaderboard-total {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.leaderboard-more {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  th {
+    text-align: left;
+    padding: 0.4rem 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--bg-surface-alt);
+    color: var(--text-primary);
+  }
+
+  a {
+    color: var(--nav-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+}
+
+// Unlike the main data tables, the dashboard leaderboards were never given
+// a scroll wrapper — on a narrow viewport the Category/Product column was
+// squeezed down to ~130px (table-layout: auto splitting `width: 100%`
+// three ways), wrapping names like "Amplifier Power Supply Boards" across
+// several lines per row. `:has()` scopes the scroll behavior to just the
+// card containing this table, no HTML changes needed (same trick as
+// .table-wrapper elsewhere, minus the sticky-header requirement these
+// short, non-paginated lists don't have).
+@media (max-width: 1024px) {
+  .chart-card:has(.leaderboard-table) {
+    overflow-x: auto;
+  }
+  .leaderboard-table {
+    min-width: 480px;
+    // Product names run noticeably longer than category names (e.g. "IFR
+    // 32700 3.2V 6000mAh LiFePO4 Rechargeable Battery 3C - Grade A") —
+    // dropping from the desktop 0.85rem shrinks the row height enough
+    // that most names fit in 1-2 lines instead of 3-4 within the same
+    // 480px budget.
+    font-size: 0.75rem;
+
+    th {
+      padding: 0.35rem 0.45rem;
+    }
+    td {
+      padding: 0.4rem 0.45rem;
+    }
+  }
 }

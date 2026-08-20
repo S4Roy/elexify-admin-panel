@@ -129,6 +129,72 @@
   line-height: 18px;
 }
 
+// Icon-only on mobile — the "Filters"/"Add New X" label text is a bare
+// text node (not wrapped in its own element), so `font-size: 0` on the
+// button collapses it to nothing while the icon and count badge stay
+// visible: both already declare their own explicit font-size, which
+// (being each element's own property, not inherited) isn't affected by
+// the parent's.
+//
+// Breadcrumb trail also collapses to just the active/last crumb — the
+// full "Inventory > Products > Connectors" chain plus two action buttons
+// competing for ~370px is what forced this bar into two visibly
+// mismatched rows to begin with. `.crumb-link:not(:last-child)` catches
+// every non-active link (including the optional "Others" lead-in) since
+// the last DOM child is always the active crumb — the loop never renders
+// a trailing separator after it.
+@media (max-width: 767px) {
+  // The bar itself (mx-3 mt-2 px-3 py-2 from the template's Tailwind
+  // classes) was sized for a full breadcrumb chain plus two labeled
+  // buttons — now that both collapse to a single short crumb + two icon
+  // buttons, the surrounding chrome can shrink to match.
+  .crumb-bar {
+    margin: 0.4rem 0.5rem 0;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .crumb-link {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .filters-btn,
+  .add-new-btn {
+    gap: 0;
+    padding: 0.3rem;
+    font-size: 0;
+  }
+
+  .filters-btn mat-icon,
+  .add-new-btn mat-icon {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    font-size: 16px !important;
+    line-height: 16px !important;
+  }
+
+  .filters-count {
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    font-size: 0.6rem;
+    line-height: 15px;
+  }
+
+  // mat-icon's own theme sets `display` on the host element too (matching
+  // this codebase's existing pattern of !important-ing every mat-icon
+  // sizing property on .crumb-sep above) — without it, `display: none`
+  // here loses to Material's rule and the separator chevrons stay visible
+  // even with both linked crumbs hidden.
+  .crumb-sep {
+    display: none !important;
+  }
+  .crumb-link:not(:last-child) {
+    display: none;
+  }
+}
+
 .link-btn {
   display: inline-flex;
   align-items: center;

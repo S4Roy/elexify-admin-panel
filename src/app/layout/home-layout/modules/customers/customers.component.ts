@@ -65,13 +65,27 @@ export class CustomersComponent {
   public sortKey: string = 'created_at';
   public sortDirection: 'asc' | 'desc' = 'desc';
   ngOnInit(): void {
-    combineLatest([this.route.paramMap, this.helperService.searchKey$])
+    combineLatest([
+      this.route.paramMap,
+      this.route.queryParamMap,
+      this.helperService.searchKey$,
+    ])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([params, searchKey]) => {
+      .subscribe(([params, queryParams, searchKey]) => {
         this.filterOption = Global.resetTableFilterOptions();
         this.filterOption.search_key = searchKey;
+        // Seed the date-range filter from ?from_date=&to_date= if present
+        // (e.g. links from the dashboard's "New Customers" KPI card) so
+        // it's reflected in both the drawer and the fetched list.
+        const queryFromDate = queryParams.get('from_date');
+        const queryToDate = queryParams.get('to_date');
+        if (queryFromDate) this.filterValues['from_date'] = queryFromDate;
+        if (queryToDate) this.filterValues['to_date'] = queryToDate;
+        this.filterOption.from_date = this.filterValues['from_date'] || null;
+        this.filterOption.to_date = this.filterValues['to_date'] || null;
         this.paginationOption.page = 1;
         this.fetchCutomerList();
+        this.updateFilterButton();
       });
     if (this.permissions.includes('add')) {
       this.helperService.setActionButton({ label: 'Add New', icon: 'add' });
