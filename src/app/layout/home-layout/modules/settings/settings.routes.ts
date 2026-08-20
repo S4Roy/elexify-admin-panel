@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
+import { Routes, ActivatedRouteSnapshot } from '@angular/router';
 import { MediaComponent } from './media/media.component';
 import { CurrencyComponent } from './currency/currency.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -10,7 +9,7 @@ import { CountriesComponent } from './countries/countries.component';
 import { StatesComponent } from './states/states.component';
 import { CitiesComponent } from './cities/cities.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     redirectTo: 'dashboard',
@@ -63,9 +62,3 @@ const routes: Routes = [
     },
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class SettingsRoutingModule {}

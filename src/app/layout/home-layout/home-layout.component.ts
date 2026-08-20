@@ -21,7 +21,6 @@ import { NgIf } from '@angular/common';
   styleUrl: './home-layout.component.scss',
 })
 export class HomeLayoutComponent {
-  isNavOpen: boolean = true;
   pagesOutlet: boolean = false;
   breadcrumbs: any = [];
   constructor(

@@ -13,7 +13,7 @@
         placeholder="Select"
         (scrollToEnd)="loadMoreItems()"
         (search)="searchSubject.next($event)"
-      >
+      [ariaLabel]="'Select'">
         <ng-option *ngFor="let item of images" [value]="item._id">
           <div class="flex items-center">
             <img

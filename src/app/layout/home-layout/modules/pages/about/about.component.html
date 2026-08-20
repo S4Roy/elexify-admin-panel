@@ -281,7 +281,7 @@
         formControlName="parters"
         placeholder="Select Partner"
         [multiple]="true"
-      >
+      [ariaLabel]="'Select Partner'">
         <ng-option *ngFor="let item of partner_list" [value]="item.id">
           <div class="option-item">
             <img
@@ -652,7 +652,7 @@
         formControlName="news_event"
         [multiple]="true"
         placeholder="Select"
-      >
+      [ariaLabel]="'Select'">
         <ng-option *ngFor="let item of news_list" [value]="item.id">
           <div class="option-item">
             {{ item.title }}

@@ -1,6 +1,5 @@
 export const environment = {
   production: false,
-  AES_KEY: '127131361926BYIBXIUBVSXIY',
   APP_NAME: 'Elexify Industries Control Panel',
   APP_URL: 'http://localhost:4200',
   API_URL: 'http://localhost:7000/api/v1/',

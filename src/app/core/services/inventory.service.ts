@@ -126,6 +126,9 @@ export class InventoryService {
   deleteMedia(payload: any) {
     return this.httpService.delete(`admin/media/delete`, payload);
   }
+  mediaUsage(id: string) {
+    return this.httpService.get(`admin/media/${id}/usage`);
+  }
   attributeValueList(params: any) {
     return this.httpService.get(
       `admin/inventory/attribute/value-list?${params.toString()}`

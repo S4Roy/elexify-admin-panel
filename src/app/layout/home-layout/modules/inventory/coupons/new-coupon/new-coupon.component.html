@@ -91,7 +91,7 @@
                 [multiple]="true"
                 formControlName="applicable_products"
                 placeholder="Select Products"
-              >
+              [ariaLabel]="'Select Products'">
               </ng-select>
 
               <ng-select
@@ -102,7 +102,7 @@
                 [multiple]="true"
                 formControlName="applicable_categories"
                 placeholder="Select Categories"
-              >
+              [ariaLabel]="'Select Categories'">
               </ng-select>
 
               <ng-select
@@ -113,7 +113,7 @@
                 [multiple]="true"
                 formControlName="applicable_brands"
                 placeholder="Select Brands"
-              >
+              [ariaLabel]="'Select Brands'">
               </ng-select>
 
               <ng-select
@@ -124,7 +124,7 @@
                 [multiple]="true"
                 formControlName="applicable_variations"
                 placeholder="Select Variations"
-              >
+              [ariaLabel]="'Select Variations'">
               </ng-select>
               <mat-form-field>
                 <mat-label>Minimum Cart Value</mat-label>

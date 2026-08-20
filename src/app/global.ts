@@ -284,18 +284,46 @@ export function resetPaginationOptions() {
 }
 export function resetTableFilterOptions() {
   return {
-    category: '',
+    category: null,
     search_key: '',
     slug: '',
     name: '',
     stock_status: '',
     list_type: '',
     _id: '',
-    order_status: '',
-    tags: '',
-    classifications: '',
+    order_status: null,
+    tags: null,
+    classifications: null,
+    status: null,
+    from_date: null,
+    to_date: null,
+    email_verified: null,
+    mobile_verified: null,
+    brand: null,
+    type: null,
+    min_price: null,
+    max_price: null,
+    currency: null,
+    payment_status: null,
+    payment_method: null,
+    min_amount: null,
+    max_amount: null,
+    rating: null,
   };
 }
+
+// Generic active/inactive status used by virtually every list model in
+// this app (matches the enum on User, Product, Category, etc.) — reused
+// across filter drawers instead of redefined per page.
+export const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+];
+
+export const VERIFIED_OPTIONS: { value: string; label: string }[] = [
+  { value: 'yes', label: 'Verified' },
+  { value: 'no', label: 'Not Verified' },
+];
 
 export function scrollToQuery(query: any) {
   let $_errFormControl = document.querySelectorAll(query);

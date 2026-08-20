@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { HomeLayoutComponent } from '../../home-layout.component';
 import { AboutComponent } from './about/about.component';
 import { PageComponent } from './page/page.component';
@@ -7,7 +6,7 @@ import { pageResolver } from '../../../../core/resolver/page.resolver';
 import { HomeComponent } from './home/home.component';
 import { WhyChooseElexifyComponent } from './why-choose-elexify/why-choose-elexify.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     component: HomeLayoutComponent,
@@ -51,9 +50,3 @@ const routes: Routes = [
     ],
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class PagesRoutingModule {}

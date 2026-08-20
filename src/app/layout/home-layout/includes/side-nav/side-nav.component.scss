@@ -1,0 +1,36 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.nav-link.active {
+  background-color: var(--active-tint-bg);
+  border-radius: 0.5rem;
+
+  .nav-icon {
+    color: var(--nav-primary);
+  }
+}
+
+.nav-link:not(.active) .nav-icon {
+  color: var(--text-secondary);
+}
+
+.chevron.rotate-90 {
+  transform: rotate(90deg);
+}
+
+.flyout-active {
+  background-color: var(--active-tint-bg);
+  color: var(--nav-primary) !important;
+  font-weight: 500;
+}
+
+.group-title-link {
+  cursor: pointer;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--nav-primary);
+  }
+}

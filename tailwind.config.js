@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     "./src/**/*.{html,ts}", // ✅ include all component templates and code
     "./index.html",
@@ -8,7 +9,8 @@ module.exports = {
     extend: {
       colors: {
         cream: "#F8E9D2",
-        primary: "#2A445F",
+        // Kept in sync with $primary-color in styles.scss — single source of truth.
+        primary: "#2563eb",
         peachlight: "#FEF8EC",
         peach: "#FBEFDF",
         // "header-bg": "#f5e9d5",

@@ -11,7 +11,7 @@ import { InventoryService } from 'app/core/services/inventory.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { MatIconModule } from '@angular/material/icon';
-import { combineLatest } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { NewSpecificationComponent } from './new-specification/new-specification.component';
 import { ApiService } from 'app/core/services/api.service';
@@ -23,10 +23,14 @@ import {
 } from '@angular/cdk/drag-drop';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 
 @Component({
   selector: 'app-specifications',
   imports: [
+    EmptyStateComponent,
     NgFor,
     NgIf,
     PaginationComponent,
@@ -43,6 +47,10 @@ export class SpecificationsComponent {
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
+  filterValues: Record<string, any> = {
+    status: [],
+  };
+  private destroy$ = new Subject<void>();
   constructor(
     private dialog: MatDialog,
     private apiService: ApiService,
@@ -64,7 +72,59 @@ export class SpecificationsComponent {
       this.fetchClassification();
     });
   }
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.permissions.includes('add')) {
+      this.helperService.setActionButton({ label: 'Add New', icon: 'add' });
+    }
+    this.helperService.actionButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.addItem());
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: Global.STATUS_OPTIONS,
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.fetchClassification();
+        this.updateFilterButton();
+      });
+  }
+  ngOnDestroy(): void {
+    this.helperService.clearActionButton();
+    this.helperService.clearFilterButton();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
   addItem(data: any = null) {
     this.dialog
       .open(NewSpecificationComponent, {
@@ -88,6 +148,9 @@ export class SpecificationsComponent {
     }
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
     }
     this.apiService.specificationList(params).subscribe({
       next: (res: any) => {

@@ -1,0 +1,122 @@
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div class="drawer-panel pointer-events-auto relative w-screen max-w-md">
+        <div class="flex h-full flex-col overflow-y-scroll bg-[var(--bg-surface)] shadow-xl">
+          <h2 class="header" id="filter-drawer-title">
+            Filters
+            <button color="warn" mat-dialog-close mat-icon-button aria-label="Close filters">
+              <mat-icon class="text-red-700">close</mat-icon>
+            </button>
+          </h2>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <ng-container *ngFor="let field of data.fields">
+              <div class="filter-field-block">
+                <label>{{ field.label }}</label>
+
+                <ng-container [ngSwitch]="field.type">
+                  <ng-select
+                    *ngSwitchCase="'multiselect'"
+                    [items]="field.options"
+                    bindLabel="label"
+                    bindValue="value"
+                    [multiple]="true"
+                    [closeOnSelect]="false"
+                    [placeholder]="field.placeholder || 'All ' + field.label"
+                    [ariaLabel]="field.label"
+                    [(ngModel)]="values[field.key]"
+                  >
+                    <ng-template ng-option-tmp let-item="item">
+                      <span
+                        class="option-dot"
+                        *ngIf="item.color"
+                        [style.background-color]="item.color"
+                      ></span>
+                      {{ item.label }}
+                    </ng-template>
+                  </ng-select>
+
+                  <ng-select
+                    *ngSwitchCase="'select'"
+                    [items]="field.options"
+                    bindLabel="label"
+                    bindValue="value"
+                    [placeholder]="field.placeholder || 'All ' + field.label"
+                    [ariaLabel]="field.label"
+                    [(ngModel)]="values[field.key]"
+                  ></ng-select>
+
+                  <ng-select
+                    *ngSwitchCase="'async-select'"
+                    [items]="asyncOptions[field.key]"
+                    bindLabel="label"
+                    [typeahead]="typeaheadInput(field.key)"
+                    [loading]="asyncLoading[field.key]"
+                    [placeholder]="field.placeholder || 'Search ' + field.label"
+                    [ariaLabel]="field.label"
+                    [(ngModel)]="values[field.key]"
+                  ></ng-select>
+
+                  <div *ngSwitchCase="'daterange'" class="range-row">
+                    <input
+                      type="date"
+                      class="filter-drawer-input"
+                      [attr.aria-label]="field.label + ' from'"
+                      [(ngModel)]="values[field.fromKey!]"
+                      [max]="values[field.toKey!] || ''"
+                    />
+                    <span class="range-sep">to</span>
+                    <input
+                      type="date"
+                      class="filter-drawer-input"
+                      [attr.aria-label]="field.label + ' to'"
+                      [(ngModel)]="values[field.toKey!]"
+                      [min]="values[field.fromKey!] || ''"
+                    />
+                  </div>
+
+                  <div *ngSwitchCase="'number-range'" class="range-row">
+                    <input
+                      type="number"
+                      class="filter-drawer-input"
+                      placeholder="Min"
+                      min="0"
+                      [attr.aria-label]="field.label + ' minimum'"
+                      [(ngModel)]="values[field.fromKey!]"
+                    />
+                    <span class="range-sep">to</span>
+                    <input
+                      type="number"
+                      class="filter-drawer-input"
+                      placeholder="Max"
+                      min="0"
+                      [attr.aria-label]="field.label + ' maximum'"
+                      [(ngModel)]="values[field.toKey!]"
+                    />
+                  </div>
+
+                  <input
+                    *ngSwitchCase="'text'"
+                    type="text"
+                    class="filter-drawer-input"
+                    [placeholder]="field.placeholder || ''"
+                    [attr.aria-label]="field.label"
+                    [(ngModel)]="values[field.key]"
+                  />
+                </ng-container>
+              </div>
+            </ng-container>
+          </div>
+          <div class="filter-drawer-actions p-3">
+            <button type="button" class="filter-reset-btn" (click)="resetAll()">
+              Reset
+            </button>
+            <button type="button" class="btn-primary" (click)="applyFilters()">
+              Apply Filters{{ activeCount() > 0 ? ' (' + activeCount() + ')' : '' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

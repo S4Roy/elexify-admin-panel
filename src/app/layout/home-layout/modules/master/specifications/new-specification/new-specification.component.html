@@ -79,7 +79,7 @@
                   [class.is-invalid]="
                     !Global.isInputValid(formGroup, 'options')
                   "
-                >
+                [ariaLabel]="'Add / select options'">
                   <ng-template ng-option-tmp let-item="item">
                     <div class="flex items-center">
                       {{ item.label || item }}

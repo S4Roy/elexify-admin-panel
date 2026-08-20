@@ -10,17 +10,20 @@ import * as Global from 'app/global';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { MatIconModule } from '@angular/material/icon';
-import { combineLatest } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
 import { NewBannerComponent } from './new-banner/new-banner.component';
 import { ApiService } from 'app/core/services/api.service';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 
 @Component({
   selector: 'app-banners',
-  imports: [NgFor, NgIf, PaginationComponent, MenuComponent, MatIconModule],
+  imports: [EmptyStateComponent, NgFor, NgIf, PaginationComponent, MenuComponent, MatIconModule],
   templateUrl: './banners.component.html',
   styleUrl: './banners.component.scss',
 })
@@ -29,6 +32,10 @@ export class BannersComponent {
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
+  filterValues: Record<string, any> = {
+    status: [],
+  };
+  private destroy$ = new Subject<void>();
   constructor(
     private dialog: MatDialog,
     private apiService: ApiService,
@@ -50,7 +57,59 @@ export class BannersComponent {
       this.fetchBrands();
     });
   }
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.permissions.includes('add')) {
+      this.helperService.setActionButton({ label: 'Add New', icon: 'add' });
+    }
+    this.helperService.actionButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.addItem());
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+  ngOnDestroy(): void {
+    this.helperService.clearActionButton();
+    this.helperService.clearFilterButton();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: Global.STATUS_OPTIONS,
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.fetchBrands();
+        this.updateFilterButton();
+      });
+  }
   addItem(data: any = null) {
     this.dialog
       .open(NewBannerComponent, {
@@ -74,6 +133,9 @@ export class BannersComponent {
     }
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
     }
     this.apiService.bannerList(params).subscribe({
       next: (res: any) => {

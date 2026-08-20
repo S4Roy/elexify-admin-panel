@@ -1,0 +1,57 @@
+<h2 mat-dialog-title class="bg-[var(--bg-surface)]">Edit Media</h2>
+<mat-dialog-content class="bg-[var(--bg-surface)]">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-3">
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-xs font-medium text-gray-500">{{
+          item?.type === "video" ? "Video" : "Image"
+          }}</label>
+        <label class="text-xs text-red-600 cursor-pointer hover:underline flex items-center gap-1">
+          <mat-icon class="!text-sm !w-4 !h-4">upload</mat-icon>
+          Replace file
+          <input type="file" [accept]="item?.type === 'video' ? 'video/*' : 'image/*'" class="hidden"
+            (change)="onReplaceFileSelected($event)" />
+        </label>
+      </div>
+      <div class="border rounded-lg overflow-hidden bg-black/5" style="height: 340px">
+        <ng-container *ngIf="item?.type !== 'video'; else videoPreview">
+          <image-cropper *ngIf="imageChangedEvent || !imageLoadFailed" [imageChangedEvent]="imageChangedEvent"
+            [imageURL]="imageChangedEvent ? undefined : item?.url" [maintainAspectRatio]="false" format="jpeg"
+            output="blob" (imageCropped)="onImageCropped($event)"
+            (loadImageFailed)="onLoadImageFailed()"></image-cropper>
+          <div *ngIf="imageLoadFailed && !imageChangedEvent"
+            class="w-full h-full flex flex-col items-center justify-center text-center gap-2 p-6 text-gray-400">
+            <mat-icon class="!text-3xl !w-8 !h-8">broken_image</mat-icon>
+            <p class="text-xs">
+              Couldn't load this image into the cropper (likely a CORS
+              restriction on the storage bucket). You can still update the
+              alt text, or use "Replace file" above to upload a new image
+              instead.
+            </p>
+          </div>
+        </ng-container>
+        <ng-template #videoPreview>
+          <video *ngIf="item?.url" [src]="item?.url" controls class="w-full h-full object-contain"></video>
+        </ng-template>
+      </div>
+      <p *ngIf="croppedBlob || replacementVideoFile" class="text-xs text-green-600 mt-2">
+        {{
+        replacementFileName
+        ? "Replacing with " + replacementFileName + " on save."
+        : "Crop applied — the original file will be replaced on save."
+        }}
+      </p>
+    </div>
+    <div class="flex flex-col gap-3">
+      <label class="text-xs font-medium text-gray-500">Alt text</label>
+      <textarea [(ngModel)]="altText" rows="6" placeholder="Describe this image..."
+        class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600"></textarea>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions class="bg-[var(--bg-surface)]" align="end">
+  <button type="button" mat-stroked-button (click)="cancel()">Cancel</button>
+  <button type="button" mat-flat-button color="primary" [disabled]="saving" (click)="save()">
+    {{ saving ? "Saving..." : "Save Changes" }}
+  </button>
+</mat-dialog-actions>

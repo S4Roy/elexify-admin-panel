@@ -138,7 +138,7 @@
                 [class.is-invalid]="!Global.isInputValid(formGroup, 'brand')"
                 (scrollToEnd)="loadMoreBrands()"
                 (search)="brandsSearchSubject.next($event)"
-              >
+              [ariaLabel]="'Select Brand'">
                 <ng-option *ngFor="let brand of brands" [value]="brand?._id">
                   <div class="flex items-center">
                     <img
@@ -166,7 +166,7 @@
                 (scrollToEnd)="loadMoreCategories()"
                 (search)="categorySearchSubject.next($event)"
                 [class.is-invalid]="!Global.isInputValid(formGroup, 'category')"
-              >
+              [ariaLabel]="'Select Category'">
                 <ng-option
                   *ngFor="let category of categories"
                   [value]="category?._id"
@@ -214,7 +214,7 @@
                 [class.is-invalid]="
                   !Global.isInputValid(formGroup, 'sub_category')
                 "
-              >
+              [ariaLabel]="'Select Sub Category'">
                 <ng-option
                   *ngFor="let category of sub_categories"
                   [value]="category?._id"
@@ -260,7 +260,7 @@
                 (scrollToEnd)="loadMoreTags()"
                 (search)="tagSearchSubject.next($event)"
                 [class.is-invalid]="!Global.isInputValid(formGroup, 'tags')"
-              >
+              [ariaLabel]="'Select Tags'">
                 <ng-option *ngFor="let tag of tag_list" [value]="tag?._id">
                   <div class="flex items-center">
                     {{ tag?.name }}
@@ -299,7 +299,7 @@
                 [class.is-invalid]="
                   !Global.isInputValid(formGroup, 'classifications')
                 "
-              >
+              [ariaLabel]="'Select classifications'">
                 <ng-option
                   *ngFor="let classification of classification_list"
                   [value]="classification?._id"
@@ -337,7 +337,7 @@
                 formControlName="rarity"
                 [multiple]="false"
                 [class.is-invalid]="!Global.isInputValid(formGroup, 'rarity')"
-              >
+              [ariaLabel]="'Select Rarity'">
                 <ng-option
                   *ngFor="let rarity of Global.rarity_list"
                   [value]="rarity?._id"

@@ -41,12 +41,12 @@
             {{ item?.created_at | date : "medium" }}
           </td>
           <td>
-            <span
+            <a
               [routerLink]="'/inventory/orders/' + item?.order_status"
               class="status-label cursor-pointer"
               [class]="item?.order_status"
             >
-              {{ item?.order_status }}</span
+              {{ item?.order_status }}</a
             >
           </td>
           <td>{{ item?.total_items }}</td>
@@ -66,7 +66,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="7">No Items Found</td>
+          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

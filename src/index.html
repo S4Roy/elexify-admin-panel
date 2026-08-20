@@ -21,6 +21,17 @@
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
     />
+    <script>
+      // Applied before Angular loads so there's no flash of the wrong theme.
+      (function () {
+        var stored = localStorage.getItem('ELEXIFY-THEME');
+        var dark =
+          stored === 'dark' ||
+          (!stored &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
   </head>
   <body class="mat-typography">
     <app-root></app-root>

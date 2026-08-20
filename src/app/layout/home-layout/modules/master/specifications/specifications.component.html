@@ -1,14 +1,3 @@
-<div class="action-btns">
-  <button
-    (click)="addItem()"
-    *ngIf="permissions.includes('add')"
-    matTooltip="Add New Classification"
-    class="btn-add"
-  >
-    <mat-icon class="text-xs">add</mat-icon>
-    Add New
-  </button>
-</div>
 <div class="table-wrapper">
   <table class="table-base">
     <thead class="">
@@ -36,10 +25,10 @@
           <td>
             {{ item?.visible ? "Yes" : "No" }}
           </td>
-          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
-            <span class="table-status" [class]="item?.status">
+          <td class="text-center">
+            <button type="button" class="table-status cursor-pointer" [class]="item?.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
               {{ item?.status }}
-            </span>
+            </button>
           </td>
           <td class="text-center">
             <app-menu
@@ -53,7 +42,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="7">No Items Found</td>
+          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

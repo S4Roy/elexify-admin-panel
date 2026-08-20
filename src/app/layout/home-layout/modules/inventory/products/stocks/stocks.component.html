@@ -125,7 +125,7 @@
                   </ng-container>
                   <ng-container *ngIf="!transactions?.length">
                     <tr>
-                      <td class="text-center" colspan="6">No Items Found</td>
+                      <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
                     </tr>
                   </ng-container>
                 </tbody>

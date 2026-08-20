@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { ThemeService } from '../../../../core/services/theme.service';
 @Component({
   selector: 'app-header',
   imports: [
@@ -36,8 +37,6 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './header.component.scss',
 })
 export class HeaderComponent {
-  @Input() isNavOpen: boolean = true;
-  @Output() toggleSideNav = new EventEmitter<boolean>();
   public searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -52,7 +51,8 @@ export class HeaderComponent {
     private apiService: ApiService,
     private dialog: MatDialog,
     public device: DeviceDetectorService,
-    private navService: NavService
+    public navService: NavService,
+    public themeService: ThemeService
   ) {
     this.userDetails = this.helperService.userDetails();
     // this.fetchNotificationList()

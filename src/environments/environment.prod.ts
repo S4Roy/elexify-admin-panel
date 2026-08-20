@@ -1,6 +1,5 @@
 export const environment = {
   production: true,
-  AES_KEY: '127131361926BYIBXIUBVSXIY',
   APP_NAME: 'Elexify Industries Control Panel',
   APP_URL: 'https://inventory.elexify.com',
   API_URL: 'https://api.elexify.online/api/v1/',

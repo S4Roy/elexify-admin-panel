@@ -10,13 +10,17 @@ import * as Global from 'app/global';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { OrderDetailsComponent } from './order-details/order-details.component';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { OrderShippingComponent } from './order-shipping/order-shipping.component';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 @Component({
   selector: 'app-orders',
   imports: [
+    EmptyStateComponent,
     NgFor,
     NgIf,
     PaginationComponent,
@@ -33,6 +37,17 @@ export class OrdersComponent {
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
+  // Working filter values, keyed to match filterFields below — this is what
+  // gets handed to the (page-agnostic) filter drawer and read back from it.
+  // Note: order_status is intentionally NOT included here — it's already
+  // driven by the /inventory/orders/:order_status route (status tiles /
+  // sidebar links), so a drawer filter for it would just duplicate that nav.
+  filterValues: Record<string, any> = {
+    payment_status: [],
+    payment_method: [],
+    from_date: null,
+    to_date: null,
+  };
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -57,8 +72,90 @@ export class OrdersComponent {
         this.filterOption.slug = params.get('slug');
         this.filterOption.order_status = params.get('order_status');
         this.filterOption.search_key = searchKey;
+        // Re-apply any drawer-selected filters, since resetTableFilterOptions()
+        // above wipes filterOption back to defaults on every route change.
+        this.filterOption.payment_status = this.filterValues['payment_status']
+          ?.length
+          ? this.filterValues['payment_status'].join(',')
+          : null;
+        this.filterOption.payment_method = this.filterValues['payment_method']
+          ?.length
+          ? this.filterValues['payment_method'].join(',')
+          : null;
+        this.filterOption.from_date = this.filterValues['from_date'] || null;
+        this.filterOption.to_date = this.filterValues['to_date'] || null;
         this.paginationOption.page = 1;
         this.fetchOrderList();
+        this.updateFilterButton();
+      });
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'payment_status',
+        label: 'Payment Status',
+        type: 'multiselect',
+        options: [
+          { value: 'pending', label: 'Pending' },
+          { value: 'paid', label: 'Paid' },
+          { value: 'failed', label: 'Failed' },
+        ],
+      },
+      {
+        key: 'payment_method',
+        label: 'Payment Method',
+        type: 'multiselect',
+        options: [
+          { value: 'cod', label: 'Cash on Delivery' },
+          { value: 'razorpay', label: 'Razorpay' },
+          { value: 'paypal', label: 'PayPal' },
+        ],
+      },
+      {
+        key: 'created_at',
+        label: 'Order Date',
+        type: 'daterange',
+        fromKey: 'from_date',
+        toKey: 'to_date',
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['payment_status']?.length) count++;
+    if (this.filterValues['payment_method']?.length) count++;
+    if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.payment_status = this.filterValues['payment_status']
+          ?.length
+          ? this.filterValues['payment_status'].join(',')
+          : null;
+        this.filterOption.payment_method = this.filterValues['payment_method']
+          ?.length
+          ? this.filterValues['payment_method'].join(',')
+          : null;
+        this.filterOption.from_date = this.filterValues['from_date'] || null;
+        this.filterOption.to_date = this.filterValues['to_date'] || null;
+        this.paginationOption.page = 1;
+        this.fetchOrderList();
+        this.updateFilterButton();
       });
   }
   sort(field: string): void {
@@ -99,6 +196,18 @@ export class OrdersComponent {
     }
     if (this.filterOption.order_status) {
       params.set('order_status', this.filterOption.order_status);
+    }
+    if (this.filterOption.payment_status) {
+      params.set('payment_status', this.filterOption.payment_status);
+    }
+    if (this.filterOption.payment_method) {
+      params.set('payment_method', this.filterOption.payment_method);
+    }
+    if (this.filterOption.from_date) {
+      params.set('from_date', this.filterOption.from_date);
+    }
+    if (this.filterOption.to_date) {
+      params.set('to_date', this.filterOption.to_date);
     }
 
     this.inventoryService.orderList(params).subscribe({
@@ -154,6 +263,7 @@ export class OrdersComponent {
       });
   }
   ngOnDestroy(): void {
+    this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();
   }

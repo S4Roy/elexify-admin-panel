@@ -1,6 +1,14 @@
 @if (modalItem || edit || details|| delete || stockItem ) {
 
-<mat-icon class="cursor-pointer" [matMenuTriggerFor]="menu">more_vert</mat-icon>
+<button
+  type="button"
+  mat-icon-button
+  class="action-menu-trigger"
+  [matMenuTriggerFor]="menu"
+  aria-label="More actions"
+>
+  <mat-icon>more_vert</mat-icon>
+</button>
 
 <mat-menu #menu="matMenu">
   <ul class="actionlink">

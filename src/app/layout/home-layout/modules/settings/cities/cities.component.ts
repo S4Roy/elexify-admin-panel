@@ -6,6 +6,7 @@ import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
 import { ActivatedRoute, Router } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import PaginationOptions from 'app/core/models/PaginationOptions';
@@ -13,9 +14,11 @@ import { MenuComponent } from 'app/layout/home-layout/includes/menu/menu.compone
 import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 @Component({
   selector: 'app-cities',
-  imports: [NgFor, NgIf, PaginationComponent, DatePipe],
+  imports: [EmptyStateComponent, NgFor, NgIf, PaginationComponent, DatePipe],
   templateUrl: './cities.component.html',
   styleUrl: './cities.component.scss',
 })
@@ -25,6 +28,11 @@ export class CitiesComponent {
   paginationOption: PaginationOptions;
 
   filterOption: FilterOptions;
+  // Working filter values, keyed to match filterFields below — this is what
+  // gets handed to the (page-agnostic) filter drawer and read back from it.
+  filterValues: Record<string, any> = {
+    status: [],
+  };
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -49,6 +57,45 @@ export class CitiesComponent {
         this.filterOption.search_key = searchKey;
         this.paginationOption.page = 1;
         this.fetchCityList();
+      });
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: Global.STATUS_OPTIONS,
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.fetchCityList();
+        this.updateFilterButton();
       });
   }
   sort(field: string): void {
@@ -83,6 +130,9 @@ export class CitiesComponent {
 
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
     }
 
     this.apiService.cityList(params).subscribe({
@@ -140,6 +190,7 @@ export class CitiesComponent {
   permissions: any = ['add', 'edit', 'delete'];
 
   ngOnDestroy(): void {
+    this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();
   }

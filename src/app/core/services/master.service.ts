@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from './http.service';
 import { Router } from '@angular/router';
-import * as CryptoJS from 'crypto-js';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root',

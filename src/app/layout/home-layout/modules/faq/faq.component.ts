@@ -6,6 +6,7 @@ import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
 import { ActivatedRoute, Router } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
@@ -15,9 +16,12 @@ import { InventoryService } from 'app/core/services/inventory.service';
 import { NewFaqComponent } from './new-faq/new-faq.component';
 import { MatIconModule } from '@angular/material/icon';
 import { ReadMoreClampDirective } from 'app/core/directives/read-more-clamp.directive';
+import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawer.component';
 @Component({
   selector: 'app-faq',
   imports: [
+    EmptyStateComponent,
     MenuComponent,
     NgFor,
     NgIf,
@@ -33,6 +37,13 @@ export class FaqComponent {
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
+  // Working filter values, keyed to match filterFields below — handed to
+  // the (page-agnostic) filter drawer and read back from it.
+  filterValues: Record<string, any> = {
+    status: [],
+    category: [],
+  };
+  private destroy$ = new Subject<void>();
   constructor(
     private dialog: MatDialog,
     private apiService: ApiService,
@@ -53,7 +64,67 @@ export class FaqComponent {
       this.fetcFaqList();
     });
   }
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.permissions.includes('add')) {
+      this.helperService.setActionButton({ label: 'Add New', icon: 'add' });
+    }
+    this.helperService.actionButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.addItem());
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: Global.STATUS_OPTIONS,
+      },
+      {
+        key: 'category',
+        label: 'Category',
+        type: 'multiselect',
+        options: Global.FAQ_CATEGORIES.map((c: string) => ({
+          value: c,
+          label: c,
+        })),
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    if (this.filterValues['category']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.filterOption.category = this.filterValues['category']?.length
+          ? this.filterValues['category'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.fetcFaqList();
+        this.updateFilterButton();
+      });
+  }
   addItem(data: any = null) {
     this.dialog
       .open(NewFaqComponent, {
@@ -77,6 +148,12 @@ export class FaqComponent {
     }
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
+    }
+    if (this.filterOption.category) {
+      params.set('category', this.filterOption.category);
     }
     this.apiService.faqList(params).subscribe({
       next: (res: any) => {
@@ -109,5 +186,11 @@ export class FaqComponent {
     //     this.permissions = permissions;
     //   },
     // });
+  }
+  ngOnDestroy(): void {
+    this.helperService.clearActionButton();
+    this.helperService.clearFilterButton();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from './auth.service';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import PaginationOptions from '../models/PaginationOptions';
 
 @Injectable({
@@ -18,7 +18,73 @@ export class HelpersService {
   breadcrumbs$ = this.breadcrumbs.asObservable();
   private searchKey = new BehaviorSubject<any>([]);
   searchKey$ = this.searchKey.asObservable();
+  // Lets any list page register a "Filters" button (with an active-filter
+  // count badge) that renders on the right side of the shared breadcrumb
+  // bar, and lets that same page know when it was clicked — keeps the
+  // filter drawer trigger common/reusable instead of duplicated per page.
+  private filterButton = new BehaviorSubject<{ count: number } | null>(null);
+  filterButton$ = this.filterButton.asObservable();
+  private filterButtonClick = new Subject<void>();
+  filterButtonClick$ = this.filterButtonClick.asObservable();
+  // Same pattern as the Filters button — lets a list page register an
+  // "Add New" action that renders on the breadcrumb bar instead of each
+  // page floating its own button over its table.
+  private actionButton = new BehaviorSubject<{
+    label: string;
+    icon?: string;
+  } | null>(null);
+  actionButton$ = this.actionButton.asObservable();
+  private actionButtonClick = new Subject<void>();
+  actionButtonClick$ = this.actionButtonClick.asObservable();
+  // Lets a list page register a view-mode switch (e.g. Tree/Table) plus a
+  // small set of secondary actions (e.g. Expand all/Collapse all) that
+  // render on the same breadcrumb-bar row as Add New/Filters, instead of
+  // the page floating its own separate toolbar row underneath.
+  private viewToggle = new BehaviorSubject<{
+    options: { value: string; label: string; icon?: string }[];
+    active: string;
+    extraActions?: { key: string; label: string; icon?: string }[];
+  } | null>(null);
+  viewToggle$ = this.viewToggle.asObservable();
+  private viewToggleChange = new Subject<string>();
+  viewToggleChange$ = this.viewToggleChange.asObservable();
+  private viewToggleAction = new Subject<string>();
+  viewToggleAction$ = this.viewToggleAction.asObservable();
   constructor(private authService: AuthService) {}
+  setViewToggle(config: {
+    options: { value: string; label: string; icon?: string }[];
+    active: string;
+    extraActions?: { key: string; label: string; icon?: string }[];
+  }) {
+    this.viewToggle.next(config);
+  }
+  clearViewToggle() {
+    this.viewToggle.next(null);
+  }
+  triggerViewToggleChange(value: string) {
+    this.viewToggleChange.next(value);
+  }
+  triggerViewToggleAction(key: string) {
+    this.viewToggleAction.next(key);
+  }
+  setFilterButton(count: number = 0) {
+    this.filterButton.next({ count });
+  }
+  clearFilterButton() {
+    this.filterButton.next(null);
+  }
+  triggerFilterButtonClick() {
+    this.filterButtonClick.next();
+  }
+  setActionButton(config: { label: string; icon?: string }) {
+    this.actionButton.next(config);
+  }
+  clearActionButton() {
+    this.actionButton.next(null);
+  }
+  triggerActionButtonClick() {
+    this.actionButtonClick.next();
+  }
   updateSearchTerm(searchKey: string) {
     this.searchKey.next(searchKey.trim());
   }

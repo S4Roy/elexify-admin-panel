@@ -359,6 +359,22 @@ mat-pseudo-checkbox {
   }
 }
 
+// Full-screen media lightbox — set via `panelClass: 'media-lightbox-panel'`
+// on that one dialog.open() call only, so this doesn't touch any other
+// dialog's chrome.
+.media-lightbox-panel {
+  max-width: 100vw !important;
+  width: 100vw;
+  height: 100vh;
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    border-radius: 0 !important;
+    padding: 0 !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*  @ Drawer
 /* -------------------------------------------------------------------------- */
@@ -449,13 +465,13 @@ mat-pseudo-checkbox {
 
   /* Default style tweaks and enhancements */
   .mat-mdc-text-field-wrapper {
-    background: #fff !important;
+    background: var(--bg-surface) !important;
+    border-color: var(--border-color);
     font-size: 14px;
     padding: 0;
     border-radius: 6px;
     border-width: 1px;
     border-style: solid;
-    // @apply shadow-sm bg-white border-gray-300 dark:bg-black dark:bg-opacity-5 dark:border-gray-500 #{'!important'};
 
     /* Adjust the top spacing and overflow when mat-label present */
     &:not(.mdc-text-field--no-label) {

@@ -13,10 +13,13 @@ import { MenuComponent } from 'app/layout/home-layout/includes/menu/menu.compone
 import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 
 @Component({
   selector: 'app-currency',
-  imports: [NgFor, NgIf, PaginationComponent, DatePipe],
+  imports: [EmptyStateComponent, NgFor, NgIf, PaginationComponent, DatePipe],
   templateUrl: './currency.component.html',
   styleUrl: './currency.component.scss',
 })
@@ -26,6 +29,9 @@ export class CurrencyComponent {
   paginationOption: PaginationOptions;
 
   filterOption: FilterOptions;
+  filterValues: Record<string, any> = {
+    status: [],
+  };
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -50,6 +56,45 @@ export class CurrencyComponent {
         this.filterOption.search_key = searchKey;
         this.paginationOption.page = 1;
         this.fetchCurrencyList();
+      });
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: Global.STATUS_OPTIONS,
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.fetchCurrencyList();
+        this.updateFilterButton();
       });
   }
   sort(field: string): void {
@@ -84,6 +129,9 @@ export class CurrencyComponent {
 
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
     }
 
     this.apiService.currencyList(params).subscribe({
@@ -141,6 +189,7 @@ export class CurrencyComponent {
   permissions: any = ['add', 'edit', 'delete'];
 
   ngOnDestroy(): void {
+    this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();
   }

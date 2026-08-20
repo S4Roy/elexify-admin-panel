@@ -1,16 +1,111 @@
-<div class="action-btns">
-  <button
-    (click)="addItem()"
-    *ngIf="permissions.includes('add')"
-    matTooltip="Add New Category"
-    class="btn-add"
-  >
-    <mat-icon class="text-xs">add</mat-icon>
-    Add New
-  </button>
+<!-- Tree View -->
+<div class="table-wrapper" *ngIf="viewMode === 'tree' && !isDrillDown">
+  <table class="table-base tree-table">
+    <thead>
+      <tr class="sticky">
+        <th scope="col">Name</th>
+        <th scope="col">Products</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let root of treeNodes">
+        <tr>
+          <td>
+            <div class="tree-row">
+              <button
+                type="button"
+                class="tree-toggle"
+                *ngIf="root?.children?.length; else treeSpacer"
+                (click)="toggleExpand(root._id)"
+                [attr.aria-label]="isExpanded(root._id) ? 'Collapse ' + root?.name : 'Expand ' + root?.name"
+              >
+                <mat-icon>{{ isExpanded(root._id) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+              </button>
+              <ng-template #treeSpacer><span class="tree-spacer"></span></ng-template>
+              <mat-icon class="tree-folder-icon" *ngIf="root?.children?.length">folder</mat-icon>
+              <img
+                *ngIf="!root?.children?.length && root?.image?.url"
+                [src]="root?.image?.url"
+                alt="Image"
+                height="24"
+              />
+              <a [routerLink]="'/inventory/categories/' + root?.slug">{{ root?.name }}</a>
+              <span class="sub-count-badge" *ngIf="root?.children?.length">
+                {{ root.children.length }} sub-{{ root.children.length > 1 ? 'categories' : 'category' }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <a [routerLink]="'/inventory/products/' + root?.slug">{{
+              root?.products
+                ? root.products + " Product" + (root.products > 1 ? "s" : "")
+                : ""
+            }}</a>
+          </td>
+          <td class="text-center">
+            <button type="button" class="table-status cursor-pointer" [class]="root?.status" (click)="updateStatus(root)" [attr.aria-label]="'Change status: ' + root?.status">
+              {{ root?.status }}
+            </button>
+          </td>
+          <td class="text-center">
+            <app-menu
+              [modalItem]="permissions.includes('edit') ? root : null"
+              (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? root : null"
+            ></app-menu>
+          </td>
+        </tr>
+        <ng-container *ngIf="root?.children?.length && isExpanded(root._id)">
+          <tr *ngFor="let child of root.children">
+            <td>
+              <div class="tree-row tree-row-child">
+                <span class="tree-spacer"></span>
+                <img
+                  *ngIf="child?.image?.url"
+                  [src]="child?.image?.url"
+                  alt="Image"
+                  height="24"
+                />
+                <a [routerLink]="'/inventory/categories/' + child?.slug">{{ child?.name }}</a>
+              </div>
+            </td>
+            <td>
+              <a [routerLink]="'/inventory/products/' + child?.slug">{{
+                child?.products
+                  ? child.products + " Product" + (child.products > 1 ? "s" : "")
+                  : ""
+              }}</a>
+            </td>
+            <td class="text-center">
+              <button type="button" class="table-status cursor-pointer" [class]="child?.status" (click)="updateStatus(child)" [attr.aria-label]="'Change status: ' + child?.status">
+                {{ child?.status }}
+              </button>
+            </td>
+            <td class="text-center">
+              <app-menu
+                [modalItem]="permissions.includes('edit') ? child : null"
+                (initModal)="addItem($event)"
+                (deleteItem)="deleteItem($event)"
+                [delete]="permissions.includes('delete') ? child : null"
+              ></app-menu>
+            </td>
+          </tr>
+        </ng-container>
+      </ng-container>
+      <ng-container *ngIf="!treeNodes?.length">
+        <tr>
+          <td class="text-center" colspan="4"><app-empty-state message="No Items Found"></app-empty-state></td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
 </div>
 
-<div class="table-wrapper">
+<!-- Table View (also used for the drill-down "children of X" view) -->
+<div class="table-wrapper" *ngIf="viewMode === 'table' || isDrillDown">
   <table class="table-base">
     <thead>
       <tr class="sticky">
@@ -51,10 +146,10 @@
                 : ""
             }}</a>
           </td>
-          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
-            <span class="table-status" [class]="item?.status">
+          <td class="text-center">
+            <button type="button" class="table-status cursor-pointer" [class]="item?.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
               {{ item?.status }}
-            </span>
+            </button>
           </td>
           <td class="text-center">
             <app-menu
@@ -68,13 +163,13 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="5">No Items Found</td>
+          <td class="text-center" colspan="5"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
   </table>
 </div>
-<ng-container>
+<ng-container *ngIf="viewMode === 'table' || isDrillDown">
   <pagination
     [pagination]="paginationOption"
     (pageChange)="onPageChange($event)"

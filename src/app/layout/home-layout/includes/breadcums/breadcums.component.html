@@ -1,37 +1,76 @@
-<div
-  class="flex flex-wrap items-center gap-2 px-3 py-2 mt-2 mb-0 system-bg text-sm sm:text-base"
+<nav
   *ngIf="breadcrumbs?.length"
+  aria-label="Breadcrumb"
+  class="crumb-bar mx-3 mt-2 flex flex-wrap items-center justify-between gap-1 rounded-lg px-3 py-2 text-sm"
 >
-  <!-- Optional OTHERS section -->
-  <ng-container *ngIf="settingsOutlet || usersOutlet">
-    <a
-      class="font-medium flex items-center text-gray-700 hover:text-teal-600 transition"
-      [routerLink]=""
-    >
-      OTHERS
-      <img
-        src="assets/double-arrow.png"
-        alt="arrow"
-        class="mx-1 inline-block size-4 sm:size-5"
-      />
-    </a>
-  </ng-container>
+  <div class="flex flex-wrap items-center gap-1">
+    <!-- Optional OTHERS section -->
+    <ng-container *ngIf="settingsOutlet || usersOutlet">
+      <a class="crumb-link" [routerLink]="">Others</a>
+      <mat-icon class="crumb-sep">chevron_right</mat-icon>
+    </ng-container>
 
-  <!-- Breadcrumb items -->
-  <ng-container *ngFor="let item of breadcrumbs; let l = last">
-    <a
-      class="font-medium flex items-center text-gray-700 bread-crumb transition"
-      [routerLink]="[item?.url]"
-      [routerLinkActiveOptions]="{ exact: true }"
-      routerLinkActive="bread-crumb-active"
+    <!-- Breadcrumb items -->
+    <ng-container *ngFor="let item of breadcrumbs; let l = last">
+      <a
+        class="crumb-link"
+        [routerLink]="[item?.url]"
+        [routerLinkActiveOptions]="{ exact: true }"
+        routerLinkActive="crumb-active"
+      >
+        {{ item?.label }}
+      </a>
+      <mat-icon *ngIf="!l" class="crumb-sep">chevron_right</mat-icon>
+    </ng-container>
+  </div>
+
+  <div class="flex items-center gap-2 flex-wrap">
+    <ng-container *ngIf="viewToggle?.extraActions?.length">
+      <button
+        type="button"
+        class="link-btn"
+        *ngFor="let action of viewToggle?.extraActions"
+        (click)="triggerViewAction(action.key)"
+      >
+        <mat-icon class="text-base" *ngIf="action.icon">{{ action.icon }}</mat-icon>
+        {{ action.label }}
+      </button>
+    </ng-container>
+
+    <div class="view-mode-switch" *ngIf="viewToggle as vt">
+      <button
+        type="button"
+        class="view-mode-btn"
+        *ngFor="let option of vt.options"
+        [class.active]="vt.active === option.value"
+        (click)="selectViewOption(option.value)"
+      >
+        <mat-icon class="text-base" *ngIf="option.icon">{{ option.icon }}</mat-icon>
+        {{ option.label }}
+      </button>
+    </div>
+
+    <button
+      type="button"
+      *ngIf="actionButton"
+      class="add-new-btn"
+      (click)="triggerAction()"
     >
-      {{ item?.label | uppercase }}
-      <img
-        src="assets/double-arrow.png"
-        *ngIf="!l"
-        alt="arrow"
-        class="mx-1 inline-block size-4 sm:size-5"
-      />
-    </a>
-  </ng-container>
-</div>
+      <mat-icon class="text-base">{{ actionButton.icon || 'add' }}</mat-icon>
+      {{ actionButton.label }}
+    </button>
+
+    <button
+      type="button"
+      *ngIf="filterButton"
+      class="filters-btn"
+      (click)="openFilters()"
+    >
+      <mat-icon class="text-base">tune</mat-icon>
+      Filters
+      <span class="filters-count" *ngIf="filterButton.count > 0">{{
+        filterButton.count
+      }}</span>
+    </button>
+  </div>
+</nav>

@@ -18,37 +18,29 @@
           <td>{{ item?.email }}</td>
           <td>{{ item?.ip }}</td>
           <td>
-            <div
-              [innerHTML]="item.user_agent"
-              [appReadMoreClamp]="60"
-              readMoreLabel="Read More"
-              readLessLabel="Read Less"
-            ></div>
-          </td>
-          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
-            <span class="table-status" [class]="item?.status">
-              {{ item?.status }}
-            </span>
+            <div [innerHTML]="item.user_agent" [appReadMoreClamp]="60" readMoreLabel="Read More"
+              readLessLabel="Read Less"></div>
           </td>
           <td class="text-center">
-            <app-menu
-              (deleteItem)="deleteItem($event)"
-              [delete]="permissions.includes('delete') ? item : null"
-            ></app-menu>
+            <button type="button" class="table-status cursor-pointer" [class]="item?.status"
+              (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
+              {{ item?.status }}
+            </button>
+          </td>
+          <td class="text-center">
+            <app-menu (deleteItem)="deleteItem($event)"
+              [delete]="permissions.includes('delete') ? item : null"></app-menu>
           </td>
         </tr>
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="5">No Items Found</td>
+          <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
   </table>
 </div>
 <ng-container>
-  <pagination
-    [pagination]="paginationOption"
-    (pageChange)="onPageChange($event)"
-  ></pagination>
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
 </ng-container>

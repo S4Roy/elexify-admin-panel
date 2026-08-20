@@ -32,11 +32,11 @@
   align-items: center;
   font: normal normal normal 12px/16px Rethink Sans;
   letter-spacing: 0px;
-  color: #0e153a;
+  color: var(--text-primary);
 }
 .profile-menu .right-side .item .dot {
   font-size: 20px !important;
-  background-color: #0e153a;
+  background-color: var(--text-primary);
   height: 4px;
   width: 4px;
   border-radius: 50%;
@@ -44,7 +44,7 @@
 
 button mat-icon {
   color: #868a9c !important;
-  margin-right: 8px;
+  // margin-right: 8px;
 }
 .mat-mdc-menu-item {
   min-height: 36px;
@@ -133,10 +133,18 @@ element.style {
 
 .mat-elevation-z8,
 .mat-mdc-elevation-specific.mat-elevation-z8 {
-  -webkit-transition: opacity 0.3s linear, left 0.3s ease-out;
-  -moz-transition: opacity 0.3s linear, left 0.3s ease-out;
-  -o-transition: opacity 0.3s linear, left 0.3s ease-out;
-  transition: opacity 0.3s linear, left 0.3s ease-out;
+  -webkit-transition:
+    opacity 0.3s linear,
+    left 0.3s ease-out;
+  -moz-transition:
+    opacity 0.3s linear,
+    left 0.3s ease-out;
+  -o-transition:
+    opacity 0.3s linear,
+    left 0.3s ease-out;
+  transition:
+    opacity 0.3s linear,
+    left 0.3s ease-out;
 }
 span.profile-image {
   width: 30px;

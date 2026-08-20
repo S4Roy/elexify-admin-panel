@@ -1,94 +1,77 @@
 <nav class="bg-gray-100">
-  <div class="mx-auto max-w-7xl pl-2 sm:pl-6 lg:pl-2">
+  <div class="mx-auto pl-2 sm:pl-6 lg:pl-2">
     <div class="relative flex h-12 items-center justify-between">
       <div class="h-[100%] flex items-center">
-        <ng-container *ngIf="!device.isDesktop()">
-          <button mat-icon-button (click)="toggleMenu()">
-            <mat-icon>menu</mat-icon>
-          </button>
-        </ng-container>
+        <button type="button" mat-icon-button *ngIf="!device.isDesktop()" (click)="toggleMenu()"
+          aria-label="Toggle menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <button type="button" mat-icon-button *ngIf="device.isDesktop()" (click)="navService.toggleSideNav()"
+          [attr.aria-label]="
+            navService.isSideNavOpen ? 'Collapse sidebar' : 'Expand sidebar'
+          ">
+          <mat-icon>{{
+            navService.isSideNavOpen ? 'menu_open' : 'menu'
+            }}</mat-icon>
+        </button>
       </div>
 
       <div class="open-outlet flex justify-end items-center">
-        <div
-          class="max-w-md w-96 flex-1 flex items-center"
-          *ngIf="!device.isMobile()"
-        >
+        <div class="max-w-md w-96 flex-1 flex items-center" *ngIf="!device.isMobile()">
           <mat-form-field class="search">
             <mat-icon matPrefix>search</mat-icon>
-            <input
-              [(ngModel)]="searchTerm"
-              (input)="onSearchChange($event)"
-              matInput
-              placeholder="Enter your search keywords"
-            />
+            <input [(ngModel)]="searchTerm" (input)="onSearchChange($event)" matInput
+              placeholder="Enter your search keywords" aria-label="Search" />
 
-            <mat-icon
-              class="cursor-pointer"
-              *ngIf="searchTerm"
-              (click)="clearSearch()"
-              matSuffix
-              >close</mat-icon
-            >
+            <button type="button" mat-icon-button *ngIf="searchTerm" (click)="clearSearch()" matSuffix
+              aria-label="Clear search">
+              <mat-icon>close</mat-icon>
+            </button>
           </mat-form-field>
         </div>
         <mat-icon class="mx-4 cursor-pointer">settings</mat-icon>
-        <mat-icon
-          matBadgeColor="warn"
-          [matBadgeHidden]="!total_unread_record"
-          [matBadge]="total_unread_record"
-          class="mr-4 cursor-pointer"
-          (click)="showNotifications()"
-          >notifications</mat-icon
-        >
+        <button type="button" mat-icon-button class="mr-4" (click)="themeService.toggle()" [attr.aria-label]="
+            themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme'
+          ">
+          <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+        <button type="button" mat-icon-button class="mr-4" (click)="showNotifications()" [attr.aria-label]="
+            total_unread_record
+              ? 'Notifications, ' + total_unread_record + ' unread'
+              : 'Notifications'
+          ">
+          <mat-icon matBadgeColor="warn" [matBadgeHidden]="!total_unread_record"
+            [matBadge]="total_unread_record">notifications</mat-icon>
+        </button>
 
         <!-- Profile dropdown -->
         <div class="h-12 flex items-center" [matMenuTriggerFor]="menu">
-          <button class="flex items-center justify-center">
-            <img
-              alt=""
-              src="assets/avatar.jpg"
-              class="inline-block size-7 rounded-full ring-1 ring-red-600"
-            /><span
-              *ngIf="!device.isMobile()"
-              class="mx-3 flex flex-col leading-3 items-start justify-start"
-            >
+          <button class="flex items-center justify-center" aria-label="Open account menu">
+            <img alt="" src="assets/avatar.jpg" class="inline-block size-7 rounded-full ring-1 ring-red-600" /><span
+              *ngIf="!device.isMobile()" class="mx-3 flex flex-col leading-3 items-start justify-start">
               <span class="block text-sm text-black">{{
                 helperService.userDetails()?.name
-              }}</span>
+                }}</span>
               <small class="block text-gray-500">{{
                 helperService.userDetails()?.display_role_name
-              }}</small>
+                }}</small>
             </span>
             <mat-icon class="ml-4">keyboard_arrow_down</mat-icon>
           </button>
         </div>
         <mat-menu #menu="matMenu">
           <div class="profile-menu">
-            <img
-              alt=""
-              src="assets/avatar.jpg"
-              class="inline-block size-7 rounded-full ring-1 ring-red-600"
-            />
+            <img alt="" src="assets/avatar.jpg" class="inline-block size-7 rounded-full ring-1 ring-red-600" />
             <div class="right-side">
               <div class="item">
                 {{ userDetails?.name }}
               </div>
               <div class="item email">{{ userDetails?.email }}</div>
               <div class="item">
-                <a
-                  class="text-primary"
-                  routerLink="/settings/basic-information"
-                >
-                  My Account</a
-                >
+                <a class="text-primary" routerLink="/settings/basic-information">
+                  My Account</a>
                 <span class="dot mx-2"></span>
-                <a
-                  href="javascript:void(0)"
-                  (click)="signOut()"
-                  class="text-danger"
-                  >Sign Out</a
-                >
+                <a href="javascript:void(0)" (click)="signOut()" class="text-danger">Sign Out</a>
               </div>
             </div>
           </div>

@@ -21,6 +21,38 @@ $transition: all 0.3s ease-in-out;
 $z-index: 1000;
 $white: #ffffff;
 
+// Dark-mode tokens. Toggled by ThemeService adding/removing `.dark` on
+// <html> (Tailwind's darkMode: 'class' strategy — the same class also
+// drives the `dark:` utilities used in a few templates). Status badges
+// intentionally keep their light, saturated colors in both themes (same
+// convention as GitHub/Linear/Notion) — they're small self-contained
+// chips, not full-page surfaces, so they don't need a dark variant.
+:root {
+  --bg-page: #f8f8f8;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #eaeaea3b;
+  --bg-header: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --border-color-strong: #cdcdcd;
+  --nav-primary: #2563eb;
+  --active-tint-bg: rgba(37, 99, 235, 0.08);
+}
+
+.dark {
+  --bg-page: #10141d;
+  --bg-surface: #1a1f2b;
+  --bg-surface-alt: #232937;
+  --bg-header: #232937;
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --border-color: #2d3344;
+  --border-color-strong: #3a4152;
+  --nav-primary: #3b82f6;
+  --active-tint-bg: rgba(59, 130, 246, 0.18);
+}
+
 html,
 body {
   height: 100%;
@@ -28,62 +60,105 @@ body {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
 }
 
 ::-webkit-scrollbar-track {
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-  background-color: #f5f5f5;
+  background-color: var(--bg-page);
 }
 
 ::-webkit-scrollbar {
   width: 6px;
-  background-color: #f5f5f5;
+  background-color: var(--bg-page);
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: $primary-color;
 }
 .mat-mdc-menu-panel {
-  background: white !important;
+  background: var(--bg-surface) !important;
   padding: 0 !important;
 }
 .page-wrapper {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 
-  .left-wrapper {
-    background-color: #f8f8f8;
-    margin-right: 10px;
-    width: 290px;
+  .sidenav-wrapper {
+    background-color: var(--bg-surface);
+    border-right: 1px solid var(--border-color);
+    flex-shrink: 0;
   }
-  .stretch-left-wrapper {
-    background-color: #f8f8f8 !important;
-    margin-right: 10px !important;
-    width: 80px !important;
+  .left-wrapper {
+    width: 260px;
+    transition: width 0.2s ease;
+
+    &.sidenav-collapsed {
+      width: 76px;
+    }
+  }
+  .sidenav-mobile {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+
+    &.sidenav-mobile-open {
+      transform: translateX(0);
+    }
   }
   .right-wrapper {
     width: 100%;
+    min-width: 0;
   }
 }
-.system-bg {
-  background-color: #f8f8f8;
+.sidenav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(15, 23, 42, 0.45);
 }
+.system-bg {
+  background-color: var(--bg-page);
+}
+.skip-to-content-link {
+  position: absolute;
+  top: -3rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background-color: $primary-color;
+  color: #fff;
+  border-radius: 0.25rem;
+  transition: top 0.15s ease-in-out;
+}
+
+.skip-to-content-link:focus {
+  top: 0.5rem;
+}
+
 .outlet {
   margin: 0;
   padding: 10px;
-  background-color: #f8f8f8;
+  background-color: var(--bg-page);
   height: calc(100vh - 96px);
   overflow: auto;
 }
 .full-outlet {
-  margin: 10px 10px 0 0 !important;
-  background-color: #f8f8f8 !important;
+  background-color: var(--bg-page) !important;
   overflow: auto !important;
-  height: calc(100vh - 109px) !important;
+  height: calc(100vh - 111px) !important;
 }
 .content-box {
   height: calc(100% - 0px);
-  background: white;
+  background: var(--bg-surface);
 }
 .child-menu-list.hidden {
   display: none; /* Hide child menu by default */
@@ -101,13 +176,6 @@ a.active .child-menu-list {
   display: block !important; /* Ensure child menu is shown when parent is active */
 }
 
-.bread-crumb-active {
-  color: $primary-color !important; /* Change color of active breadcrumb */
-  font-weight: 500 !important; /* Make active breadcrumb bold */
-}
-.bread-crumb-active:hover {
-  color: $primary-dark !important; /* Change color of active breadcrumb */
-}
 ul.child-menu {
   list-style: none;
   margin: 0;
@@ -154,14 +222,13 @@ li.child-item.active {
     border-radius: 10px;
   }
   a {
-    color: black !important;
+    color: var(--text-primary) !important;
     font-weight: 500 !important;
   }
 }
-.sidebarMenu {
-  height: calc(100vh - 80px);
-  overflow-y: auto;
-}
+// .sidebarMenu itself is sized by the flex column layout in
+// side-nav.component.html (h-full flex-col host, flex-1 min-h-0 nav) —
+// no fixed height needed here.
 // a.active img {
 //   filter: invert(16%) sepia(92%) saturate(7463%) hue-rotate(-6deg)
 //     brightness(100%) contrast(119%);
@@ -187,34 +254,40 @@ ngx-editor,
 table {
   min-width: 100%;
 }
-thead th {
+// Scoped to :not(.table-base) so these legacy rules never bleed into the
+// unified .table-base look (they used to collide: both styled thead/td
+// backgrounds on the same table, e.g. a blue header showing through a
+// table meant to have a peach header).
+table:not(.table-base) thead th {
   background: $primary-light;
-  border: 1px solid white;
+  border: 1px solid var(--bg-page);
   padding: 12px 22px;
+  color: var(--text-primary);
 }
-thead th:first-child {
+table:not(.table-base) thead th:first-child {
   border-left: none;
 }
-thead th:last-child {
+table:not(.table-base) thead th:last-child {
   border-right: none;
 }
 
-tbody td {
-  border: 1px solid white;
+table:not(.table-base) tbody td {
+  border: 1px solid var(--bg-page);
   padding: 12px 22px;
+  color: var(--text-primary);
 }
-tbody td:first-child {
+table:not(.table-base) tbody td:first-child {
   border-left: none;
 }
-tbody td:last-child {
+table:not(.table-base) tbody td:last-child {
   border-right: none;
 }
-tbody tr:nth-child(odd) {
-  background-color: #ffffff; /* White background for odd cells */
+table:not(.table-base) tbody tr:nth-child(odd) {
+  background-color: var(--bg-surface);
 }
 
-tbody tr:nth-child(even) {
-  background-color: #eaeaea3b; /* Light gray background for even cells */
+table:not(.table-base) tbody tr:nth-child(even) {
+  background-color: var(--bg-surface-alt);
 }
 
 .add-new-title {
@@ -223,8 +296,8 @@ tbody tr:nth-child(even) {
 .date {
   min-width: 118px;
 }
-tbody tr td {
-  border-bottom: 1px solid #cdcdcd !important;
+table:not(.table-base) tbody tr td {
+  border-bottom: 1px solid var(--border-color-strong) !important;
 }
 .settings-bg-card {
   position: absolute;
@@ -256,14 +329,36 @@ button.save-button {
   height: calc(100vh - 156px);
   overflow: auto;
 }
+// This owns BOTH scroll axes for its table — on purpose. A sticky <thead>
+// can only stick relative to its *nearest* ancestor with non-visible
+// overflow; if that ancestor only handled vertical scroll (e.g. `.outlet`)
+// and horizontal scroll lived one level further in (needed so wide tables
+// don't blow out the layout on mobile), the two requirements conflict —
+// CSS forces overflow-x/y to move together, so an intermediate horizontal
+// scroller silently steals the sticky containing block and the header
+// stops sticking to the page. Keeping one scroll container here, with the
+// header sticky relative to it, sidesteps that entirely and is the
+// standard pattern for tables that need both a sticky header and
+// horizontal scroll on narrow viewports. `.outlet` itself doesn't scroll
+// on these pages — its content (breadcrumb bar + this wrapper) is sized to
+// fit within it, so there's only ever one scrollbar.
 .table-wrapper {
-  height: calc(100vh - 169px);
+  height: calc(100vh - 192px);
   overflow: auto;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+
+  @media (max-width: 767px) {
+    height: calc(100vh - 175px);
+  }
 }
 .add-wrapper {
   height: calc(100vh - 100px);
   overflow: auto;
 }
+thead tr,
 tr.sticky {
   position: sticky;
   top: 0;
@@ -273,8 +368,8 @@ tr.sticky {
 
 button:disabled,
 button[disabled] {
-  background-color: #cccccc;
-  color: #666666;
+  background-color: #d9d9d9;
+  color: #595959;
   cursor: not-allowed;
 }
 span.rejected,
@@ -464,7 +559,7 @@ div.previous-image {
   font-weight: 500;
   font-size: 1rem;
   color: $primary-color; /* Tailwind's green-500 */
-  background-color: white;
+  background-color: var(--bg-surface);
   transition: all 0.3s ease;
   border-color: $primary-color;
   cursor: pointer;
@@ -488,27 +583,65 @@ div.previous-image {
   width: 100%;
   font-size: 0.875rem; /* text-sm */
   text-align: left;
-  color: #6b7280; /* Tailwind gray-500 */
-  border-collapse: collapse;
+  color: var(--text-secondary);
+  background-color: var(--bg-surface);
+  // `collapse` breaks position:sticky header cells — collapsed borders
+  // prevent the browser from properly isolating the sticky cell's paint
+  // layer, so a scrolled-past row can visibly bleed through the stuck
+  // header. `separate` fixes it; safe here since only bottom-borders are
+  // used (nothing to double up).
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .table-base thead {
-  background-color: #f8e9e6; /* Tailwind red-100 */
-  color: #000;
+  background-color: var(--bg-header);
+  color: var(--text-primary);
   text-transform: uppercase;
   font-size: 0.75rem; /* text-xs */
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .table-base th,
 .table-base td {
-  padding: 0.75rem;
+  padding: 0.7rem;
   vertical-align: middle;
-  border-bottom: 1px solid #e5e7eb; /* Tailwind gray-200 */
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-base thead th {
+  // Sticky is applied to the row via the universal `thead tr` rule above,
+  // not here — see the note on the generic `thead th` rule for why.
+  border-bottom: 1px solid var(--border-color-strong);
+}
+
+.table-base tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table-base tbody tr:hover td {
+  background-color: var(--bg-surface-alt);
+}
+
+.table-base tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .table-base th.text-center,
 .table-base td.text-center {
   text-align: center;
+}
+
+// Tighter rows on mobile — less wasted padding, so more of the (already
+// height-constrained) table is actual data instead of whitespace.
+@media (max-width: 767px) {
+  thead th,
+  tbody td,
+  .table-base th,
+  .table-base td {
+    padding: 0.55rem 0.65rem;
+  }
 }
 
 .table-base img {
@@ -545,6 +678,15 @@ div.previous-image {
 .table-status.inactive {
   color: #991b1b;
   background-color: #fee2e2;
+}
+
+// Status toggles are real <button> elements for keyboard accessibility;
+// strip native button chrome so they still read as inline status pills.
+button.cursor-pointer {
+  border: none;
+  background-color: transparent;
+  font-family: inherit;
+  line-height: inherit;
 }
 
 .table-empty-row {
@@ -705,8 +847,10 @@ div.previous-image {
   border: none;
   box-sizing: border-box;
   border-radius: 4px;
-  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-    0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
 .cdk-drag-placeholder {
   opacity: 0;
@@ -714,6 +858,76 @@ div.previous-image {
 .cdk-drag-animating {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+/* -------------------------------------------------------------------------- */
+/*  @ Dark mode patches
+/* -------------------------------------------------------------------------- */
+// Angular Material's prebuilt theme (indigo-pink.css) and the many
+// `bg-white`/`text-gray-*` Tailwind utilities sprinkled through page
+// templates are all authored as fixed light-mode values. Rather than
+// editing every dialog/card template individually, override the utility
+// classes themselves once `.dark` is active — same surface tokens as the
+// rest of the app.
+.dark {
+  .bg-white {
+    background-color: var(--bg-surface) !important;
+  }
+  .text-gray-900,
+  .text-gray-800,
+  .text-gray-700 {
+    color: var(--text-primary) !important;
+  }
+  .text-gray-600,
+  .text-gray-500 {
+    color: var(--text-secondary) !important;
+  }
+  .border-gray-200,
+  .border-gray-300 {
+    border-color: var(--border-color) !important;
+  }
+
+  // Dialog surface content (each dialog's own root div uses bg-white,
+  // already covered above) plus the dropdown/select panels Material
+  // renders into the CDK overlay container.
+  .mat-mdc-dialog-container .mdc-dialog__title,
+  .mat-mdc-dialog-container .mdc-dialog__content {
+    color: var(--text-primary);
+  }
+  .mat-mdc-select-panel,
+  .mat-mdc-autocomplete-panel,
+  .cdk-overlay-container .ng-dropdown-panel {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+  }
+
+  // mat-mdc-form-field input/label text (the wrapper's background/border
+  // is handled in angular-material.scss via the same tokens).
+  .mat-mdc-form-field {
+    input,
+    textarea,
+    .mat-mdc-select-value {
+      color: var(--text-primary) !important;
+    }
+    .mdc-floating-label {
+      color: var(--text-secondary) !important;
+    }
+  }
+
+  .ng-select .ng-select-container {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  // logo.png has dark wordmark text baked into the PNG with no dark-mode
+  // variant — give it a light backing so the text stays legible instead
+  // of commissioning/guessing a recolored asset.
+  img[src*="logo.png"] {
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+}
+
 @import "ckeditor5/ckeditor5.css";
 .product {
   ul {

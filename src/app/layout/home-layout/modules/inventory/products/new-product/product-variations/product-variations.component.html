@@ -65,7 +65,7 @@
                         formControlName="value_id"
                         clearable="false"
                         [readonly]="data?._id"
-                      >
+                      [ariaLabel]="'Select Value'">
                         <ng-option
                           *ngFor="let value of attribute_values"
                           [value]="value._id"
@@ -82,7 +82,7 @@
                   placeholder="Select Rarity"
                   formControlName="rarity"
                   [multiple]="false"
-                >
+                [ariaLabel]="'Select Rarity'">
                   <ng-option
                     *ngFor="let rarity of Global.rarity_list"
                     [value]="rarity?._id"

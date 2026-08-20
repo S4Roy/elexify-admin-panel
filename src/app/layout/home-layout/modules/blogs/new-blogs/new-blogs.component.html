@@ -59,7 +59,7 @@
               [addTag]="true"
               [multiple]="true"
               [class.is-invalid]="!Global.isInputValid(formGroup, 'tags')"
-            >
+            [ariaLabel]="'Select Tags'">
               <ng-template ng-option-tmp let-item="item">
                 <div class="flex items-center">
                   {{ item }}
@@ -143,7 +143,7 @@
         (scrollToEnd)="loadMoreBlogs()"
         (search)="blogSearchSubject.next($event)"
         [class.is-invalid]="!Global.isInputValid(formGroup, 'related_blogs')"
-      >
+      [ariaLabel]="'Select Blogs'">
         <ng-option *ngFor="let blog of blog_list" [value]="blog?._id">
           <div class="flex items-center">
             {{ blog?.title }}

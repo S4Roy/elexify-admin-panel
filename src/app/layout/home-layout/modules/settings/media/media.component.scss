@@ -1,0 +1,32 @@
+// Scoped to this component's own template only — everything below is a
+// descendant of <app-media> (mat-dialog-content, mat-tab-group, etc. are
+// written in media.component.html), so :host ::ng-deep reaches them without
+// leaking out to other dialogs in the app.
+//
+// mat-dialog-content is the SINGLE scroll container for the whole dialog
+// body (both tabs) — do not reintroduce a nested overflow-y:auto wrapper
+// inside it, that's what caused the double-scrollbar issue.
+:host ::ng-deep {
+  .mat-mdc-dialog-content {
+    padding: 12px 16px !important;
+    max-height: 70vh;
+  }
+
+  h2[mat-dialog-title] {
+    padding: 12px 16px 4px !important;
+    margin: 0 !important;
+  }
+
+  .mat-mdc-tab-header {
+    margin: 0 0 4px;
+  }
+
+  .mat-mdc-tab-body-content {
+    padding: 8px 0 0 0;
+  }
+
+  .mat-mdc-dialog-actions {
+    padding: 8px 16px !important;
+    min-height: 0;
+  }
+}

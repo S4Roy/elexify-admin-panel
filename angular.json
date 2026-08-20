@@ -36,7 +36,6 @@
               "src/styles.scss",
               "node_modules/ngx-toastr/toastr.css",
               "node_modules/ngx-spinner/animations/ball-scale-multiple.css",
-              "node_modules/@swimlane/ngx-datatable/assets/icons.css",
               "@ng-select/ng-select/themes/default.theme.css"
             ],
             "scripts": []

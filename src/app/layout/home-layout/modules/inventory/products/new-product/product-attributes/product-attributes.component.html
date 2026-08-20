@@ -28,7 +28,7 @@
           (change)="onAttributeSelect($event)"
           (scrollToEnd)="loadMoreAttributes()"
           (search)="attributesSearchSubject.next($event)"
-        >
+        [ariaLabel]="'Select Attributes'">
           <ng-option
             *ngFor="let attribute of filter_attributes"
             [value]="attribute"
@@ -78,7 +78,7 @@
                     formControlName="attribute"
                     appendTo="body"
                     [readonly]="true"
-                  >
+                  [ariaLabel]="'Select Attributes'">
                     <ng-option
                       *ngFor="let attribute of attributes_list"
                       [value]="attribute?._id"
@@ -107,7 +107,7 @@
                         'attributes.' + i + '.values'
                       )
                     "
-                  >
+                  [ariaLabel]="'Select values'">
                     <ng-template ng-header-tmp>
                       <div class="select-all">
                         <input

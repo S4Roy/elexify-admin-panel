@@ -1,3 +1,12 @@
+// Keep the trigger the size of the bare icon it replaces so table rows
+// don't grow now that it's a real (keyboard-focusable) button.
+::ng-deep .action-menu-trigger.mat-mdc-icon-button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  --mdc-icon-button-state-layer-size: 24px;
+}
+
 .actionlink {
   margin: 0px 0px;
   padding: 0px 0px;

@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { HomeLayoutComponent } from './home-layout.component';
 import { CustomersComponent } from './modules/customers/customers.component';
 import { DashboardComponent } from './modules/dashboard/dashboard/dashboard.component';
@@ -14,7 +13,7 @@ import { ContactUsComponent } from './modules/contact-us/contact-us.component';
 import { SubscriberComponent } from './modules/subscriber/subscriber.component';
 import { EnquiriesComponent } from './modules/enquiries/enquiries.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     component: HomeLayoutComponent,
@@ -32,9 +31,7 @@ const routes: Routes = [
         path: 'settings',
         data: { pageTitle: 'Settings', breadcrumb: 'Settings' },
         loadChildren: () =>
-          import('./modules/settings/settings.module').then(
-            (m) => m.SettingsModule
-          ),
+          import('./modules/settings/settings.routes').then((m) => m.routes),
       },
       {
         path: 'customers',
@@ -106,9 +103,3 @@ const routes: Routes = [
     ],
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class HomeLayoutRoutingModule {}

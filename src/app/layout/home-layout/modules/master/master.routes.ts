@@ -1,10 +1,9 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { SpecificationsComponent } from './specifications/specifications.component';
 import { BlankLayoutComponent } from '../../includes/blank-layout/blank-layout.component';
 import { HomeLayoutComponent } from '../../home-layout.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     component: HomeLayoutComponent,
@@ -36,9 +35,3 @@ const routes: Routes = [
     ],
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class MasterRoutingModule {}

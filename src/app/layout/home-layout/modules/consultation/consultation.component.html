@@ -29,29 +29,17 @@
           <td>{{ item?.dob | date : "dd/MM/yyyy" }} {{ item?.time }}</td>
           <td>{{ item?.occupation }}</td>
           <td>
-            <div
-              [innerHTML]="item.place"
-              [appReadMoreClamp]="110"
-              readMoreLabel="Read More"
-              readLessLabel="Read Less"
-            ></div>
+            <div [innerHTML]="item.place" [appReadMoreClamp]="110" readMoreLabel="Read More" readLessLabel="Read Less">
+            </div>
           </td>
           <td>{{ item?.postcode }}</td>
           <td>
-            <div
-              [innerHTML]="item.current_address"
-              [appReadMoreClamp]="110"
-              readMoreLabel="Read More"
-              readLessLabel="Read Less"
-            ></div>
+            <div [innerHTML]="item.current_address" [appReadMoreClamp]="110" readMoreLabel="Read More"
+              readLessLabel="Read Less"></div>
           </td>
           <td>
-            <div
-              [innerHTML]="item.purpose"
-              [appReadMoreClamp]="110"
-              readMoreLabel="Read More"
-              readLessLabel="Read Less"
-            ></div>
+            <div [innerHTML]="item.purpose" [appReadMoreClamp]="110" readMoreLabel="Read More"
+              readLessLabel="Read Less"></div>
           </td>
 
           <td class="text-center">
@@ -68,15 +56,12 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="9">No Items Found</td>
+          <td class="text-center" colspan="11"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
   </table>
 </div>
 <ng-container>
-  <pagination
-    [pagination]="paginationOption"
-    (pageChange)="onPageChange($event)"
-  ></pagination>
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
 </ng-container>

@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
+import { ActivatedRouteSnapshot, Routes } from '@angular/router';
 import { CategoriesComponent } from './categories/categories.component';
 import { HomeLayoutComponent } from '../../home-layout.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -18,7 +17,7 @@ import { ClassificationComponent } from './classification/classification.compone
 import { NewCategoryComponent } from './categories/new-category/new-category.component';
 import { CouponsComponent } from './coupons/coupons.component';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     component: HomeLayoutComponent,
@@ -146,18 +145,8 @@ const routes: Routes = [
         children: [
           {
             path: '',
-            redirectTo: 'parent',
-            pathMatch: 'full',
-          },
-          {
-            path: 'parent',
             component: CategoriesComponent,
-            data: { pageTitle: 'Categories', breadcrumb: 'Parent' },
-          },
-          {
-            path: 'sub',
-            component: CategoriesComponent,
-            data: { pageTitle: 'Categories', breadcrumb: 'Sub' },
+            data: { pageTitle: 'Categories', breadcrumb: '' },
           },
           {
             path: 'add',
@@ -320,9 +309,3 @@ const routes: Routes = [
     ],
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class InventoryRoutingModule {}

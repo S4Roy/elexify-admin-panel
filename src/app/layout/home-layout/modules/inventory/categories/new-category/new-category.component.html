@@ -28,7 +28,7 @@
               "
               (scrollToEnd)="loadMoreItems()"
               (search)="searchSubject.next($event)"
-            >
+            [ariaLabel]="'Select'">
               <ng-option
                 *ngFor="let category of categories"
                 [value]="category?._id"

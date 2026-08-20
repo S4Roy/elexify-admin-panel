@@ -10,19 +10,23 @@ import * as Global from 'app/global';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { NewProductComponent } from './new-product/new-product.component';
 import { StocksComponent } from './stocks/stocks.component';
 import { MatIconModule } from '@angular/material/icon';
-import { combineLatest } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
 import { SpecialButtonComponent } from 'app/layout/home-layout/includes/special-button/special-button.component';
 import { A11yModule } from '@angular/cdk/a11y';
 import { TruncateListDirective } from 'app/core/directives/truncate-list.directive';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 @Component({
   selector: 'app-products',
   imports: [
+    EmptyStateComponent,
     NgFor,
     NgIf,
     PaginationComponent,
@@ -47,6 +51,26 @@ export class ProductsComponent {
   filterOption: FilterOptions;
   public sortKey: string = 'created_at';
   public sortDirection: 'asc' | 'desc' = 'desc';
+  // Working filter values, keyed to match filterFields below — handed to the
+  // shared filter drawer and read back from it. Category/tags/classifications/
+  // stock_status are also kept in sync with route/query params so links from
+  // elsewhere (e.g. a category tree, a "Low Stock" dashboard link) still work.
+  filterValues: Record<string, any> = {
+    category: [],
+    brand: [],
+    status: null,
+    stock_status: null,
+    type: null,
+    tags: [],
+    classifications: [],
+    min_price: null,
+    max_price: null,
+  };
+  categoryOptions: { value: string; label: string }[] = [];
+  brandOptions: { value: string; label: string }[] = [];
+  tagOptions: { value: string; label: string }[] = [];
+  classificationOptions: { value: string; label: string }[] = [];
+  private destroy$ = new Subject<void>();
   constructor(
     private dialog: MatDialog,
     private inventoryService: InventoryService,
@@ -61,20 +85,210 @@ export class ProductsComponent {
     // this.checkPermission();
   }
   ngOnInit(): void {
+    if (this.permissions.includes('add')) {
+      this.helperService.setActionButton({
+        label: 'Add New Product',
+        icon: 'add',
+      });
+    }
+    this.helperService.actionButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.addItem());
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    // Only active rows — a truncated, unfiltered page can silently miss
+    // every active row if inactive ones happen to sort first.
+    this.inventoryService
+      .categoryList(new URLSearchParams({ all: 'true', status: 'active' }))
+      .subscribe({
+        next: (res: any) => {
+          this.categoryOptions = (Array.isArray(res?.data) ? res.data : []).map(
+            (c: any) => ({ value: c.slug, label: c.name })
+          );
+        },
+        error: () => {},
+      });
+    this.inventoryService
+      .brandList(new URLSearchParams({ all: 'true' }))
+      .subscribe({
+        next: (res: any) => {
+          this.brandOptions = (Array.isArray(res?.data) ? res.data : []).map(
+            (b: any) => ({ value: b.slug, label: b.name })
+          );
+        },
+        error: () => {},
+      });
+    this.inventoryService
+      .tagList(new URLSearchParams({ limit: '200', status: 'active' }))
+      .subscribe({
+        next: (res: any) => {
+          this.tagOptions = (res?.data?.docs ?? []).map((t: any) => ({
+            value: t.slug,
+            label: t.name,
+          }));
+        },
+        error: () => {},
+      });
+    this.inventoryService
+      .classificationList(
+        new URLSearchParams({ limit: '200', status: 'active' })
+      )
+      .subscribe({
+        next: (res: any) => {
+          this.classificationOptions = (res?.data?.docs ?? []).map(
+            (c: any) => ({ value: c.slug, label: c.name })
+          );
+        },
+        error: () => {},
+      });
     combineLatest([
       this.route.paramMap,
       this.route.queryParamMap,
       this.helperService.searchKey$,
-    ]).subscribe(([params, queryParam, searchKey]) => {
-      this.filterOption = Global.resetTableFilterOptions();
-      this.filterOption.category = params.get('slug');
-      this.filterOption.stock_status = queryParam.get('stock_status');
-      this.filterOption.tags = queryParam.get('tags');
-      this.filterOption.classifications = queryParam.get('classifications');
-      this.filterOption.search_key = searchKey;
-      this.paginationOption.page = 1;
-      this.fetchProductList();
-    });
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([params, queryParam, searchKey]) => {
+        this.filterOption = Global.resetTableFilterOptions();
+        this.filterOption.category = params.get('slug');
+        this.filterOption.stock_status = queryParam.get('stock_status');
+        this.filterOption.tags = queryParam.get('tags');
+        this.filterOption.classifications = queryParam.get('classifications');
+        this.filterOption.search_key = searchKey;
+        // Keep the filter drawer in sync when category/tags/classifications/
+        // stock_status arrive via a route or query-param link rather than
+        // via the drawer itself.
+        this.filterValues = {
+          ...this.filterValues,
+          category: this.filterOption.category
+            ? [this.filterOption.category]
+            : [],
+          tags: this.filterOption.tags ? this.filterOption.tags.split(',') : [],
+          classifications: this.filterOption.classifications
+            ? this.filterOption.classifications.split(',')
+            : [],
+          stock_status: this.filterOption.stock_status || null,
+        };
+        this.paginationOption.page = 1;
+        this.fetchProductList();
+        this.updateFilterButton();
+      });
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'category',
+        label: 'Category',
+        type: 'multiselect',
+        options: this.categoryOptions,
+      },
+      {
+        key: 'brand',
+        label: 'Brand',
+        type: 'multiselect',
+        options: this.brandOptions,
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'select',
+        options: Global.STATUS_OPTIONS,
+      },
+      {
+        key: 'stock_status',
+        label: 'Stock Status',
+        type: 'select',
+        options: [
+          { value: 'in_stock', label: 'In Stock' },
+          { value: 'low_stock', label: 'Low Stock' },
+          { value: 'out_of_stock', label: 'Out of Stock' },
+        ],
+      },
+      {
+        key: 'type',
+        label: 'Product Type',
+        type: 'select',
+        options: [
+          { value: 'simple', label: 'Simple' },
+          { value: 'variable', label: 'Variable' },
+        ],
+      },
+      {
+        key: 'tags',
+        label: 'Tags',
+        type: 'multiselect',
+        options: this.tagOptions,
+      },
+      {
+        key: 'classifications',
+        label: 'Classification',
+        type: 'multiselect',
+        options: this.classificationOptions,
+      },
+      {
+        key: 'price',
+        label: 'Price Range',
+        type: 'number-range',
+        fromKey: 'min_price',
+        toKey: 'max_price',
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['category']?.length) count++;
+    if (this.filterValues['brand']?.length) count++;
+    if (this.filterValues['status']) count++;
+    if (this.filterValues['stock_status']) count++;
+    if (this.filterValues['type']) count++;
+    if (this.filterValues['tags']?.length) count++;
+    if (this.filterValues['classifications']?.length) count++;
+    if (this.filterValues['min_price'] || this.filterValues['max_price'])
+      count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.category = this.filterValues['category']?.length
+          ? this.filterValues['category'].join(',')
+          : null;
+        this.filterOption.brand = this.filterValues['brand']?.length
+          ? this.filterValues['brand'].join(',')
+          : null;
+        this.filterOption.status = this.filterValues['status'] || null;
+        this.filterOption.stock_status =
+          this.filterValues['stock_status'] || null;
+        this.filterOption.type = this.filterValues['type'] || null;
+        this.filterOption.tags = this.filterValues['tags']?.length
+          ? this.filterValues['tags'].join(',')
+          : null;
+        this.filterOption.classifications = this.filterValues[
+          'classifications'
+        ]?.length
+          ? this.filterValues['classifications'].join(',')
+          : null;
+        this.filterOption.min_price = this.filterValues['min_price'] || null;
+        this.filterOption.max_price = this.filterValues['max_price'] || null;
+        this.paginationOption.page = 1;
+        this.fetchProductList();
+        this.updateFilterButton();
+      });
+  }
+  ngOnDestroy(): void {
+    this.helperService.clearActionButton();
+    this.helperService.clearFilterButton();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   sort(field: string): void {
     this.paginationOption = Global.resetPaginationOptions();
@@ -144,6 +358,21 @@ export class ProductsComponent {
     }
     if (this.filterOption.classifications) {
       params.set('classifications', this.filterOption.classifications);
+    }
+    if (this.filterOption.brand) {
+      params.set('brand', this.filterOption.brand);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
+    }
+    if (this.filterOption.type) {
+      params.set('type', this.filterOption.type);
+    }
+    if (this.filterOption.min_price) {
+      params.set('min_price', this.filterOption.min_price);
+    }
+    if (this.filterOption.max_price) {
+      params.set('max_price', this.filterOption.max_price);
     }
     this.inventoryService.productList(params).subscribe({
       next: (res: any) => {

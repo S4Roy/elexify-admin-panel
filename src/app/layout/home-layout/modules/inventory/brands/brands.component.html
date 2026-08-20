@@ -1,14 +1,3 @@
-<div class="action-btns">
-  <button
-    (click)="addItem()"
-    *ngIf="permissions.includes('add')"
-    matTooltip="Add New Brand"
-    class="btn-add"
-  >
-    <mat-icon class="text-xs">add</mat-icon>
-    Add New
-  </button>
-</div>
 <div class="table-wrapper">
   <table class="table-base">
     <thead class="">
@@ -25,55 +14,41 @@
       <ng-container *ngFor="let item of item_list">
         <tr>
           <td>
-            <img
-              *ngIf="item?.image?.url"
-              [src]="item?.image?.url"
-              alt="Image"
-            />
+            <img *ngIf="item?.image?.url" [src]="item?.image?.url" alt="Image" />
           </td>
           <td>
             <a [routerLink]="'/inventory/brands/' + item?.slug">{{
               item?.name
-            }}</a>
+              }}</a>
           </td>
           <td>{{ item?.description }}</td>
           <td>
-            <a
-              [routerLink]="'/inventory/products/'"
-              [queryParams]="{ brand: item?.slug }"
-              >{{
-                item?.products
-                  ? item.products + " Product" + (item.products > 1 ? "s" : "")
-                  : ""
-              }}</a
-            >
-          </td>
-          <td class="text-center cursor-pointer" (click)="updateStatus(item)">
-            <span class="table-status" [class]="item?.status">
-              {{ item?.status }}
-            </span>
+            <a [routerLink]="'/inventory/products/'" [queryParams]="{ brand: item?.slug }">{{
+              item?.products
+              ? item.products + " Product" + (item.products > 1 ? "s" : "")
+              : ""
+              }}</a>
           </td>
           <td class="text-center">
-            <app-menu
-              [modalItem]="permissions.includes('edit') ? item : null"
-              (initModal)="addItem($event)"
-              (deleteItem)="deleteItem($event)"
-              [delete]="permissions.includes('delete') ? item : null"
-            ></app-menu>
+            <button type="button" class="table-status cursor-pointer" [class]="item?.status"
+              (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
+              {{ item?.status }}
+            </button>
+          </td>
+          <td class="text-center">
+            <app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
           </td>
         </tr>
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="5">No Items Found</td>
+          <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
   </table>
 </div>
 <ng-container>
-  <pagination
-    [pagination]="paginationOption"
-    (pageChange)="onPageChange($event)"
-  ></pagination>
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
 </ng-container>

@@ -1,19 +1,26 @@
 <div class="pagination-container">
   <!-- Info Display -->
-  <div class="pagination-info" *ngIf="device.isDesktop()">
-    Showing {{ (pagination.page - 1) * pagination.limit + 1 }} -
-    {{
+  <div class="pagination-info" *ngIf="device.isDesktop(); else pageOfTotal">
+    Showing
+    <b>{{ (pagination.page - 1) * pagination.limit + 1 }}</b>
+    –
+    <b>{{
       pagination.page === pagination.totalPages
         ? pagination.totalDocs
         : pagination.page * pagination.limit
-    }}
+    }}</b>
     of <b>{{ pagination.totalDocs }}</b> records
   </div>
+  <ng-template #pageOfTotal>
+    <div class="pagination-info" *ngIf="pagination.totalDocs > 10">
+      Page <b>{{ value }}</b> of <b>{{ pagination.totalPages }}</b>
+    </div>
+  </ng-template>
 
   <!-- Pagination Controls -->
   <div class="pagination-controls" *ngIf="pagination.totalDocs > 10">
     <button
-      mat-icon-button
+      class="page-btn"
       matTooltip="First Page"
       [disabled]="value === 1"
       (click)="selectPage(1)"
@@ -22,7 +29,7 @@
     </button>
 
     <button
-      mat-icon-button
+      class="page-btn"
       matTooltip="Previous Page"
       [disabled]="value === 1"
       (click)="selectPage(value - 1)"
@@ -32,19 +39,24 @@
 
     <!-- Only show page numbers on desktop -->
     <ng-container *ngIf="device.isDesktop()">
-      <button
-        mat-mini-fab
-        *ngFor="let page of visiblePages"
-        [color]="value === page ? 'primary' : undefined"
-        [disabled]="value === page"
-        (click)="selectPage(page)"
-      >
-        {{ page }}
-      </button>
+      <ng-container *ngFor="let page of pageItems">
+        <span *ngIf="page === ELLIPSIS" class="page-ellipsis">{{
+          ELLIPSIS
+        }}</span>
+        <button
+          *ngIf="page !== ELLIPSIS"
+          class="page-btn page-number"
+          [class.active]="value === page"
+          [disabled]="value === page"
+          (click)="selectPage($any(page))"
+        >
+          {{ page }}
+        </button>
+      </ng-container>
     </ng-container>
 
     <button
-      mat-icon-button
+      class="page-btn"
       matTooltip="Next Page"
       [disabled]="value === pagination.totalPages"
       (click)="selectPage(value + 1)"
@@ -53,7 +65,7 @@
     </button>
 
     <button
-      mat-icon-button
+      class="page-btn"
       matTooltip="Last Page"
       [disabled]="value === pagination.totalPages"
       (click)="selectPage(pagination.totalPages)"

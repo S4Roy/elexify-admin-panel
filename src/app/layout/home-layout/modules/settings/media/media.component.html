@@ -1,42 +1,122 @@
+<!-- Shared grid-item card — used by both the picker dialog's Media Library
+     tab and the standalone Settings > Media page, so usage/edit/delete
+     behavior stays identical in both places. -->
+<ng-template #mediaGridItem let-item="item" let-showCheckbox="showCheckbox">
+  <div class="relative group cursor-pointer">
+    <div class="aspect-square border rounded overflow-hidden">
+      <label
+        [for]="item?._id"
+        (click)="!showCheckbox && openLightbox(item, $event)"
+      >
+        <ng-container *ngIf="item.type == 'video'; else isImage">
+          <video [src]="item?.url" class="object-cover w-full h-full"></video>
+        </ng-container>
+        <ng-template #isImage>
+          <img *ngIf="item?.url" [src]="item?.url" [alt]="item?.alt_text || 'media'"
+            class="object-cover w-full h-full" />
+        </ng-template>
+      </label>
+    </div>
+
+    <!-- Name/alt caption on hover -->
+    <div *ngIf="item?.alt_text"
+      class="absolute bottom-0 inset-x-0 px-1.5 py-1 text-[10px] leading-tight text-white bg-black/60 truncate opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-b">
+      {{ item?.alt_text }}
+    </div>
+
+    <input *ngIf="showCheckbox"
+      [disabled]="(item.type == 'video' && !video_allow) || (item.type != 'video' && video_only)"
+      id="{{ item?._id }}"
+      (change)="onMediaSelect(item)" [checked]="selected.includes(item?._id)" type="checkbox"
+      class="absolute top-2 right-2 w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-0" />
+
+    <!-- "Used in" info button + popover -->
+    <button type="button" (click)="toggleUsage(item, $event)"
+      class="absolute top-2 left-2 w-5 h-5 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+      [class.!opacity-100]="usageOpenId === item?._id" title="Where is this used?">
+      <mat-icon class="!text-sm !w-4 !h-4 text-white leading-4">info</mat-icon>
+    </button>
+
+    <div *ngIf="usageOpenId === item?._id" (click)="$event.stopPropagation()" style="width: max-content; height: auto"
+      class="absolute z-20 top-8 left-2 min-w-[9rem] max-w-[14rem] max-h-32 overflow-y-auto rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 bg-[var(--bg-surface)] text-xs px-2.5 py-2 cursor-auto">
+      <ng-container *ngIf="usageCache[item?._id] === 'loading'">
+        <span class="text-gray-400">Checking usage...</span>
+      </ng-container>
+      <ng-container *ngIf="usageCache[item?._id] === 'error'">
+        <span class="text-red-500">Failed to check usage</span>
+      </ng-container>
+      <ng-container *ngIf="isUsageList(item?._id)">
+        <ng-container *ngIf="getUsageItems(item?._id).length; else notUsedAnywhere">
+          <p class="font-semibold mb-1 text-gray-500">Used in</p>
+          <ul class="space-y-1">
+            <li *ngFor="let ref of getUsageItems(item?._id)" class="break-words leading-snug">
+              <span class="text-gray-400">{{ ref.type }}:</span>
+              {{ ref.label || "Untitled" }}
+            </li>
+          </ul>
+        </ng-container>
+        <ng-template #notUsedAnywhere>
+          <span class="text-gray-400 whitespace-nowrap">Not used anywhere</span>
+        </ng-template>
+      </ng-container>
+    </div>
+
+    <!-- View full screen -->
+    <button type="button" (click)="openLightbox(item, $event)"
+      class="absolute bottom-1 left-1 z-10 w-5 h-5 flex items-center justify-center rounded bg-black/60 hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity"
+      title="View full screen">
+      <mat-icon class="!text-xs !w-3.5 !h-3.5 text-white">fullscreen</mat-icon>
+    </button>
+
+    <!-- Edit / Delete -->
+    <div class="absolute bottom-1 right-1 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <button type="button" (click)="openEditMedia(item, $event)"
+        class="w-5 h-5 flex items-center justify-center rounded bg-black/60 hover:bg-black/80" title="Edit">
+        <mat-icon class="!text-xs !w-3.5 !h-3.5 text-white">edit</mat-icon>
+      </button>
+      <button type="button" (click)="deleteItem(item, $event)"
+        class="w-5 h-5 flex items-center justify-center rounded bg-black/60 hover:bg-red-600" title="Delete">
+        <mat-icon class="!text-xs !w-3.5 !h-3.5 text-white">delete</mat-icon>
+      </button>
+    </div>
+  </div>
+</ng-template>
+
 <ng-container *ngIf="data; else tableLayout">
-  <h2 mat-dialog-title class="bg-white">Media</h2>
-  <mat-dialog-content class="bg-white">
-    <mat-tab-group
-      [selectedIndex]="1"
-      #mediaTabs
-      mat-stretch-tabs="false"
-      class="h-fit"
-      mat-align-tabs="start"
-    >
+  <h2 mat-dialog-title class="bg-[var(--bg-surface)] flex items-baseline gap-2">
+    Media
+    <span *ngIf="paginationOption.totalDocs !== undefined" class="text-xs font-normal text-gray-400">
+      ({{ paginationOption.totalDocs }}
+      {{ paginationOption.totalDocs === 1 ? "item" : "items" }})
+    </span>
+  </h2>
+  <mat-dialog-content class="bg-[var(--bg-surface)]" #mediaScrollContainer>
+    <mat-tab-group [selectedIndex]="1" #mediaTabs mat-stretch-tabs="false" class="h-fit" mat-align-tabs="start">
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon class="mr-4">attach_file</mat-icon>
           Upload Files
         </ng-template>
-        <div
-          class="flex items-center justify-center w-full h-80 p-6 cursor-pointer"
-        >
-          <label
-            for="file-upload"
+        <div class="flex items-center justify-center w-full h-80 p-6 cursor-pointer">
+          <label for="file-upload"
             class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-2xl cursor-pointer transition duration-300 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300"
-            :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-          >
+            :class="{ 'border-blue-500 bg-blue-50': isDragging }">
             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-              <mat-icon class="mb-4 text-gray-400 cursor-pointer"
-                >add_photo_alternate</mat-icon
-              >
-              <p
-                class="mb-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer"
-              >
+              <mat-icon class="mb-4 text-gray-400 cursor-pointer">add_photo_alternate</mat-icon>
+              <p class="mb-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
                 <span class="font-semibold">Click to upload</span> or drag &
                 drop
               </p>
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                PNG, JPG, WEBP (max 10MB)
+                <ng-container *ngIf="video_only; else imageHint">
+                  MP4, WEBM (max 30MB)
+                </ng-container>
+                <ng-template #imageHint>
+                  PNG, JPG, WEBP (max 10MB)
+                </ng-template>
               </p>
             </div>
-            <input
-              (change)="
+            <input (change)="
                 Global.onFileSelected(
                   formGroup,
                   $event,
@@ -45,12 +125,7 @@
                   allowed_types,
                   'file_name'
                 )
-              "
-              id="file-upload"
-              type="file"
-              class="hidden"
-              multiple
-            />
+              " id="file-upload" type="file" class="hidden" multiple />
           </label>
         </div>
       </mat-tab>
@@ -60,104 +135,140 @@
           <mat-icon class="mr-4">image</mat-icon>
           Media Library
         </ng-template>
-        <div class="max-h-[49vh] overflow-y-auto">
-          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            <ng-container *ngFor="let item of item_list">
-              <!-- Image preview item -->
-              <div
-                class="relative border rounded overflow-hidden group cursor-pointer"
-              >
-                <label [for]="item?._id">
-                  <ng-container *ngIf="item.type == 'video'; else isImage">
-                    <video [src]="item?.url"></video>
-                  </ng-container>
-                  <ng-template #isImage>
-                    <img
-                      *ngIf="item?.url"
-                      [src]="item?.url"
-                      alt="media"
-                      class="object-cover w-full h-full"
-                    />
-                  </ng-template>
-                </label>
+        <div class="relative">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 sticky top-0 z-10 bg-[var(--bg-surface)] pb-2">
+            <div class="relative flex-1">
+              <mat-icon
+                class="!absolute left-2 top-1/2 -translate-y-1/2 !text-lg !w-5 !h-5 text-gray-400 pointer-events-none">search</mat-icon>
+              <input type="text" placeholder="Search media by name..." [value]="mediaSearchTerm"
+                (input)="onMediaSearchInput($any($event.target).value)"
+                class="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600" />
+            </div>
+            <select [value]="mediaReferenceTypeFilter" (change)="
+                onMediaReferenceTypeFilterChange($any($event.target).value)
+              "
+              class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600 sm:w-40">
+              <option value="" [selected]="!mediaReferenceTypeFilter">
+                All references
+              </option>
+              <option *ngFor="let opt of referenceTypeOptions" [value]="opt.value"
+                [selected]="opt.value === mediaReferenceTypeFilter">
+                {{ opt.label }}
+              </option>
+            </select>
+            <select [value]="mediaTypeFilter" [disabled]="video_only || image_only"
+              (change)="onMediaTypeFilterChange($any($event.target).value)"
+              class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600 sm:w-40 disabled:opacity-60 disabled:cursor-not-allowed">
+              <option value="" [selected]="!mediaTypeFilter" *ngIf="!video_only && !image_only">
+                All types
+              </option>
+              <option value="image" [selected]="mediaTypeFilter === 'image'" *ngIf="!video_only">
+                Images
+              </option>
+              <option value="video" [selected]="mediaTypeFilter === 'video'" *ngIf="!image_only">
+                Videos
+              </option>
+            </select>
+            <label
+              class="flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg cursor-pointer select-none dark:border-gray-600 whitespace-nowrap">
+              <input type="checkbox" [checked]="mediaUnusedFilter" (change)="
+                  onMediaUnusedFilterChange($any($event.target).checked)
+                " class="w-4 h-4 text-blue-600 rounded focus:ring-0" />
+              Unused only
+            </label>
+          </div>
 
-                <input
-                  [disabled]="item.type == 'video' && !video_allow"
-                  id="{{ item?._id }}"
-                  (change)="onMediaSelect(item)"
-                  [checked]="selected.includes(item?._id)"
-                  type="checkbox"
-                  class="absolute top-2 right-2 w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-0"
-                />
-              </div>
-              <!-- Repeat for each media item -->
+          <div *ngIf="item_list.length; else noMediaFound" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            <ng-container *ngFor="let item of item_list">
+              <ng-container *ngTemplateOutlet="
+                  mediaGridItem;
+                  context: { item: item, showCheckbox: true }
+                "></ng-container>
             </ng-container>
           </div>
-          <div class="mt-6 flex justify-center">
-            <!-- Load More Button -->
-            <ng-container *ngIf="paginationOption?.hasNextPage">
-              <button
-                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                (click)="onLoadMore()"
-              >
-                Load More
-              </button>
-            </ng-container>
-            <ng-container *ngIf="!paginationOption?.hasNextPage">
-              <span class="text-gray-500">No more products to load</span>
-            </ng-container>
+          <ng-template #noMediaFound>
+            <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+              <mat-icon class="!text-4xl !w-10 !h-10 mb-2">image_not_supported</mat-icon>
+              <p class="text-sm">No media found</p>
+            </div>
+          </ng-template>
+
+          <!-- Infinite scroll sentinel -->
+          <div #scrollSentinel class="mt-6 flex justify-center items-center h-8">
+            <mat-progress-spinner *ngIf="isLoadingMore" diameter="20" mode="indeterminate"></mat-progress-spinner>
+            <span *ngIf="
+                item_list.length &&
+                !paginationOption?.hasNextPage &&
+                !isLoadingMore
+              " class="text-xs text-gray-400">No more media to load</span>
           </div>
         </div>
       </mat-tab>
     </mat-tab-group>
   </mat-dialog-content>
-  <mat-dialog-actions class="bg-white" align="end">
+  <mat-dialog-actions class="bg-[var(--bg-surface)]" align="end">
     <button mat-dialog-close mat-stroked-button>Cancel</button>
-    <button
-      [disabled]="!selectedMedia.length"
-      mat-stroked-button
-      color="primary"
-      (click)="addToGallery()"
-    >
+    <button [disabled]="!selectedMedia.length" mat-stroked-button color="primary" (click)="addToGallery()">
       Add to Gallery
     </button>
   </mat-dialog-actions>
 </ng-container>
 <ng-template #tableLayout>
-  <div class="action-btns">
-    <!-- <button
-      (click)="addItem()"
-      *ngIf="permissions.includes('add')"
-      matTooltip="Add New Brand"
-      class="btn-add"
-    >
-      <mat-icon class="text-xs">add</mat-icon>
-      Add New
-    </button> -->
-  </div>
-  <div class="table-wrapper">
-    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+  <div class="table-wrapper p-3">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+      <div class="relative flex-1">
+        <mat-icon
+          class="!absolute left-2 top-1/2 -translate-y-1/2 !text-lg !w-5 !h-5 text-gray-400 pointer-events-none">search</mat-icon>
+        <input type="text" placeholder="Search media by name..." [value]="mediaSearchTerm"
+          (input)="onMediaSearchInput($any($event.target).value)"
+          class="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600" />
+      </div>
+      <select [value]="mediaReferenceTypeFilter" (change)="onMediaReferenceTypeFilterChange($any($event.target).value)"
+        class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600 sm:w-40">
+        <option value="" [selected]="!mediaReferenceTypeFilter">
+          All References
+        </option>
+        <option *ngFor="let opt of referenceTypeOptions" [value]="opt.value"
+          [selected]="opt.value === mediaReferenceTypeFilter">
+          {{ opt.label }}
+        </option>
+      </select>
+      <select [value]="mediaTypeFilter" (change)="onMediaTypeFilterChange($any($event.target).value)"
+        class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-600 sm:w-40">
+        <option value="" [selected]="!mediaTypeFilter">All Types</option>
+        <option value="image" [selected]="mediaTypeFilter === 'image'">
+          Images
+        </option>
+        <option value="video" [selected]="mediaTypeFilter === 'video'">
+          Videos
+        </option>
+      </select>
+      <label
+        class="flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg cursor-pointer select-none dark:border-gray-600 whitespace-nowrap">
+        <input type="checkbox" [checked]="mediaUnusedFilter"
+          (change)="onMediaUnusedFilterChange($any($event.target).checked)"
+          class="w-4 h-4 text-blue-600 rounded focus:ring-0" />
+        Unused only
+      </label>
+    </div>
+
+    <div *ngIf="item_list.length; else noMediaFoundStandalone"
+      class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
       <ng-container *ngFor="let item of item_list">
-        <!-- Image preview item -->
-        <div
-          class="relative border rounded overflow-hidden group cursor-pointer"
-        >
-          <label [for]="item?._id">
-            <img
-              *ngIf="item?.url"
-              [src]="item?.url"
-              alt="media"
-              class="object-cover w-full h-full"
-          /></label>
-        </div>
-        <!-- Repeat for each media item -->
+        <ng-container *ngTemplateOutlet="
+            mediaGridItem;
+            context: { item: item, showCheckbox: false }
+          "></ng-container>
       </ng-container>
     </div>
+    <ng-template #noMediaFoundStandalone>
+      <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+        <mat-icon class="!text-4xl !w-10 !h-10 mb-2">image_not_supported</mat-icon>
+        <p class="text-sm">No media found</p>
+      </div>
+    </ng-template>
   </div>
-  <ng-container>
-    <pagination
-      [pagination]="paginationOption"
-      (pageChange)="onPageChange($event)"
-    ></pagination>
+  <ng-container *ngIf="item_list.length">
+    <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
   </ng-container>
 </ng-template>

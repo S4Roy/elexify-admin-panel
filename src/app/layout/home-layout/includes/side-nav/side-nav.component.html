@@ -1,90 +1,153 @@
-<div class="">
-  <div class="flex items-center h-12 border w-full">
-    <div
-      class="flex shrink-0 items-center px-2"
-      [class]="isNavOpen ? '' : 'w-full justify-center'"
-    >
-      <img
-        class="h-10 w-auto"
-        src="assets/{{ isNavOpen ? 'logo.png' : 'sats.png' }}"
-        alt="Your Company"
-      />
-    </div>
+<div class="flex h-full flex-col bg-[var(--bg-surface)]">
+  <div
+    class="flex h-14 shrink-0 items-center border-b border-[var(--border-color)]"
+    [class]="isNavOpen ? 'px-4' : 'justify-center px-2'"
+  >
+    <img
+      class="h-8 w-auto"
+      src="assets/{{ isNavOpen ? 'logo' : 'sats' }}.png"
+      alt="Your Company"
+    />
   </div>
-  <div class="mx-auto max-w-7xl p-3">
-    <nav
-      [class]="isNavOpen ? 'divide-y divide-blue-200' : 'w-full justify-center'"
-      class="flex-auto text-sm/6 overflow-hidden"
-    >
-      <ul class="mt-2 sidebarMenu">
-        <ng-container *ngFor="let item of itemList">
-          <li class="px-2">
-            <span class="text-sm block">{{ item?.title }}</span>
-            <small *ngIf="isNavOpen" class="text-gray-500 text-xs block">{{
-              item?.description
-            }}</small>
-          </li>
-          <ng-container *ngFor="let menu of item?.menuItems">
-            <a
-              #menuItem
-              (click)="navService.closeMenu()"
-              [routerLink]="menu?.url"
-              [class]="isNavOpen ? 'gap-x-6' : ''"
-              routerLinkActive=" active"
-              [routerLinkActiveOptions]="{ exact: menu?.exact ?? false }"
-              class="group items-center relative flex mb-2 hover:bg-gray-50"
-            >
-              <div class="w-full flex justify-between items-center">
-                <div class="flex items-center">
-                  <div
-                    class="mt-1 flex size-11 flex-none items-center justify-center"
+
+  <nav
+    class="sidebarMenu min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-3"
+    [class]="isNavOpen ? 'px-2' : 'flex flex-col items-center px-2'"
+  >
+    <ng-container *ngFor="let item of itemList; let first = first">
+      <div
+        *ngIf="isNavOpen"
+        class="px-2"
+        [class]="first ? 'mb-2' : 'mb-2 mt-6'"
+      >
+        <a
+          *ngIf="item?.groupUrl; else plainGroupTitle"
+          (click)="navService.closeMenu()"
+          [routerLink]="item?.groupUrl"
+          class="group-title-link block text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]"
+          >{{ item?.title }}</a
+        >
+        <ng-template #plainGroupTitle>
+          <span
+            class="block text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]"
+            >{{ item?.title }}</span
+          >
+        </ng-template>
+      </div>
+      <div
+        *ngIf="!isNavOpen && !first"
+        class="my-3 h-px w-8 shrink-0 bg-[var(--border-color)]"
+      ></div>
+
+      <div
+        *ngFor="let menu of item?.menuItems"
+        class="group relative"
+        [class]="isNavOpen ? 'w-full' : ''"
+        (mouseenter)="onMenuEnter(menu, $event)"
+        (mouseleave)="onMenuLeave()"
+      >
+        <a
+          #menuItem
+          (click)="navService.closeMenu()"
+          [routerLink]="menu?.url"
+          [title]="!isNavOpen ? menu?.label : null"
+          [routerLinkActive]="menu?.childMenuItems?.length ? '' : ' active'"
+          [routerLinkActiveOptions]="{ exact: menu?.exact ?? false }"
+          [class.active]="menu?.childMenuItems?.length && isActiveChild(menu)"
+          class="nav-link mb-1 flex items-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface-alt)] hover:text-[var(--text-primary)]"
+          [class]="isNavOpen ? 'gap-x-3 px-3 py-2' : 'size-11 justify-center p-2.5'"
+        >
+          <div
+            class="flex min-w-0 items-center"
+            [class]="isNavOpen ? 'flex-1 gap-x-3' : ''"
+          >
+            <div class="flex size-5 shrink-0 items-center justify-center">
+              <mat-icon class="nav-icon !size-5 !text-[20px]">{{
+                menu?.icon
+              }}</mat-icon>
+            </div>
+            <span *ngIf="isNavOpen" class="truncate text-sm font-medium">
+              {{ menu?.label }}
+            </span>
+          </div>
+          <mat-icon
+            *ngIf="isNavOpen && menu?.childMenuItems?.length"
+            (click)="toggleMenu(menu, $event)"
+            class="chevron shrink-0 !size-[18px] !text-[18px] cursor-pointer rounded text-[var(--text-secondary)] transition-transform hover:bg-[var(--bg-surface-alt)] hover:text-[var(--text-primary)]"
+            [class.rotate-90]="isMenuExpanded(menu)"
+            >chevron_right</mat-icon
+          >
+        </a>
+
+        <!-- Expanded: inline child list under the parent -->
+        <ng-container *ngIf="menu?.childMenuItems?.length && isNavOpen">
+          <div
+            class="child-menu-list ml-4"
+            [ngClass]="{
+              block: isMenuExpanded(menu),
+              hidden: !isMenuExpanded(menu)
+            }"
+          >
+            <ul class="child-menu">
+              <ng-container *ngFor="let childMenu of menu?.childMenuItems">
+                <li
+                  (click)="navService.closeMenu()"
+                  class="child-item"
+                  routerLinkActive=" active"
+                  [routerLink]="childMenu?.url"
+                  [routerLinkActiveOptions]="{
+                    exact: false
+                  }"
+                >
+                  <a
+                    class="block truncate rounded-md px-2 py-1.5 text-[13px] font-normal hover:bg-[var(--bg-surface-alt)]"
+                    >{{ childMenu?.label }}</a
                   >
-                    <ng-container *ngIf="menu?.image_path; else matIcon">
-                      <img [src]="menu?.image_path" alt="Icon" />
-                    </ng-container>
-                    <ng-template #matIcon>
-                      <mat-icon class="">{{ menu?.icon }}</mat-icon>
-                    </ng-template>
-                  </div>
-                  <span *ngIf="isNavOpen" class="font-medium leading-4">
-                    {{ menu?.label }}
-                  </span>
-                </div>
-                <mat-icon *ngIf="isNavOpen">{{
-                  isActiveChild(menu) ? "keyboard_arrow_down" : "chevron_right"
-                }}</mat-icon>
-              </div>
-            </a>
-            <ng-container *ngIf="menu?.childMenuItems?.length && isNavOpen">
-              <div
-                class="ml-4 child-menu-list"
-                [ngClass]="{
-                  block: isActiveChild(menu),
-                  hidden: !isActiveChild(menu)
-                }"
-              >
-                <ul class="child-menu">
-                  <ng-container *ngFor="let childMenu of menu?.childMenuItems">
-                    <li
-                      (click)="navService.closeMenu()"
-                      class="child-item"
-                      routerLinkActive=" active"
-                      [routerLink]="childMenu?.url"
-                      [routerLinkActiveOptions]="{
-                        exact: false
-                      }"
-                    >
-                      <a class="block font-light px-2">
-                        {{ childMenu?.label }}</a
-                      >
-                    </li>
-                  </ng-container>
-                </ul>
-              </div>
-            </ng-container>
-          </ng-container>
+                </li>
+              </ng-container>
+            </ul>
+          </div>
+        </ng-container>
+      </div>
+    </ng-container>
+  </nav>
+
+  <!-- Collapsed-rail hover flyout: rendered once, position:fixed (so the
+       nav's own overflow-x-hidden scroll clipping can't hide it), and
+       positioned in TS from the hovered item's rect. Keeps children
+       reachable — and the active one visible — instead of disappearing
+       entirely when the sidebar is collapsed. -->
+  <div
+    #flyoutEl
+    *ngIf="hoveredMenu && !isNavOpen"
+    class="fixed z-50 w-56 pl-2"
+    [style.top.px]="hoveredMenuTop"
+    [style.left.px]="collapsedRailWidth"
+    (mouseenter)="onFlyoutEnter()"
+    (mouseleave)="onMenuLeave()"
+  >
+    <div
+      class="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-lg"
+    >
+      <div
+        class="border-b border-[var(--border-color)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]"
+      >
+        {{ hoveredMenu?.label }}
+      </div>
+      <ul class="py-1">
+        <ng-container *ngFor="let childMenu of hoveredMenu?.childMenuItems">
+          <li>
+            <a
+              (click)="navService.closeMenu(); hoveredMenu = null"
+              [routerLink]="childMenu?.url"
+              routerLinkActive=" flyout-active"
+              [routerLinkActiveOptions]="{ exact: false }"
+              class="block truncate px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-surface-alt)]"
+              >{{ childMenu?.label }}</a
+            >
+          </li>
         </ng-container>
       </ul>
-    </nav>
+    </div>
   </div>
 </div>

@@ -16,6 +16,7 @@ export class DialogService {
         width: '400px',
         data,
         disableClose: true,
+        ariaLabelledBy: 'modal-title',
       })
       .afterClosed();
   }

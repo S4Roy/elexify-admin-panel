@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from './http.service';
 import { Router } from '@angular/router';
-import * as CryptoJS from 'crypto-js';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../../environments/environment.prod';
 @Injectable({
   providedIn: 'root',
 })
@@ -40,23 +38,11 @@ export class AuthService {
     let user = { ...data?.user };
 
     if (rememberme == true) {
-      localStorage.setItem(
-        this.USER_TOKEN_KEY,
-        this.encrypt(data?.token?.access_token)
-      );
-      localStorage.setItem(
-        this.USER_TOKEN_ADMIN,
-        this.encrypt(JSON.stringify(user))
-      );
+      localStorage.setItem(this.USER_TOKEN_KEY, data?.token?.access_token);
+      localStorage.setItem(this.USER_TOKEN_ADMIN, JSON.stringify(user));
     } else {
-      sessionStorage.setItem(
-        this.USER_TOKEN_KEY,
-        this.encrypt(data?.token?.access_token)
-      );
-      sessionStorage.setItem(
-        this.USER_TOKEN_ADMIN,
-        this.encrypt(JSON.stringify(user))
-      );
+      sessionStorage.setItem(this.USER_TOKEN_KEY, data?.token?.access_token);
+      sessionStorage.setItem(this.USER_TOKEN_ADMIN, JSON.stringify(user));
     }
     this.router.navigate(['/']);
   }
@@ -65,14 +51,14 @@ export class AuthService {
     if (!token) {
       token = sessionStorage.getItem(this.USER_TOKEN_KEY);
     }
-    return token ? this.decrypt(token) : null;
+    return token;
   }
   getUserData() {
     let data = localStorage.getItem(this.USER_TOKEN_ADMIN);
     if (!data) {
       data = sessionStorage.getItem(this.USER_TOKEN_ADMIN);
     }
-    return data ? this.decrypt(data) : null;
+    return data;
   }
   userLogout() {
     localStorage.removeItem(this.USER_TOKEN_KEY);
@@ -84,29 +70,6 @@ export class AuthService {
   }
   userLoggedIn() {
     return !!this.getUserToken();
-  }
-  private encrypt(txt: string): string {
-    return CryptoJS.AES.encrypt(txt.toString(), environment.AES_KEY).toString();
-  }
-
-  private decrypt(txtToDecrypt: string) {
-    if (!txtToDecrypt) {
-      console.error('Decryption failed: Invalid input data.');
-      return null;
-    }
-
-    try {
-      const decryptedBytes = CryptoJS.AES.decrypt(
-        txtToDecrypt,
-        environment.AES_KEY
-      );
-      const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
-      return decryptedText ? decryptedText : null;
-    } catch (error) {
-      console.error('Decryption failed:', error);
-      this.userLogout();
-      return null;
-    }
   }
   // HRMS_REDIRECTION(res: any) {
   //   localStorage.removeItem(this.USER_TOKEN_KEY);

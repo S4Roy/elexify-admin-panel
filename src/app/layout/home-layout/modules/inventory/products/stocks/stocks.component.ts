@@ -27,10 +27,12 @@ import FilterOptions from 'app/core/models/FilterOptions';
 import PaginationOptions from 'app/core/models/PaginationOptions';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { EmptyStateComponent } from '../../../../includes/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-stocks',
   imports: [
+    EmptyStateComponent,
     ReactiveFormsModule,
     MatIconModule,
     MatFormFieldModule,

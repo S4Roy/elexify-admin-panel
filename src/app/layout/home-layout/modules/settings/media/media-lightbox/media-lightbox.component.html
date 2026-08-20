@@ -1,0 +1,55 @@
+<div class="lightbox-root" (click)="close()">
+  <button
+    type="button"
+    class="close-btn"
+    (click)="close()"
+    aria-label="Close"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <span class="counter" *ngIf="items.length > 1"
+    >{{ index + 1 }} / {{ items.length }}</span
+  >
+
+  <button
+    type="button"
+    class="nav-btn nav-prev"
+    *ngIf="hasPrev"
+    (click)="prev($event)"
+    aria-label="Previous"
+  >
+    <mat-icon>chevron_left</mat-icon>
+  </button>
+
+  <div class="media-stage" (click)="$event.stopPropagation()">
+    <ng-container *ngIf="current?.type === 'video'; else isImage">
+      <video
+        [src]="current?.url"
+        controls
+        autoplay
+        class="media-content"
+      ></video>
+    </ng-container>
+    <ng-template #isImage>
+      <img
+        *ngIf="current?.url"
+        [src]="current?.url"
+        [alt]="current?.alt_text || 'media'"
+        class="media-content"
+      />
+    </ng-template>
+  </div>
+
+  <button
+    type="button"
+    class="nav-btn nav-next"
+    *ngIf="hasNext"
+    (click)="next($event)"
+    aria-label="Next"
+  >
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+
+  <p class="caption" *ngIf="current?.alt_text">{{ current?.alt_text }}</p>
+</div>

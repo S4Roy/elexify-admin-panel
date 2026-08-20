@@ -7,40 +7,36 @@ export const routes: Routes = [
   {
     path: '',
     loadChildren: () =>
-      import('./layout/home-layout/home-layout.module').then(
-        (m) => m.HomeLayoutModule
-      ),
+      import('./layout/home-layout/home-layout.routes').then((m) => m.routes),
     canActivate: [authGuard],
   },
   {
     path: 'auth',
     loadChildren: () =>
-      import('./layout/auth-layout/auth-layout.module').then(
-        (m) => m.AuthLayoutModule
-      ),
+      import('./layout/auth-layout/auth-layout.routes').then((m) => m.routes),
     canActivate: [guestGuard],
   },
   {
     path: 'pages',
     loadChildren: () =>
-      import('./layout/home-layout/modules/pages/pages.module').then(
-        (m) => m.PagesModule
+      import('./layout/home-layout/modules/pages/pages.routes').then(
+        (m) => m.routes
       ),
     canActivate: [authGuard],
   },
   {
     path: 'masters',
     loadChildren: () =>
-      import('./layout/home-layout/modules/master/master.module').then(
-        (m) => m.MasterModule
+      import('./layout/home-layout/modules/master/master.routes').then(
+        (m) => m.routes
       ),
     canActivate: [authGuard],
   },
   {
     path: 'inventory',
     loadChildren: () =>
-      import('./layout/home-layout/modules/inventory/inventory.module').then(
-        (m) => m.InventoryModule
+      import('./layout/home-layout/modules/inventory/inventory.routes').then(
+        (m) => m.routes
       ),
     canActivate: [authGuard],
   },

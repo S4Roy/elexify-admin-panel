@@ -6,6 +6,7 @@ import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
 import { ActivatedRoute, Router } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
@@ -15,10 +16,13 @@ import { InventoryService } from 'app/core/services/inventory.service';
 import { MatIconModule } from '@angular/material/icon';
 import { ReadMoreClampDirective } from 'app/core/directives/read-more-clamp.directive';
 import { UpdateRatingStatusComponent } from './update-rating-status/update-rating-status.component';
+import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawer.component';
 
 @Component({
   selector: 'app-rating-reveiws',
   imports: [
+    EmptyStateComponent,
     MenuComponent,
     NgFor,
     NgIf,
@@ -34,6 +38,11 @@ export class RatingReveiwsComponent {
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
+  filterValues: Record<string, any> = {
+    status: [],
+    rating: [],
+  };
+  private destroy$ = new Subject<void>();
   constructor(
     private dialog: MatDialog,
     private apiService: ApiService,
@@ -54,7 +63,73 @@ export class RatingReveiwsComponent {
       this.fetchRating();
     });
   }
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+  ngOnDestroy(): void {
+    this.helperService.clearFilterButton();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: [
+          { value: 'pending', label: 'Pending' },
+          { value: 'approved', label: 'Approved' },
+          { value: 'rejected', label: 'Rejected' },
+        ],
+      },
+      {
+        key: 'rating',
+        label: 'Rating',
+        type: 'multiselect',
+        options: [
+          { value: '1', label: '1 Star' },
+          { value: '2', label: '2 Stars' },
+          { value: '3', label: '3 Stars' },
+          { value: '4', label: '4 Stars' },
+          { value: '5', label: '5 Stars' },
+        ],
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    if (this.filterValues['rating']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.filterOption.rating = this.filterValues['rating']
+          ?.length
+          ? this.filterValues['rating'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.fetchRating();
+        this.updateFilterButton();
+      });
+  }
 
   fetchRating() {
     let params = new URLSearchParams();
@@ -66,6 +141,12 @@ export class RatingReveiwsComponent {
     }
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
+    }
+    if (this.filterOption.rating) {
+      params.set('rating', this.filterOption.rating);
     }
     this.apiService.ratingList(params).subscribe({
       next: (res: any) => {

@@ -13,9 +13,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { MatIconModule } from '@angular/material/icon';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { combineLatest } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 import {
   CdkDropList,
   CdkDrag,
@@ -26,6 +29,7 @@ import {
 @Component({
   selector: 'app-categories',
   imports: [
+    EmptyStateComponent,
     NgFor,
     NgIf,
     PaginationComponent,
@@ -43,7 +47,18 @@ export class CategoriesComponent {
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
-  type: 'parent' | 'sub' | null = null;
+  filterValues: Record<string, any> = {
+    status: [],
+  };
+  private destroy$ = new Subject<void>();
+
+  // Tree/Table toggle only makes sense at the top-level "all categories"
+  // view — a drill-down into one parent's children (the `:slug` route) is
+  // already a single flat level, so it stays a plain table.
+  viewMode: 'tree' | 'table' = 'tree';
+  isDrillDown = false;
+  treeNodes: any[] = [];
+  expandedIds = new Set<string>();
 
   public sortKey: string = 'sort_order';
   public sortDirection: 'asc' | 'desc' = 'asc';
@@ -56,8 +71,6 @@ export class CategoriesComponent {
     private router: Router,
     private dialogService: DialogService
   ) {
-    this.type = this.checkCategoryType();
-
     this.paginationOption = Global.resetPaginationOptions();
     this.filterOption = Global.resetTableFilterOptions();
     combineLatest([
@@ -67,8 +80,87 @@ export class CategoriesComponent {
       this.filterOption = Global.resetTableFilterOptions();
       this.filterOption.slug = params.get('slug');
       this.filterOption.search_key = searchKey;
+      this.isDrillDown = !!this.filterOption.slug;
+      if (this.isDrillDown) this.viewMode = 'table';
       this.paginationOption.page = 1;
+      this.updateViewToggle();
+      this.refetch();
+    });
+  }
+  updateViewToggle(): void {
+    if (this.isDrillDown) {
+      this.helperService.clearViewToggle();
+      return;
+    }
+    this.helperService.setViewToggle({
+      active: this.viewMode,
+      options: [
+        { value: 'tree', label: 'Tree View', icon: 'account_tree' },
+        { value: 'table', label: 'Table View', icon: 'table_rows' },
+      ],
+      extraActions:
+        this.viewMode === 'tree'
+          ? [
+              { key: 'expand-all', label: 'Expand all', icon: 'unfold_more' },
+              { key: 'collapse-all', label: 'Collapse all', icon: 'unfold_less' },
+            ]
+          : undefined,
+    });
+  }
+  setViewMode(mode: 'tree' | 'table'): void {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    this.updateViewToggle();
+    this.refetch();
+  }
+  refetch(): void {
+    if (this.viewMode === 'tree' && !this.isDrillDown) {
+      this.fetchCategoryTree();
+    } else {
       this.fetchCategoryList();
+    }
+  }
+  isExpanded(id: string): boolean {
+    return this.expandedIds.has(id);
+  }
+  toggleExpand(id: string): void {
+    if (this.expandedIds.has(id)) {
+      this.expandedIds.delete(id);
+    } else {
+      this.expandedIds.add(id);
+    }
+  }
+  expandAll(): void {
+    this.treeNodes.forEach((node) => this.expandedIds.add(node._id));
+  }
+  collapseAll(): void {
+    this.expandedIds.clear();
+  }
+  fetchCategoryTree(): void {
+    let params = new URLSearchParams({
+      sort_by: this.sortKey,
+      sort_order: this.sortDirection === 'asc' ? '1' : '-1',
+      limit: '1000',
+      page: '1',
+    });
+    if (this.filterOption.search_key) {
+      params.set('search_key', this.filterOption.search_key);
+    }
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
+    }
+    this.inventoryService.categoryList(params).subscribe({
+      next: (res: any) => {
+        const allItems: any[] = res?.data?.docs ?? [];
+        const roots = allItems.filter((item) => !item?.parent_category?._id);
+        this.treeNodes = roots.map((root) => ({
+          ...root,
+          children: allItems.filter(
+            (item) => item?.parent_category?._id === root._id
+          ),
+        }));
+      },
+      error: (err) => {},
     });
   }
   getSortIcon(field: string): string {
@@ -86,17 +178,64 @@ export class CategoriesComponent {
     }
 
     // Emit or trigger sorting logic (API call or client-side)
-    this.fetchCategoryList();
+    this.refetch();
   }
-  checkCategoryType(): 'parent' | 'sub' | null {
-    const url = this.router.url;
-
-    if (url.includes('/inventory/categories/parent')) return 'parent';
-    if (url.includes('/inventory/categories/sub')) return 'sub';
-
-    return null;
+  ngOnInit(): void {
+    if (this.permissions.includes('add')) {
+      this.helperService.setActionButton({ label: 'Add New', icon: 'add' });
+    }
+    this.helperService.actionButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.addItem());
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+    this.helperService.viewToggleChange$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((value) => this.setViewMode(value as 'tree' | 'table'));
+    this.helperService.viewToggleAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((key) => {
+        if (key === 'expand-all') this.expandAll();
+        if (key === 'collapse-all') this.collapseAll();
+      });
   }
-  ngOnInit(): void {}
+  get filterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'multiselect',
+        options: Global.STATUS_OPTIONS,
+      },
+    ];
+  }
+  filterCount(): number {
+    let count = 0;
+    if (this.filterValues['status']?.length) count++;
+    return count;
+  }
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: { fields: this.filterFields, values: { ...this.filterValues } },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.filterValues = result;
+        this.filterOption.status = this.filterValues['status']?.length
+          ? this.filterValues['status'].join(',')
+          : null;
+        this.paginationOption.page = 1;
+        this.refetch();
+        this.updateFilterButton();
+      });
+  }
   addItem(data: any = null) {
     this.router.navigateByUrl(
       `/inventory/categories/${data ? 'update/' + data?._id : 'add'}`
@@ -130,8 +269,8 @@ export class CategoriesComponent {
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);
     }
-    if (this.type) {
-      params.set('type', this.type);
+    if (this.filterOption.status) {
+      params.set('status', this.filterOption.status);
     }
     this.inventoryService.categoryList(params).subscribe({
       next: (res: any) => {
@@ -147,7 +286,7 @@ export class CategoriesComponent {
     this.inventoryService.deleteCategory({ _id: item._id }).subscribe({
       next: (res: any) => {
         this.toastr.success(res?.body?.message);
-        this.fetchCategoryList();
+        this.refetch();
       },
       error: (err: any) => {},
     });
@@ -164,6 +303,13 @@ export class CategoriesComponent {
     //     this.permissions = permissions;
     //   },
     // });
+  }
+  ngOnDestroy(): void {
+    this.helperService.clearActionButton();
+    this.helperService.clearFilterButton();
+    this.helperService.clearViewToggle();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   drop(event: CdkDragDrop<string[]>) {
     moveItemInArray(this.item_list, event.previousIndex, event.currentIndex);
@@ -210,7 +356,7 @@ export class CategoriesComponent {
                   newStatus === 'active' ? 'activated' : 'deactivated'
                 } successfully`
               );
-              this.fetchCategoryList();
+              this.refetch();
             },
             error: (err: any) => {},
           });
