@@ -1,0 +1,134 @@
+.serp-preview {
+  max-width: 600px;
+  font-family: arial, sans-serif;
+}
+
+.serp-url {
+  color: #202124;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+.serp-title {
+  color: #1a0dab;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.serp-description {
+  color: #4d5156;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.counter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.counter-pill {
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.status-good .counter-pill {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+.status-warn .counter-pill {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+.status-bad .counter-pill {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+
+.keyword-checklist,
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.keyword-checklist {
+  margin-top: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.checklist {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.keyword-checklist li,
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.keyword-checklist li mat-icon,
+.checklist li mat-icon {
+  font-size: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.keyword-checklist li.pass,
+.checklist li.pass {
+  color: #15803d;
+}
+.keyword-checklist li.pass mat-icon,
+.checklist li.pass mat-icon {
+  color: #15803d;
+}
+
+.keyword-checklist li.fail,
+.checklist li.fail {
+  color: #b45309;
+}
+.keyword-checklist li.fail mat-icon,
+.checklist li.fail mat-icon {
+  color: #d97706;
+}
+
+.score-number {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.chip-good {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+.chip-warn {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+.chip-bad {
+  color: #991b1b;
+  background-color: #fee2e2;
+}

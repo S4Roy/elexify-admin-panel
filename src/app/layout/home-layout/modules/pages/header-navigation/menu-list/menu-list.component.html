@@ -1,0 +1,131 @@
+<div class="space-y-5">
+  <!-- Toolbar -->
+  <div
+    class="rounded-lg p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+      Navigation Menus
+    </h2>
+    <button type="button" mat-flat-button color="primary" (click)="openCreateForm()">
+      <mat-icon>add</mat-icon> New Menu
+    </button>
+  </div>
+
+  <!-- Create / edit form -->
+  <div
+    *ngIf="showForm"
+    class="rounded-lg p-4 sm:p-5"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary)">
+      {{ editingItem ? "Rename Menu" : "New Menu" }}
+    </h3>
+    <form [formGroup]="formGroup" (ngSubmit)="submitForm()" class="space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <mat-form-field class="w-full">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" (input)="onNameChange()" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Slug</mat-label>
+          <input matInput formControlName="slug" (input)="onSlugInput()" />
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="!editingItem" class="flex flex-wrap items-center gap-2 text-xs" style="color: var(--text-secondary)">
+        <span>Suggested slugs (used by the storefront):</span>
+        <button
+          type="button"
+          *ngFor="let s of suggestedSlugs"
+          mat-stroked-button
+          (click)="applySuggestedSlug(s)"
+        >
+          {{ s }}
+        </button>
+      </div>
+
+      <mat-form-field class="w-full">
+        <mat-label>Description</mat-label>
+        <textarea matInput rows="2" formControlName="description"></textarea>
+      </mat-form-field>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" mat-stroked-button (click)="closeForm()">Cancel</button>
+        <button type="submit" mat-flat-button color="primary" [disabled]="formGroup.disabled">
+          {{ editingItem ? "Save Changes" : "Create Menu" }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Menu list -->
+  <div
+    class="rounded-lg p-2 sm:p-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <table class="table-base" *ngIf="item_list.length; else emptyState">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Slug</th>
+          <th scope="col" class="text-center">Status</th>
+          <th scope="col" class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of item_list">
+          <td>
+            <a class="cursor-pointer font-medium" style="color: var(--text-primary)" (click)="openBuilder(item)">
+              {{ item.name }}
+            </a>
+          </td>
+          <td>
+            <code class="text-xs">{{ item.slug }}</code>
+          </td>
+          <td class="text-center">
+            <span class="table-status" [class]="item.status === 'published' ? 'active' : 'inactive'">
+              {{ item.status === "published" ? "Published" : "Draft" }}
+            </span>
+          </td>
+          <td class="text-center">
+            <div class="flex items-center justify-center gap-1">
+              <button type="button" mat-icon-button (click)="openBuilder(item)" matTooltip="Open builder">
+                <mat-icon>account_tree</mat-icon>
+              </button>
+              <button type="button" mat-icon-button (click)="openEditForm(item)" matTooltip="Rename">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                *ngIf="item.status !== 'published'"
+                (click)="publish(item)"
+                matTooltip="Publish"
+              >
+                <mat-icon>publish</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                *ngIf="item.status === 'published'"
+                (click)="unpublish(item)"
+                matTooltip="Unpublish"
+              >
+                <mat-icon>unpublished</mat-icon>
+              </button>
+              <button type="button" mat-icon-button color="warn" (click)="deleteMenu(item)" matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #emptyState>
+      <app-empty-state message="No menus yet. Use &quot;New Menu&quot; to create one."></app-empty-state>
+    </ng-template>
+  </div>
+
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
+</div>

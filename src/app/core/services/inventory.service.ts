@@ -237,4 +237,117 @@ export class InventoryService {
   deleteCoupon(payload: any) {
     return this.httpService.delete(`admin/inventory/coupon/delete`, payload);
   }
+
+  shippingClassList(params: any) {
+    return this.httpService.get(
+      `admin/shipping/class/list?${params.toString()}`
+    );
+  }
+  submitShippingClass(payload: any) {
+    if (payload?._id) {
+      return this.httpService.put(`admin/shipping/class/edit`, payload);
+    } else {
+      return this.httpService.post(`admin/shipping/class/add`, payload);
+    }
+  }
+  deleteShippingClass(payload: any) {
+    return this.httpService.delete(`admin/shipping/class/delete`, payload);
+  }
+
+  shippingZoneList(params: any) {
+    return this.httpService.get(
+      `admin/shipping/zone/list?${params.toString()}`
+    );
+  }
+  submitShippingZone(payload: any) {
+    if (payload?._id) {
+      return this.httpService.put(`admin/shipping/zone/edit`, payload);
+    } else {
+      return this.httpService.post(`admin/shipping/zone/add`, payload);
+    }
+  }
+  deleteShippingZone(payload: any) {
+    return this.httpService.delete(`admin/shipping/zone/delete`, payload);
+  }
+
+  shippingRateList(params: any) {
+    return this.httpService.get(
+      `admin/shipping/rate/list?${params.toString()}`
+    );
+  }
+  submitShippingRate(payload: any) {
+    if (payload?._id) {
+      return this.httpService.put(`admin/shipping/rate/edit`, payload);
+    } else {
+      return this.httpService.post(`admin/shipping/rate/add`, payload);
+    }
+  }
+  deleteShippingRate(payload: any) {
+    return this.httpService.delete(`admin/shipping/rate/delete`, payload);
+  }
+
+  shippingSettingsGet() {
+    return this.httpService.get(`admin/shipping/settings`);
+  }
+  shippingSettingsUpdate(payload: any) {
+    return this.httpService.put(`admin/shipping/settings/edit`, payload);
+  }
+
+  productSeoGet(productId: string) {
+    return this.httpService.get(`admin/seo/product/${productId}`);
+  }
+  productSeoUpdate(productId: string, payload: any) {
+    return this.httpService.put(`admin/seo/product/${productId}`, payload);
+  }
+  productSeoGenerate(productId: string, overwrite: boolean = false) {
+    return this.httpService.post(`admin/seo/product/${productId}/generate`, {
+      overwrite,
+    });
+  }
+  productSeoBulkGenerate(payload: any) {
+    return this.httpService.post(`admin/seo/product/bulk-generate`, payload);
+  }
+  productSeoReport(params: URLSearchParams) {
+    return this.httpService.get(
+      `admin/seo/product/report?${params.toString()}`
+    );
+  }
+  productSeoDuplicates() {
+    return this.httpService.get(`admin/seo/product/duplicates`);
+  }
+
+  seoSettingsGet() {
+    return this.httpService.get(`admin/seo/settings`);
+  }
+  seoSettingsUpdate(payload: any) {
+    return this.httpService.put(`admin/seo/settings`, payload);
+  }
+
+  homeGet() {
+    return this.httpService.get(`admin/home`);
+  }
+  homeUpdate(payload: any) {
+    return this.httpService.put(`admin/home`, payload);
+  }
+  homeAddSection(payload: any) {
+    return this.httpService.post(`admin/home/sections`, payload);
+  }
+  homeUpdateSection(id: string, payload: any) {
+    return this.httpService.put(`admin/home/sections/${id}`, payload);
+  }
+  homeRemoveSection(id: string) {
+    return this.httpService.delete(`admin/home/sections/${id}`);
+  }
+  homeReorder(order: string[]) {
+    return this.httpService.post(`admin/home/reorder`, { order });
+  }
+  homePreview() {
+    return this.httpService.get(`admin/home/preview`);
+  }
+  homePublish() {
+    return this.httpService.post(`admin/home/publish`, {});
+  }
+  homeUnpublish() {
+    return this.httpService.post(`admin/home/unpublish`, {});
+  }
 }

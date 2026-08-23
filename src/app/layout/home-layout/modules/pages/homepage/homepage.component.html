@@ -1,0 +1,154 @@
+<div class="space-y-5">
+  <!-- Toolbar -->
+  <div
+    class="rounded-lg p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div class="flex items-center gap-3">
+      <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+        Homepage Sections
+      </h2>
+      <span
+        class="table-status"
+        [class]="homeDoc?.status === 'published' ? 'active' : 'inactive'"
+      >
+        {{ homeDoc?.status === "published" ? "Published" : "Draft" }}
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" mat-stroked-button (click)="toggleSeoPanel()">
+        <mat-icon>travel_explore</mat-icon> Homepage SEO
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="openPreview()"
+        matTooltip="Open the storefront's live preview of the current draft"
+      >
+        <mat-icon>visibility</mat-icon> Preview
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        color="warn"
+        *ngIf="homeDoc?.status === 'published'"
+        (click)="unpublish()"
+      >
+        <mat-icon>unpublished</mat-icon> Unpublish
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="publish()">
+        <mat-icon>publish</mat-icon> Publish
+      </button>
+      <button
+        type="button"
+        mat-flat-button
+        color="primary"
+        [matMenuTriggerFor]="addMenu"
+      >
+        <mat-icon>add</mat-icon> Add Section
+      </button>
+      <mat-menu #addMenu="matMenu">
+        <button
+          type="button"
+          mat-menu-item
+          *ngFor="let t of sectionTypes"
+          (click)="addSection(t.type)"
+        >
+          <mat-icon>{{ t.icon }}</mat-icon>
+          <span>{{ t.label }}</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- SEO panel -->
+  <div
+    *ngIf="showSeoPanel"
+    class="rounded-lg p-4 sm:p-5"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary)">
+      Homepage SEO
+    </h3>
+    <form [formGroup]="seoFormGroup" class="grid grid-cols-1 gap-4">
+      <mat-form-field class="w-full">
+        <mat-label>Meta Title</mat-label>
+        <input matInput formControlName="meta_title" />
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label>Meta Description</mat-label>
+        <textarea matInput rows="3" formControlName="meta_description"></textarea>
+      </mat-form-field>
+      <div class="flex justify-end gap-2">
+        <button type="button" mat-stroked-button (click)="toggleSeoPanel()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          mat-flat-button
+          color="primary"
+          [disabled]="seoFormGroup.disabled"
+          (click)="saveSeo()"
+        >
+          {{ seoFormGroup.disabled ? "Saving..." : "Save SEO" }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Section list -->
+  <div
+    class="rounded-lg p-2 sm:p-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div *ngIf="!loading && !sections.length" class="text-sm text-center py-10" style="color: var(--text-secondary)">
+      No sections yet. Use "Add Section" to build the homepage.
+    </div>
+
+    <div cdkDropList class="space-y-2" (cdkDropListDropped)="drop($event)">
+      <div
+        *ngFor="let section of sections"
+        cdkDrag
+        class="flex items-center gap-3 rounded-md p-3"
+        style="background-color: var(--bg-page); border: 1px solid var(--border-color)"
+      >
+        <mat-icon cdkDragHandle class="cursor-move" style="color: var(--text-secondary)"
+          >drag_indicator</mat-icon
+        >
+        <mat-icon style="color: var(--text-secondary)">{{ typeDef(section.type).icon }}</mat-icon>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-medium truncate" style="color: var(--text-primary)">
+              {{ section.title || "(untitled)" }}
+            </span>
+            <span class="text-xs" style="color: var(--text-secondary)">
+              {{ typeDef(section.type).label }}
+            </span>
+            <span *ngIf="isScheduled(section)" class="table-status active">Scheduled</span>
+          </div>
+        </div>
+
+        <mat-slide-toggle
+          [checked]="section.enabled"
+          (change)="toggleEnabled(section)"
+          matTooltip="Enable / disable this section"
+        ></mat-slide-toggle>
+
+        <button type="button" mat-icon-button (click)="editSection(section)" matTooltip="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          type="button"
+          mat-icon-button
+          color="warn"
+          (click)="deleteSection(section)"
+          matTooltip="Delete"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,284 @@
+<ng-container *ngIf="!productId">
+  <div
+    class="rounded-lg p-6 text-center text-sm"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-secondary)"
+  >
+    Save the product first to manage its SEO details.
+  </div>
+</ng-container>
+
+<ng-container *ngIf="productId">
+  <form [formGroup]="formGroup" class="space-y-5">
+    <!-- Toolbar -->
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <button
+        type="button"
+        mat-stroked-button
+        color="primary"
+        [disabled]="generating || regenerating || loading"
+        (click)="onGenerate()"
+      >
+        <mat-icon class="mr-1">auto_awesome</mat-icon>
+        {{ generating ? "Generating..." : "Generate" }}
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        color="warn"
+        [disabled]="generating || regenerating || loading"
+        (click)="onRegenerate()"
+      >
+        <mat-icon class="mr-1">refresh</mat-icon>
+        {{ regenerating ? "Regenerating..." : "Regenerate & Replace" }}
+      </button>
+      <button
+        type="button"
+        mat-raised-button
+        color="primary"
+        [disabled]="saving || loading"
+        (click)="onSave()"
+      >
+        {{ saving ? "Saving..." : "Save SEO" }}
+      </button>
+    </div>
+
+    <!-- SERP Preview -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-3" style="color: var(--text-primary)">
+        Search Result Preview
+      </h2>
+      <div class="serp-preview">
+        <div class="serp-url">elexify.online/product/{{ slug || "..." }}</div>
+        <div class="serp-title">
+          {{ formGroup.get("meta_title")?.value || "Meta title will appear here" }}
+        </div>
+        <div class="serp-description">
+          {{
+            formGroup.get("meta_description")?.value ||
+              "Meta description will appear here."
+          }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Title / Description -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        Meta Title &amp; Description
+      </h2>
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <mat-form-field class="w-full">
+            <mat-label>Meta Title</mat-label>
+            <input
+              matInput
+              formControlName="meta_title"
+              placeholder="Meta Title"
+            />
+          </mat-form-field>
+          <div class="counter-row" [ngClass]="'status-' + titleStatus">
+            {{ titleLength }} / {{ settings.title_max_length }} characters
+            <span class="counter-pill">{{
+              titleStatus === "good"
+                ? "Good length"
+                : titleStatus === "warn"
+                ? "Close to ideal"
+                : "Outside ideal range"
+            }}</span>
+          </div>
+        </div>
+
+        <div>
+          <mat-form-field class="w-full">
+            <mat-label>Meta Description</mat-label>
+            <textarea
+              matInput
+              rows="3"
+              formControlName="meta_description"
+              placeholder="Meta Description"
+            ></textarea>
+          </mat-form-field>
+          <div class="counter-row" [ngClass]="'status-' + descriptionStatus">
+            {{ descriptionLength }} / {{ settings.description_max_length }}
+            characters
+            <span class="counter-pill">{{
+              descriptionStatus === "good"
+                ? "Good length"
+                : descriptionStatus === "warn"
+                ? "Close to ideal"
+                : "Outside ideal range"
+            }}</span>
+          </div>
+        </div>
+
+        <mat-form-field class="w-full">
+          <mat-label>Meta Keywords</mat-label>
+          <input
+            matInput
+            formControlName="meta_keywords"
+            placeholder="Comma-separated keywords"
+          />
+          <mat-hint>Example: rudraksha, 5 mukhi, certified rudraksha</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Focus Keyword -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-1" style="color: var(--text-primary)">
+        Focus Keyword
+      </h2>
+      <p class="text-xs mb-3" style="color: var(--text-secondary)">
+        The main phrase you want this product to rank for.
+      </p>
+      <mat-form-field class="w-full max-w-md">
+        <mat-label>Focus Keyword</mat-label>
+        <input
+          matInput
+          formControlName="focus_keyword"
+          placeholder="e.g. 5 mukhi rudraksha"
+        />
+      </mat-form-field>
+
+      <ul class="keyword-checklist" *ngIf="focusKeyword">
+        <li [ngClass]="keywordInTitle ? 'pass' : 'fail'">
+          <mat-icon>{{ keywordInTitle ? "check_circle" : "cancel" }}</mat-icon>
+          Appears in the meta title
+        </li>
+        <li [ngClass]="keywordInDescription ? 'pass' : 'fail'">
+          <mat-icon>{{
+            keywordInDescription ? "check_circle" : "cancel"
+          }}</mat-icon>
+          Appears in the meta description
+        </li>
+        <li [ngClass]="keywordInProductName ? 'pass' : 'fail'">
+          <mat-icon>{{
+            keywordInProductName ? "check_circle" : "cancel"
+          }}</mat-icon>
+          Appears in the product name
+        </li>
+        <li [ngClass]="keywordInSlug ? 'pass' : 'fail'">
+          <mat-icon>{{ keywordInSlug ? "check_circle" : "cancel" }}</mat-icon>
+          Appears in the URL slug
+        </li>
+      </ul>
+    </div>
+
+    <!-- SEO Score -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      *ngIf="score"
+    >
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+          SEO Analysis
+        </h2>
+        <div class="flex items-center gap-2">
+          <span class="score-number">{{ score.score }}/{{ score.max_score }}</span>
+          <span [class]="scoreChipClass(score.status)">{{ score.status }}</span>
+        </div>
+      </div>
+      <p class="text-xs mb-4" style="color: var(--text-secondary)">
+        Internal SEO quality score — not a Google ranking signal.
+      </p>
+      <ul class="checklist">
+        <li
+          *ngFor="let check of score.checks"
+          [ngClass]="check.pass ? 'pass' : 'fail'"
+        >
+          <mat-icon>{{ check.pass ? "check_circle" : "error" }}</mat-icon>
+          <span>{{ check.label }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Advanced -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        Advanced
+      </h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <mat-form-field>
+          <mat-label>Canonical URL</mat-label>
+          <input
+            matInput
+            formControlName="canonical_url"
+            placeholder="/product/slug"
+          />
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Robots</mat-label>
+          <mat-select formControlName="robots">
+            <mat-option
+              *ngFor="let option of robotsOptions"
+              [value]="option.value"
+              >{{ option.label }}</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-checkbox formControlName="schema_enabled" class="mt-2"
+        >Enable structured data (product schema)
+        <mat-icon
+          class="align-middle text-sm"
+          matTooltip="Adds machine-readable product markup so search engines can show rich results (price, availability, ratings)."
+          >info</mat-icon
+        >
+      </mat-checkbox>
+    </div>
+
+    <!-- Social sharing -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        Social Sharing (Open Graph &amp; Twitter)
+      </h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <mat-form-field>
+          <mat-label>Open Graph Title</mat-label>
+          <input matInput formControlName="og_title" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Open Graph Image URL</mat-label>
+          <input matInput formControlName="og_image" />
+        </mat-form-field>
+        <mat-form-field class="lg:col-span-2">
+          <mat-label>Open Graph Description</mat-label>
+          <textarea matInput rows="2" formControlName="og_description"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Twitter Title</mat-label>
+          <input matInput formControlName="twitter_title" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Twitter Image URL</mat-label>
+          <input matInput formControlName="twitter_image" />
+        </mat-form-field>
+        <mat-form-field class="lg:col-span-2">
+          <mat-label>Twitter Description</mat-label>
+          <textarea
+            matInput
+            rows="2"
+            formControlName="twitter_description"
+          ></textarea>
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</ng-container>

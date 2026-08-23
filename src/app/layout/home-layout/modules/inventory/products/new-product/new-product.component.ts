@@ -37,6 +37,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ProductSpecificationsComponent } from './product-specifications/product-specifications.component';
+import { ProductSeoComponent } from './product-seo/product-seo.component';
 
 @Component({
   selector: 'app-new-product',
@@ -60,6 +61,7 @@ import { ProductSpecificationsComponent } from './product-specifications/product
     MatSliderModule,
     MatCheckboxModule,
     ProductSpecificationsComponent,
+    ProductSeoComponent,
   ],
   templateUrl: './new-product.component.html',
   styleUrl: './new-product.component.scss',
@@ -91,6 +93,10 @@ export class NewProductComponent {
   classifcationPagination: PaginationOptions;
   classifcationFilter: FilterOptions;
 
+  shippingClassSearchSubject = new Subject<any>();
+  shippingClassPagination: PaginationOptions;
+  shippingClassFilter: FilterOptions;
+
   editor!: Editor;
   shortEditor!: Editor;
   product_id: any = null;
@@ -120,6 +126,9 @@ export class NewProductComponent {
 
     this.classifcationPagination = Global.resetPaginationOptions();
     this.classifcationFilter = Global.resetTableFilterOptions();
+
+    this.shippingClassPagination = Global.resetPaginationOptions();
+    this.shippingClassFilter = Global.resetTableFilterOptions();
     this.initFormGroup();
   }
   initFormGroup() {
@@ -150,7 +159,9 @@ export class NewProductComponent {
       length: [this.data?.length ?? null],
       width: [this.data?.width ?? null],
       height: [this.data?.height ?? null],
-      shipping_class: [this.data?.shipping_class ?? null],
+      shipping_class: [
+        this.data?.shipping_class?._id ?? this.data?.shipping_class ?? null,
+      ],
 
       regular_price: [
         this.data?.regular_price ?? null,
@@ -163,6 +174,8 @@ export class NewProductComponent {
       power_level: [this.data?.power_level ?? 0],
       ask_for_price: [this.data?.ask_for_price ?? false],
       enable_enquiry: [this.data?.enable_enquiry ?? false],
+      is_featured: [this.data?.is_featured ?? false],
+      is_bestseller: [this.data?.is_bestseller ?? false],
       sku: [
         this.data?.sku ?? '',
         [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)],
@@ -187,6 +200,7 @@ export class NewProductComponent {
       attributes: this.fb.array([]),
       variations: this.fb.array([]),
       specifications: this.fb.array([]),
+      quantity_discounts: this.fb.array([]),
     });
     this.formGroup.get('name')?.valueChanges.subscribe((value: any) => {
       this.autoGenerateSKU();
@@ -278,6 +292,19 @@ export class NewProductComponent {
         this.fetchBrandList();
       });
 
+    this.shippingClassSearchSubject
+      .pipe(
+        debounceTime(300), // Adjust debounce time as needed
+        distinctUntilChanged()
+      )
+      .subscribe((data: any) => {
+        this.shipping_classes = [];
+        this.shippingClassPagination = Global.resetPaginationOptions();
+        this.shippingClassFilter = Global.resetTableFilterOptions();
+        this.shippingClassFilter.search_key = data?.term ?? '';
+        this.fetchShippingClassList();
+      });
+
     this.tagSearchSubject
       .pipe(
         debounceTime(300), // Adjust debounce time as needed
@@ -309,9 +336,40 @@ export class NewProductComponent {
     } else {
       this.fetchBrandList();
     }
+
+    if (this.data?.shipping_class && this.data.shipping_class._id) {
+      this.shipping_classes = [this.data.shipping_class];
+    } else {
+      this.fetchShippingClassList();
+    }
   }
   get images(): FormArray {
     return this.formGroup.get('images') as FormArray;
+  }
+
+  get quantity_discounts(): FormArray {
+    return this.formGroup.get('quantity_discounts') as FormArray;
+  }
+
+  newDiscountTier(value: any = null): FormGroup {
+    return this.fb.group({
+      min_quantity: [
+        value?.min_quantity ?? null,
+        [Validators.required, Validators.min(2)],
+      ],
+      discount_percent: [
+        value?.discount_percent ?? null,
+        [Validators.required, Validators.min(0), Validators.max(100)],
+      ],
+    });
+  }
+
+  addDiscountTier() {
+    this.quantity_discounts.push(this.newDiscountTier());
+  }
+
+  removeDiscountTier(index: number) {
+    this.quantity_discounts.removeAt(index);
   }
 
   fetchCategoryList() {
@@ -402,6 +460,34 @@ export class NewProductComponent {
       next: (res: any) => {
         this.brands = [...this.brands, ...res?.data?.docs];
         this.brandPagination = {
+          ...res?.data,
+        };
+      },
+      error: (err) => {},
+    });
+  }
+  loadMoreShippingClasses() {
+    if (this.shippingClassPagination.hasNextPage) {
+      this.shippingClassPagination.page = this.shippingClassPagination.nextPage;
+      this.fetchShippingClassList();
+    }
+  }
+  fetchShippingClassList() {
+    let params = new URLSearchParams();
+    if (this.shippingClassPagination.page) {
+      params.set('page', String(this.shippingClassPagination.page));
+    }
+    if (this.shippingClassFilter.search_key) {
+      params.set('search_key', this.shippingClassFilter.search_key);
+    }
+    params.set('status', 'active');
+    this.inventoryService.shippingClassList(params).subscribe({
+      next: (res: any) => {
+        this.shipping_classes = [
+          ...this.shipping_classes,
+          ...res?.data?.docs,
+        ];
+        this.shippingClassPagination = {
           ...res?.data,
         };
       },
@@ -580,6 +666,10 @@ export class NewProductComponent {
           this.images.clear();
           res?.data?.images.forEach((file: any) => {
             this.images.push(this.fb.group(file));
+          });
+          this.quantity_discounts.clear();
+          (res?.data?.quantity_discounts ?? []).forEach((tier: any) => {
+            this.quantity_discounts.push(this.newDiscountTier(tier));
           });
           this.onProductTypeChange({ value: this.data?.type });
         }

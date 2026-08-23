@@ -1,0 +1,55 @@
+<div class="menu-node-row" style="border: 1px solid var(--border-color); background-color: var(--bg-page)">
+  <mat-icon cdkDragHandle class="cursor-move" style="color: var(--text-secondary)">drag_indicator</mat-icon>
+  <mat-icon style="color: var(--text-secondary)">{{ typeIcon(node.type) }}</mat-icon>
+
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="text-sm font-medium truncate" style="color: var(--text-primary)">{{ node.label }}</span>
+      <span class="text-xs" style="color: var(--text-secondary)">{{ typeLabel(node.type) }}</span>
+      <span
+        *ngIf="node.badge?.text"
+        class="text-xs px-2 py-0.5 rounded-full"
+        [style.background-color]="node.badge.color || '#999'"
+        style="color: #fff"
+      >
+        {{ node.badge.text }}
+      </span>
+      <span *ngIf="!node.enabled" class="table-status inactive">Disabled</span>
+      <span *ngIf="isScheduled(node)" class="table-status active">Scheduled</span>
+    </div>
+  </div>
+
+  <button type="button" mat-icon-button (click)="addChildNode.emit(node)" matTooltip="Add child item">
+    <mat-icon>add</mat-icon>
+  </button>
+  <button type="button" mat-icon-button (click)="editNode.emit(node)" matTooltip="Edit">
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button type="button" mat-icon-button color="warn" (click)="deleteNode.emit(node)" matTooltip="Delete">
+    <mat-icon>delete</mat-icon>
+  </button>
+</div>
+
+<div
+  class="menu-node-children"
+  cdkDropList
+  [id]="'list-' + node._id"
+  [cdkDropListData]="node.children"
+  [cdkDropListConnectedTo]="connectedListIds"
+  [cdkDropListEnterPredicate]="megaMenuEnterPredicate"
+  (cdkDropListDropped)="onLocalDrop($event)"
+>
+  <app-menu-tree-node
+    *ngFor="let child of node.children"
+    cdkDrag
+    [cdkDragData]="child"
+    [node]="child"
+    [connectedListIds]="connectedListIds"
+    (editNode)="editNode.emit($event)"
+    (addChildNode)="addChildNode.emit($event)"
+    (deleteNode)="deleteNode.emit($event)"
+    (dropped)="relayDropped($event)"
+  ></app-menu-tree-node>
+
+  <div *ngIf="!node.children.length" class="empty-drop-hint text-xs">Drop items here</div>
+</div>

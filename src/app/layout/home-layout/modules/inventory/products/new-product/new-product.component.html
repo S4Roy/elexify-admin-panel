@@ -632,6 +632,115 @@
                 <!-- <mat-checkbox formControlName="enable_enquiry"
                   >Enable Enquiry?</mat-checkbox
                 > -->
+                <mat-checkbox formControlName="is_featured"
+                  >Featured Product?</mat-checkbox
+                >
+                <mat-checkbox formControlName="is_bestseller"
+                  >Best Seller?</mat-checkbox
+                >
+              </div>
+
+              <!-- Quantity Discounts -->
+              <div class="mt-4" formArrayName="quantity_discounts">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-medium text-gray-600">
+                    Quantity Discounts
+                  </h3>
+                  <button
+                    type="button"
+                    mat-stroked-button
+                    color="primary"
+                    (click)="addDiscountTier()"
+                  >
+                    <mat-icon>add</mat-icon> Add tier
+                  </button>
+                </div>
+                <div
+                  *ngFor="let tier of quantity_discounts.controls; let i = index"
+                  [formGroupName]="i"
+                  class="grid grid-cols-2 lg:grid-cols-5 gap-4 items-start mt-2"
+                >
+                  <mat-form-field class="lg:col-span-2">
+                    <mat-label
+                      >Min Quantity
+                      <span
+                        class="text-red-500"
+                        *ngIf="
+                          Global.isInputRuleAvailable(
+                            $any(tier),
+                            'min_quantity',
+                            'required'
+                          )
+                        "
+                        >*</span
+                      >
+                    </mat-label>
+                    <input
+                      matInput
+                      type="number"
+                      formControlName="min_quantity"
+                      placeholder="e.g. 5"
+                    />
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          $any(tier),
+                          'min_quantity',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <mat-form-field class="lg:col-span-2">
+                    <mat-label
+                      >Discount %
+                      <span
+                        class="text-red-500"
+                        *ngIf="
+                          Global.isInputRuleAvailable(
+                            $any(tier),
+                            'discount_percent',
+                            'required'
+                          )
+                        "
+                        >*</span
+                      >
+                    </mat-label>
+                    <input
+                      matInput
+                      type="number"
+                      formControlName="discount_percent"
+                      placeholder="e.g. 10"
+                    />
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          $any(tier),
+                          'discount_percent',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    (click)="removeDiscountTier(i)"
+                    aria-label="Remove tier"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                <div
+                  *ngIf="!quantity_discounts.controls.length"
+                  class="text-sm text-gray-500 mt-2"
+                >
+                  No quantity discount tiers added — buy-more-save-more is
+                  off for this product.
+                </div>
               </div>
             </mat-tab>
             <!-- Shipping -->
@@ -719,14 +828,18 @@
                     >
                   </mat-form-field>
                   <!-- Shipping Class -->
-                  <!-- <div class="col-span-1 lg:col-span-2">
+                  <div class="col-span-1 lg:col-span-2">
                     <mat-label>Shipping Class</mat-label>
                     <ng-select
+                      placeholder="Select Shipping Class"
                       formControlName="shipping_class"
                       matInput
                       [class.is-invalid]="
                         !Global.isInputValid(formGroup, 'shipping_class')
                       "
+                      (scrollToEnd)="loadMoreShippingClasses()"
+                      (search)="shippingClassSearchSubject.next($event)"
+                      [ariaLabel]="'Select Shipping Class'"
                     >
                       <ng-option
                         *ngFor="let shipping of shipping_classes"
@@ -745,7 +858,7 @@
                       "
                       >This field is required</mat-error
                     >
-                  </div> -->
+                  </div>
                 </div>
               </div>
             </mat-tab>
@@ -860,6 +973,15 @@
               [formGroup]="formGroup"
               (specificationsChange)="onSpecificationsChange($event)"
             ></app-product-specifications>
+          </mat-tab>
+          <!-- Product SEO Management -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="mr-4">travel_explore</mat-icon>
+              SEO Management
+            </ng-template>
+
+            <app-product-seo [data]="data"></app-product-seo>
           </mat-tab>
         </mat-tab-group>
       </div>

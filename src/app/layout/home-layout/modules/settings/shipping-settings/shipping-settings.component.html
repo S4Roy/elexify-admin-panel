@@ -1,0 +1,156 @@
+<form [formGroup]="formGroup">
+  <div class="space-y-5">
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        Order Processing
+      </h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <mat-form-field>
+          <mat-label
+            >Processing Days (Min)
+            <span
+              class="text-red-500"
+              *ngIf="
+                Global.isInputRuleAvailable(
+                  formGroup,
+                  'processing_days_min',
+                  'required'
+                )
+              "
+              >*</span
+            >
+          </mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="processing_days_min"
+          />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label
+            >Processing Days (Max)
+            <span
+              class="text-red-500"
+              *ngIf="
+                Global.isInputRuleAvailable(
+                  formGroup,
+                  'processing_days_max',
+                  'required'
+                )
+              "
+              >*</span
+            >
+          </mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="processing_days_max"
+          />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Order Cutoff Time (HH:mm)</mat-label>
+          <input
+            matInput
+            formControlName="order_cutoff_time"
+            placeholder="18:00"
+          />
+          <mat-error
+            *ngIf="
+              !Global.isInputRuleValid(
+                formGroup,
+                'order_cutoff_time',
+                'pattern'
+              )
+            "
+            >Use HH:mm 24-hour format</mat-error
+          >
+        </mat-form-field>
+        <div>
+          <label>Default Shipping Zone</label>
+          <ng-select
+            placeholder="Select Zone"
+            formControlName="default_shipping_zone"
+            matInput
+            (scrollToEnd)="loadMoreZones()"
+            (search)="zoneSearchSubject.next($event)"
+            [ariaLabel]="'Select Default Shipping Zone'"
+          >
+            <ng-option *ngFor="let zone of zones" [value]="zone?._id">
+              {{ zone?.name }}
+            </ng-option>
+          </ng-select>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        Weekends & Holidays
+      </h2>
+      <mat-checkbox formControlName="exclude_weekends"
+        >Exclude weekend days from processing time</mat-checkbox
+      >
+      <div class="mt-3 flex flex-wrap gap-4" *ngIf="formGroup.value.exclude_weekends">
+        <mat-checkbox
+          *ngFor="let day of weekdays"
+          [checked]="isWeekdaySelected(day.value)"
+          (change)="toggleWeekday(day.value, $event)"
+        >
+          {{ day.label }}
+        </mat-checkbox>
+      </div>
+
+      <div class="mt-5">
+        <div class="flex items-center justify-between">
+          <label>Holidays</label>
+          <button
+            type="button"
+            mat-stroked-button
+            color="primary"
+            (click)="addHoliday()"
+          >
+            <mat-icon>add</mat-icon> Add Holiday
+          </button>
+        </div>
+        <div formArrayName="holidays" class="space-y-2 mt-2">
+          <div
+            *ngFor="let holiday of holidays.controls; let i = index"
+            class="flex items-center gap-2"
+          >
+            <mat-form-field class="flex-1">
+              <input matInput type="date" [formControlName]="i" />
+            </mat-form-field>
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="removeHoliday(i)"
+              aria-label="Remove holiday"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="!holidays.controls.length" class="text-sm text-gray-500">
+            No holidays added.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button
+        (click)="onSubmit()"
+        [disabled]="formGroup.disabled"
+        class="btn-primary"
+      >
+        {{ formGroup.disabled ? "Please wait..." : "Save Settings" }}
+      </button>
+    </div>
+  </div>
+</form>

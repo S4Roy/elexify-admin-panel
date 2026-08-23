@@ -1,0 +1,148 @@
+<div class="toolbar">
+  <div class="filter-chips">
+    <button
+      type="button"
+      class="chip-filter"
+      [class.active]="!activeFilter"
+      (click)="setFilter(null)"
+    >
+      All
+    </button>
+    <button
+      type="button"
+      class="chip-filter"
+      *ngFor="let option of filterOptions"
+      [class.active]="activeFilter === option.value"
+      (click)="setFilter(option.value)"
+    >
+      {{ option.label }}
+    </button>
+  </div>
+
+  <div class="toolbar-actions">
+    <button
+      type="button"
+      mat-stroked-button
+      color="primary"
+      [disabled]="!selected.size || bulkGenerating"
+      (click)="bulkGenerate()"
+    >
+      <mat-icon class="mr-1">auto_awesome</mat-icon>
+      {{ bulkGenerating ? "Generating..." : "Bulk Generate (" + selected.size + ")" }}
+    </button>
+    <button type="button" mat-stroked-button (click)="exportCsv()">
+      <mat-icon class="mr-1">download</mat-icon>
+      Export SEO Report
+    </button>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead>
+      <tr class="sticky">
+        <th scope="col" class="text-center">
+          <mat-checkbox
+            [checked]="allSelected"
+            (change)="toggleSelectAll()"
+            aria-label="Select all rows"
+          ></mat-checkbox>
+        </th>
+        <th scope="col">Product</th>
+        <th scope="col">SEO Title</th>
+        <th scope="col">Description</th>
+        <th scope="col">Focus Keyword</th>
+        <th scope="col" class="text-center">Score</th>
+        <th scope="col" class="text-center">Status</th>
+        <th scope="col" class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let row of item_list">
+        <tr>
+          <td class="text-center">
+            <mat-checkbox
+              [checked]="isSelected(row)"
+              (change)="toggleSelect(row)"
+              [attr.aria-label]="'Select ' + row?.product?.name"
+            ></mat-checkbox>
+          </td>
+          <td>
+            <a [routerLink]="'/inventory/products/update/' + row?.product?._id">{{
+              row?.product?.name
+            }}</a>
+          </td>
+          <td>
+            <span [class]="hasTitle(row) ? 'chip chip-good' : 'chip chip-bad'">{{
+              hasTitle(row) ? "Complete" : "Missing"
+            }}</span>
+          </td>
+          <td>
+            <span
+              [class]="hasDescription(row) ? 'chip chip-good' : 'chip chip-bad'"
+              >{{ hasDescription(row) ? "Complete" : "Missing" }}</span
+            >
+          </td>
+          <td>
+            <span
+              [class]="hasFocusKeyword(row) ? 'chip chip-good' : 'chip chip-bad'"
+              >{{ hasFocusKeyword(row) ? "Set" : "Missing" }}</span
+            >
+          </td>
+          <td class="text-center">
+            {{ row?.score?.score ?? "-" }}<ng-container *ngIf="row?.score?.score !== undefined"
+              >/{{ row?.score?.max_score }}</ng-container
+            >
+          </td>
+          <td class="text-center">
+            <span *ngIf="row?.score?.status" [class]="scoreChipClass(row?.score?.status)">{{
+              row?.score?.status
+            }}</span>
+          </td>
+          <td class="text-center">
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Generate (fill missing fields)"
+              [disabled]="rowBusy.has(rowId(row))"
+              (click)="generateOne(row)"
+            >
+              <mat-icon>auto_awesome</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Regenerate & Replace"
+              color="warn"
+              [disabled]="rowBusy.has(rowId(row))"
+              (click)="regenerateOne(row)"
+            >
+              <mat-icon>refresh</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Edit Product"
+              [routerLink]="'/inventory/products/update/' + row?.product?._id"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!loading && !item_list?.length">
+        <tr>
+          <td class="text-center" colspan="8">
+            <app-empty-state message="No Products Found"></app-empty-state>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination
+    [pagination]="paginationOption"
+    (pageChange)="onPageChange($event)"
+  ></pagination>
+</ng-container>

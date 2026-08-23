@@ -1028,6 +1028,37 @@ button.cursor-pointer {
   }
 }
 
+// ngx-editor (rich text editor — product/blog/about/static-page/homepage
+// content fields) ships its own hardcoded light-mode CSS custom properties
+// on :root (#fff background, #000 text, etc.), set by its own component
+// styles. Angular injects component styles after this global stylesheet,
+// so a same-specificity :root override here would lose that tie without
+// !important — remapped to the app's existing theme tokens so the editor
+// tracks light/dark automatically instead of needing a separate dark block.
+:root {
+  --ngx-editor-background-color: var(--bg-surface) !important;
+  --ngx-editor-text-color: var(--text-primary) !important;
+  --ngx-editor-placeholder-color: var(--text-secondary) !important;
+  --ngx-editor-border-color: var(--border-color) !important;
+  --ngx-editor-wrapper-border-color: var(--border-color) !important;
+  --ngx-editor-menubar-bg-color: var(--bg-surface) !important;
+  --ngx-editor-blockquote-color: var(--border-color-strong) !important;
+  --ngx-editor-popup-bg-color: var(--bg-surface) !important;
+  --ngx-editor-menu-item-hover-bg-color: var(--bg-surface-alt) !important;
+  --ngx-editor-menu-item-active-bg-color: var(--active-tint-bg) !important;
+  --ngx-editor-menu-item-active-color: var(--nav-primary) !important;
+  --ngx-editor-seperator-color: var(--border-color-strong) !important;
+}
+// The toolbar's icon buttons render inline SVGs with a hardcoded dark
+// stroke/fill — invisible against the dark menubar once its background
+// flips via the token above.
+.dark {
+  .NgxEditor__MenuBar svg,
+  .NgxEditor__MenuItem--Icon svg {
+    filter: invert(0.85);
+  }
+}
+
 @import "ckeditor5/ckeditor5.css";
 .product {
   ul {

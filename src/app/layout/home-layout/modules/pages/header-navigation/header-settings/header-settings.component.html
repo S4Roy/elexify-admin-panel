@@ -1,0 +1,215 @@
+<div class="space-y-5" *ngIf="form">
+  <!-- Toolbar -->
+  <div
+    class="rounded-lg p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div class="flex items-center gap-3">
+      <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+        Header Settings
+      </h2>
+      <span
+        class="table-status"
+        [class]="doc?.status === 'published' ? 'active' : 'inactive'"
+      >
+        {{ doc?.status === "published" ? "Published" : "Draft" }}
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="openPreview()"
+        matTooltip="Open the storefront's live preview of the current draft"
+      >
+        <mat-icon>visibility</mat-icon> Preview
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        color="warn"
+        *ngIf="doc?.status === 'published'"
+        (click)="unpublish()"
+      >
+        <mat-icon>unpublished</mat-icon> Unpublish
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="publish()">
+        <mat-icon>publish</mat-icon> Publish
+      </button>
+    </div>
+  </div>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    class="rounded-lg p-4 sm:p-5 space-y-6"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <!-- Logo -->
+    <div [formGroup]="logoGroup" class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Logo</h3>
+      <div class="flex items-center gap-3">
+        <button type="button" mat-stroked-button (click)="chooseLogo('logo')">
+          <mat-icon>image</mat-icon> Choose Logo
+        </button>
+        <span *ngIf="logoGroup.get('image')?.value" class="text-xs" style="color: var(--text-secondary)">
+          Image selected ({{ logoGroup.get('image')?.value }})
+        </span>
+        <button
+          type="button"
+          mat-icon-button
+          *ngIf="logoGroup.get('image')?.value"
+          (click)="clearLogo('logo')"
+          matTooltip="Remove logo"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <mat-form-field class="w-full">
+          <mat-label>Alt text</mat-label>
+          <input matInput formControlName="alt_text" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Link</mat-label>
+          <input matInput formControlName="link" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Mobile logo -->
+    <div [formGroup]="logoMobileGroup" class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Mobile Logo</h3>
+      <div class="flex items-center gap-3">
+        <button type="button" mat-stroked-button (click)="chooseLogo('logo_mobile')">
+          <mat-icon>image</mat-icon> Choose Mobile Logo
+        </button>
+        <span
+          *ngIf="logoMobileGroup.get('image')?.value"
+          class="text-xs"
+          style="color: var(--text-secondary)"
+        >
+          Image selected ({{ logoMobileGroup.get('image')?.value }})
+        </span>
+        <button
+          type="button"
+          mat-icon-button
+          *ngIf="logoMobileGroup.get('image')?.value"
+          (click)="clearLogo('logo_mobile')"
+          matTooltip="Remove mobile logo"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <mat-form-field class="w-full sm:w-1/2">
+        <mat-label>Alt text</mat-label>
+        <input matInput formControlName="alt_text" />
+      </mat-form-field>
+    </div>
+
+    <!-- Layout & behavior -->
+    <div class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Layout & Behavior</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <mat-form-field class="w-full">
+          <mat-label>Layout</mat-label>
+          <mat-select formControlName="layout">
+            <mat-option value="classic">Classic</mat-option>
+            <mat-option value="centered">Centered</mat-option>
+            <mat-option value="minimal">Minimal</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Height (px)</mat-label>
+          <input matInput type="number" formControlName="height_px" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Mobile Height (px)</mat-label>
+          <input matInput type="number" formControlName="height_mobile_px" />
+        </mat-form-field>
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <mat-checkbox formControlName="sticky">Sticky</mat-checkbox>
+        <mat-checkbox formControlName="sticky_shrink_on_scroll">Shrink on scroll</mat-checkbox>
+        <mat-checkbox formControlName="hide_on_scroll_down">Hide on scroll down</mat-checkbox>
+      </div>
+    </div>
+
+    <!-- Background -->
+    <div [formGroup]="$any(form.get('background'))" class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Background</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <mat-form-field class="w-full">
+          <mat-label>Type</mat-label>
+          <mat-select formControlName="type">
+            <mat-option value="color">Color</mat-option>
+            <mat-option value="transparent">Transparent</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Color</mat-label>
+          <input matInput type="color" formControlName="color" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Visibility -->
+    <div [formGroup]="$any(form.get('visibility'))" class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Visibility</h3>
+      <div class="flex flex-wrap items-center gap-4">
+        <mat-checkbox formControlName="show_topbar">Top bar</mat-checkbox>
+        <mat-checkbox formControlName="show_search">Search</mat-checkbox>
+        <mat-checkbox formControlName="show_wishlist">Wishlist</mat-checkbox>
+        <mat-checkbox formControlName="show_account">Account</mat-checkbox>
+        <mat-checkbox formControlName="show_cart">Cart</mat-checkbox>
+      </div>
+    </div>
+
+    <!-- CTA button -->
+    <div [formGroup]="$any(form.get('cta_button'))" class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">CTA Button</h3>
+      <mat-checkbox formControlName="enabled">Enabled</mat-checkbox>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <mat-form-field class="w-full">
+          <mat-label>Label</mat-label>
+          <input matInput formControlName="label" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Link</mat-label>
+          <input matInput formControlName="link" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Style</mat-label>
+          <mat-select formControlName="style">
+            <mat-option value="primary">Primary</mat-option>
+            <mat-option value="secondary">Secondary</mat-option>
+            <mat-option value="outline">Outline</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div [formGroup]="$any(form.get('search'))" class="space-y-3">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Search</h3>
+      <mat-checkbox formControlName="enabled">Enabled</mat-checkbox>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <mat-form-field class="w-full">
+          <mat-label>Placeholder</mat-label>
+          <input matInput formControlName="placeholder" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Minimum characters</mat-label>
+          <input matInput type="number" formControlName="min_chars" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button type="submit" mat-flat-button color="primary" [disabled]="form.disabled">
+        {{ form.disabled ? "Saving..." : "Save Settings" }}
+      </button>
+    </div>
+  </form>
+</div>

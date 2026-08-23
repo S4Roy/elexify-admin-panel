@@ -1,0 +1,49 @@
+:host {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.menu-node-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.menu-node-children {
+  margin-left: 28px;
+  padding: 6px 0 2px 12px;
+  border-left: 2px dashed var(--border-color);
+  min-height: 16px;
+}
+
+.empty-drop-hint {
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text-secondary);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 6px;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  background-color: var(--bg-surface);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .cdk-drag {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

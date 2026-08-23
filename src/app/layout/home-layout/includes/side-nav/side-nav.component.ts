@@ -79,6 +79,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'SEO Manager',
+              url: '/inventory/products/seo-manager',
+              exact: true,
+            },
+            {
               label: 'Categories',
               url: '/inventory/categories',
               exact: true,
@@ -113,6 +118,21 @@ export class SideNavComponent {
               url: '/inventory/coupons',
               exact: true,
             },
+            {
+              label: 'Shipping Classes',
+              url: '/inventory/shipping-classes',
+              exact: true,
+            },
+            {
+              label: 'Shipping Zones',
+              url: '/inventory/shipping-zones',
+              exact: true,
+            },
+            {
+              label: 'Shipping Rates',
+              url: '/inventory/shipping-rates',
+              exact: true,
+            },
           ],
         },
         {
@@ -132,13 +152,26 @@ export class SideNavComponent {
           icon: 'description',
           url: '/pages',
           childMenuItems: [
+            // {
+            //   label: 'Home',
+            //   url: '/pages/home',
+            //   exact: true,
+            // },
             {
-              label: 'Home',
-              url: '/pages/home',
+              label: 'Homepage',
+              icon: 'dashboard_customize',
+              url: '/pages/homepage',
               exact: true,
+            },
+            {
+              label: 'Header & Navigation',
+              icon: 'view_headline',
+              url: '/pages/header-navigation',
+              exact: false,
             },
           ],
         },
+
         {
           label: 'Blogs',
           icon: 'article',
@@ -252,6 +285,16 @@ export class SideNavComponent {
               url: '/settings/shipping-policy',
               exact: true,
             },
+            {
+              label: 'Shipping Settings',
+              url: '/settings/shipping-settings',
+              exact: true,
+            },
+            {
+              label: 'SEO Settings',
+              url: '/settings/seo',
+              exact: true,
+            },
           ],
         },
       ],
@@ -260,7 +303,7 @@ export class SideNavComponent {
   constructor(
     private router: Router,
     private settingService: SettingsService,
-    public navService: NavService
+    public navService: NavService,
   ) {
     // this.fetchMenuList();
   }
@@ -323,7 +366,7 @@ export class SideNavComponent {
     // here would wrongly light up both at once.
     if (menu?.childMenuItems?.length) {
       return menu.childMenuItems.some((child: any) =>
-        currentUrl.startsWith(child?.url)
+        currentUrl.startsWith(child?.url),
       );
     }
     return currentUrl.startsWith(menu?.url);
@@ -348,7 +391,7 @@ export class SideNavComponent {
 
   scrollToActive() {
     const activeItem = this.menuItems.find((item) =>
-      item.nativeElement.classList.contains('active')
+      item.nativeElement.classList.contains('active'),
     );
 
     if (activeItem) {

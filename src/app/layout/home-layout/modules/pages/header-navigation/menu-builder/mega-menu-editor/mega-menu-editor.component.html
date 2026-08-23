@@ -1,0 +1,124 @@
+<h2 mat-dialog-title>Configure Mega Menu</h2>
+<form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+  <div mat-dialog-content class="space-y-5" style="max-height: 70vh">
+    <!-- Columns -->
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Columns</h3>
+      <button type="button" mat-stroked-button (click)="addColumn()">
+        <mat-icon>add</mat-icon> Add Column
+      </button>
+    </div>
+
+    <div formArrayName="columns" class="space-y-4">
+      <div
+        *ngFor="let col of columns.controls; let ci = index"
+        [formGroupName]="ci"
+        class="rounded-md p-3 space-y-3"
+        style="border: 1px solid var(--border-color)"
+      >
+        <div class="flex items-center gap-2">
+          <mat-form-field class="flex-1">
+            <mat-label>Column heading</mat-label>
+            <input matInput formControlName="heading" />
+          </mat-form-field>
+          <button type="button" mat-icon-button color="warn" (click)="removeColumn(ci)" matTooltip="Remove column">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <div formArrayName="links" class="space-y-2 pl-3" style="border-left: 2px solid var(--border-color)">
+          <div
+            *ngFor="let link of linksOf(ci).controls; let li = index"
+            [formGroupName]="li"
+            class="grid grid-cols-1 sm:grid-cols-6 gap-2 items-start"
+          >
+            <mat-form-field class="sm:col-span-2">
+              <mat-label>Label</mat-label>
+              <input matInput formControlName="label" />
+            </mat-form-field>
+            <mat-form-field class="sm:col-span-2">
+              <mat-label>Type</mat-label>
+              <mat-select formControlName="type">
+                <mat-option *ngFor="let t of linkTypeOptions" [value]="t.value">{{ t.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div *ngIf="linkNeedsReference(asFormGroup(link)) && !linkNeedsManualReference(asFormGroup(link))" class="sm:col-span-2">
+              <ng-select
+                [items]="referenceItemsFor(asFormGroup(link))"
+                [bindLabel]="referenceBindLabelFor(asFormGroup(link))"
+                bindValue="_id"
+                [searchable]="true"
+                formControlName="reference_id"
+                placeholder="Search..."
+              ></ng-select>
+            </div>
+            <mat-form-field *ngIf="linkNeedsManualReference(asFormGroup(link))" class="sm:col-span-2">
+              <mat-label>Reference ID</mat-label>
+              <input matInput formControlName="reference_id" placeholder="ObjectId" />
+            </mat-form-field>
+            <mat-form-field *ngIf="linkNeedsUrl(asFormGroup(link))" class="sm:col-span-2">
+              <mat-label>URL</mat-label>
+              <input matInput formControlName="custom_url" />
+            </mat-form-field>
+
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="removeLink(ci, li)"
+              matTooltip="Remove link"
+              class="sm:col-span-6 sm:w-auto justify-self-end"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <button type="button" mat-button (click)="addLink(ci)">
+            <mat-icon>add</mat-icon> Add Link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promo tile -->
+    <div class="rounded-md p-3 space-y-3" style="border: 1px solid var(--border-color)">
+      <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Promo Tile</h3>
+      <div class="flex items-center gap-3">
+        <button type="button" mat-stroked-button (click)="choosePromoImage()">
+          <mat-icon>image</mat-icon> Choose Image
+        </button>
+        <span *ngIf="formGroup.get('promo_image')?.value" class="text-xs" style="color: var(--text-secondary)">
+          Image selected ({{ formGroup.get('promo_image')?.value }})
+        </span>
+        <button
+          type="button"
+          mat-icon-button
+          *ngIf="formGroup.get('promo_image')?.value"
+          (click)="clearPromoImage()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <mat-form-field class="w-full">
+          <mat-label>Heading</mat-label>
+          <input matInput formControlName="promo_heading" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Link</mat-label>
+          <input matInput formControlName="promo_link" />
+        </mat-form-field>
+        <mat-form-field class="w-full sm:col-span-2">
+          <mat-label>Subtext</mat-label>
+          <textarea matInput rows="2" formControlName="promo_subtext"></textarea>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+
+  <div mat-dialog-actions class="flex justify-end gap-2">
+    <button type="button" mat-stroked-button (click)="closeDialog()">Cancel</button>
+    <button type="submit" mat-flat-button color="primary">Save Mega Menu</button>
+  </div>
+</form>

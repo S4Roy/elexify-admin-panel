@@ -1,0 +1,68 @@
+<div class="space-y-5">
+  <div
+    class="rounded-lg p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+      Live Preview
+    </h2>
+    <button
+      type="button"
+      mat-flat-button
+      color="primary"
+      (click)="openPreview()"
+      matTooltip="Open the storefront's combined draft preview (top bar + header + all menus)"
+    >
+      <mat-icon>open_in_new</mat-icon> Open Preview
+    </button>
+  </div>
+
+  <div
+    class="rounded-lg p-4 sm:p-5 space-y-4"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    *ngIf="summary"
+  >
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="rounded-md p-3" style="border: 1px solid var(--border-color)">
+        <h3 class="text-xs font-semibold mb-1" style="color: var(--text-secondary)">Top Bar</h3>
+        <p class="text-sm" style="color: var(--text-primary)">
+          {{ summary.topbar?.announcements?.length ?? 0 }} announcement(s),
+          {{ summary.topbar?.contact_items?.length ?? 0 }} contact item(s)
+        </p>
+      </div>
+      <div class="rounded-md p-3" style="border: 1px solid var(--border-color)">
+        <h3 class="text-xs font-semibold mb-1" style="color: var(--text-secondary)">Header</h3>
+        <p class="text-sm" style="color: var(--text-primary)">
+          Layout: {{ summary.header?.layout ?? "—" }}
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xs font-semibold mb-2" style="color: var(--text-secondary)">Menus</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div
+          *ngFor="let entry of summary.menus | keyvalue"
+          class="rounded-md p-3"
+          style="border: 1px solid var(--border-color)"
+        >
+          <p class="text-sm font-medium" style="color: var(--text-primary)">{{ entry.key }}</p>
+          <p class="text-xs" style="color: var(--text-secondary)">
+            {{ menuItemCount($any(entry.value)) }} item(s)
+          </p>
+        </div>
+      </div>
+      <p *ngIf="!(summary.menus | keyvalue)?.length" class="text-sm" style="color: var(--text-secondary)">
+        No menus published to draft yet.
+      </p>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!loading && !summary"
+    class="text-sm text-center py-10"
+    style="color: var(--text-secondary)"
+  >
+    Nothing to preview yet.
+  </div>
+</div>

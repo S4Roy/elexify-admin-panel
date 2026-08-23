@@ -1,0 +1,430 @@
+<h2 class="header" id="section-editor-title">
+  {{ isEdit ? "Edit" : "Add" }} {{ typeLabel }}
+  <button mat-icon-button mat-dialog-close color="warn">
+    <mat-icon class="text-white">close</mat-icon>
+  </button>
+</h2>
+
+<div mat-dialog-content class="!max-h-[75vh]">
+  <form [formGroup]="formGroup" class="space-y-5 py-3">
+    <!-- Common fields -->
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h3 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        General
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <mat-form-field>
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" placeholder="Section title (optional)" />
+          <mat-hint>Shown as a heading above this section, if set.</mat-hint>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Subtitle</mat-label>
+          <input matInput formControlName="subtitle" placeholder="Section subtitle (optional)" />
+        </mat-form-field>
+      </div>
+
+      <mat-checkbox formControlName="enabled">Enabled</mat-checkbox>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+        <mat-form-field>
+          <mat-label>Schedule Start</mat-label>
+          <input matInput type="datetime-local" formControlName="schedule_start" />
+          <mat-hint>Section auto-appears at this time, if set.</mat-hint>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Schedule End</mat-label>
+          <input matInput type="datetime-local" formControlName="schedule_end" />
+          <mat-hint>Section auto-hides at this time, if set.</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Type-specific fields -->
+    <ng-container [ngSwitch]="type">
+      <!-- HERO -->
+      <div
+        *ngSwitchCase="'hero'"
+        class="rounded-lg p-4 sm:p-5"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold" style="color: var(--text-primary)">
+            Slides
+          </h3>
+          <button type="button" mat-stroked-button color="primary" (click)="addSlide()">
+            <mat-icon>add</mat-icon> Add Slide
+          </button>
+        </div>
+
+        <div
+          *ngFor="let slide of slides.controls; let i = index"
+          [formGroup]="$any(slide)"
+          class="rounded-md p-3 mb-3"
+          style="border: 1px solid var(--border-color)"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold" style="color: var(--text-secondary)"
+              >Slide {{ i + 1 }}</span
+            >
+            <button type="button" mat-icon-button color="warn" (click)="removeSlide(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-xs mb-1" style="color: var(--text-secondary)"
+                >Desktop Image</label
+              >
+              <div class="flex items-center gap-2">
+                <img
+                  *ngIf="slide.get('desktop_image_preview')?.value"
+                  [src]="slide.get('desktop_image_preview')?.value"
+                  class="h-12 w-20 object-cover rounded"
+                  alt="Desktop preview"
+                />
+                <span
+                  *ngIf="!slide.get('desktop_image_preview')?.value && slide.get('desktop_image')?.value"
+                  class="text-xs"
+                  style="color: var(--text-secondary)"
+                  >Image selected</span
+                >
+                <button
+                  type="button"
+                  mat-stroked-button
+                  (click)="chooseSlideImage(i, 'desktop')"
+                >
+                  Choose
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs mb-1" style="color: var(--text-secondary)"
+                >Mobile Image</label
+              >
+              <div class="flex items-center gap-2">
+                <img
+                  *ngIf="slide.get('mobile_image_preview')?.value"
+                  [src]="slide.get('mobile_image_preview')?.value"
+                  class="h-12 w-20 object-cover rounded"
+                  alt="Mobile preview"
+                />
+                <span
+                  *ngIf="!slide.get('mobile_image_preview')?.value && slide.get('mobile_image')?.value"
+                  class="text-xs"
+                  style="color: var(--text-secondary)"
+                  >Image selected</span
+                >
+                <button
+                  type="button"
+                  mat-stroked-button
+                  (click)="chooseSlideImage(i, 'mobile')"
+                >
+                  Choose
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <mat-form-field>
+              <mat-label>Heading</mat-label>
+              <input matInput formControlName="heading" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Description</mat-label>
+              <input matInput formControlName="description" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Primary CTA Label</mat-label>
+              <input matInput formControlName="primary_cta_label" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Primary CTA Link</mat-label>
+              <input
+                matInput
+                formControlName="primary_cta_link"
+                placeholder="/products?category=x"
+              />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Secondary CTA Label</mat-label>
+              <input matInput formControlName="secondary_cta_label" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Secondary CTA Link</mat-label>
+              <input matInput formControlName="secondary_cta_link" />
+            </mat-form-field>
+          </div>
+
+          <div class="mt-2">
+            <label class="block text-xs mb-1" style="color: var(--text-secondary)"
+              >Overlay Opacity ({{ slide.get('overlay_opacity')?.value }})</label
+            >
+            <mat-slider min="0" max="1" step="0.1" thumbLabel>
+              <input formControlName="overlay_opacity" matSliderThumb />
+            </mat-slider>
+          </div>
+
+          <mat-checkbox formControlName="enabled" class="block mt-2"
+            >Slide Enabled</mat-checkbox
+          >
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            <mat-form-field>
+              <mat-label>Slide Schedule Start</mat-label>
+              <input matInput type="datetime-local" formControlName="schedule_start" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Slide Schedule End</mat-label>
+              <input matInput type="datetime-local" formControlName="schedule_end" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div *ngIf="!slides.controls.length" class="text-sm" style="color: var(--text-secondary)">
+          No slides added yet — a hero section needs at least one slide to show
+          anything on the storefront.
+        </div>
+      </div>
+
+      <!-- PRODUCT SECTION -->
+      <div
+        *ngSwitchCase="'product_section'"
+        class="rounded-lg p-4 sm:p-5 space-y-4"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <h3 class="text-sm font-semibold" style="color: var(--text-primary)">
+          Product Source
+        </h3>
+        <mat-form-field class="w-full">
+          <mat-label>Source Mode</mat-label>
+          <mat-select formControlName="source_mode">
+            <mat-option *ngFor="let mode of productSourceModes" [value]="mode.value">
+              {{ mode.label }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>{{ productSourceModeHint }}</mat-hint>
+        </mat-form-field>
+
+        <ng-select
+          *ngIf="formGroup.get('source_mode')?.value === 'manual'"
+          [items]="products"
+          bindLabel="name"
+          bindValue="_id"
+          [multiple]="true"
+          formControlName="product_ids"
+          placeholder="Select Products"
+          [ariaLabel]="'Select Products'"
+        >
+        </ng-select>
+
+        <mat-form-field class="w-full" *ngIf="formGroup.get('source_mode')?.value === 'category'">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category_id">
+            <mat-option *ngFor="let cat of categories" [value]="cat._id">{{
+              cat.name
+            }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <mat-form-field>
+            <mat-label>Limit</mat-label>
+            <input matInput type="number" min="1" formControlName="limit" />
+            <mat-hint>Max products to show in this section.</mat-hint>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>View All Link</mat-label>
+            <input
+              matInput
+              formControlName="view_all_link"
+              placeholder="/products?sort=newest"
+            />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Sort By</mat-label>
+            <input matInput formControlName="sort_by" placeholder="Optional override" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Sort Order</mat-label>
+            <mat-select formControlName="sort_order">
+              <mat-option [value]="null">Default</mat-option>
+              <mat-option value="asc">Ascending</mat-option>
+              <mat-option value="desc">Descending</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Countdown End</mat-label>
+            <input matInput type="datetime-local" formControlName="countdown_end_at" />
+            <mat-hint>Set for a flash-sale style countdown timer.</mat-hint>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Badge Icon</mat-label>
+            <input matInput formControlName="badge_icon" placeholder="e.g. zap" />
+            <mat-hint>Purely cosmetic free-text key.</mat-hint>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- CATEGORY SECTION -->
+      <div
+        *ngSwitchCase="'category_section'"
+        class="rounded-lg p-4 sm:p-5 space-y-4"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <h3 class="text-sm font-semibold" style="color: var(--text-primary)">
+          Category Source
+        </h3>
+        <mat-form-field class="w-full">
+          <mat-label>Source Mode</mat-label>
+          <mat-select formControlName="cat_source_mode">
+            <mat-option *ngFor="let mode of categorySourceModes" [value]="mode.value">
+              {{ mode.label }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>{{ categorySourceModeHint }}</mat-hint>
+        </mat-form-field>
+
+        <ng-select
+          *ngIf="formGroup.get('cat_source_mode')?.value === 'manual'"
+          [items]="categories"
+          bindLabel="name"
+          bindValue="_id"
+          [multiple]="true"
+          formControlName="category_ids"
+          placeholder="Select Categories"
+          [ariaLabel]="'Select Categories'"
+        >
+        </ng-select>
+
+        <mat-form-field>
+          <mat-label>Limit</mat-label>
+          <input matInput type="number" min="1" formControlName="cat_limit" />
+        </mat-form-field>
+      </div>
+
+      <!-- TRUST BADGES -->
+      <div
+        *ngSwitchCase="'trust_badges'"
+        class="rounded-lg p-4 sm:p-5"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold" style="color: var(--text-primary)">
+            Badge Items
+          </h3>
+          <button type="button" mat-stroked-button color="primary" (click)="addTrustBadge()">
+            <mat-icon>add</mat-icon> Add Item
+          </button>
+        </div>
+
+        <div
+          *ngFor="let item of items.controls; let i = index"
+          [formGroup]="$any(item)"
+          class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-start mb-3"
+        >
+          <mat-form-field>
+            <mat-label>Icon</mat-label>
+            <mat-select formControlName="icon">
+              <mat-option *ngFor="let icon of iconOptions" [value]="icon">{{
+                icon
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Label</mat-label>
+            <input matInput formControlName="label" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Sub Text</mat-label>
+            <input matInput formControlName="sub" />
+          </mat-form-field>
+          <button type="button" mat-icon-button color="warn" (click)="removeTrustBadge(i)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <div *ngIf="!items.controls.length" class="text-sm" style="color: var(--text-secondary)">
+          No badge items added yet.
+        </div>
+      </div>
+
+      <!-- CTA BANNER -->
+      <div
+        *ngSwitchCase="'cta_banner'"
+        class="rounded-lg p-4 sm:p-5 space-y-1"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary)">
+          CTA Banner
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <mat-form-field>
+            <mat-label>Heading</mat-label>
+            <input matInput formControlName="cta_heading" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Button Label</mat-label>
+            <input matInput formControlName="button_label" />
+          </mat-form-field>
+          <mat-form-field class="sm:col-span-2">
+            <mat-label>Description</mat-label>
+            <textarea matInput rows="2" formControlName="cta_description"></textarea>
+          </mat-form-field>
+          <mat-form-field class="sm:col-span-2">
+            <mat-label>Button Link</mat-label>
+            <input matInput formControlName="button_link" placeholder="/seller/register" />
+          </mat-form-field>
+        </div>
+        <mat-checkbox formControlName="show_newsletter_panel"
+          >Show Newsletter Panel</mat-checkbox
+        >
+      </div>
+
+      <!-- CONTENT SECTION -->
+      <div
+        *ngSwitchCase="'content_section'"
+        class="rounded-lg p-4 sm:p-5"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary)">
+          Content
+        </h3>
+        <mat-form-field class="w-full mb-3">
+          <mat-label>Heading</mat-label>
+          <input matInput formControlName="content_heading" />
+        </mat-form-field>
+
+        <label class="block text-xs mb-1" style="color: var(--text-secondary)">Body</label>
+        <div class="border rounded-md" style="border-color: var(--border-color)">
+          <ngx-editor-menu [editor]="editor" [toolbar]="Global.toolbar"></ngx-editor-menu>
+          <div class="max-h-60 overflow-y-auto">
+            <ngx-editor
+              [editor]="editor"
+              formControlName="body"
+              placeholder="Add body content"
+            ></ngx-editor>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end" class="px-4 pb-3">
+  <button type="button" mat-stroked-button (click)="closeDialog()">Cancel</button>
+  <button
+    type="button"
+    mat-flat-button
+    color="primary"
+    [disabled]="formGroup.disabled"
+    (click)="onSubmit()"
+  >
+    {{ formGroup.disabled ? "Saving..." : isEdit ? "Save Changes" : "Add Section" }}
+  </button>
+</div>

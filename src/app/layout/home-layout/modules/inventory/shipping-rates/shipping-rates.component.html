@@ -1,0 +1,52 @@
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead>
+      <tr>
+        <th scope="col">Zone</th>
+        <th scope="col">Shipping Class</th>
+        <th scope="col">Flat Rate</th>
+        <th scope="col">Per KG Rate</th>
+        <th scope="col">Free Weight (KG)</th>
+        <th scope="col">Free Shipping Above</th>
+        <th scope="col">Delivery Days</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td>{{ item?.zone?.name ?? '-' }}</td>
+          <td>{{ item?.shipping_class?.name ?? 'Default (Any Class)' }}</td>
+          <td>₹{{ item?.flat_rate }}</td>
+          <td>₹{{ item?.per_kg_rate }}</td>
+          <td>{{ item?.free_weight_kg }}</td>
+          <td>
+            <ng-container *ngIf="item?.free_shipping_min_order_value; else noThreshold">
+              ₹{{ item?.free_shipping_min_order_value }}
+            </ng-container>
+            <ng-template #noThreshold>-</ng-template>
+          </td>
+          <td>{{ item?.min_delivery_days }}-{{ item?.max_delivery_days }} days</td>
+          <td class="text-center">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="addItem($event)"
+              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="9"><app-empty-state message="No Shipping Rates Found"></app-empty-state></td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
+</ng-container>

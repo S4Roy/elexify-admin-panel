@@ -1,0 +1,87 @@
+<div class="space-y-5">
+  <!-- Toolbar -->
+  <div
+    class="rounded-lg p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div class="flex items-center gap-3">
+      <button type="button" mat-icon-button routerLink="/pages/header-navigation/menus" matTooltip="Back to menus">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+          {{ menu?.name ?? "Menu Builder" }}
+        </h2>
+        <span class="text-xs" style="color: var(--text-secondary)" *ngIf="menu?.slug">{{ menu.slug }}</span>
+      </div>
+      <span
+        *ngIf="menu"
+        class="table-status"
+        [class]="menu?.status === 'published' ? 'active' : 'inactive'"
+      >
+        {{ menu?.status === "published" ? "Published" : "Draft" }}
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="openPreview()"
+        matTooltip="Open the storefront's live preview of the current draft"
+      >
+        <mat-icon>visibility</mat-icon> Preview
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        color="warn"
+        *ngIf="menu?.status === 'published'"
+        (click)="unpublish()"
+      >
+        <mat-icon>unpublished</mat-icon> Unpublish
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="publish()">
+        <mat-icon>publish</mat-icon> Publish
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="addTopLevelItem()">
+        <mat-icon>add</mat-icon> Add Top-level Item
+      </button>
+    </div>
+  </div>
+
+  <!-- Tree -->
+  <div
+    class="rounded-lg p-3 sm:p-4"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    cdkDropListGroup
+  >
+    <div
+      cdkDropList
+      id="list-root"
+      [cdkDropListData]="tree"
+      [cdkDropListConnectedTo]="connectedListIds"
+      (cdkDropListDropped)="onDrop($event, null)"
+    >
+      <app-menu-tree-node
+        *ngFor="let node of tree"
+        cdkDrag
+        [cdkDragData]="node"
+        [node]="node"
+        [connectedListIds]="connectedListIds"
+        (editNode)="editItem($event)"
+        (addChildNode)="addChild($event)"
+        (deleteNode)="deleteNode($event)"
+        (dropped)="onNodeDropped($event)"
+      ></app-menu-tree-node>
+
+      <div
+        *ngIf="!loading && !tree.length"
+        class="text-sm text-center py-10"
+        style="color: var(--text-secondary)"
+      >
+        No items yet. Use "Add Top-level Item" to build this menu.
+      </div>
+    </div>
+  </div>
+</div>

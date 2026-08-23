@@ -1,0 +1,45 @@
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Countries</th>
+        <th scope="col">States</th>
+        <th scope="col">Pincode Prefixes</th>
+        <th scope="col" class="text-center">Default</th>
+        <th scope="col" class="text-center">Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of item_list">
+        <tr>
+          <td>{{ item?.name }}</td>
+          <td>{{ item?.countries?.length ?? 0 }}</td>
+          <td>{{ item?.states?.length ?? 0 }}</td>
+          <td>{{ (item?.pincode_prefixes ?? []).join(', ') }}</td>
+          <td class="text-center">
+            <mat-icon *ngIf="item?.is_default" class="!text-[18px]">check_circle</mat-icon>
+          </td>
+          <td class="text-center">
+            <span class="table-status" [class]="item?.status">
+              {{ item?.status }}
+            </span>
+          </td>
+          <td class="text-center">
+            <app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="editItem($event)"
+              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!item_list?.length">
+        <tr>
+          <td class="text-center" colspan="7"><app-empty-state message="No Shipping Zones Found"></app-empty-state></td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+<ng-container>
+  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
+</ng-container>

@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>{{ isEdit ? "Edit Announcement" : "Add Announcement" }}</h2>
+<form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+  <div mat-dialog-content class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <mat-form-field class="w-full sm:col-span-2">
+      <mat-label>Message</mat-label>
+      <input matInput formControlName="message" />
+    </mat-form-field>
+
+    <mat-form-field class="w-full">
+      <mat-label>Icon</mat-label>
+      <input matInput formControlName="icon" placeholder="e.g. truck" />
+    </mat-form-field>
+
+    <mat-form-field class="w-full">
+      <mat-label>Link</mat-label>
+      <input matInput formControlName="link" placeholder="https://..." />
+    </mat-form-field>
+
+    <mat-form-field class="w-full">
+      <mat-label>Target</mat-label>
+      <mat-select formControlName="target">
+        <mat-option value="_self">Same tab</mat-option>
+        <mat-option value="_blank">New tab</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="flex items-center gap-4">
+      <mat-checkbox formControlName="dismissible">Dismissible</mat-checkbox>
+      <mat-checkbox formControlName="enabled">Enabled</mat-checkbox>
+    </div>
+
+    <mat-form-field class="w-full sm:col-span-2">
+      <mat-label>Desktop content (optional rich text)</mat-label>
+      <textarea matInput rows="2" formControlName="desktop_content"></textarea>
+    </mat-form-field>
+
+    <mat-form-field class="w-full sm:col-span-2">
+      <mat-label>Mobile content (optional rich text)</mat-label>
+      <textarea matInput rows="2" formControlName="mobile_content"></textarea>
+    </mat-form-field>
+
+    <mat-form-field class="w-full">
+      <mat-label>Schedule start</mat-label>
+      <input matInput type="datetime-local" formControlName="schedule_start" />
+    </mat-form-field>
+
+    <mat-form-field class="w-full">
+      <mat-label>Schedule end</mat-label>
+      <input matInput type="datetime-local" formControlName="schedule_end" />
+    </mat-form-field>
+  </div>
+
+  <div mat-dialog-actions class="flex justify-end gap-2">
+    <button type="button" mat-stroked-button (click)="closeDialog()">Cancel</button>
+    <button type="submit" mat-flat-button color="primary">
+      {{ isEdit ? "Save Changes" : "Add Announcement" }}
+    </button>
+  </div>
+</form>

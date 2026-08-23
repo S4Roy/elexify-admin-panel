@@ -1,0 +1,102 @@
+<div class="space-y-5">
+  <!-- Toolbar -->
+  <div
+    class="rounded-lg p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div class="flex items-center gap-3">
+      <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
+        Top Bar Announcements
+      </h2>
+      <span
+        class="table-status"
+        [class]="doc?.status === 'published' ? 'active' : 'inactive'"
+      >
+        {{ doc?.status === "published" ? "Published" : "Draft" }}
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="openPreview()"
+        matTooltip="Open the storefront's live preview of the current draft"
+      >
+        <mat-icon>visibility</mat-icon> Preview
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        color="warn"
+        *ngIf="doc?.status === 'published'"
+        (click)="unpublish()"
+      >
+        <mat-icon>unpublished</mat-icon> Unpublish
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="publish()">
+        <mat-icon>publish</mat-icon> Publish
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="addAnnouncement()">
+        <mat-icon>add</mat-icon> Add Announcement
+      </button>
+    </div>
+  </div>
+
+  <!-- Announcement list -->
+  <div
+    class="rounded-lg p-2 sm:p-3"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div
+      *ngIf="!loading && !announcements.length"
+      class="text-sm text-center py-10"
+      style="color: var(--text-secondary)"
+    >
+      No announcements yet. Use "Add Announcement" to create one.
+    </div>
+
+    <div cdkDropList class="space-y-2" (cdkDropListDropped)="drop($event)">
+      <div
+        *ngFor="let item of announcements"
+        cdkDrag
+        class="flex items-center gap-3 rounded-md p-3"
+        style="background-color: var(--bg-page); border: 1px solid var(--border-color)"
+      >
+        <mat-icon cdkDragHandle class="cursor-move" style="color: var(--text-secondary)"
+          >drag_indicator</mat-icon
+        >
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-medium truncate" style="color: var(--text-primary)">
+              {{ item.message || "(untitled)" }}
+            </span>
+            <span *ngIf="item.link" class="text-xs" style="color: var(--text-secondary)">
+              {{ item.link }}
+            </span>
+          </div>
+        </div>
+
+        <mat-slide-toggle
+          [checked]="item.enabled"
+          (change)="toggleEnabled(item)"
+          matTooltip="Enable / disable this announcement"
+        ></mat-slide-toggle>
+
+        <button type="button" mat-icon-button (click)="editAnnouncement(item)" matTooltip="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          type="button"
+          mat-icon-button
+          color="warn"
+          (click)="deleteAnnouncement(item)"
+          matTooltip="Delete"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

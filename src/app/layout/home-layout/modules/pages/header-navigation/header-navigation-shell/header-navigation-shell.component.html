@@ -1,0 +1,18 @@
+<div class="space-y-4">
+  <nav
+    class="flex flex-wrap gap-1 rounded-lg p-1"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <a
+      *ngFor="let tab of tabs"
+      [routerLink]="[tab.path]"
+      routerLinkActive="header-nav-tab-active"
+      class="header-nav-tab flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium"
+    >
+      <mat-icon class="text-base">{{ tab.icon }}</mat-icon>
+      <span>{{ tab.label }}</span>
+    </a>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>

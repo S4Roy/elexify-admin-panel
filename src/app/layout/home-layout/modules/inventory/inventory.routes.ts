@@ -16,6 +16,11 @@ import { TagsComponent } from './tags/tags.component';
 import { ClassificationComponent } from './classification/classification.component';
 import { NewCategoryComponent } from './categories/new-category/new-category.component';
 import { CouponsComponent } from './coupons/coupons.component';
+import { ShippingClassesComponent } from './shipping-classes/shipping-classes.component';
+import { ShippingZonesComponent } from './shipping-zones/shipping-zones.component';
+import { NewShippingZoneComponent } from './shipping-zones/new-shipping-zone/new-shipping-zone.component';
+import { ShippingRatesComponent } from './shipping-rates/shipping-rates.component';
+import { SeoManagerComponent } from './products/seo-manager/seo-manager.component';
 
 export const routes: Routes = [
   {
@@ -195,6 +200,11 @@ export const routes: Routes = [
             data: { pageTitle: 'Update Product', breadcrumb: 'Update Product' },
           },
           {
+            path: 'seo-manager',
+            component: SeoManagerComponent,
+            data: { pageTitle: 'SEO Manager', breadcrumb: 'SEO Manager' },
+          },
+          {
             path: 'details/:slug',
             component: ProductDetailsComponent,
             resolve: {
@@ -303,6 +313,67 @@ export const routes: Routes = [
             path: '',
             component: CouponsComponent,
             data: { pageTitle: 'Coupons', breadcrumb: '' },
+          },
+        ],
+      },
+      {
+        path: 'shipping-classes',
+        component: BlankLayoutComponent,
+        data: { pageTitle: 'Shipping Classes', breadcrumb: 'Shipping Classes' },
+        children: [
+          {
+            path: '',
+            redirectTo: '',
+            pathMatch: 'full',
+          },
+          {
+            path: '',
+            component: ShippingClassesComponent,
+            data: { pageTitle: 'Shipping Classes', breadcrumb: '' },
+          },
+        ],
+      },
+      {
+        path: 'shipping-zones',
+        component: BlankLayoutComponent,
+        data: { pageTitle: 'Shipping Zones', breadcrumb: 'Shipping Zones' },
+        children: [
+          {
+            path: '',
+            redirectTo: '',
+            pathMatch: 'full',
+          },
+          {
+            path: '',
+            component: ShippingZonesComponent,
+            data: { pageTitle: 'Shipping Zones', breadcrumb: '' },
+          },
+          {
+            path: 'add',
+            component: NewShippingZoneComponent,
+            data: { pageTitle: 'Add Shipping Zone', breadcrumb: 'Add' },
+          },
+          {
+            path: 'update/:_id',
+            component: NewShippingZoneComponent,
+            data: { pageTitle: 'Update Shipping Zone', breadcrumb: 'Update' },
+          },
+        ],
+      },
+      {
+        path: 'shipping-rates',
+        component: BlankLayoutComponent,
+        data: { pageTitle: 'Shipping Rates', breadcrumb: 'Shipping Rates' },
+        children: [
+          {
+            path: '',
+            redirectTo: '',
+            pathMatch: 'full',
+          },
+          {
+            path: '',
+            component: ShippingRatesComponent,
+            data: { pageTitle: 'Shipping Rates', breadcrumb: '' },
           },
         ],
       },

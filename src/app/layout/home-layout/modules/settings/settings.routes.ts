@@ -8,6 +8,8 @@ import { SiteSettingsComponent } from './site-settings/site-settings.component';
 import { CountriesComponent } from './countries/countries.component';
 import { StatesComponent } from './states/states.component';
 import { CitiesComponent } from './cities/cities.component';
+import { ShippingSettingsComponent } from './shipping-settings/shipping-settings.component';
+import { SeoSettingsComponent } from './seo-settings/seo-settings.component';
 
 export const routes: Routes = [
   {
@@ -49,6 +51,16 @@ export const routes: Routes = [
     path: 'site',
     data: { pageTitle: 'Site Settings', breadcrumb: 'Site Info' },
     component: SiteSettingsComponent,
+  },
+  {
+    path: 'shipping-settings',
+    data: { pageTitle: 'Shipping Settings', breadcrumb: 'Shipping Settings' },
+    component: ShippingSettingsComponent,
+  },
+  {
+    path: 'seo',
+    data: { pageTitle: 'SEO Settings', breadcrumb: 'SEO Settings' },
+    component: SeoSettingsComponent,
   },
   {
     path: ':slug',
