@@ -260,8 +260,14 @@ ngx-editor,
   height: inherit !important;
   overflow: auto;
 }
+// Not every dialog template sets its own bg-white (menu-item-editor and
+// mega-menu-editor don't) — a flat `transparent` here left those with no
+// opaque backing at all, so a dialog opened on top of another (e.g. the
+// mega-menu column editor's nested "Add Menu Item" dialog) showed both
+// dialogs' content bled together. Use the theme surface token instead so
+// every dialog gets a real, theme-correct background.
 .mdc-dialog--open .mat-mdc-dialog-surface {
-  background: transparent !important;
+  background: var(--bg-surface) !important;
 }
 table {
   min-width: 100%;
