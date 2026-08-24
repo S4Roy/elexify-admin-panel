@@ -62,6 +62,9 @@ export class NavigationService {
   previewMenu(id: string) {
     return this.httpService.get(`admin/navigation-menu/${id}/preview`);
   }
+  generateDefaultMenus() {
+    return this.httpService.post(`admin/navigation-menu/generate-defaults`, {});
+  }
 
   // ── Menu items ────────────────────────────────────────────────────────
   menuItemList(menuId: string) {

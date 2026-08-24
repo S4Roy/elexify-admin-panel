@@ -51,6 +51,55 @@
         class="rounded-lg p-4 sm:p-5"
         style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
       >
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 pb-4" style="border-bottom: 1px solid var(--border-color)">
+          <div>
+            <h3 class="text-sm font-semibold mb-2" style="color: var(--text-primary)">
+              Right Pane Auto Play (active slide)
+            </h3>
+            <mat-checkbox formControlName="autoplay">Auto Play Enabled</mat-checkbox>
+            <mat-form-field class="block mt-2">
+              <mat-label>Interval (ms)</mat-label>
+              <input
+                matInput
+                type="number"
+                step="500"
+                formControlName="autoplay_interval_ms"
+              />
+              <mat-hint>Time each slide stays before auto-advancing (1000–20000ms).</mat-hint>
+            </mat-form-field>
+            <mat-checkbox formControlName="autoplay_pause_on_hover" class="block mt-2"
+              >Pause on Hover</mat-checkbox
+            >
+            <mat-form-field class="block mt-2">
+              <mat-label>Transition Direction</mat-label>
+              <mat-select formControlName="transition_direction">
+                <mat-option
+                  *ngFor="let d of transitionDirections"
+                  [value]="d.value"
+                  >{{ d.label }}</mat-option
+                >
+              </mat-select>
+              <mat-hint>How the active slide animates in/out.</mat-hint>
+            </mat-form-field>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold mb-2" style="color: var(--text-primary)">
+              Left Pane Auto Play (preview slide)
+            </h3>
+            <mat-checkbox formControlName="left_autoplay">Auto Play Enabled</mat-checkbox>
+            <mat-form-field class="block mt-2">
+              <mat-label>Interval (ms)</mat-label>
+              <input
+                matInput
+                type="number"
+                step="500"
+                formControlName="left_autoplay_interval_ms"
+              />
+              <mat-hint>Cycles independently of the right pane (1000–20000ms).</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-sm font-semibold" style="color: var(--text-primary)">
             Slides

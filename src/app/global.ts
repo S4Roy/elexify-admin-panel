@@ -9,7 +9,6 @@ import { ToastrService } from 'ngx-toastr';
 import { ElementRef } from '@angular/core';
 export const APP_NAME = environment.APP_NAME;
 export const BACKEND_URL = environment.API_URL;
-export const RUDRAKSHA = environment.RUDRAKSHA;
 export const toolbar: Toolbar = [
   ['bold', 'italic'],
   ['underline'],
@@ -61,7 +60,7 @@ export const rarity_list: any = [
 
 export function isInputValidArray(
   formGroup: FormGroup,
-  controlPath: string
+  controlPath: string,
 ): boolean {
   let control: AbstractControl | null = formGroup;
 
@@ -93,7 +92,7 @@ export function isInputValidArray(
 export function isInputRuleValid(
   formGroup: FormGroup,
   control: any,
-  rule: any
+  rule: any,
 ) {
   let valid: boolean = true;
 
@@ -131,7 +130,7 @@ export function isInputRuleValid(
 export function isInputRuleAvailable(
   formGroup: FormGroup,
   control: any,
-  rule: any
+  rule: any,
 ) {
   const formControl: any = formGroup.get(control);
   if (formControl) {
@@ -151,7 +150,7 @@ export function onFileSelected(
   sourceKey: any,
   toastr: ToastrService,
   allowedTypes: string[] = ['image/jpeg', 'image/png'], // Default allowed types are JPEG and PNG
-  fileNameKey: any
+  fileNameKey: any,
 ) {
   if (event.target.files.length > 0) {
     const files = event.target.files;
@@ -168,8 +167,8 @@ export function onFileSelected(
       const fileTypeName = file.type.split('/')[1];
       toastr.error(
         `${fileTypeName} type is not allowed. Allowed types are: ${allowedTypes.join(
-          ', '
-        )}`
+          ', ',
+        )}`,
       );
       return; // Skip this file and continue with the next one
     }
@@ -179,7 +178,7 @@ export function onFileSelected(
       // Append the Base64 string to the array in the form group
       formGroup.patchValue({
         [sourceKey]: file,
-        [fileNameKey]: reader.result,
+        [fileNameKey]: file.name,
       });
     };
 
@@ -197,7 +196,7 @@ export async function onFileSelectedMultiple(
   sourceKey: any,
   toastr: ToastrService,
   allowedTypes: string[] = ['image/jpeg', 'image/png'], // Default allowed types are JPEG and PNG
-  files_preview: any
+  files_preview: any,
 ) {
   if (event.target.files.length > 0) {
     const files = event.target.files;
@@ -342,7 +341,7 @@ export function isImage(fileName: string) {
 
   // Check if the file name ends with any of the image extensions
   return imageExtensions.some((extension) =>
-    lowerCaseFileName.endsWith(extension)
+    lowerCaseFileName.endsWith(extension),
   );
 }
 export function getFormGroupArray(formGroup: FormGroup, type: any) {
@@ -352,7 +351,7 @@ export function getFormGroupArray(formGroup: FormGroup, type: any) {
 export function removeFormGroupArrRow(
   formGroup: FormGroup,
   type: any,
-  index: number
+  index: number,
 ) {
   const control = <FormArray>formGroup.get(type);
   control.removeAt(index);
@@ -367,7 +366,7 @@ export function fetchFormGroupIndexOfControl(
   formGroup: FormGroup,
   type: any,
   s_key: any,
-  s_value: any
+  s_value: any,
 ) {
   let arr: any[] = formGroup.value?.[type];
   if (Array.isArray(arr)) {
@@ -387,7 +386,7 @@ export function openLinkInNewTab(relativeUrl: string): void {
     baseHref = baseElement.getAttribute('href') || '';
   } else {
     console.warn(
-      '<base> tag not found. Falling back to window.location.origin.'
+      '<base> tag not found. Falling back to window.location.origin.',
     );
     // Fallback to using window.location.origin if no <base> tag is present
     baseHref = window.location.origin;

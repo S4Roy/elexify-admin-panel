@@ -7,9 +7,21 @@
     <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
       Navigation Menus
     </h2>
-    <button type="button" mat-flat-button color="primary" (click)="openCreateForm()">
-      <mat-icon>add</mat-icon> New Menu
-    </button>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        mat-stroked-button
+        [disabled]="generatingDefaults"
+        (click)="generateDefaults()"
+        matTooltip="Create & publish standard Main / Mobile / Footer menus — skips any that already have items"
+      >
+        <mat-icon>auto_awesome</mat-icon>
+        {{ generatingDefaults ? "Generating..." : "Generate Default Menus" }}
+      </button>
+      <button type="button" mat-flat-button color="primary" (click)="openCreateForm()">
+        <mat-icon>add</mat-icon> New Menu
+      </button>
+    </div>
   </div>
 
   <!-- Create / edit form -->

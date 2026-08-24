@@ -79,6 +79,12 @@ const CATEGORY_SOURCE_MODES: { value: string; label: string; hint: string }[] = 
   { value: 'all', label: 'All', hint: 'Show every active category' },
 ];
 
+const TRANSITION_DIRECTIONS: { value: string; label: string }[] = [
+  { value: 'auto', label: 'Auto (follows Next/Back/dot clicked)' },
+  { value: 'ltr', label: 'Left to Right' },
+  { value: 'rtl', label: 'Right to Left' },
+];
+
 @Component({
   selector: 'app-section-editor',
   standalone: true,
@@ -113,6 +119,7 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
   iconOptions = TRUST_BADGE_ICONS;
   productSourceModes = PRODUCT_SOURCE_MODES;
   categorySourceModes = CATEGORY_SOURCE_MODES;
+  transitionDirections = TRANSITION_DIRECTIONS;
 
   products: any[] = [];
   categories: any[] = [];
@@ -178,6 +185,33 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
         this.formGroup.addControl(
           'slides',
           this.fb.array((config.slides ?? []).map((s: any) => this.newSlide(s)))
+        );
+        this.formGroup.addControl('autoplay', this.fb.control(config.autoplay ?? true));
+        this.formGroup.addControl(
+          'autoplay_interval_ms',
+          this.fb.control(config.autoplay_interval_ms ?? 4000, [
+            Validators.min(1000),
+            Validators.max(20000),
+          ])
+        );
+        this.formGroup.addControl(
+          'autoplay_pause_on_hover',
+          this.fb.control(config.autoplay_pause_on_hover ?? true)
+        );
+        this.formGroup.addControl(
+          'left_autoplay',
+          this.fb.control(config.left_autoplay ?? true)
+        );
+        this.formGroup.addControl(
+          'left_autoplay_interval_ms',
+          this.fb.control(config.left_autoplay_interval_ms ?? 4000, [
+            Validators.min(1000),
+            Validators.max(20000),
+          ])
+        );
+        this.formGroup.addControl(
+          'transition_direction',
+          this.fb.control(config.transition_direction ?? 'auto')
         );
         break;
       case 'product_section':
@@ -406,6 +440,12 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
     switch (this.type) {
       case 'hero':
         return {
+          autoplay: raw.autoplay ?? true,
+          autoplay_interval_ms: raw.autoplay_interval_ms ?? 4000,
+          autoplay_pause_on_hover: raw.autoplay_pause_on_hover ?? true,
+          left_autoplay: raw.left_autoplay ?? true,
+          left_autoplay_interval_ms: raw.left_autoplay_interval_ms ?? 4000,
+          transition_direction: raw.transition_direction ?? 'auto',
           slides: (raw.slides ?? []).map((s: any, i: number) => ({
             desktop_image: s.desktop_image || null,
             mobile_image: s.mobile_image || null,

@@ -239,4 +239,37 @@ export class MenuListComponent implements OnInit {
   openBuilder(item: any) {
     this.router.navigate(['/pages/header-navigation/menus', item._id]);
   }
+
+  // ── Generate industry-standard defaults ─────────────────────────────────
+  generatingDefaults = false;
+
+  generateDefaults() {
+    const dialogData: ConfirmDialogData = {
+      title: 'Generate default menus?',
+      message:
+        'Creates and publishes standard Main, Mobile, and Footer menus (Home, Shop, Track Order, About Us, Contact Us, policy links, etc). Any menu that already has items is left untouched.',
+      cancelText: 'Cancel',
+      saveText: 'Generate',
+    };
+    this.dialogService.confirmDialog(dialogData).subscribe((result: any) => {
+      if (!result?.confirm) return;
+      this.generatingDefaults = true;
+      this.navigationService.generateDefaultMenus().subscribe({
+        next: (res: any) => {
+          this.generatingDefaults = false;
+          const created = (res?.data ?? []).filter((r: any) => r.status === 'created');
+          const skipped = (res?.data ?? []).filter((r: any) => r.status === 'skipped');
+          this.toastr.success(
+            created.length
+              ? `Generated: ${created.map((r: any) => r.slug).join(', ')}${skipped.length ? ` (skipped ${skipped.map((r: any) => r.slug).join(', ')} — already has items)` : ''}`
+              : 'All standard menus already have items — nothing to generate'
+          );
+          this.fetch();
+        },
+        error: () => {
+          this.generatingDefaults = false;
+        },
+      });
+    });
+  }
 }
