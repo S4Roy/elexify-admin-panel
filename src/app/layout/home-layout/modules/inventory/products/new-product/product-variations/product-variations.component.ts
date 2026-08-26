@@ -176,8 +176,6 @@ export class ProductVariationsComponent implements OnInit {
         width: [attr.width ?? null],
         height: [attr.height ?? null],
         shipping_class: [attr.shipping_class ?? null],
-        power_level: [attr.power_level ?? 0],
-        rarity: [attr?.rarity ?? null],
         ask_for_price: [attr?.ask_for_price ?? false],
         enable_enquiry: [attr?.enable_enquiry ?? false],
         regular_price: [
@@ -291,8 +289,6 @@ export class ProductVariationsComponent implements OnInit {
           width: [null],
           height: [null],
           shipping_class: [null],
-          power_level: [0],
-          rarity: [null],
           visible_in_list: [visible_in_list || false],
           regular_price: [null, [Validators.required, Validators.min(0)]],
           sale_price: [null, [Validators.min(0)]],

@@ -170,8 +170,6 @@ export class NewProductComponent {
       sale_price: [this.data?.sale_price ?? null, [Validators.min(0)]],
       sale_start_date: [this.data?.sale_start_date ?? null],
       sale_end_date: [this.data?.sale_end_date ?? null],
-      rarity: [this.data?.rarity ?? null],
-      power_level: [this.data?.power_level ?? 0],
       ask_for_price: [this.data?.ask_for_price ?? false],
       enable_enquiry: [this.data?.enable_enquiry ?? false],
       is_featured: [this.data?.is_featured ?? false],

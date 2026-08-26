@@ -165,6 +165,15 @@ export class ApiService {
   updateCityStatus(payload: any) {
     return this.httpService.put(`admin/city/edit`, payload);
   }
+  pincodeList(params: any) {
+    return this.httpService.get(`admin/pincode/list?${params.toString()}`);
+  }
+  updatePincode(payload: any) {
+    return this.httpService.put(`admin/pincode/edit`, payload);
+  }
+  addPincode(payload: any) {
+    return this.httpService.post(`admin/pincode/add`, payload);
+  }
   getCountries() {
     return this.httpService.get(`site/common/countries`);
   }

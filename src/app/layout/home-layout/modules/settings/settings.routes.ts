@@ -8,6 +8,7 @@ import { SiteSettingsComponent } from './site-settings/site-settings.component';
 import { CountriesComponent } from './countries/countries.component';
 import { StatesComponent } from './states/states.component';
 import { CitiesComponent } from './cities/cities.component';
+import { PincodesComponent } from './pincodes/pincodes.component';
 import { ShippingSettingsComponent } from './shipping-settings/shipping-settings.component';
 import { SeoSettingsComponent } from './seo-settings/seo-settings.component';
 
@@ -46,6 +47,11 @@ export const routes: Routes = [
     path: 'cities',
     data: { pageTitle: 'Cities', breadcrumb: 'Cities' },
     component: CitiesComponent,
+  },
+  {
+    path: 'pincodes',
+    data: { pageTitle: 'Pincodes', breadcrumb: 'Pincodes' },
+    component: PincodesComponent,
   },
   {
     path: 'site',

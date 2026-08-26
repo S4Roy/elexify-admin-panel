@@ -18,7 +18,6 @@
       <tr>
         <th style="max-width: 20px"></th>
         <th scope="col">Variation</th>
-        <th scope="col">Rarity/Power</th>
         <th scope="col">Images</th>
         <th scope="col">Ask for Price?</th>
         <!-- <th scope="col">Enable Enquiry?</th> -->
@@ -76,32 +75,6 @@
                     </ng-container>
                   </ng-container>
                 </ng-container>
-              </td>
-              <td class="text-center">
-                <ng-select
-                  placeholder="Select Rarity"
-                  formControlName="rarity"
-                  [multiple]="false"
-                [ariaLabel]="'Select Rarity'">
-                  <ng-option
-                    *ngFor="let rarity of Global.rarity_list"
-                    [value]="rarity?._id"
-                  >
-                    <div class="flex items-center">
-                      {{ rarity?.name }}
-                    </div>
-                  </ng-option>
-                </ng-select>
-                <mat-slider
-                  min="0"
-                  max="100"
-                  step="1"
-                  value="0"
-                  thumbLabel
-                  tickInterval="10"
-                >
-                  <input formControlName="power_level" matSliderThumb />
-                </mat-slider>
               </td>
               <td style="width: 150px">
                 <ng-container>

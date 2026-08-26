@@ -43,20 +43,6 @@ export function isInputValid(formGroup: FormGroup, control: any) {
 
   return valid;
 }
-export const rarity_list: any = [
-  {
-    _id: 'Rare',
-    name: 'Rare',
-  },
-  {
-    _id: 'Very Rare',
-    name: 'Very Rare',
-  },
-  {
-    _id: 'Extremely Rare',
-    name: 'Extremely Rare',
-  },
-];
 
 export function isInputValidArray(
   formGroup: FormGroup,

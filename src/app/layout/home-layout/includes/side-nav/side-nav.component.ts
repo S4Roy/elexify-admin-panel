@@ -261,6 +261,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'Pincodes',
+              url: '/settings/pincodes',
+              exact: true,
+            },
+            {
               label: 'Currency',
               url: '/settings/currency',
               exact: true,
