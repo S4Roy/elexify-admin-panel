@@ -31,7 +31,11 @@ function donutOptions(overrides: Highcharts.Options): Highcharts.Options {
       layout: 'vertical',
       align: 'right',
       verticalAlign: 'middle',
-      itemStyle: { color: 'var(--text-secondary)', fontWeight: '500', fontSize: '12px' },
+      itemStyle: {
+        color: 'var(--text-secondary)',
+        fontWeight: '500',
+        fontSize: '12px',
+      },
     },
     // `overrides.tooltip` (set by every caller) replaces this wholesale —
     // spread is shallow — so background/border/text theming lives directly
@@ -43,7 +47,7 @@ function donutOptions(overrides: Highcharts.Options): Highcharts.Options {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, RouterLink, MatIconModule, HighchartsChartComponent],
+  imports: [NgFor, NgIf, RouterLink, MatIconModule, HighchartsChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -86,12 +90,12 @@ export class DashboardComponent {
         // Cancelled/Delivered in the thousands) surface above long-tail
         // ones (e.g. Return Initiated: 5) instead of whatever order the
         // API happens to return.
-        this.data.status = (res?.data ?? []).slice().sort(
-          (a: any, b: any) => (b?.count ?? 0) - (a?.count ?? 0)
-        );
+        this.data.status = (res?.data ?? [])
+          .slice()
+          .sort((a: any, b: any) => (b?.count ?? 0) - (a?.count ?? 0));
         this.data.total = this.data.status.reduce(
           (sum: number, item: any) => sum + (item?.count ?? 0),
-          0
+          0,
         );
         this.buildStatusChart();
       });
@@ -110,7 +114,7 @@ export class DashboardComponent {
   get orderStatusMoreCount(): number {
     return Math.max(
       this.data.status.length - DashboardComponent.STATUS_LIST_LIMIT,
-      0
+      0,
     );
   }
 
@@ -129,7 +133,7 @@ export class DashboardComponent {
     const outOfStock = this.product?.out_of_stock || 0;
     const inStock = Math.max(
       (this.product?.total_products || 0) - lowStock - outOfStock,
-      0
+      0,
     );
 
     this.stockBreakdown = [
@@ -221,6 +225,8 @@ export class DashboardComponent {
   }
 
   toTitleCase(value: string): string {
-    return (value || '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return (value || '')
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   }
 }
