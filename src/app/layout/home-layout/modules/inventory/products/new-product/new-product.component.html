@@ -791,6 +791,17 @@
                       >This field is required</mat-error
                     >
                   </div>
+                  <mat-form-field>
+                    <mat-label>Cash on Delivery</mat-label>
+                    <mat-select formControlName="cod_status">
+                      <mat-option value="use_global">Use Global Setting</mat-option>
+                      <mat-option value="allowed">COD Allowed</mat-option>
+                      <mat-option value="disallowed">COD Not Allowed</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <div class="flex items-center">
+                    <mat-checkbox formControlName="prepaid_only">Prepaid-only product</mat-checkbox>
+                  </div>
                 </div>
               </div>
             </mat-tab>

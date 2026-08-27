@@ -182,6 +182,19 @@ export class PincodesComponent {
     });
   }
 
+  updateCodStatus(item: any) {
+    const statuses = ['use_global', 'allowed', 'disallowed'];
+    const current = statuses.indexOf(item?.cod_status ?? 'use_global');
+    const cod_status = statuses[(current + 1) % statuses.length];
+    this.apiService.updatePincode({ _id: item._id, cod_status }).subscribe({
+      next: () => {
+        this.toastr.success(`COD setting updated for ${item.pincode}`);
+        this.fetchPincodeList();
+      },
+      error: () => {},
+    });
+  }
+
   onPageChange(data: any) {
     this.paginationOption.page = data;
     this.fetchPincodeList();

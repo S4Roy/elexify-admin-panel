@@ -20,6 +20,14 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
   spinner.show();
   return next(authReq).pipe(
     catchError((error) => {
+      // A blob-response request (e.g. invoice PDF download) gets its error
+      // body back as a Blob too, not parsed JSON — every branch below
+      // would only ever show a generic "Something went wrong." The caller
+      // already reads the Blob itself and shows a specific toast, so skip
+      // the generic one here to avoid a stacked double-toast.
+      if (req.responseType === 'blob') {
+        return throwError(() => error);
+      }
       if (error?.status === 401) {
         let message = 'Unauthorized';
         if (error.error) {

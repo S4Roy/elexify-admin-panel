@@ -162,6 +162,8 @@ export class NewProductComponent {
       shipping_class: [
         this.data?.shipping_class?._id ?? this.data?.shipping_class ?? null,
       ],
+      cod_status: [this.data?.cod_status ?? 'use_global'],
+      prepaid_only: [this.data?.prepaid_only ?? false],
 
       regular_price: [
         this.data?.regular_price ?? null,

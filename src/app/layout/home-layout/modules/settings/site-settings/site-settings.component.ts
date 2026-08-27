@@ -47,6 +47,10 @@ const SECTION_META: Record<string, { label: string; icon: string }> = {
   social_links: { label: 'Social Links', icon: 'share' },
   homepage: { label: 'Homepage', icon: 'home' },
   product_info: { label: 'Product Settings', icon: 'inventory_2' },
+  // Powers the header of generated tax invoices (see the backend's
+  // src/services/invoiceService/getCompanySettings.js) — leaving GSTIN
+  // and GST Rate blank keeps GST columns hidden on invoices.
+  company_info: { label: 'Company & Invoice Info', icon: 'business' },
 };
 const SECTION_ORDER = Object.keys(SECTION_META);
 
@@ -63,6 +67,15 @@ const OPTIONAL_SETTING_SLUGS = new Set([
   'contact_mobile_2',
   'homepage_video_url',
   'homepage_video_poster_url',
+  // Company/GST invoice fields — blank is a valid, working state (the
+  // invoice renderer omits GST columns and skips blank header lines
+  // rather than breaking on them).
+  'company_address',
+  'company_state',
+  'company_gstin',
+  'company_email',
+  'company_phone',
+  'company_gst_rate',
 ]);
 
 @Component({

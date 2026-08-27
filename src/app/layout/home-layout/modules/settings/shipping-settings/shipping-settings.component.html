@@ -143,6 +143,55 @@
       </div>
     </div>
 
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
+        Cash on Delivery
+      </h2>
+      <mat-checkbox formControlName="cod_enabled">Enable Cash on Delivery</mat-checkbox>
+      <div class="grid md:grid-cols-2 gap-4 mt-4">
+        <mat-form-field>
+          <mat-label>Minimum COD Order Amount</mat-label>
+          <input matInput type="number" min="0" formControlName="cod_min_order" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Maximum COD Order Amount</mat-label>
+          <input matInput type="number" min="0" formControlName="cod_max_order" />
+          <mat-hint>Leave empty for no maximum</mat-hint>
+        </mat-form-field>
+      </div>
+      <mat-checkbox formControlName="cod_charge_enabled">Charge a COD handling fee</mat-checkbox>
+      <mat-form-field class="block mt-3" *ngIf="formGroup.value.cod_charge_enabled">
+        <mat-label>COD Fee</mat-label>
+        <input matInput type="number" min="0" formControlName="cod_charge" />
+      </mat-form-field>
+      <div class="grid md:grid-cols-2 gap-4 mt-4">
+        <mat-form-field>
+          <mat-label>Allowed Pincodes</mat-label>
+          <textarea matInput rows="3" formControlName="cod_allowed_pincodes_text" placeholder="Comma-separated; blank allows all"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Disallowed Pincodes</mat-label>
+          <textarea matInput rows="3" formControlName="cod_disallowed_pincodes_text" placeholder="Comma-separated"></textarea>
+        </mat-form-field>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4 mt-4">
+        <mat-form-field><mat-label>Restricted Category IDs</mat-label><textarea matInput rows="2" formControlName="cod_disallowed_categories_text" placeholder="Comma-separated IDs"></textarea></mat-form-field>
+        <mat-form-field><mat-label>Restricted Brand IDs</mat-label><textarea matInput rows="2" formControlName="cod_disallowed_brands_text" placeholder="Comma-separated IDs"></textarea></mat-form-field>
+        <mat-form-field><mat-label>Restricted Shipping Class IDs</mat-label><textarea matInput rows="2" formControlName="cod_disallowed_shipping_classes_text" placeholder="Comma-separated IDs"></textarea></mat-form-field>
+        <mat-form-field><mat-label>Allowed Customer Types</mat-label><input matInput formControlName="cod_allowed_customer_types_text" placeholder="customer" /><mat-hint>Blank allows all customer types</mat-hint></mat-form-field>
+        <div>
+          <label>Restricted Delivery Zones</label>
+          <ng-select [multiple]="true" formControlName="cod_disallowed_zones" placeholder="Select zones" (scrollToEnd)="loadMoreZones()" [ariaLabel]="'Select COD restricted zones'">
+            <ng-option *ngFor="let zone of zones" [value]="zone?._id">{{ zone?.name }}</ng-option>
+          </ng-select>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500">Product, variation, category, brand, shipping-class and zone restrictions are also enforced by the backend configuration.</p>
+    </div>
+
     <div class="flex justify-end">
       <button
         (click)="onSubmit()"

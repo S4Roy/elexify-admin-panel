@@ -14,6 +14,9 @@
         <th scope="col" (click)="sort('order_status')" class="sortable">
           Status <span [class]="getSortIcon('order_status')"></span>
         </th>
+        <th scope="col" (click)="sort('payment_status')" class="sortable">
+          Payment <span [class]="getSortIcon('payment_status')"></span>
+        </th>
         <th scope="col" (click)="sort('total_items')" class="sortable">
           Items <span [class]="getSortIcon('total_items')"></span>
         </th>
@@ -49,6 +52,17 @@
               {{ item?.order_status }}</a
             >
           </td>
+          <td>
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              [ngClass]="paymentStatusClass(item?.payment_status)"
+            >
+              {{ paymentStatusLabel(item?.payment_status) }}
+            </span>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ paymentMethodLabel(item?.payment_method) }}
+            </div>
+          </td>
           <td>{{ item?.total_items }}</td>
           <td>
             {{ item?.grand_total | currency : item?.currency }}
@@ -66,7 +80,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="8"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

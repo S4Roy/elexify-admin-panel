@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import PaginationOptions from 'app/core/models/PaginationOptions';
@@ -17,12 +17,40 @@ import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { OrderShippingComponent } from './order-shipping/order-shipping.component';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
+
+const PAYMENT_STATUS_STYLES: Record<string, string> = {
+  paid: 'bg-green-100 text-green-800',
+  pending: 'bg-yellow-100 text-yellow-800',
+  failed: 'bg-red-100 text-red-800',
+  refund_pending: 'bg-yellow-100 text-yellow-800',
+  partially_refunded: 'bg-yellow-100 text-yellow-800',
+  refunded: 'bg-green-100 text-green-800',
+  refund_failed: 'bg-red-100 text-red-800',
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  paid: 'Paid',
+  pending: 'Pending',
+  failed: 'Failed',
+  refund_pending: 'Refund Pending',
+  partially_refunded: 'Partially Refunded',
+  refunded: 'Refunded',
+  refund_failed: 'Refund Failed',
+};
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cod: 'Cash on Delivery',
+  razorpay: 'Razorpay',
+  paypal: 'PayPal',
+};
+
 @Component({
   selector: 'app-orders',
   imports: [
     EmptyStateComponent,
     NgFor,
     NgIf,
+    NgClass,
     PaginationComponent,
     DatePipe,
     CurrencyPipe,
@@ -188,6 +216,15 @@ export class OrdersComponent {
   }
   addItem(data: any = null) {}
   stockItem(data: any = null) {}
+  paymentStatusClass(status: string): string {
+    return PAYMENT_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+  paymentStatusLabel(status: string): string {
+    return PAYMENT_STATUS_LABELS[status] ?? status;
+  }
+  paymentMethodLabel(method: string): string {
+    return PAYMENT_METHOD_LABELS[method] ?? method;
+  }
   fetchOrderList() {
     let params = new URLSearchParams({
       sort_by: this.sortKey,

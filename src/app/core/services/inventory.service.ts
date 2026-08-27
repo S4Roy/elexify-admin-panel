@@ -142,6 +142,20 @@ export class InventoryService {
   sendToShipRocket(payload: any) {
     return this.httpService.post(`admin/inventory/order/shipping`, payload);
   }
+  cancelOrder(payload: any) {
+    return this.httpService.post(`admin/inventory/order/cancel`, payload);
+  }
+  retryRefund(payload: any) {
+    return this.httpService.post(
+      `admin/inventory/order/refund/retry`,
+      payload
+    );
+  }
+  downloadInvoice(orderId: string) {
+    return this.httpService.downloadFile(
+      `admin/inventory/order/invoice?order_id=${orderId}`
+    );
+  }
   orderDetails(params: any) {
     return this.httpService.get(
       `admin/inventory/order/details?${params.toString()}`

@@ -1,20 +1,87 @@
 import {
   CurrencyPipe,
   DatePipe,
+  NgClass,
   NgFor,
   NgIf,
   TitleCasePipe,
 } from '@angular/common';
 import { Component, Inject, Optional } from '@angular/core';
 import {
+  MatDialog,
   MatDialogRef,
   MAT_DIALOG_DATA,
   MatDialogModule,
 } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
 import * as Global from 'app/global';
+import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
+
+// Mirrors CANCELLABLE_ORDER_STATUSES in the backend
+// (elexify-backend/src/constants/orderStatus.js) — the backend is the real
+// enforcer of this rule; this only controls whether the button is shown.
+const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing'];
+
+// Mirrors INVOICE_ELIGIBLE_STATUSES / canGenerateInvoice in the backend
+// (elexify-backend/src/constants/orderStatus.js) — the backend is the real
+// enforcer; this only controls whether the button is shown.
+const INVOICE_ELIGIBLE_STATUSES = [
+  'confirmed',
+  'processing',
+  'packed',
+  'shipped',
+  'out_for_delivery',
+  'delivered',
+];
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  processing: 'Processing',
+  packed: 'Packed',
+  shipped: 'Shipped',
+  out_for_delivery: 'Out for Delivery',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+  return_requested: 'Return Requested',
+  returned: 'Returned',
+};
+
+const ORDER_STATUS_STYLES: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-800',
+  confirmed: 'bg-blue-100 text-blue-800',
+  processing: 'bg-blue-100 text-blue-800',
+  packed: 'bg-blue-100 text-blue-800',
+  shipped: 'bg-indigo-100 text-indigo-800',
+  out_for_delivery: 'bg-indigo-100 text-indigo-800',
+  delivered: 'bg-green-100 text-green-800',
+  cancelled: 'bg-red-100 text-red-800',
+  return_requested: 'bg-gray-100 text-gray-700',
+  returned: 'bg-gray-100 text-gray-700',
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  paid: 'Paid',
+  pending: 'Pending',
+  failed: 'Failed',
+  refund_pending: 'Refund Pending',
+  partially_refunded: 'Partially Refunded',
+  refunded: 'Refunded',
+  refund_failed: 'Refund Failed',
+};
+
+const PAYMENT_STATUS_STYLES: Record<string, string> = {
+  paid: 'bg-green-100 text-green-800',
+  pending: 'bg-yellow-100 text-yellow-800',
+  failed: 'bg-red-100 text-red-800',
+  refund_pending: 'bg-yellow-100 text-yellow-800',
+  partially_refunded: 'bg-yellow-100 text-yellow-800',
+  refunded: 'bg-green-100 text-green-800',
+  refund_failed: 'bg-red-100 text-red-800',
+};
 
 @Component({
   selector: 'app-order-details',
@@ -23,6 +90,7 @@ import * as Global from 'app/global';
     DatePipe,
     NgFor,
     NgIf,
+    NgClass,
     CurrencyPipe,
     TitleCasePipe,
   ],
@@ -32,12 +100,17 @@ import * as Global from 'app/global';
 export class OrderDetailsComponent {
   Global = Global;
   filterOption: FilterOptions;
+  cancelling = false;
+  retryingRefund = false;
+  downloadingInvoice = false;
 
   constructor(
     @Optional() public dialogRef: MatDialogRef<OrderDetailsComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: any,
     private route: ActivatedRoute,
-    private inventoryService: InventoryService
+    private inventoryService: InventoryService,
+    private dialog: MatDialog,
+    private toastr: ToastrService
   ) {
     this.filterOption = Global.resetTableFilterOptions();
   }
@@ -68,5 +141,162 @@ export class OrderDetailsComponent {
       },
       error: (err) => {},
     });
+  }
+
+  get isCancellable(): boolean {
+    return (
+      !!this.data?.order_status &&
+      CANCELLABLE_STATUSES.includes(this.data.order_status)
+    );
+  }
+
+  get canRetryRefund(): boolean {
+    return this.data?.payment_status === 'refund_failed';
+  }
+
+  get canDownloadInvoice(): boolean {
+    return (
+      !!this.data?.invoice?.generated ||
+      INVOICE_ELIGIBLE_STATUSES.includes(this.data?.order_status)
+    );
+  }
+
+  orderStatusLabel(status: string): string {
+    return ORDER_STATUS_LABELS[status] ?? status;
+  }
+
+  orderStatusClass(status: string): string {
+    return ORDER_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  paymentStatusLabel(status: string): string {
+    return PAYMENT_STATUS_LABELS[status] ?? status;
+  }
+
+  paymentStatusClass(status: string): string {
+    return PAYMENT_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  // Mirrors the MRP/discount breakdown shown on the customer order-detail
+  // page (elexify.online account/orders/[id]) so admin sees the same math.
+  get actualItemCount(): number {
+    return (this.data?.order_items ?? []).reduce(
+      (sum: number, item: any) => sum + (Number(item?.quantity) || 0),
+      0
+    );
+  }
+
+  get itemsPayable(): number {
+    return (this.data?.order_items ?? []).reduce(
+      (sum: number, item: any) => sum + (Number(item?.total_price) || 0),
+      0
+    );
+  }
+
+  get mrpSubtotal(): number {
+    return (this.data?.order_items ?? []).reduce((sum: number, item: any) => {
+      const quantity = Number(item?.quantity) || 0;
+      const regular = Number(item?.regular_price);
+      const unit = Number(item?.unit_price) || 0;
+      return (
+        sum +
+        (Number.isFinite(regular) && regular > 0 ? regular : unit) * quantity
+      );
+    }, 0);
+  }
+
+  get productDiscount(): number {
+    return Math.max(0, this.mrpSubtotal - this.itemsPayable);
+  }
+
+  get totalSavings(): number {
+    return this.productDiscount + Number(this.data?.discount || 0);
+  }
+
+  openCancelDialog() {
+    const ref = this.dialog.open(CancelOrderDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { orderNumber: this.data?.id },
+    });
+
+    ref.afterClosed().subscribe((result: any) => {
+      if (!result?.confirm) return;
+      this.cancelling = true;
+      this.inventoryService
+        .cancelOrder({
+          order_id: this.data?._id,
+          reason: result.reason,
+          comment: result.comment,
+        })
+        .subscribe({
+          next: (res: any) => {
+            this.cancelling = false;
+            this.data = {
+              ...this.data,
+              order_status: res?.data?.order_status ?? 'cancelled',
+              payment_status:
+                res?.data?.payment_status ?? this.data.payment_status,
+              cancellation: res?.data?.cancellation ?? this.data.cancellation,
+              refund: res?.data?.refund ?? this.data.refund,
+            };
+            this.toastr.success('Order cancelled successfully');
+          },
+          error: () => {
+            this.cancelling = false;
+          },
+        });
+    });
+  }
+
+  downloadInvoice() {
+    if (this.downloadingInvoice) return;
+    this.downloadingInvoice = true;
+    this.inventoryService.downloadInvoice(this.data?._id).subscribe({
+      next: (res: any) => {
+        const blob: Blob = res;
+        this.downloadingInvoice = false;
+        const filename = this.data?.invoice?.invoice_number
+          ? `Invoice-${this.data.invoice.invoice_number.replace(/\//g, '-')}.pdf`
+          : `Invoice-${this.data?.id}.pdf`;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        this.toastr.success('Invoice downloaded successfully');
+        // Picks up invoice.invoice_number/invoice_date on first generation
+        // — the blob response itself carries no metadata to patch locally.
+        this.fetchOrderList();
+      },
+      error: () => {
+        this.downloadingInvoice = false;
+        this.toastr.error('Unable to download invoice. Please try again.');
+      },
+    });
+  }
+
+  retryRefund() {
+    this.retryingRefund = true;
+    this.inventoryService
+      .retryRefund({ order_id: this.data?._id })
+      .subscribe({
+        next: (res: any) => {
+          this.retryingRefund = false;
+          this.data = {
+            ...this.data,
+            payment_status:
+              res?.data?.payment_status ?? this.data.payment_status,
+            refund: res?.data?.refund ?? this.data.refund,
+          };
+          this.toastr.success('Refund retry initiated');
+        },
+        error: () => {
+          this.retryingRefund = false;
+        },
+      });
   }
 }

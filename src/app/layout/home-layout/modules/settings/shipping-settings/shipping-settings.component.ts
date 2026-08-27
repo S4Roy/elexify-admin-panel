@@ -76,6 +76,18 @@ export class ShippingSettingsComponent {
         [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)],
       ],
       default_shipping_zone: [null],
+      cod_enabled: [true],
+      cod_min_order: [0, [Validators.min(0)]],
+      cod_max_order: [null, [Validators.min(0)]],
+      cod_charge_enabled: [false],
+      cod_charge: [0, [Validators.min(0)]],
+      cod_allowed_pincodes_text: [''],
+      cod_disallowed_pincodes_text: [''],
+      cod_disallowed_categories_text: [''],
+      cod_disallowed_brands_text: [''],
+      cod_disallowed_shipping_classes_text: [''],
+      cod_disallowed_zones: [[]],
+      cod_allowed_customer_types_text: ['customer'],
     });
   }
 
@@ -165,6 +177,18 @@ export class ShippingSettingsComponent {
           order_cutoff_time: data.order_cutoff_time ?? null,
           default_shipping_zone:
             data.default_shipping_zone?._id ?? data.default_shipping_zone ?? null,
+          cod_enabled: data.cod_enabled ?? true,
+          cod_min_order: data.cod_min_order ?? 0,
+          cod_max_order: data.cod_max_order ?? null,
+          cod_charge_enabled: data.cod_charge_enabled ?? false,
+          cod_charge: data.cod_charge ?? 0,
+          cod_allowed_pincodes_text: (data.cod_allowed_pincodes ?? []).join(', '),
+          cod_disallowed_pincodes_text: (data.cod_disallowed_pincodes ?? []).join(', '),
+          cod_disallowed_categories_text: (data.cod_disallowed_categories ?? []).map((v: any) => v?._id ?? v).join(', '),
+          cod_disallowed_brands_text: (data.cod_disallowed_brands ?? []).map((v: any) => v?._id ?? v).join(', '),
+          cod_disallowed_shipping_classes_text: (data.cod_disallowed_shipping_classes ?? []).map((v: any) => v?._id ?? v).join(', '),
+          cod_disallowed_zones: (data.cod_disallowed_zones ?? []).map((v: any) => v?._id ?? v),
+          cod_allowed_customer_types_text: (data.cod_allowed_customer_types ?? []).join(', '),
         });
         this.holidays.clear();
         (data.holidays ?? []).forEach((holiday: any) => {
@@ -187,6 +211,18 @@ export class ShippingSettingsComponent {
     if (this.formGroup.valid) {
       this.formGroup.disable();
       const payload = this.formGroup.getRawValue();
+      payload.cod_allowed_pincodes = this.parsePincodes(payload.cod_allowed_pincodes_text);
+      payload.cod_disallowed_pincodes = this.parsePincodes(payload.cod_disallowed_pincodes_text);
+      payload.cod_disallowed_categories = this.parseIds(payload.cod_disallowed_categories_text);
+      payload.cod_disallowed_brands = this.parseIds(payload.cod_disallowed_brands_text);
+      payload.cod_disallowed_shipping_classes = this.parseIds(payload.cod_disallowed_shipping_classes_text);
+      payload.cod_allowed_customer_types = String(payload.cod_allowed_customer_types_text || '').split(/[\s,]+/).map((v: string) => v.trim()).filter(Boolean);
+      delete payload.cod_allowed_pincodes_text;
+      delete payload.cod_disallowed_pincodes_text;
+      delete payload.cod_disallowed_categories_text;
+      delete payload.cod_disallowed_brands_text;
+      delete payload.cod_disallowed_shipping_classes_text;
+      delete payload.cod_allowed_customer_types_text;
       payload.holidays = (payload.holidays ?? []).filter((h: any) => !!h);
       this.inventoryService.shippingSettingsUpdate(payload).subscribe({
         next: (res: any) => {
@@ -198,5 +234,13 @@ export class ShippingSettingsComponent {
         },
       });
     }
+  }
+
+  private parsePincodes(value: string): string[] {
+    return [...new Set(String(value || '').split(/[\s,]+/).map((v) => v.trim()).filter((v) => /^\d{6}$/.test(v)))];
+  }
+
+  private parseIds(value: string): string[] {
+    return [...new Set(String(value || '').split(/[\s,]+/).map((v) => v.trim()).filter((v) => /^[a-f\d]{24}$/i.test(v)))];
   }
 }

@@ -11,6 +11,7 @@
         <th scope="col">City</th>
         <th scope="col">State</th>
         <th scope="col">Note</th>
+        <th scope="col" class="text-center">COD</th>
         <th
           scope="col"
           (click)="sort('updated_at')"
@@ -38,6 +39,11 @@
           <td>{{ item?.state?.name || '—' }}</td>
           <td>{{ item?.note || '—' }}</td>
           <td class="text-center">
+            <button type="button" class="cursor-pointer" (click)="updateCodStatus(item)" [attr.aria-label]="'Change COD setting: ' + (item?.cod_status || 'use_global')">
+              {{ item?.cod_status === 'allowed' ? 'allowed' : item?.cod_status === 'disallowed' ? 'blocked' : 'global' }}
+            </button>
+          </td>
+          <td class="text-center">
             {{ item?.updated_at | date }}
           </td>
           <td class="text-center">
@@ -55,7 +61,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="8"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
