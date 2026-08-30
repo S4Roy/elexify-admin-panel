@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { SecurityContext } from '@angular/core';
 
 @Pipe({
   name: 'oembedToIframe',
@@ -13,6 +14,25 @@ export class OembedToIframePipe implements PipeTransform {
       return null;
     }
 
+    // This pipe's only job is to upgrade <oembed>/<iframe> embed tags into
+    // real trusted iframe HTML - it must not grant blanket trust to the rest
+    // of the (externally-authored, CKEditor-produced) content around them.
+    // Extract each embed as a placeholder token first, sanitize everything
+    // else through Angular's real HTML sanitizer (which strips <script>,
+    // event-handler attributes, javascript: URLs, etc.), then splice the
+    // trusted iframe HTML back in by token. Previously the whole string was
+    // passed to bypassSecurityTrustHtml() unconditionally, which meant any
+    // <script>/onerror payload saved into blog content would execute
+    // unsanitized on the blog-details page.
+    const embeds: string[] = [];
+    const placeholder = (fragment: string) => {
+      // Plain-text token with no leading/trailing whitespace, since the
+      // sanitizer can trim/collapse whitespace around text-node boundaries.
+      const token = '[[[OEMBED_TOKEN_' + embeds.length + ']]]';
+      embeds.push(fragment);
+      return token;
+    };
+
     let transformed = html;
 
     // 1) Replace <oembed url="..."></oembed> (handles youtu.be, youtube.com, vimeo)
@@ -20,8 +40,8 @@ export class OembedToIframePipe implements PipeTransform {
       /<oembed\s+url=["']([^"']+)["']\s*><\/oembed>/gi,
       (_match, url: string) => {
         const iframe = this.oembedUrlToIframe(url);
-        // wrap iframe in a responsive container (optional)
-        return `<div class="responsive-embed">${iframe}</div>`;
+        if (!iframe) return '';
+        return placeholder(`<div class="responsive-embed">${iframe}</div>`);
       }
     );
 
@@ -31,14 +51,20 @@ export class OembedToIframePipe implements PipeTransform {
       (match, src) => {
         // if src is a watch?v= or youtu.be, convert
         const converted = this.oembedUrlToIframe(src);
-        return converted
-          ? `<div class="responsive-embed">${converted}</div>`
-          : match;
+        // An iframe this pipe doesn't recognize is untrusted third-party
+        // markup, not a safe embed - drop it rather than let it through
+        // unsanitized (Angular's sanitizer strips <iframe> entirely anyway).
+        return converted ? placeholder(`<div class="responsive-embed">${converted}</div>`) : '';
       }
     );
 
-    // sanitize and return
-    return this.sanitizer.bypassSecurityTrustHtml(transformed);
+    const sanitized = this.sanitizer.sanitize(SecurityContext.HTML, transformed) ?? '';
+    const withEmbeds = sanitized.replace(
+      /\[\[\[OEMBED_TOKEN_(\d+)\]\]\]/g,
+      (_match, index: string) => embeds[Number(index)] ?? ''
+    );
+
+    return this.sanitizer.bypassSecurityTrustHtml(withEmbeds);
   }
 
   private oembedUrlToIframe(url: string): string | null {
