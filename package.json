@@ -1,6 +1,9 @@
 {
   "name": "elexify-admin-panel",
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20.11 <23"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -25,7 +28,6 @@
     "@ng-select/ng-select": "^14.2.2",
     "autoprefixer": "^10.4.20",
     "ckeditor5": "^46.0.3",
-    "ckeditor5-premium-features": "^46.0.3",
     "highcharts": "^13.0.1",
     "highcharts-angular": "^5.4.1",
     "moment": "^2.30.1",
