@@ -42,3 +42,7 @@ testem.log
 Thumbs.db
 /.vscode
 /.angular
+
+# Playwright
+playwright-report/
+test-results/

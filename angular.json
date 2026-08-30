@@ -67,6 +67,18 @@
               "extractLicenses": false,
               "sourceMap": true,
               "baseHref": "/"
+            },
+            "e2e": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "baseHref": "/",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.e2e.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -82,6 +94,9 @@
             },
             "development": {
               "buildTarget": "elexify-admin-panel:build:development"
+            },
+            "e2e": {
+              "buildTarget": "elexify-admin-panel:build:e2e"
             }
           },
           "defaultConfiguration": "development"
