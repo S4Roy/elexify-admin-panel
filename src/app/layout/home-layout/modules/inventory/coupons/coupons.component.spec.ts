@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CouponsComponent } from './coupons.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../../testing/shared-test-providers';
 
 describe('CouponsComponent', () => {
   let component: CouponsComponent;
@@ -8,7 +9,8 @@ describe('CouponsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CouponsComponent]
+      imports: [CouponsComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NewBrandComponent } from './new-brand.component';
+import { sharedTestProviders, activatedRouteStub, matDialogDataProvider, matDialogRefStub } from '../../../../../../../testing/shared-test-providers';
 
 describe('NewBrandComponent', () => {
   let component: NewBrandComponent;
@@ -9,6 +10,7 @@ describe('NewBrandComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [NewBrandComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub(), matDialogDataProvider(), matDialogRefStub()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(NewBrandComponent);

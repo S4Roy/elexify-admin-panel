@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ContactUsComponent } from './contact-us.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../testing/shared-test-providers';
 
 describe('ContactUsComponent', () => {
   let component: ContactUsComponent;
@@ -8,7 +9,8 @@ describe('ContactUsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ContactUsComponent]
+      imports: [ContactUsComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

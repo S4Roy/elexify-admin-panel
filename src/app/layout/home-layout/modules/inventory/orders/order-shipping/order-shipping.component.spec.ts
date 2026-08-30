@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { OrderShippingComponent } from './order-shipping.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../../../testing/shared-test-providers';
 
 describe('OrderShippingComponent', () => {
   let component: OrderShippingComponent;
@@ -8,7 +9,8 @@ describe('OrderShippingComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [OrderShippingComponent]
+      imports: [OrderShippingComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

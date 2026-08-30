@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NewCategoryComponent } from './new-category.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../../../testing/shared-test-providers';
 
 describe('NewCategoryComponent', () => {
   let component: NewCategoryComponent;
@@ -8,7 +9,8 @@ describe('NewCategoryComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NewCategoryComponent]
+      imports: [NewCategoryComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

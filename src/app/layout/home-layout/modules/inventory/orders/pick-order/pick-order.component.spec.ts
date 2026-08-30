@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PickOrderComponent } from './pick-order.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../../../testing/shared-test-providers';
 
 describe('PickOrderComponent', () => {
   let component: PickOrderComponent;
@@ -8,7 +9,8 @@ describe('PickOrderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PickOrderComponent]
+      imports: [PickOrderComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

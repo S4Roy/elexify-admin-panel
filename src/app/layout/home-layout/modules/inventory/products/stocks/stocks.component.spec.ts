@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { StocksComponent } from './stocks.component';
+import { sharedTestProviders, activatedRouteStub, matDialogDataProvider, matDialogRefStub } from '../../../../../../../testing/shared-test-providers';
 
 describe('StocksComponent', () => {
   let component: StocksComponent;
@@ -8,7 +9,8 @@ describe('StocksComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StocksComponent]
+      imports: [StocksComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub(), matDialogDataProvider(), matDialogRefStub()],
     })
     .compileComponents();
 

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { StaticPageComponent } from './static-page.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../../testing/shared-test-providers';
 
 describe('StaticPageComponent', () => {
   let component: StaticPageComponent;
@@ -8,7 +9,8 @@ describe('StaticPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StaticPageComponent]
+      imports: [StaticPageComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

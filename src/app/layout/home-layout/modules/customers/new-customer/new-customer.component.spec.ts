@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NewCustomerComponent } from './new-customer.component';
+import { sharedTestProviders, matDialogDataProvider, matDialogRefStub } from '../../../../../../testing/shared-test-providers';
 
 describe('NewCustomerComponent', () => {
   let component: NewCustomerComponent;
@@ -8,7 +9,8 @@ describe('NewCustomerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NewCustomerComponent]
+      imports: [NewCustomerComponent],
+      providers: [...sharedTestProviders(), matDialogDataProvider(), matDialogRefStub()],
     })
     .compileComponents();
 

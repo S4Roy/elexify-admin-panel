@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { UpdateEnquiryComponent } from './update-enquiry.component';
+import { sharedTestProviders, matDialogDataProvider, matDialogRefStub } from '../../../../../../testing/shared-test-providers';
 
 describe('UpdateEnquiryComponent', () => {
   let component: UpdateEnquiryComponent;
@@ -8,7 +9,8 @@ describe('UpdateEnquiryComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UpdateEnquiryComponent]
+      imports: [UpdateEnquiryComponent],
+      providers: [...sharedTestProviders(), matDialogDataProvider(), matDialogRefStub()],
     })
     .compileComponents();
 

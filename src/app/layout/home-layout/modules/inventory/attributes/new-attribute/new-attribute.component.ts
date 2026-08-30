@@ -85,6 +85,7 @@ export class NewAttributeComponent {
     this.filterOption = Global.resetTableFilterOptions();
     this.formGroup = this.fb.group({
       name: [this.data?.name ?? null, [Validators.required]],
+      visible_in_list: [this.data?.visible_in_list ?? false],
       size_meta: [this.data?.size_meta ?? false],
       customized_mala_mukhi: [this.data?.customized_mala_mukhi ?? false],
       customized_mala_design: [this.data?.customized_mala_design ?? false],

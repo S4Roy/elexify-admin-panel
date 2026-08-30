@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NotificationsComponent } from './notifications.component';
+import { sharedTestProviders, matDialogRefStub } from '../../../../../../testing/shared-test-providers';
 
 describe('NotificationsComponent', () => {
   let component: NotificationsComponent;
@@ -8,7 +9,8 @@ describe('NotificationsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NotificationsComponent]
+      imports: [NotificationsComponent],
+      providers: [...sharedTestProviders(), matDialogRefStub()],
     })
     .compileComponents();
 

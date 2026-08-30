@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RouterCardComponent } from './router-card.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../testing/shared-test-providers';
 
 describe('RouterCardComponent', () => {
   let component: RouterCardComponent;
@@ -8,7 +9,8 @@ describe('RouterCardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RouterCardComponent]
+      imports: [RouterCardComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

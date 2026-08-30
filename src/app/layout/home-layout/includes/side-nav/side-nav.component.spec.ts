@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SideNavComponent } from './side-nav.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../../../testing/shared-test-providers';
 
 describe('SideNavComponent', () => {
   let component: SideNavComponent;
@@ -9,6 +10,7 @@ describe('SideNavComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SideNavComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SideNavComponent);

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { P404Component } from './p404.component';
+import { sharedTestProviders, activatedRouteStub } from '../../../testing/shared-test-providers';
 
 describe('P404Component', () => {
   let component: P404Component;
@@ -8,7 +9,8 @@ describe('P404Component', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [P404Component]
+      imports: [P404Component],
+      providers: [...sharedTestProviders(), activatedRouteStub()],
     })
     .compileComponents();
 

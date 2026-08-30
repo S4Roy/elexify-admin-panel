@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NewTagComponent } from './new-tag.component';
+import { sharedTestProviders, activatedRouteStub, matDialogDataProvider, matDialogRefStub } from '../../../../../../../testing/shared-test-providers';
 
 describe('NewTagComponent', () => {
   let component: NewTagComponent;
@@ -8,7 +9,8 @@ describe('NewTagComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NewTagComponent]
+      imports: [NewTagComponent],
+      providers: [...sharedTestProviders(), activatedRouteStub(), matDialogDataProvider(), matDialogRefStub()],
     })
     .compileComponents();
 

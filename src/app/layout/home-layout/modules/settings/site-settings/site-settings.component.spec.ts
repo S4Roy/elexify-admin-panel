@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SiteSettingsComponent } from './site-settings.component';
+import { sharedTestProviders } from '../../../../../../testing/shared-test-providers';
 
 describe('SiteSettingsComponent', () => {
   let component: SiteSettingsComponent;
@@ -8,7 +9,8 @@ describe('SiteSettingsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SiteSettingsComponent]
+      imports: [SiteSettingsComponent],
+      providers: [...sharedTestProviders()],
     })
     .compileComponents();
 
