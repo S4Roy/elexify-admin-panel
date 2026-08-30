@@ -17,7 +17,7 @@
                 <ng-container [ngSwitch]="field.type">
                   <ng-select
                     *ngSwitchCase="'multiselect'"
-                    [items]="field.options"
+                    [items]="field.options || []"
                     bindLabel="label"
                     bindValue="value"
                     [multiple]="true"
@@ -38,7 +38,7 @@
 
                   <ng-select
                     *ngSwitchCase="'select'"
-                    [items]="field.options"
+                    [items]="field.options || []"
                     bindLabel="label"
                     bindValue="value"
                     [placeholder]="field.placeholder || 'All ' + field.label"
