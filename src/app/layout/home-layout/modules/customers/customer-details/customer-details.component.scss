@@ -1,0 +1,70 @@
+.pref-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border: none;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease;
+  }
+
+  &.on {
+    background: var(--color-primary, #4f46e5);
+  }
+
+  &.on::after {
+    transform: translateX(18px);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// Notification job status badges — reuses the .table-status shell from
+// styles.scss (padding/radius/weight) but adds colors for the statuses on
+// admin/notifications/* responses, which aren't part of the generic
+// active/inactive palette already defined there.
+.table-status.queued {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+.table-status.sending {
+  color: #075985;
+  background-color: #e0f2fe;
+}
+.table-status.sent {
+  color: #3730a3;
+  background-color: #e0e7ff;
+}
+.table-status.delivered {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+.table-status.failed {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+.table-status.retrying {
+  color: #9a3412;
+  background-color: #ffedd5;
+}
+.table-status.dead_letter {
+  color: #fff;
+  background-color: #6b7280;
+}

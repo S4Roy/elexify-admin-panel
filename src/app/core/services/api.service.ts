@@ -188,4 +188,40 @@ export class ApiService {
   updateCustomerStatus(payload: any) {
     return this.httpService.patch(`admin/customer/change-status`, payload);
   }
+
+  // --- Phase 2: customer profile / notification preferences ---
+  customerDetails(id: string) {
+    return this.httpService.get(`admin/customers/${id}/details`);
+  }
+  notificationPreferences(id: string) {
+    return this.httpService.get(`admin/customers/${id}/notification-preferences`);
+  }
+  updateNotificationPreferences(id: string, payload: any) {
+    return this.httpService.patch(
+      `admin/customers/${id}/notification-preferences`,
+      payload,
+    );
+  }
+  verificationOverride(id: string, payload: any) {
+    return this.httpService.post(
+      `admin/customers/${id}/verification-override`,
+      payload,
+    );
+  }
+
+  // --- Phase 2: notifications ---
+  notificationHistory(params: any) {
+    return this.httpService.get(`admin/notifications/history?${params.toString()}`);
+  }
+  notificationDeadLetter(params: any) {
+    return this.httpService.get(
+      `admin/notifications/dead-letter?${params.toString()}`,
+    );
+  }
+  retryNotification(jobId: string) {
+    return this.httpService.post(`admin/notifications/${jobId}/retry`, {});
+  }
+  notificationSummary(range: string) {
+    return this.httpService.get(`admin/notifications/summary?range=${range}`);
+  }
 }

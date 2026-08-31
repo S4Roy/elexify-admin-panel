@@ -218,6 +218,23 @@ export class SideNavComponent {
           icon: 'mail',
           url: '/subscriber',
         },
+        {
+          label: 'Notifications',
+          icon: 'notifications',
+          url: '/notifications',
+          childMenuItems: [
+            {
+              label: 'Summary',
+              url: '/notifications',
+              exact: true,
+            },
+            {
+              label: 'Dead Letter Queue',
+              url: '/notifications/dead-letter',
+              exact: true,
+            },
+          ],
+        },
       ],
     },
     {

@@ -1,0 +1,49 @@
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col">Event</th>
+        <th scope="col">Channel</th>
+        <th scope="col">Destination</th>
+        <th scope="col">Provider</th>
+        <th scope="col" class="text-center">Attempts</th>
+        <th scope="col">Last Error</th>
+        <th scope="col" class="text-center">Created</th>
+        <th scope="col" class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of itemList">
+        <tr>
+          <td class="font-medium text-gray-900 whitespace-nowrap">{{ item?.event }}</td>
+          <td class="capitalize">{{ item?.channel }}</td>
+          <td>{{ item?.destination_masked }}</td>
+          <td>{{ item?.provider }}</td>
+          <td class="text-center">{{ item?.attempts }}</td>
+          <td class="text-red-600 text-xs">{{ item?.last_error_safe || '—' }}</td>
+          <td class="text-center">{{ item?.created_at | date : 'short' }}</td>
+          <td class="text-center">
+            <button
+              type="button"
+              *ngIf="isPrivileged"
+              (click)="retry(item)"
+              [disabled]="retryingId === item?._id"
+              class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
+            >
+              {{ retryingId === item?._id ? 'Retrying…' : 'Retry' }}
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!itemList?.length">
+        <tr>
+          <td class="text-center" colspan="8">
+            <app-empty-state message="No dead letter notifications"></app-empty-state>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>

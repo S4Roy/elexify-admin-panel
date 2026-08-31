@@ -12,6 +12,9 @@ import { RatingReveiwsComponent } from './modules/rating-reveiws/rating-reveiws.
 import { ContactUsComponent } from './modules/contact-us/contact-us.component';
 import { SubscriberComponent } from './modules/subscriber/subscriber.component';
 import { EnquiriesComponent } from './modules/enquiries/enquiries.component';
+import { CustomerDetailsComponent } from './modules/customers/customer-details/customer-details.component';
+import { NotificationDashboardComponent } from './modules/notifications/notification-dashboard/notification-dashboard.component';
+import { DeadLetterComponent } from './modules/notifications/dead-letter/dead-letter.component';
 
 export const routes: Routes = [
   {
@@ -35,8 +38,35 @@ export const routes: Routes = [
       },
       {
         path: 'customers',
-        component: CustomersComponent,
         data: { pageTitle: 'Customers', breadcrumb: 'Customers' },
+        children: [
+          {
+            path: '',
+            component: CustomersComponent,
+            data: { pageTitle: 'Customers', breadcrumb: 'List' },
+          },
+          {
+            path: 'details/:_id',
+            component: CustomerDetailsComponent,
+            data: { pageTitle: 'Customer Details', breadcrumb: 'Details' },
+          },
+        ],
+      },
+      {
+        path: 'notifications',
+        data: { pageTitle: 'Notifications', breadcrumb: 'Notifications' },
+        children: [
+          {
+            path: '',
+            component: NotificationDashboardComponent,
+            data: { pageTitle: 'Notifications', breadcrumb: 'Summary' },
+          },
+          {
+            path: 'dead-letter',
+            component: DeadLetterComponent,
+            data: { pageTitle: 'Dead Letter Queue', breadcrumb: 'Dead Letter' },
+          },
+        ],
       },
       {
         path: 'testimonials',

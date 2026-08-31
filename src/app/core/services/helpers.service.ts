@@ -119,11 +119,11 @@ export class HelpersService {
     let userData = this.authService.getUserData();
     if (userData !== null) {
       let parseData = JSON.parse(userData);
-      if (!parseData?.userRoles?.length) {
-        return '';
-      }
-      let user_role = parseData?.userRoles[0]?.name ?? null;
-      return user_role;
+      // The login response stores a flat `role` string on the user object
+      // (see adminLogin.js: `role: user.role`) — there is no `userRoles`
+      // array anywhere in the API. The old `userRoles[0].name` lookup below
+      // always returned '' for every admin regardless of actual role.
+      return parseData?.role ?? parseData?.userRoles?.[0]?.name ?? '';
     } else {
       return null;
     }

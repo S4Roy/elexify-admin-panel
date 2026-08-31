@@ -42,7 +42,8 @@
           </td>
           <td class="text-center">
             <app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="addItem($event)"
-              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('deledte') ? item : null"></app-menu>
+              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('deledte') ? item : null"
+              [details]="['/customers/details', item?._id]"></app-menu>
           </td>
         </tr>
       </ng-container>

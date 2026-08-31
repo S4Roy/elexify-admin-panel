@@ -1,0 +1,32 @@
+// Notification job status badges — see the matching block in
+// customer-details.component.scss for why these colors live per-component
+// instead of in the shared .table-status rules in styles.scss (those only
+// cover generic active/inactive, not the notifications status enum).
+.table-status.queued {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+.table-status.sending {
+  color: #075985;
+  background-color: #e0f2fe;
+}
+.table-status.sent {
+  color: #3730a3;
+  background-color: #e0e7ff;
+}
+.table-status.delivered {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+.table-status.failed {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+.table-status.retrying {
+  color: #9a3412;
+  background-color: #ffedd5;
+}
+.table-status.dead_letter {
+  color: #fff;
+  background-color: #6b7280;
+}

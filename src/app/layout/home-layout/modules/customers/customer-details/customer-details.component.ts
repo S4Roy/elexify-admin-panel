@@ -1,0 +1,396 @@
+import { DatePipe, LowerCasePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { Subject, takeUntil } from 'rxjs';
+import { ApiService } from 'app/core/services/api.service';
+import { HelpersService } from 'app/core/services/helpers.service';
+import * as Global from 'app/global';
+import PaginationOptions from 'app/core/models/PaginationOptions';
+import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
+import { PaginationComponent } from '../../../includes/pagination/pagination.component';
+import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
+import {
+  ReasonDialogComponent,
+  ReasonDialogData,
+} from '../../../includes/reason-dialog/reason-dialog.component';
+
+// Notification preference groups + rows as returned by
+// GET admin/customers/:id/notification-preferences. Kept here (rather than
+// derived from the response) so the grid always renders every known row —
+// including ones the backend might omit — with a stable label/order.
+const PREFERENCE_GROUPS: {
+  key: string;
+  label: string;
+  rows: { key: string; label: string }[];
+}[] = [
+  {
+    key: 'transactional',
+    label: 'Transactional',
+    rows: [
+      { key: 'order_email', label: 'Order updates — Email' },
+      { key: 'order_sms', label: 'Order updates — SMS' },
+      { key: 'order_whatsapp', label: 'Order updates — WhatsApp' },
+      { key: 'payment_email', label: 'Payment updates — Email' },
+      { key: 'payment_sms', label: 'Payment updates — SMS' },
+      { key: 'refund_email', label: 'Refund updates — Email' },
+      { key: 'refund_sms', label: 'Refund updates — SMS' },
+    ],
+  },
+  {
+    key: 'security',
+    label: 'Security',
+    rows: [
+      { key: 'email', label: 'Security alerts — Email' },
+      { key: 'sms', label: 'Security alerts — SMS' },
+    ],
+  },
+  {
+    key: 'marketing',
+    label: 'Marketing',
+    rows: [
+      { key: 'email', label: 'Marketing — Email' },
+      { key: 'sms', label: 'Marketing — SMS' },
+      { key: 'whatsapp', label: 'Marketing — WhatsApp' },
+    ],
+  },
+  {
+    key: 'reminders',
+    label: 'Reminders',
+    rows: [
+      { key: 'abandoned_cart_email', label: 'Abandoned cart — Email' },
+      { key: 'abandoned_cart_whatsapp', label: 'Abandoned cart — WhatsApp' },
+      { key: 'wishlist_email', label: 'Wishlist — Email' },
+    ],
+  },
+];
+
+@Component({
+  selector: 'app-customer-details',
+  imports: [
+    NgIf,
+    NgFor,
+    NgClass,
+    DatePipe,
+    LowerCasePipe,
+    MatIconModule,
+    RouterModule,
+    PaginationComponent,
+    EmptyStateComponent,
+  ],
+  templateUrl: './customer-details.component.html',
+  styleUrl: './customer-details.component.scss',
+})
+export class CustomerDetailsComponent implements OnInit, OnDestroy {
+  Global = Global;
+  customerId: string | null = null;
+  customer: any = null;
+  loading = true;
+
+  preferences: any = null;
+  preferenceGroups = PREFERENCE_GROUPS;
+  editingPreferences = false;
+  editablePreferenceValues: Record<string, Record<string, boolean>> = {};
+  savingPreferences = false;
+
+  historyList: any[] = [];
+  historyPagination: PaginationOptions;
+  historyFilterValues: Record<string, any> = {
+    event: null,
+    channel: null,
+    status: null,
+    from_date: null,
+    to_date: null,
+  };
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private apiService: ApiService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private toastr: ToastrService,
+    private dialog: MatDialog,
+    public helperService: HelpersService,
+  ) {
+    this.historyPagination = Global.resetPaginationOptions();
+  }
+
+  ngOnInit(): void {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.customerId = params.get('_id');
+      if (this.customerId) {
+        this.fetchCustomerDetails();
+        this.fetchNotificationPreferences();
+        this.fetchNotificationHistory();
+      }
+    });
+    this.helperService.filterButtonClick$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openFilters());
+    this.updateFilterButton();
+  }
+
+  ngOnDestroy(): void {
+    this.helperService.clearFilterButton();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  get isPrivileged(): boolean {
+    const role = this.helperService.role();
+    return role === 'superadmin' || role === 'manager';
+  }
+
+  // --- Profile / verification ---
+
+  fetchCustomerDetails() {
+    this.loading = true;
+    this.apiService.customerDetails(this.customerId!).subscribe({
+      next: (res: any) => {
+        this.customer = res?.data ?? null;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      },
+    });
+  }
+
+  markVerified(channel: 'email' | 'mobile') {
+    const dialogData: ReasonDialogData = {
+      title: `Mark ${channel === 'email' ? 'email' : 'mobile'} as verified?`,
+      message:
+        'This overrides the normal verification flow. Please provide a reason for this manual override — it will be recorded on the customer record.',
+      reasonLabel: 'Reason for override',
+      minLength: 10,
+      confirmText: 'Mark Verified',
+    };
+
+    this.dialog
+      .open(ReasonDialogComponent, { data: dialogData, disableClose: true })
+      .afterClosed()
+      .subscribe((result: any) => {
+        if (!result?.confirm) return;
+        this.apiService
+          .verificationOverride(this.customerId!, {
+            channel,
+            reason: result.reason,
+          })
+          .subscribe({
+            next: () => {
+              this.toastr.success(
+                `${channel === 'email' ? 'Email' : 'Mobile'} marked as verified`,
+              );
+              this.fetchCustomerDetails();
+            },
+            error: () => {},
+          });
+      });
+  }
+
+  // --- Notification preferences ---
+
+  fetchNotificationPreferences() {
+    this.apiService.notificationPreferences(this.customerId!).subscribe({
+      next: (res: any) => {
+        this.preferences = res?.data ?? null;
+        this.resetEditableValues();
+      },
+      error: () => {},
+    });
+  }
+
+  resetEditableValues() {
+    this.editablePreferenceValues = {};
+    for (const group of this.preferenceGroups) {
+      this.editablePreferenceValues[group.key] = {};
+      for (const row of group.rows) {
+        this.editablePreferenceValues[group.key][row.key] =
+          !!this.preferences?.preferences?.[group.key]?.[row.key];
+      }
+    }
+  }
+
+  isLocked(groupKey: string, rowKey: string): boolean {
+    const path = `${groupKey}.${rowKey}`;
+    return !!this.preferences?.mandatory_locked_paths?.includes(path);
+  }
+
+  unavailableReason(groupKey: string, rowKey: string): string | null {
+    const isSmsOrWhatsapp =
+      rowKey.includes('sms') || rowKey.includes('whatsapp');
+    const isEmail = rowKey.includes('email') || rowKey === 'email';
+    if (isSmsOrWhatsapp && this.preferences?.mobile_verified === false) {
+      return 'Unavailable — mobile not verified';
+    }
+    if (isEmail && this.preferences?.email_verified === false) {
+      return 'Unavailable — email not verified';
+    }
+    return null;
+  }
+
+  isRowDisabled(groupKey: string, rowKey: string): boolean {
+    return this.isLocked(groupKey, rowKey) || !!this.unavailableReason(groupKey, rowKey);
+  }
+
+  rowValue(groupKey: string, rowKey: string): boolean {
+    return !!this.preferences?.preferences?.[groupKey]?.[rowKey];
+  }
+
+  toggleEditMode() {
+    if (!this.isPrivileged) return;
+    if (this.editingPreferences) {
+      this.resetEditableValues();
+    }
+    this.editingPreferences = !this.editingPreferences;
+  }
+
+  toggleEditableValue(groupKey: string, rowKey: string) {
+    if (this.isRowDisabled(groupKey, rowKey)) return;
+    this.editablePreferenceValues[groupKey][rowKey] =
+      !this.editablePreferenceValues[groupKey][rowKey];
+  }
+
+  savePreferences() {
+    if (!this.customerId) return;
+    this.savingPreferences = true;
+    const payload: Record<string, any> = {};
+    for (const group of this.preferenceGroups) {
+      payload[group.key] = { ...this.editablePreferenceValues[group.key] };
+    }
+    this.apiService
+      .updateNotificationPreferences(this.customerId, payload)
+      .subscribe({
+        next: (res: any) => {
+          this.savingPreferences = false;
+          this.preferences = res?.data ?? this.preferences;
+          this.resetEditableValues();
+          this.editingPreferences = false;
+          this.toastr.success('Notification preferences updated');
+        },
+        error: () => {
+          this.savingPreferences = false;
+        },
+      });
+  }
+
+  // --- Notification history ---
+
+  get historyFilterFields(): FilterFieldDef[] {
+    return [
+      {
+        key: 'event',
+        label: 'Event',
+        type: 'text',
+        placeholder: 'e.g. order.placed',
+      },
+      {
+        key: 'channel',
+        label: 'Channel',
+        type: 'select',
+        options: [
+          { value: 'email', label: 'Email' },
+          { value: 'sms', label: 'SMS' },
+          { value: 'whatsapp', label: 'WhatsApp' },
+          { value: 'push', label: 'Push' },
+        ],
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'select',
+        options: [
+          { value: 'QUEUED', label: 'Queued' },
+          { value: 'SENDING', label: 'Sending' },
+          { value: 'SENT', label: 'Sent' },
+          { value: 'DELIVERED', label: 'Delivered' },
+          { value: 'FAILED', label: 'Failed' },
+          { value: 'RETRYING', label: 'Retrying' },
+          { value: 'DEAD_LETTER', label: 'Dead Letter' },
+        ],
+      },
+      {
+        key: 'created_at',
+        label: 'Date',
+        type: 'daterange',
+        fromKey: 'from_date',
+        toKey: 'to_date',
+      },
+    ];
+  }
+
+  filterCount(): number {
+    let count = 0;
+    if (this.historyFilterValues['event']) count++;
+    if (this.historyFilterValues['channel']) count++;
+    if (this.historyFilterValues['status']) count++;
+    if (this.historyFilterValues['from_date'] || this.historyFilterValues['to_date'])
+      count++;
+    return count;
+  }
+
+  updateFilterButton(): void {
+    this.helperService.setFilterButton(this.filterCount());
+  }
+
+  openFilters(): void {
+    this.dialog
+      .open(FilterDrawerComponent, {
+        data: {
+          fields: this.historyFilterFields,
+          values: { ...this.historyFilterValues },
+        },
+      })
+      .afterClosed()
+      .subscribe((result: Record<string, any> | undefined) => {
+        if (!result) return;
+        this.historyFilterValues = result;
+        this.historyPagination.page = 1;
+        this.fetchNotificationHistory();
+        this.updateFilterButton();
+      });
+  }
+
+  fetchNotificationHistory() {
+    if (!this.customerId) return;
+    const params = new URLSearchParams({ user_id: this.customerId });
+    if (this.historyPagination.limit) {
+      params.set('limit', String(this.historyPagination.limit));
+    }
+    if (this.historyPagination.page) {
+      params.set('page', String(this.historyPagination.page));
+    }
+    if (this.historyFilterValues['event']) {
+      params.set('event', this.historyFilterValues['event']);
+    }
+    if (this.historyFilterValues['channel']) {
+      params.set('channel', this.historyFilterValues['channel']);
+    }
+    if (this.historyFilterValues['status']) {
+      params.set('status', this.historyFilterValues['status']);
+    }
+    if (this.historyFilterValues['from_date']) {
+      params.set('from', this.historyFilterValues['from_date']);
+    }
+    if (this.historyFilterValues['to_date']) {
+      params.set('to', this.historyFilterValues['to_date']);
+    }
+
+    this.apiService.notificationHistory(params).subscribe({
+      next: (res: any) => {
+        this.historyList = res?.data?.docs ?? [];
+        this.historyPagination = { ...res?.data };
+      },
+      error: () => {},
+    });
+  }
+
+  onHistoryPageChange(page: number) {
+    this.historyPagination.page = page;
+    this.fetchNotificationHistory();
+  }
+}

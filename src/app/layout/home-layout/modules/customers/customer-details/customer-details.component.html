@@ -1,0 +1,200 @@
+<div *ngIf="loading" class="p-6 text-center text-gray-500">Loading…</div>
+
+<div *ngIf="!loading && !customer" class="p-6">
+  <app-empty-state message="Customer not found"></app-empty-state>
+</div>
+
+<div *ngIf="!loading && customer" class="flex flex-col gap-6">
+  <!-- Profile card -->
+  <div class="p-6 bg-white shadow-xl rounded-2xl">
+    <div class="flex flex-wrap justify-between items-start gap-3 border-b pb-4 mb-4">
+      <div>
+        <h2 class="text-2xl font-bold">{{ customer?.name }}</h2>
+        <p class="text-sm text-gray-500">Customer ID: {{ customer?._id }}</p>
+      </div>
+      <span [class]="customer?.status">{{ customer?.status }}</span>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-6 text-sm">
+      <div>
+        <p class="text-gray-500">Date of Birth</p>
+        <p class="text-gray-800 font-medium">{{ customer?.dob ? (customer?.dob | date) : '—' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Gender</p>
+        <p class="text-gray-800 font-medium capitalize">{{ customer?.gender || '—' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Registered On</p>
+        <p class="text-gray-800 font-medium">{{ customer?.created_at | date : 'medium' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Last Updated</p>
+        <p class="text-gray-800 font-medium">{{ customer?.updated_at | date : 'medium' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact cards -->
+  <div class="grid sm:grid-cols-2 gap-6">
+    <div class="p-6 bg-white shadow-xl rounded-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Email</h3>
+        <span [class]="customer?.email_verified ? 'active' : 'inactive'">
+          {{ customer?.email_verified ? 'Verified' : 'Not Verified' }}
+        </span>
+      </div>
+      <p class="text-gray-800">{{ customer?.email }}</p>
+      <p class="text-xs text-gray-500 mt-1" *ngIf="customer?.pending_email">
+        Pending change to: {{ customer?.pending_email }}
+      </p>
+      <button
+        type="button"
+        *ngIf="!customer?.email_verified && isPrivileged"
+        (click)="markVerified('email')"
+        class="mt-3 inline-flex items-center rounded-md border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5"
+      >
+        Mark Verified
+      </button>
+    </div>
+
+    <div class="p-6 bg-white shadow-xl rounded-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">Mobile</h3>
+        <span [class]="customer?.mobile_verified ? 'active' : 'inactive'">
+          {{ customer?.mobile_verified ? 'Verified' : 'Not Verified' }}
+        </span>
+      </div>
+      <p class="text-gray-800">
+        <span *ngIf="customer?.phone_code">+{{ customer?.phone_code }} </span>{{ customer?.mobile }}
+      </p>
+      <p class="text-xs text-gray-500 mt-1" *ngIf="customer?.pending_mobile">
+        Pending change to: {{ customer?.pending_mobile }}
+      </p>
+      <button
+        type="button"
+        *ngIf="!customer?.mobile_verified && isPrivileged"
+        (click)="markVerified('mobile')"
+        class="mt-3 inline-flex items-center rounded-md border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5"
+      >
+        Mark Verified
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification preferences -->
+  <div class="p-6 bg-white shadow-xl rounded-2xl">
+    <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4 mb-4">
+      <h3 class="text-lg font-semibold">Notification Preferences</h3>
+      <div class="flex gap-2" *ngIf="isPrivileged">
+        <button
+          type="button"
+          *ngIf="!editingPreferences"
+          (click)="toggleEditMode()"
+          class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5"
+        >
+          Edit
+        </button>
+        <ng-container *ngIf="editingPreferences">
+          <button
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="savingPreferences"
+            class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="savePreferences()"
+            [disabled]="savingPreferences"
+            class="inline-flex items-center rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
+          >
+            {{ savingPreferences ? 'Saving…' : 'Save' }}
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <div *ngIf="!preferences" class="text-sm text-gray-500">Loading preferences…</div>
+
+    <div *ngIf="preferences" class="grid sm:grid-cols-2 gap-x-8 gap-y-6">
+      <div *ngFor="let group of preferenceGroups">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ group.label }}</h4>
+        <div class="flex flex-col gap-2">
+          <div
+            *ngFor="let row of group.rows"
+            class="flex items-center justify-between gap-3 text-sm py-1"
+          >
+            <span class="text-gray-700">{{ row.label }}</span>
+            <div class="flex items-center gap-2">
+              <span
+                *ngIf="isLocked(group.key, row.key)"
+                class="text-xs text-gray-400"
+              >Required</span>
+              <span
+                *ngIf="!isLocked(group.key, row.key) && unavailableReason(group.key, row.key)"
+                class="text-xs text-gray-400"
+              >{{ unavailableReason(group.key, row.key) }}</span>
+
+              <button
+                type="button"
+                class="pref-switch"
+                [ngClass]="{ on: editingPreferences ? editablePreferenceValues[group.key][row.key] : rowValue(group.key, row.key) }"
+                [disabled]="!editingPreferences || isRowDisabled(group.key, row.key)"
+                (click)="editingPreferences && toggleEditableValue(group.key, row.key)"
+                [attr.aria-label]="row.label"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification history -->
+  <div class="p-6 bg-white shadow-xl rounded-2xl">
+    <h3 class="text-lg font-semibold mb-4">Notification History</h3>
+
+    <div class="table-wrapper">
+      <table class="table-base">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+          <tr class="sticky">
+            <th scope="col">Event</th>
+            <th scope="col">Channel</th>
+            <th scope="col">Destination</th>
+            <th scope="col">Provider</th>
+            <th scope="col" class="text-center">Attempts</th>
+            <th scope="col" class="text-center">Status</th>
+            <th scope="col" class="text-center">Created</th>
+            <th scope="col" class="text-center">Sent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let item of historyList">
+            <tr>
+              <td class="font-medium text-gray-900 whitespace-nowrap">{{ item?.event }}</td>
+              <td class="capitalize">{{ item?.channel }}</td>
+              <td>{{ item?.destination_masked }}</td>
+              <td>{{ item?.provider }}</td>
+              <td class="text-center">{{ item?.attempts }}</td>
+              <td class="text-center">
+                <span class="table-status" [ngClass]="item?.status | lowercase">{{ item?.status }}</span>
+              </td>
+              <td class="text-center">{{ item?.created_at | date : 'short' }}</td>
+              <td class="text-center">{{ item?.sent_at ? (item?.sent_at | date : 'short') : '—' }}</td>
+            </tr>
+          </ng-container>
+          <ng-container *ngIf="!historyList?.length">
+            <tr>
+              <td class="text-center" colspan="8">
+                <app-empty-state message="No notifications found"></app-empty-state>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <pagination [pagination]="historyPagination" (pageChange)="onHistoryPageChange($event)"></pagination>
+  </div>
+</div>
