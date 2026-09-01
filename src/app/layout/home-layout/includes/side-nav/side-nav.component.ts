@@ -317,6 +317,11 @@ export class SideNavComponent {
               url: '/settings/seo',
               exact: true,
             },
+            {
+              label: 'Email Templates',
+              url: '/settings/email-templates',
+              exact: true,
+            },
           ],
         },
       ],

@@ -11,6 +11,8 @@ import { CitiesComponent } from './cities/cities.component';
 import { PincodesComponent } from './pincodes/pincodes.component';
 import { ShippingSettingsComponent } from './shipping-settings/shipping-settings.component';
 import { SeoSettingsComponent } from './seo-settings/seo-settings.component';
+import { EmailTemplatesListComponent } from './email-templates/email-templates-list/email-templates-list.component';
+import { EmailTemplateEditComponent } from './email-templates/email-template-edit/email-template-edit.component';
 
 export const routes: Routes = [
   {
@@ -67,6 +69,16 @@ export const routes: Routes = [
     path: 'seo',
     data: { pageTitle: 'SEO Settings', breadcrumb: 'SEO Settings' },
     component: SeoSettingsComponent,
+  },
+  {
+    path: 'email-templates',
+    data: { pageTitle: 'Email Templates', breadcrumb: 'Email Templates' },
+    component: EmailTemplatesListComponent,
+  },
+  {
+    path: 'email-templates/:action',
+    data: { pageTitle: 'Edit Email Template', breadcrumb: 'Edit Template' },
+    component: EmailTemplateEditComponent,
   },
   {
     path: ':slug',

@@ -224,4 +224,35 @@ export class ApiService {
   notificationSummary(range: string) {
     return this.httpService.get(`admin/notifications/summary?range=${range}`);
   }
+
+  // --- Email Templates ---
+  emailTemplateList(params?: URLSearchParams) {
+    const query = params?.toString();
+    return this.httpService.get(
+      `admin/email-templates${query ? `?${query}` : ''}`,
+    );
+  }
+  emailTemplateDetails(action: string) {
+    return this.httpService.get(`admin/email-templates/${action}`);
+  }
+  updateEmailTemplate(action: string, payload: any) {
+    return this.httpService.put(`admin/email-templates/${action}`, payload);
+  }
+  resetEmailTemplate(action: string) {
+    return this.httpService.post(`admin/email-templates/${action}/reset`, {
+      confirm: true,
+    });
+  }
+  previewEmailTemplate(action: string, draft: any = {}) {
+    return this.httpService.post(
+      `admin/email-templates/${action}/preview`,
+      draft,
+    );
+  }
+  sendTestEmailTemplate(action: string, email: string) {
+    return this.httpService.post(
+      `admin/email-templates/${action}/send-test`,
+      { email },
+    );
+  }
 }

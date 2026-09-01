@@ -1,0 +1,119 @@
+<div *ngIf="loading" class="py-10 text-center text-sm text-gray-500">Loading template...</div>
+
+<div *ngIf="!loading" class="email-template-edit">
+  <div class="flex items-center justify-between mb-4">
+    <button type="button" class="text-sm text-gray-600 hover:underline" (click)="goBack()">&larr; Back to Email Templates</button>
+    <div class="flex items-center gap-2" *ngIf="isPrivileged">
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        [disabled]="resetting"
+        (click)="resetToDefault()"
+      >
+        {{ resetting ? 'Resetting...' : 'Reset to Default' }}
+      </button>
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        (click)="sendTestEmail()"
+      >
+        Send Test Email
+      </button>
+      <button
+        type="button"
+        class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+        [disabled]="saving || formGroup.invalid"
+        (click)="save()"
+      >
+        {{ saving ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!isPrivileged" class="mb-4 rounded-md bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600">
+    You have view-only access to email templates. Editing, resetting, and test-sending require the Email Templates permission (superadmin/manager).
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Editor -->
+    <form [formGroup]="formGroup" class="space-y-4">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Subject</mat-label>
+        <input matInput formControlName="subject" (blur)="refreshPreview()" />
+        <mat-error *ngIf="formGroup.get('subject')?.hasError('required')">Subject is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Preheader (inbox preview text)</mat-label>
+        <input matInput formControlName="preheader" (blur)="refreshPreview()" />
+      </mat-form-field>
+
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="active">Active</mat-option>
+          <mat-option value="inactive">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Body</label>
+        <ckeditor
+          [editor]="Editor"
+          [config]="config"
+          formControlName="body"
+          (ready)="onEditorReady($event)"
+          (blur)="refreshPreview()"
+        ></ckeditor>
+        <p *ngIf="formGroup.get('body')?.touched && formGroup.get('body')?.hasError('required')" class="mt-1 text-xs text-red-600">
+          Body is required
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="text-sm text-primary font-medium hover:underline"
+        (click)="refreshPreview()"
+      >
+        Refresh Preview
+      </button>
+    </form>
+
+    <!-- Preview -->
+    <div class="preview-pane">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-gray-700">Live Preview</span>
+        <div class="flex rounded-md border border-gray-300 overflow-hidden text-xs">
+          <button
+            type="button"
+            class="px-3 py-1"
+            [ngClass]="previewMode === 'desktop' ? 'bg-primary text-white' : 'bg-white text-gray-600'"
+            (click)="setPreviewMode('desktop')"
+          >
+            Desktop
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1"
+            [ngClass]="previewMode === 'mobile' ? 'bg-primary text-white' : 'bg-white text-gray-600'"
+            (click)="setPreviewMode('mobile')"
+          >
+            Mobile
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="missingVariables?.length || unresolvedFields?.length" class="mb-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+        <p *ngIf="missingVariables?.length"><strong>Missing variables:</strong> {{ missingVariables.join(', ') }}</p>
+        <p *ngIf="unresolvedFields?.length"><strong>Unresolved fields:</strong> {{ unresolvedFields.join(', ') }}</p>
+      </div>
+
+      <p *ngIf="previewSubject" class="mb-2 text-sm text-gray-600"><strong>Subject:</strong> {{ previewSubject }}</p>
+
+      <div class="preview-frame-wrapper" [ngClass]="previewMode">
+        <div *ngIf="previewLoading" class="py-10 text-center text-sm text-gray-500">Rendering preview...</div>
+        <div *ngIf="!previewLoading && previewHtml" class="preview-frame" [innerHTML]="sanitizeService.safeHtml(previewHtml)"></div>
+      </div>
+    </div>
+  </div>
+</div>

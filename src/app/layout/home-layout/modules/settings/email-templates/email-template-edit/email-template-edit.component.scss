@@ -1,0 +1,24 @@
+.preview-frame-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f4f5f7;
+  padding: 16px;
+  overflow-x: auto;
+  transition: max-width 0.2s ease;
+
+  &.desktop .preview-frame {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  &.mobile .preview-frame {
+    max-width: 375px;
+    margin: 0 auto;
+  }
+}
+
+.preview-frame {
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+}
