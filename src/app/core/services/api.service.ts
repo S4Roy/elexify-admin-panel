@@ -258,4 +258,39 @@ export class ApiService {
   runEmailTemplateSeed(type: 'seed' | 'upgrade') {
     return this.httpService.post(`admin/email-templates/seed-run`, { type });
   }
+
+  // --- Data Operations (Seeder / Migration / Backfill / Repair registry) ---
+  dataOperationList() {
+    return this.httpService.get(`admin/data-operations`);
+  }
+  dataOperationDetail(key: string) {
+    return this.httpService.get(`admin/data-operations/${key}`);
+  }
+  dataOperationHealth(key: string) {
+    return this.httpService.get(`admin/data-operations/${key}/health`);
+  }
+  dataOperationDryRun(key: string) {
+    return this.httpService.post(`admin/data-operations/${key}/dry-run`, {});
+  }
+  runDataOperation(key: string, confirmation?: string) {
+    return this.httpService.post(`admin/data-operations/${key}/run`, {
+      confirmation,
+    });
+  }
+  dataOperationExecutionList(params?: URLSearchParams) {
+    const query = params?.toString();
+    return this.httpService.get(
+      `admin/data-operations/executions${query ? `?${query}` : ''}`,
+    );
+  }
+  dataOperationExecutionDetail(executionId: string) {
+    return this.httpService.get(
+      `admin/data-operations/executions/${executionId}`,
+    );
+  }
+  dataOperationExecutionLogs(executionId: string) {
+    return this.httpService.get(
+      `admin/data-operations/executions/${executionId}/logs`,
+    );
+  }
 }

@@ -1,0 +1,52 @@
+<div class="do-overview">
+  <div class="do-overview-header">
+    <div>
+      <span class="text-sm text-gray-500">Environment</span>
+      <div class="text-lg font-semibold text-gray-900 capitalize">{{ environmentName }}</div>
+    </div>
+    <div>
+      <span class="text-sm text-gray-500">App Version</span>
+      <div class="text-lg font-semibold text-gray-900">{{ appVersion }}</div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-sm text-gray-500 py-6">Loading overview…</div>
+
+  <div *ngIf="!loading" class="do-card-grid">
+    <div class="do-card">
+      <div class="do-card-title">Required Data</div>
+      <div class="do-card-value">
+        <span class="text-green-700">Healthy {{ healthyCount }}</span>
+        <span class="text-gray-300">/</span>
+        <span class="text-red-700">Missing {{ missingCount }}</span>
+      </div>
+    </div>
+
+    <div class="do-card cursor-pointer" (click)="goToOperations()">
+      <div class="do-card-title">Seeders</div>
+      <div class="do-card-value">
+        <span class="text-green-700">Current {{ seedersCurrent }}</span>
+        <span class="text-gray-300">/</span>
+        <span class="text-amber-700">Pending {{ seedersPending }}</span>
+      </div>
+    </div>
+
+    <div class="do-card cursor-pointer" (click)="goToOperations()">
+      <div class="do-card-title">Migrations</div>
+      <div class="do-card-value">
+        <span class="text-green-700">Applied {{ migrationsApplied }}</span>
+        <span class="text-gray-300">/</span>
+        <span class="text-amber-700">Pending {{ migrationsPending }}</span>
+      </div>
+    </div>
+
+    <div class="do-card cursor-pointer" (click)="goToExecutions()">
+      <div class="do-card-title">Recent Failures</div>
+      <div class="do-card-value">
+        <span [class.text-red-700]="recentFailures > 0" [class.text-gray-900]="recentFailures === 0">
+          {{ recentFailures }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

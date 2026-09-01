@@ -1,0 +1,124 @@
+<div *ngIf="loading" class="text-sm text-gray-500 py-6">Loading operation…</div>
+
+<ng-container *ngIf="!loading && operation">
+  <div class="do-detail-header">
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900">{{ operation.name }}</h2>
+      <p class="text-sm text-gray-500 mt-1" *ngIf="safeDescription">{{ safeDescription }}</p>
+    </div>
+    <div class="flex gap-2">
+      <button
+        *ngIf="operation.supportsDryRun"
+        type="button"
+        class="do-action-btn"
+        [disabled]="runningAction"
+        (click)="dryRun()"
+      >
+        Dry Run
+      </button>
+      <button
+        *ngIf="isSuperadmin"
+        type="button"
+        class="do-action-btn do-action-run"
+        [disabled]="runningAction"
+        (click)="run()"
+      >
+        Run
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="operation.lastExecution?.status === 'FAILED'" class="do-failure-banner">
+    <strong>Last run failed</strong> — {{ operation.name }} (v{{ operation.version }}).
+    <span *ngIf="isSuperadmin && operation.idempotent"> This operation is idempotent and safe to retry.</span>
+    <button *ngIf="isSuperadmin && operation.idempotent" type="button" class="do-action-btn" (click)="retry()">Retry</button>
+  </div>
+
+  <div class="do-meta-grid">
+    <div class="do-meta-item"><span>Type</span><strong>{{ operation.type }}</strong></div>
+    <div class="do-meta-item"><span>Version</span><strong>{{ operation.version ?? '—' }}</strong></div>
+    <div class="do-meta-item">
+      <span>Risk</span>
+      <strong
+        class="risk-pill"
+        [class.risk-low]="operation.risk === 'LOW'"
+        [class.risk-medium]="operation.risk === 'MEDIUM'"
+        [class.risk-high]="operation.risk === 'HIGH'"
+        [class.risk-critical]="operation.risk === 'CRITICAL'"
+      >{{ operation.risk }}</strong>
+    </div>
+    <div class="do-meta-item"><span>Environments</span><strong>{{ (operation.allowedEnvironments || []).join(', ') || 'All' }}</strong></div>
+    <div class="do-meta-item"><span>Idempotent</span><strong>{{ operation.idempotent ? 'Yes' : 'No' }}</strong></div>
+    <div class="do-meta-item"><span>Required</span><strong>{{ operation.required ? 'Yes' : 'No' }}</strong></div>
+    <div class="do-meta-item"><span>Supports Dry Run</span><strong>{{ operation.supportsDryRun ? 'Yes' : 'No' }}</strong></div>
+    <div class="do-meta-item">
+      <span>Current Health</span>
+      <strong>{{ operation.health?.status || 'NOT_APPLICABLE' }}</strong>
+      <span *ngIf="operation.health?.expected != null" class="text-xs text-gray-500">
+        ({{ operation.health?.valid }}/{{ operation.health?.expected }} valid, {{ operation.health?.missing }} missing)
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="operation.dependencies?.length" class="mt-4">
+    <div class="text-sm font-medium text-gray-700 mb-2">Dependencies</div>
+    <div class="flex flex-wrap gap-2">
+      <button
+        *ngFor="let dep of operation.dependencies"
+        type="button"
+        class="do-chip"
+        (click)="viewDependency(dep)"
+      >
+        {{ dep }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="dryRunResult" class="mt-4">
+    <div class="text-sm font-medium text-gray-700 mb-2">Latest Dry Run Result</div>
+    <div class="flex flex-wrap gap-2">
+      <span class="summary-pill">Insert: {{ dryRunResult.result?.wouldInsert ?? 0 }}</span>
+      <span class="summary-pill">Update: {{ dryRunResult.result?.wouldUpdate ?? 0 }}</span>
+      <span class="summary-pill">Skip: {{ dryRunResult.result?.wouldSkip ?? 0 }}</span>
+      <span class="summary-pill">Delete: {{ dryRunResult.result?.wouldDelete ?? 0 }}</span>
+    </div>
+    <div class="run-log mt-2">
+      <div *ngFor="let line of dryRunResult.logs" class="run-log-line" [class]="'level-' + line.level.toLowerCase()">
+        <span class="run-log-time">{{ line.timestamp | date: 'HH:mm:ss' }}</span>
+        <span class="run-log-level">{{ line.level }}</span>
+        <span class="run-log-message">{{ line.message }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="text-sm font-medium text-gray-700 mb-2">Previous Executions</div>
+    <div class="table-wrapper" *ngIf="previousExecutions.length; else noExecutions">
+      <table class="table-base">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+          <tr class="sticky">
+            <th scope="col">Status</th>
+            <th scope="col">Started</th>
+            <th scope="col">Completed</th>
+            <th scope="col">Trigger</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let exec of previousExecutions">
+            <td>{{ exec.status }}</td>
+            <td>{{ exec.started_at ? (exec.started_at | date: 'medium') : '—' }}</td>
+            <td>{{ exec.completed_at ? (exec.completed_at | date: 'medium') : '—' }}</td>
+            <td>{{ exec.trigger_source || '—' }} <span *ngIf="exec.triggered_by">({{ exec.triggered_by }})</span></td>
+            <td>
+              <button type="button" class="do-action-btn" (click)="viewExecution(exec.execution_id)">View Logs</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noExecutions>
+      <p class="text-sm text-gray-500">No executions recorded yet.</p>
+    </ng-template>
+  </div>
+</ng-container>

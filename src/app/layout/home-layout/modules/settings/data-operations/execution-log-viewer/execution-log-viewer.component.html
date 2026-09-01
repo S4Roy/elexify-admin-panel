@@ -1,0 +1,61 @@
+<div *ngIf="loading" class="text-sm text-gray-500 py-6">Loading execution…</div>
+
+<ng-container *ngIf="!loading && execution">
+  <div class="do-detail-header">
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900">
+        <a class="hover:underline" (click)="goToOperation()">{{ execution.operation_name }}</a>
+        <span class="text-sm font-normal text-gray-500"> (v{{ execution.operation_version }})</span>
+      </h2>
+      <div class="text-sm text-gray-500 mt-1">
+        Environment: {{ execution.environment }} · Triggered by {{ execution.triggered_by || 'system' }}
+        <span *ngIf="execution.trigger_source">via {{ execution.trigger_source }}</span>
+      </div>
+    </div>
+    <span class="status-pill" [ngClass]="'status-' + execution.status.toLowerCase()">{{ execution.status }}</span>
+  </div>
+
+  <div *ngIf="execution.status === 'RUNNING' || execution.status === 'QUEUED'" class="flex items-center gap-2 text-sm text-gray-500 py-2">
+    <span class="run-spinner"></span>
+    Started {{ execution.started_at | date: 'medium' }} — refreshing every 2s…
+  </div>
+
+  <div *ngIf="execution.status === 'FAILED'" class="do-failure-banner">
+    <div>
+      <strong>Execution failed</strong> —
+      started {{ execution.started_at | date: 'medium' }},
+      failed {{ execution.completed_at | date: 'medium' }}.
+      <div *ngIf="execution.error?.safe_message" class="mt-1">{{ execution.error?.safe_message }}</div>
+    </div>
+  </div>
+
+  <div *ngIf="execution.result" class="flex flex-wrap gap-2 my-3">
+    <span class="summary-pill">Inserted: {{ execution.result.inserted ?? 0 }}</span>
+    <span class="summary-pill">Updated: {{ execution.result.updated ?? 0 }}</span>
+    <span class="summary-pill">Skipped: {{ execution.result.skipped ?? 0 }}</span>
+    <span class="summary-pill">Deleted: {{ execution.result.deleted ?? 0 }}</span>
+    <span class="summary-pill">Warnings: {{ execution.result.warnings ?? 0 }}</span>
+  </div>
+
+  <div class="do-log-toolbar">
+    <label><input type="checkbox" [(ngModel)]="showInfo" /> INFO</label>
+    <label><input type="checkbox" [(ngModel)]="showWarn" /> WARN</label>
+    <label><input type="checkbox" [(ngModel)]="showError" /> ERROR</label>
+    <input
+      type="text"
+      class="do-log-search"
+      placeholder="Search logs…"
+      [(ngModel)]="searchText"
+    />
+    <button type="button" class="do-action-btn" (click)="copyLogs()">Copy Logs</button>
+  </div>
+
+  <div class="run-log">
+    <div *ngFor="let line of filteredLogs" class="run-log-line" [class]="'level-' + line.level.toLowerCase()">
+      <span class="run-log-time">{{ line.timestamp | date: 'HH:mm:ss' }}</span>
+      <span class="run-log-level">{{ line.level }}</span>
+      <span class="run-log-message">{{ line.message }}</span>
+    </div>
+    <div *ngIf="!filteredLogs.length" class="text-gray-500 text-xs">No log lines match the current filters.</div>
+  </div>
+</ng-container>

@@ -81,6 +81,12 @@ export const routes: Routes = [
     component: EmailTemplateEditComponent,
   },
   {
+    path: 'data-operations',
+    data: { pageTitle: 'Data Operations', breadcrumb: 'Data Operations' },
+    loadChildren: () =>
+      import('./data-operations/data-operations.routes').then((m) => m.routes),
+  },
+  {
     path: ':slug',
     component: StaticPageComponent,
     resolve: {

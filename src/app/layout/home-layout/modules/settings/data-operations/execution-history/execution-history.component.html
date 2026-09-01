@@ -1,0 +1,36 @@
+<h2 class="text-lg font-semibold text-gray-900 mb-4">
+  Execution History
+  <span *ngIf="operationKey" class="text-sm font-normal text-gray-500">— {{ operationKey }}</span>
+</h2>
+
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col">Status</th>
+        <th scope="col">Operation</th>
+        <th scope="col">Duration</th>
+        <th scope="col">Trigger / User</th>
+        <th scope="col">Started</th>
+        <th scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let exec of executions">
+        <td>
+          <span class="status-pill" [ngClass]="statusClass(exec.status)">{{ exec.status }}</span>
+        </td>
+        <td>{{ exec.operation_name || exec.operation_key || '—' }}</td>
+        <td>{{ formatDuration(exec.duration_ms) }}</td>
+        <td>{{ exec.trigger_source || '—' }} <span *ngIf="exec.triggered_by">/ {{ exec.triggered_by }}</span></td>
+        <td>{{ exec.started_at ? (exec.started_at | date: 'medium') : '—' }}</td>
+        <td>
+          <button type="button" class="do-action-btn" (click)="viewLogs(exec.execution_id)">View Logs</button>
+        </td>
+      </tr>
+      <tr *ngIf="!loading && !executions.length">
+        <td class="text-center" colspan="6"><app-empty-state message="No executions found"></app-empty-state></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -327,6 +327,11 @@ export class SideNavComponent {
               url: '/settings/email-templates',
               exact: true,
             },
+            {
+              label: 'Data Operations',
+              url: '/settings/data-operations',
+              exact: false,
+            },
           ],
         },
       ],

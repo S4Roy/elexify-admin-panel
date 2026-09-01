@@ -1,0 +1,165 @@
+.do-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+
+  a {
+    cursor: pointer;
+    color: inherit;
+  }
+}
+
+.do-failure-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.status-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  height: fit-content;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-partial {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.status-failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-running,
+.status-queued {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-cancelled {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.summary-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.do-log-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #374151;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+}
+
+.do-log-search {
+  flex: 1;
+  max-width: 280px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.do-action-btn {
+  font-size: 12px;
+  font-weight: 500;
+  color: #2563eb;
+  background: transparent;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.run-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  display: inline-block;
+  animation: run-spin 0.7s linear infinite;
+}
+
+@keyframes run-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.run-log {
+  max-height: 420px;
+  overflow-y: auto;
+  background: #0f172a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.run-log-line {
+  display: flex;
+  gap: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.run-log-time {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.run-log-level {
+  flex-shrink: 0;
+  width: 44px;
+  font-weight: 600;
+}
+
+.run-log-message {
+  color: #e2e8f0;
+}
+
+.level-info .run-log-level {
+  color: #38bdf8;
+}
+
+.level-warn .run-log-level {
+  color: #facc15;
+}
+
+.level-error .run-log-level {
+  color: #f87171;
+}

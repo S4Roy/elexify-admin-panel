@@ -15,6 +15,22 @@ type SeedRunType = 'seed' | 'upgrade';
 // scripts (scripts/seedEmailTemplates.js, upgradeEmailTemplatesToV2.js)
 // on demand and watch the run's structured, leveled log inline — no shell
 // access to the server needed.
+//
+// MIGRATION NOTE (Data Operations rollout): the generic
+// `admin/data-operations/email-templates/run` endpoint is intended to
+// supersede `admin/email-templates/seed-run`, assuming the backend
+// registers this seed under the key `email-templates`. This dialog and
+// its endpoint are deliberately left working as-is for now — the new
+// backend registry was still being built in parallel when this screen was
+// wired up and was not confirmed live, so cutting over the only working
+// execution path was judged riskier than the duplication. The
+// email-templates list screen now also deep-links to
+// `/settings/data-operations/operations/email-templates` for monitoring
+// (health, last run, execution history) side by side with this dialog.
+// Once the `email-templates` key is confirmed on the real backend,
+// `openSeedRun()` in email-templates-list.component.ts should be replaced
+// with a call into `ApiService.runDataOperation('email-templates', ...)`
+// and this dialog + `runEmailTemplateSeed` retired.
 @Component({
   selector: 'app-seed-run-dialog',
   imports: [MatDialogModule, NgIf, NgFor, DatePipe, KeyValuePipe],

@@ -1,0 +1,81 @@
+<div class="do-tabs">
+  <button
+    *ngFor="let tab of tabs"
+    type="button"
+    class="do-tab"
+    [class.do-tab-active]="activeTab === tab.key"
+    (click)="setTab(tab.key)"
+  >
+    {{ tab.label }}
+  </button>
+</div>
+
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col">Name</th>
+        <th scope="col">Category</th>
+        <th scope="col">Version</th>
+        <th scope="col" class="text-center">Required</th>
+        <th scope="col">Environment</th>
+        <th scope="col" class="text-center">Risk</th>
+        <th scope="col">Current Health</th>
+        <th scope="col">Last Run</th>
+        <th scope="col">Last Result</th>
+        <th scope="col" class="text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let op of filteredOperations">
+        <tr>
+          <td class="font-medium text-gray-900 whitespace-nowrap">{{ op.name }}</td>
+          <td>{{ op.category || op.type }}</td>
+          <td>{{ op.version ?? '—' }}</td>
+          <td class="text-center">{{ op.required ? 'Yes' : 'No' }}</td>
+          <td>{{ (op.allowedEnvironments || []).join(', ') || 'All' }}</td>
+          <td class="text-center">
+            <span
+              class="risk-pill"
+              [class.risk-low]="op.risk === 'LOW'"
+              [class.risk-medium]="op.risk === 'MEDIUM'"
+              [class.risk-high]="op.risk === 'HIGH'"
+              [class.risk-critical]="op.risk === 'CRITICAL'"
+            >
+              {{ op.risk }}
+            </span>
+          </td>
+          <td>{{ viewHealthText(op) }}</td>
+          <td>{{ lastRunText(op) ? (lastRunText(op) | date: 'medium') : 'Never' }}</td>
+          <td>{{ lastResultText(op) }}</td>
+          <td class="text-center whitespace-nowrap">
+            <button type="button" class="do-action-btn" (click)="viewOperation(op)">View</button>
+            <button
+              *ngIf="op.supportsDryRun"
+              type="button"
+              class="do-action-btn"
+              [disabled]="runningKey === op.key"
+              (click)="dryRun(op, $event)"
+            >
+              Dry Run
+            </button>
+            <button
+              *ngIf="isSuperadmin"
+              type="button"
+              class="do-action-btn do-action-run"
+              [disabled]="runningKey === op.key"
+              (click)="run(op, $event)"
+            >
+              Run
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!loading && !filteredOperations.length">
+        <tr>
+          <td class="text-center" colspan="10"><app-empty-state message="No operations found"></app-empty-state></td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>

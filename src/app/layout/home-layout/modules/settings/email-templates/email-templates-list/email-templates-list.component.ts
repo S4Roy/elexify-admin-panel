@@ -82,6 +82,14 @@ export class EmailTemplatesListComponent implements OnInit, OnDestroy {
       .subscribe(() => this.fetchTemplateList());
   }
 
+  // Deep link to the new generic Data Operations screen for visibility
+  // (health/last-run/execution-history monitoring) without switching the
+  // actual run path yet — see the migration note on SeedRunDialogComponent
+  // for why `openSeedRun()` above is intentionally left in place.
+  viewInDataOperations(): void {
+    this.router.navigateByUrl('/settings/data-operations/operations/email-templates');
+  }
+
   get filterFields(): FilterFieldDef[] {
     return [
       {
