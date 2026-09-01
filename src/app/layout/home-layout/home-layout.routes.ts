@@ -15,6 +15,7 @@ import { EnquiriesComponent } from './modules/enquiries/enquiries.component';
 import { CustomerDetailsComponent } from './modules/customers/customer-details/customer-details.component';
 import { NotificationDashboardComponent } from './modules/notifications/notification-dashboard/notification-dashboard.component';
 import { DeadLetterComponent } from './modules/notifications/dead-letter/dead-letter.component';
+import { NotificationHistoryComponent } from './modules/notifications/notification-history/notification-history.component';
 
 export const routes: Routes = [
   {
@@ -65,6 +66,11 @@ export const routes: Routes = [
             path: 'dead-letter',
             component: DeadLetterComponent,
             data: { pageTitle: 'Dead Letter Queue', breadcrumb: 'Dead Letter' },
+          },
+          {
+            path: 'history',
+            component: NotificationHistoryComponent,
+            data: { pageTitle: 'Notification History', breadcrumb: 'History' },
           },
         ],
       },

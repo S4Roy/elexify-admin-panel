@@ -229,6 +229,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'History',
+              url: '/notifications/history',
+              exact: true,
+            },
+            {
               label: 'Dead Letter Queue',
               url: '/notifications/dead-letter',
               exact: true,
