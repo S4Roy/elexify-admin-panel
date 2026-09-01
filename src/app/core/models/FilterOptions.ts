@@ -24,4 +24,7 @@ export default class FilterOptions {
   min_amount: string | null = null;
   max_amount: string | null = null;
   rating: string | null = null;
+  is_marketing: string | null = null;
+  event: string | null = null;
+  channel: string | null = null;
 }

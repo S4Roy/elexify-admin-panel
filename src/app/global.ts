@@ -294,6 +294,9 @@ export function resetTableFilterOptions() {
     min_amount: null,
     max_amount: null,
     rating: null,
+    is_marketing: null,
+    event: null,
+    channel: null,
   };
 }
 
