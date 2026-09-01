@@ -1,0 +1,84 @@
+<button type="button" class="dialog-btn-close" aria-label="Close" (click)="close()"></button>
+<mat-dialog-content>
+  <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+      <h3 class="text-base font-semibold text-gray-900">Run Email Template Seed</h3>
+
+      <div *ngIf="!ranType" class="mt-4 space-y-3">
+        <p class="text-sm text-gray-500">
+          Choose which run to perform. Both are safe to re-run.
+        </p>
+
+        <button
+          type="button"
+          (click)="run('seed')"
+          class="w-full text-left rounded-md border border-gray-200 px-4 py-3 hover:bg-gray-50"
+        >
+          <div class="text-sm font-medium text-gray-900">Seed Missing Templates</div>
+          <div class="text-xs text-gray-500 mt-1">
+            Creates any template action that doesn't exist yet. Never touches an existing row, including a customized one.
+          </div>
+        </button>
+
+        <button
+          type="button"
+          (click)="run('upgrade')"
+          class="w-full text-left rounded-md border border-gray-200 px-4 py-3 hover:bg-gray-50"
+        >
+          <div class="text-sm font-medium text-gray-900">Upgrade to Latest Defaults</div>
+          <div class="text-xs text-gray-500 mt-1">
+            Overwrites subject/preheader/body with the current code-owned defaults — but only for templates never customized past the original seed.
+          </div>
+        </button>
+      </div>
+
+      <div *ngIf="ranType" class="mt-4">
+        <div *ngIf="running" class="flex items-center gap-2 text-sm text-gray-500 py-4">
+          <span class="run-spinner"></span>
+          Running…
+        </div>
+
+        <div *ngIf="!running && errorMessage" class="text-sm text-red-600 py-2">
+          {{ errorMessage }}
+        </div>
+
+        <ng-container *ngIf="!running && !errorMessage">
+          <div *ngIf="summary" class="flex flex-wrap gap-2 mb-3">
+            <span
+              *ngFor="let entry of summary | keyvalue"
+              class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
+            >
+              {{ entry.key }}: {{ entry.value }}
+            </span>
+          </div>
+
+          <div class="run-log">
+            <div *ngFor="let line of logs" class="run-log-line" [class]="'level-' + line.level.toLowerCase()">
+              <span class="run-log-time">{{ line.timestamp | date: 'HH:mm:ss' }}</span>
+              <span class="run-log-level">{{ line.level }}</span>
+              <span class="run-log-message">{{ line.message }}</span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-3">
+      <button
+        *ngIf="ranType && !running"
+        (click)="runAnother()"
+        type="button"
+        class="inline-flex w-full justify-center rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm hover:bg-blue-50 sm:w-auto"
+      >
+        Run Another
+      </button>
+      <button
+        (click)="close()"
+        type="button"
+        class="mt-3 inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 sm:mt-0 sm:w-auto"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>

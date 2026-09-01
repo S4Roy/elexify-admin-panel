@@ -1,0 +1,60 @@
+.run-log {
+  max-height: 320px;
+  overflow-y: auto;
+  background: #0f172a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.run-log-line {
+  display: flex;
+  gap: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.run-log-time {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.run-log-level {
+  flex-shrink: 0;
+  width: 44px;
+  font-weight: 600;
+}
+
+.run-log-message {
+  color: #e2e8f0;
+}
+
+.level-info .run-log-level {
+  color: #38bdf8;
+}
+
+.level-warn .run-log-level {
+  color: #facc15;
+}
+
+.level-error .run-log-level {
+  color: #f87171;
+}
+
+.run-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  display: inline-block;
+  animation: run-spin 0.7s linear infinite;
+}
+
+@keyframes run-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -255,4 +255,7 @@ export class ApiService {
       { email },
     );
   }
+  runEmailTemplateSeed(type: 'seed' | 'upgrade') {
+    return this.httpService.post(`admin/email-templates/seed-run`, { type });
+  }
 }

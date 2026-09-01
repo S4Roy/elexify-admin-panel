@@ -10,6 +10,7 @@ import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { FilterDrawerComponent } from '../../../../includes/filter-drawer/filter-drawer.component';
 import { EmptyStateComponent } from '../../../../includes/empty-state/empty-state.component';
+import { SeedRunDialogComponent } from '../../../../includes/seed-run-dialog/seed-run-dialog.component';
 
 const MARKETING_OPTIONS = [
   { value: 'yes', label: 'Marketing' },
@@ -58,12 +59,27 @@ export class EmailTemplatesListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.openFilters());
     this.updateFilterButton();
+
+    if (this.isPrivileged) {
+      this.helperService.setActionButton({ label: 'Run Seed', icon: 'sync' });
+      this.helperService.actionButtonClick$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.openSeedRun());
+    }
   }
 
   ngOnDestroy(): void {
     this.helperService.clearFilterButton();
+    this.helperService.clearActionButton();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  openSeedRun(): void {
+    this.dialog
+      .open(SeedRunDialogComponent, { disableClose: true })
+      .afterClosed()
+      .subscribe(() => this.fetchTemplateList());
   }
 
   get filterFields(): FilterFieldDef[] {
