@@ -59,7 +59,7 @@ export class OperationsListComponent implements OnInit {
     this.loading = true;
     this.apiService.dataOperationList().subscribe({
       next: (res: any) => {
-        this.operations = res?.data ?? [];
+        this.operations = res?.data?.operations ?? [];
         this.loading = false;
       },
       error: () => {

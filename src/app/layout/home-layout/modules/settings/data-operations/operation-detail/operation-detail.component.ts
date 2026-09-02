@@ -82,6 +82,17 @@ export class OperationDetailComponent implements OnInit {
     });
   }
 
+  // The detail endpoint returns {key, name, satisfied}; normalized here so
+  // the template doesn't have to narrow the string|object union itself.
+  dependencyView(dep: NonNullable<DataOperation['dependencies']>[number]): {
+    key: string;
+    name: string;
+    satisfied: boolean | null;
+  } {
+    if (typeof dep === 'string') return { key: dep, name: dep, satisfied: null };
+    return dep;
+  }
+
   viewDependency(key: string): void {
     this.router.navigateByUrl(`/settings/data-operations/operations/${key}`);
   }

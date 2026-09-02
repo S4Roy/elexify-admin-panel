@@ -67,9 +67,11 @@
         *ngFor="let dep of operation.dependencies"
         type="button"
         class="do-chip"
-        (click)="viewDependency(dep)"
+        [class.do-chip-unsatisfied]="dependencyView(dep).satisfied === false"
+        [title]="dependencyView(dep).satisfied === false ? 'Not yet run successfully in this environment' : ''"
+        (click)="viewDependency(dependencyView(dep).key)"
       >
-        {{ dep }}
+        {{ dependencyView(dep).name }}<span *ngIf="dependencyView(dep).satisfied === false"> ⚠</span>
       </button>
     </div>
   </div>

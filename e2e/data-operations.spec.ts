@@ -80,7 +80,11 @@ async function mockDataOperationsApi(
   let secondRunCalled = false;
 
   await page.route("**/api/v1/admin/data-operations", async (route: Route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: jsonBody(OPERATIONS_LIST) });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: jsonBody({ environment: "staging", operations: OPERATIONS_LIST }),
+    });
   });
 
   await page.route("**/api/v1/admin/data-operations/email-templates", async (route: Route) => {
@@ -181,19 +185,24 @@ async function mockDataOperationsApi(
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: jsonBody([
-        {
-          execution_id: executionId,
-          operation_key: "email-templates",
-          operation_name: "Email Templates Seed",
-          status: "SUCCESS",
-          started_at: "2026-08-01T00:00:00Z",
-          completed_at: "2026-08-01T00:01:00Z",
-          duration_ms: 60000,
-          trigger_source: "admin-ui",
-          triggered_by: SUPERADMIN_EMAIL,
-        },
-      ]),
+      body: jsonBody({
+        items: [
+          {
+            execution_id: executionId,
+            operation_key: "email-templates",
+            operation_name: "Email Templates Seed",
+            status: "SUCCESS",
+            started_at: "2026-08-01T00:00:00Z",
+            completed_at: "2026-08-01T00:01:00Z",
+            duration_ms: 60000,
+            trigger_source: "admin-ui",
+            triggered_by: SUPERADMIN_EMAIL,
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 25,
+      }),
     });
   });
 }

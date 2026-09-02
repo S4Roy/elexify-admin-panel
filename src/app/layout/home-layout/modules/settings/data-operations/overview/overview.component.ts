@@ -41,7 +41,7 @@ export class OverviewComponent implements OnInit {
     this.loading = true;
     this.apiService.dataOperationList().subscribe({
       next: (res: any) => {
-        const operations: DataOperation[] = res?.data ?? [];
+        const operations: DataOperation[] = res?.data?.operations ?? [];
         this.computeCards(operations);
         this.loading = false;
       },

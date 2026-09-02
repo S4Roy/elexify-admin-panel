@@ -46,10 +46,10 @@ export class ExecutionHistoryComponent implements OnInit {
   fetch(): void {
     this.loading = true;
     const params = new URLSearchParams();
-    if (this.operationKey) params.set('operation_key', this.operationKey);
+    if (this.operationKey) params.set('key', this.operationKey);
     this.apiService.dataOperationExecutionList(params).subscribe({
       next: (res: any) => {
-        this.executions = res?.data ?? [];
+        this.executions = res?.data?.items ?? [];
         this.loading = false;
       },
       error: () => {

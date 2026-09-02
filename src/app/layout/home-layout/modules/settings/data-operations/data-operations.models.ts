@@ -52,7 +52,10 @@ export interface DataOperation {
   idempotent?: boolean;
   risk: DataOperationRisk;
   allowedEnvironments?: string[];
-  dependencies?: string[];
+  // The list endpoint returns plain dependency keys; the detail endpoint
+  // returns {key, name, satisfied} so the UI can flag an unsatisfied
+  // dependency without a second round trip.
+  dependencies?: (string | { key: string; name: string; satisfied: boolean })[];
   supportsDryRun?: boolean;
   requiresConfirmation?: boolean;
   health?: OperationHealth | null;

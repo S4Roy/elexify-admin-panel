@@ -69,7 +69,7 @@ describe('OperationsListComponent', () => {
   function flushList() {
     fixture.detectChanges();
     const req = httpMock.expectOne((r) => r.url.includes('admin/data-operations') && !r.url.includes('/executions'));
-    req.flush({ status: true, message: 'ok', data: MOCK_OPERATIONS });
+    req.flush({ status: true, message: 'ok', data: { environment: 'test', operations: MOCK_OPERATIONS } });
     fixture.detectChanges();
   }
 
