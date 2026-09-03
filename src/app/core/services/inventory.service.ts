@@ -157,6 +157,15 @@ export class InventoryService {
   reviewReturn(payload: any) {
     return this.httpService.post(`admin/inventory/order/returns/review`, payload);
   }
+  receiveReturn(returnRequestId: string) {
+    return this.httpService.post(`admin/inventory/order/returns/receive`, { return_request_id: returnRequestId });
+  }
+  inspectReturn(payload: any) {
+    return this.httpService.post(`admin/inventory/order/returns/inspect`, payload);
+  }
+  completeManualReturnRefund(payload: any) {
+    return this.httpService.post(`admin/inventory/order/returns/manual-refund/complete`, payload);
+  }
   downloadInvoice(orderId: string) {
     return this.httpService.downloadFile(
       `admin/inventory/order/invoice?order_id=${orderId}`

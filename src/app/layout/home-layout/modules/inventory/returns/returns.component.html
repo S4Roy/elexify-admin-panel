@@ -2,7 +2,7 @@
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div><h1 class="text-lg font-semibold">Return requests</h1><p class="text-sm text-gray-500">Review customer requests before pickup, refund, or stock movement.</p></div>
     <select class="rounded-lg border px-3 py-2 text-sm" [(ngModel)]="status" (change)="load()">
-      <option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option>
+      <option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="received">Received</option><option value="refund_pending">Refund pending</option><option value="refund_failed">Refund failed</option><option value="manual_action_required">Manual settlement</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option>
     </select>
   </div>
 
@@ -20,6 +20,27 @@
     <div *ngIf="request.status === 'requested'" class="mt-4 border-t pt-4">
       <textarea [(ngModel)]="notes[request._id]" rows="2" maxlength="1000" class="w-full rounded-lg border p-2 text-sm" placeholder="Review note (required when rejecting)"></textarea>
       <div class="mt-2 flex justify-end gap-2"><button class="rounded-lg border border-red-300 px-3 py-2 text-xs text-red-600" [disabled]="busyId === request._id" (click)="review(request, 'reject')">Reject</button><button class="btn-primary" [disabled]="busyId === request._id" (click)="review(request, 'approve')">Approve</button></div>
+    </div>
+    <div *ngIf="request.status === 'approved'" class="mt-4 flex justify-end border-t pt-4">
+      <button class="btn-primary" [disabled]="busyId === request._id" (click)="receive(request)">Mark received at warehouse</button>
+    </div>
+    <div *ngIf="request.status === 'received'" class="mt-4 space-y-3 border-t pt-4">
+      <h3 class="text-sm font-semibold">Warehouse inspection</h3>
+      <div *ngFor="let item of request.items" class="grid gap-2 rounded-lg bg-gray-50 p-3 md:grid-cols-4 md:items-center">
+        <span class="text-sm">{{ item.product_name }} × {{ item.quantity }}</span>
+        <label class="text-xs">Accepted quantity<input class="mt-1 w-full rounded border p-2" type="number" min="0" [max]="item.quantity" [(ngModel)]="inspectionFor(request, item).accepted_quantity" /></label>
+        <label class="text-xs">Disposition<select class="mt-1 w-full rounded border p-2" [(ngModel)]="inspectionFor(request, item).disposition"><option value="restock">Restock (sellable)</option><option value="damaged">Damaged / quarantine</option></select></label>
+        <label class="text-xs">Item note<input class="mt-1 w-full rounded border p-2" maxlength="500" [(ngModel)]="inspectionFor(request, item).note" /></label>
+      </div>
+      <textarea [(ngModel)]="notes[request._id]" rows="2" maxlength="1000" class="w-full rounded-lg border p-2 text-sm" placeholder="Overall inspection note"></textarea>
+      <div class="flex justify-end"><button class="btn-primary" [disabled]="busyId === request._id" (click)="submitInspection(request)">Complete inspection</button></div>
+    </div>
+    <div *ngIf="request.refund?.amount" class="mt-3 rounded-lg bg-blue-50 p-3 text-xs"><strong>Refund:</strong> {{ request.refund.amount | currency:'INR' }} · {{ request.refund.status }}<span *ngIf="request.refund.provider_ref"> · {{ request.refund.provider_ref }}</span></div>
+    <div *ngIf="request.status === 'manual_action_required'" class="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+      <p class="text-xs text-amber-800">Complete the refund outside the platform, then record its immutable settlement reference here.</p>
+      <input [(ngModel)]="settlementReferences[request._id]" maxlength="200" class="w-full rounded border p-2 text-sm" placeholder="Bank / PayPal / cash settlement reference" />
+      <textarea [(ngModel)]="notes[request._id]" maxlength="1000" rows="2" class="w-full rounded border p-2 text-sm" placeholder="Optional settlement note"></textarea>
+      <div class="flex justify-end"><button class="btn-primary" [disabled]="busyId === request._id" (click)="completeManualRefund(request)">Mark refund completed</button></div>
     </div>
     <p *ngIf="request.review_note" class="mt-3 rounded-lg bg-gray-50 p-3 text-xs"><strong>Review note:</strong> {{ request.review_note }}</p>
   </article>
