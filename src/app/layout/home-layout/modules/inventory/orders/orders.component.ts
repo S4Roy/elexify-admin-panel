@@ -77,6 +77,9 @@ export class OrdersComponent {
     to_date: null,
   };
   private destroy$ = new Subject<void>();
+  customerId: string | null = null;
+  customerContext: any = null;
+  customerSummary: any = null;
 
   constructor(
     private dialog: MatDialog,
@@ -102,7 +105,10 @@ export class OrdersComponent {
       .subscribe(([params, queryParams, searchKey]) => {
         this.filterOption = Global.resetTableFilterOptions();
         this.filterOption.slug = params.get('slug');
-        this.filterOption.order_status = params.get('order_status');
+        this.customerId = params.get('customer_id');
+        this.filterOption.customer_id = this.customerId;
+        this.filterOption.order_status =
+          params.get('order_status') || queryParams.get('order_status');
         this.filterOption.search_key = searchKey;
         // Seed the date-range filter from ?from_date=&to_date= if present
         // (e.g. links from the dashboard KPI cards) so it's reflected in
@@ -245,6 +251,9 @@ export class OrdersComponent {
     if (this.filterOption.order_status) {
       params.set('order_status', this.filterOption.order_status);
     }
+    if (this.filterOption.customer_id) {
+      params.set('customer_id', this.filterOption.customer_id);
+    }
     if (this.filterOption.payment_status) {
       params.set('payment_status', this.filterOption.payment_status);
     }
@@ -264,6 +273,8 @@ export class OrdersComponent {
         this.paginationOption = {
           ...res?.data,
         };
+        this.customerContext = res?.data?.filter_context?.customer ?? null;
+        this.customerSummary = res?.data?.filter_context?.summary ?? null;
       },
       error: (err) => {},
     });
@@ -296,6 +307,9 @@ export class OrdersComponent {
     // } else {
     this.router.navigateByUrl('/inventory/orders/details/' + item?._id);
     // }
+  }
+  customerOrdersUrl(item: any): any[] {
+    return ['/inventory/orders/customer', item?.user?._id];
   }
   shipItem(item: any) {
     this.dialog

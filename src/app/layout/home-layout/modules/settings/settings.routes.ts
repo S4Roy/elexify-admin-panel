@@ -13,6 +13,7 @@ import { ShippingSettingsComponent } from './shipping-settings/shipping-settings
 import { SeoSettingsComponent } from './seo-settings/seo-settings.component';
 import { EmailTemplatesListComponent } from './email-templates/email-templates-list/email-templates-list.component';
 import { EmailTemplateEditComponent } from './email-templates/email-template-edit/email-template-edit.component';
+import { IntegrationCredentialsComponent } from './integration-credentials/integration-credentials.component';
 
 export const routes: Routes = [
   {
@@ -79,6 +80,11 @@ export const routes: Routes = [
     path: 'email-templates/:action',
     data: { pageTitle: 'Edit Email Template', breadcrumb: 'Edit Template' },
     component: EmailTemplateEditComponent,
+  },
+  {
+    path: 'integration-credentials',
+    data: { pageTitle: 'Integration Credentials', breadcrumb: 'Integration Credentials' },
+    component: IntegrationCredentialsComponent,
   },
   {
     path: 'data-operations',

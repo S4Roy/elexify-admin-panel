@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { NavService } from 'app/core/services/nav.service';
+import { HelpersService } from 'app/core/services/helpers.service';
 
 @Component({
   selector: 'app-side-nav',
@@ -328,6 +329,12 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'Integration Credentials',
+              url: '/settings/integration-credentials',
+              exact: true,
+              roles: ['superadmin'],
+            },
+            {
               label: 'Data Operations',
               url: '/settings/data-operations',
               exact: false,
@@ -341,8 +348,12 @@ export class SideNavComponent {
     private router: Router,
     private settingService: SettingsService,
     public navService: NavService,
+    private helpersService: HelpersService,
   ) {
     // this.fetchMenuList();
+  }
+  canAccess(item: any): boolean {
+    return !item?.roles?.length || item.roles.includes(this.helpersService.role());
   }
   fetchMenuList() {
     this.settingService.menuList().subscribe({

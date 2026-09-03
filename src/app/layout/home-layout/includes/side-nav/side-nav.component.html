@@ -91,6 +91,7 @@
             <ul class="child-menu">
               <ng-container *ngFor="let childMenu of menu?.childMenuItems">
                 <li
+                  *ngIf="canAccess(childMenu)"
                   (click)="navService.closeMenu()"
                   class="child-item"
                   routerLinkActive=" active"
@@ -137,6 +138,7 @@
       <ul class="py-1">
         <ng-container *ngFor="let childMenu of hoveredMenu?.childMenuItems">
           <li>
+            <ng-container *ngIf="canAccess(childMenu)">
             <a
               (click)="navService.closeMenu(); hoveredMenu = null"
               [routerLink]="childMenu?.url"
@@ -145,6 +147,7 @@
               class="block truncate px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-surface-alt)]"
               >{{ childMenu?.label }}</a
             >
+            </ng-container>
           </li>
         </ng-container>
       </ul>

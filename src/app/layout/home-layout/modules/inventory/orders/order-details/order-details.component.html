@@ -116,6 +116,53 @@
     </div>
   </div>
 
+  <!-- Zoho Books synchronization is explicit and observable. The local
+       immutable invoice remains available independently if Zoho is down. -->
+  <section class="zoho-card mb-6" *ngIf="zohoInvoice">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 class="text-lg font-semibold">Zoho Books Invoice</h3>
+          <span class="zoho-status" [ngClass]="'status-' + (zohoInvoice?.zoho?.sync_status || 'not_synced')">
+            {{ zohoStatusLabel(zohoInvoice?.zoho?.sync_status || 'not_synced') }}
+          </span>
+        </div>
+        <p class="mt-1 text-sm text-gray-500">External accounting copy of the immutable local invoice.</p>
+      </div>
+      <div class="flex gap-2">
+        <a
+          *ngIf="zohoInvoice?.zoho?.invoice_url"
+          [href]="zohoInvoice.zoho.invoice_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="zoho-action secondary"
+        >View in Zoho</a>
+        <button
+          *ngIf="canManageZohoInvoice && zohoInvoice?.eligible && zohoInvoice?.zoho?.sync_status !== 'synced'"
+          type="button"
+          class="zoho-action primary"
+          [disabled]="syncingZohoInvoice || zohoInvoice?.zoho?.sync_status === 'syncing'"
+          (click)="syncZoho()"
+        >
+          {{ syncingZohoInvoice ? 'Synchronizing…' : zohoInvoice?.zoho?.sync_status === 'failed' ? 'Retry synchronization' : 'Sync to Zoho' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-3 sm:grid-cols-4" *ngIf="zohoInvoice?.zoho?.sync_status !== 'not_synced'">
+      <div><span class="meta-label">Zoho Invoice</span><strong>{{ zohoInvoice?.zoho?.invoice_number || '—' }}</strong></div>
+      <div><span class="meta-label">External ID</span><strong>{{ zohoInvoice?.zoho?.invoice_id || '—' }}</strong></div>
+      <div><span class="meta-label">Zoho Status</span><strong class="capitalize">{{ zohoInvoice?.zoho?.status || '—' }}</strong></div>
+      <div><span class="meta-label">Last synchronized</span><strong>{{ zohoInvoice?.zoho?.synced_at ? (zohoInvoice.zoho.synced_at | date: 'medium') : '—' }}</strong></div>
+    </div>
+    <p *ngIf="zohoInvoice?.zoho?.last_error" class="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">
+      {{ zohoInvoice.zoho.last_error }}
+    </p>
+    <p *ngIf="!zohoInvoice?.eligible" class="mt-3 text-sm text-amber-700">
+      The local invoice becomes available after the order is confirmed.
+    </p>
+  </section>
+
   <!-- Customer Info -->
   <div class="mb-6 grid sm:grid-cols-3 gap-6">
     <div>

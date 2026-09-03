@@ -7,6 +7,7 @@ export default class FilterOptions {
   stock_status: string | null = null;
   list_type: string = '';
   order_status: string | null = null;
+  customer_id?: string | null;
   tags: string | null = null;
   classifications: string | null = null;
   status: string | null = null;

@@ -293,4 +293,19 @@ export class ApiService {
       `admin/data-operations/executions/${executionId}/logs`,
     );
   }
+
+  // Third-party credentials are write-only: these APIs return configuration
+  // metadata and masks, never plaintext secrets.
+  integrationCredentialList() {
+    return this.httpService.get(`admin/integration-credentials`);
+  }
+  updateIntegrationCredential(provider: string, payload: any) {
+    return this.httpService.put(`admin/integration-credentials/${provider}`, payload);
+  }
+  testIntegrationCredential(provider: string) {
+    return this.httpService.post(`admin/integration-credentials/${provider}/test`, {});
+  }
+  clearIntegrationCredential(provider: string, reason: string) {
+    return this.httpService.delete(`admin/integration-credentials/${provider}`, { reason });
+  }
 }

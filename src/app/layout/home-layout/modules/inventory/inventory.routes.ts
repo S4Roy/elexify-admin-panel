@@ -242,6 +242,14 @@ export const routes: Routes = [
             data: { pageTitle: 'Orders', breadcrumb: '' },
           },
           {
+            path: 'customer/:customer_id',
+            component: OrdersComponent,
+            data: {
+              pageTitle: 'Customer Orders',
+              breadcrumb: 'Customer Orders',
+            },
+          },
+          {
             path: 'details/:_id',
             component: OrderDetailsComponent,
             data: {

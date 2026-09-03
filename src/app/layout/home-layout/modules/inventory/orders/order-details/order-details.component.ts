@@ -19,6 +19,7 @@ import FilterOptions from 'app/core/models/FilterOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
 import * as Global from 'app/global';
 import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
+import { HelpersService } from 'app/core/services/helpers.service';
 
 // Mirrors CANCELLABLE_ORDER_STATUSES in the backend
 // (elexify-backend/src/constants/orderStatus.js) — the backend is the real
@@ -103,6 +104,8 @@ export class OrderDetailsComponent {
   cancelling = false;
   retryingRefund = false;
   downloadingInvoice = false;
+  syncingZohoInvoice = false;
+  zohoInvoice: any = null;
 
   constructor(
     @Optional() public dialogRef: MatDialogRef<OrderDetailsComponent>,
@@ -110,7 +113,8 @@ export class OrderDetailsComponent {
     private route: ActivatedRoute,
     private inventoryService: InventoryService,
     private dialog: MatDialog,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private helpersService: HelpersService
   ) {
     this.filterOption = Global.resetTableFilterOptions();
   }
@@ -138,9 +142,39 @@ export class OrderDetailsComponent {
     this.inventoryService.orderList(params).subscribe({
       next: (res: any) => {
         this.data = res?.data;
+        this.fetchZohoInvoiceStatus();
       },
       error: (err) => {},
     });
+  }
+
+  fetchZohoInvoiceStatus(): void {
+    if (!this.data?._id) return;
+    this.inventoryService.zohoInvoiceStatus(this.data._id).subscribe({
+      next: (res: any) => { this.zohoInvoice = res?.data ?? null; },
+      error: () => { this.zohoInvoice = null; },
+    });
+  }
+
+  syncZoho(): void {
+    if (!this.data?._id || this.syncingZohoInvoice) return;
+    this.syncingZohoInvoice = true;
+    this.inventoryService.syncZohoInvoice(this.data._id).subscribe({
+      next: (res: any) => {
+        this.syncingZohoInvoice = false;
+        this.zohoInvoice = res?.data ?? null;
+        this.toastr.success('Invoice synchronized with Zoho Books');
+        this.fetchOrderList();
+      },
+      error: () => {
+        this.syncingZohoInvoice = false;
+        this.fetchZohoInvoiceStatus();
+      },
+    });
+  }
+
+  zohoStatusLabel(status: string): string {
+    return ({ not_synced: 'Not synced', syncing: 'Syncing', synced: 'Synced', failed: 'Failed' } as Record<string, string>)[status] ?? status;
   }
 
   get isCancellable(): boolean {
@@ -159,6 +193,10 @@ export class OrderDetailsComponent {
       !!this.data?.invoice?.generated ||
       INVOICE_ELIGIBLE_STATUSES.includes(this.data?.order_status)
     );
+  }
+
+  get canManageZohoInvoice(): boolean {
+    return ['superadmin', 'manager'].includes(this.helpersService.role());
   }
 
   orderStatusLabel(status: string): string {

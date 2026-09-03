@@ -156,6 +156,16 @@ export class InventoryService {
       `admin/inventory/order/invoice?order_id=${orderId}`
     );
   }
+  zohoInvoiceStatus(orderId: string) {
+    return this.httpService.get(
+      `admin/inventory/order/invoice/zoho?order_id=${encodeURIComponent(orderId)}`
+    );
+  }
+  syncZohoInvoice(orderId: string) {
+    return this.httpService.post(`admin/inventory/order/invoice/zoho/sync`, {
+      order_id: orderId,
+    });
+  }
   orderDetails(params: any) {
     return this.httpService.get(
       `admin/inventory/order/details?${params.toString()}`

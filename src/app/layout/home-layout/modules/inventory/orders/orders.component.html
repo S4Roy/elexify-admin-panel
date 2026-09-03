@@ -1,3 +1,27 @@
+<section *ngIf="customerId" class="customer-context mb-4">
+  <div class="min-w-0">
+    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Orders for customer</div>
+    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <strong class="text-gray-900">{{ customerContext?.name || 'Loading customer…' }}</strong>
+      <span *ngIf="customerContext?.email" class="text-sm text-gray-600">{{ customerContext.email }}</span>
+      <span *ngIf="customerContext?.mobile" class="text-sm text-gray-600">{{ customerContext.phone_code ? '+' + customerContext.phone_code + ' ' : '' }}{{ customerContext.mobile }}</span>
+      <span *ngIf="customerContext?.status" class="table-status" [class]="customerContext.status">{{ customerContext.status }}</span>
+    </div>
+    <div *ngIf="customerSummary" class="mt-3 flex flex-wrap gap-2 text-xs text-gray-600">
+      <span class="summary-chip"><strong>{{ customerSummary.total_orders }}</strong> total orders</span>
+      <span class="summary-chip"><strong>{{ customerSummary.paid_orders }}</strong> paid</span>
+      <span *ngFor="let total of customerSummary.totals_by_currency" class="summary-chip">
+        <strong>{{ total.value | currency: total.currency }}</strong> paid value
+      </span>
+      <span *ngIf="customerSummary.last_order_at" class="summary-chip">Last order {{ customerSummary.last_order_at | date: 'mediumDate' }}</span>
+    </div>
+  </div>
+  <div class="flex shrink-0 flex-wrap gap-2">
+    <a *ngIf="customerContext?._id" [routerLink]="['/customers/details', customerContext._id]" class="context-link">View profile</a>
+    <a routerLink="/inventory/orders" class="context-link">All orders</a>
+  </div>
+</section>
+
 <div class="table-wrapper">
   <table class="table-base">
     <thead>
@@ -38,14 +62,25 @@
             </a>
           </td>
           <td class="">
-            <a>{{ item?.user?.name }}</a>
+            <a
+              *ngIf="item?.user?._id; else unavailableCustomer"
+              [routerLink]="customerOrdersUrl(item)"
+              class="customer-link"
+              [attr.aria-label]="'View all orders for ' + (item?.user?.name || 'customer')"
+              title="View all orders for this customer"
+            >
+              {{ item?.user?.name || 'Unnamed customer' }}
+              <span *ngIf="item?.user?.email" class="block text-xs font-normal text-gray-500">{{ item.user.email }}</span>
+            </a>
+            <ng-template #unavailableCustomer><span class="text-gray-500">Customer unavailable</span></ng-template>
           </td>
           <td class="">
             {{ item?.created_at | date : "medium" }}
           </td>
           <td>
             <a
-              [routerLink]="'/inventory/orders/' + item?.order_status"
+              [routerLink]="customerId ? ['/inventory/orders/customer', customerId] : ['/inventory/orders', item?.order_status]"
+              [queryParams]="customerId ? { order_status: item?.order_status } : null"
               class="status-label cursor-pointer"
               [class]="item?.order_status"
             >

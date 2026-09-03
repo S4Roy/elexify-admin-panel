@@ -79,10 +79,10 @@
   <div *ngIf="dryRunResult" class="mt-4">
     <div class="text-sm font-medium text-gray-700 mb-2">Latest Dry Run Result</div>
     <div class="flex flex-wrap gap-2">
-      <span class="summary-pill">Insert: {{ dryRunResult.result?.wouldInsert ?? 0 }}</span>
-      <span class="summary-pill">Update: {{ dryRunResult.result?.wouldUpdate ?? 0 }}</span>
-      <span class="summary-pill">Skip: {{ dryRunResult.result?.wouldSkip ?? 0 }}</span>
-      <span class="summary-pill">Delete: {{ dryRunResult.result?.wouldDelete ?? 0 }}</span>
+      <span class="summary-pill">Insert: {{ dryRunResult.result.wouldInsert ?? 0 }}</span>
+      <span class="summary-pill">Update: {{ dryRunResult.result.wouldUpdate ?? 0 }}</span>
+      <span class="summary-pill">Skip: {{ dryRunResult.result.wouldSkip ?? 0 }}</span>
+      <span class="summary-pill">Delete: {{ dryRunResult.result.wouldDelete ?? 0 }}</span>
     </div>
     <div class="run-log mt-2">
       <div *ngFor="let line of dryRunResult.logs" class="run-log-line" [class]="'level-' + line.level.toLowerCase()">
