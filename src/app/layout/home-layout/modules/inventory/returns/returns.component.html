@@ -1,0 +1,26 @@
+<div class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div><h1 class="text-lg font-semibold">Return requests</h1><p class="text-sm text-gray-500">Review customer requests before pickup, refund, or stock movement.</p></div>
+    <select class="rounded-lg border px-3 py-2 text-sm" [(ngModel)]="status" (change)="load()">
+      <option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+
+  <div *ngIf="loading" class="rounded-xl border bg-white p-8 text-center text-sm text-gray-500">Loading return requests…</div>
+  <div *ngIf="!loading && !requests.length" class="rounded-xl border bg-white p-8 text-center text-sm text-gray-500">No return requests found.</div>
+  <article *ngFor="let request of requests" class="rounded-xl border bg-white p-4 shadow-sm">
+    <div class="flex flex-wrap justify-between gap-3">
+      <div><p class="font-semibold">{{ request.request_number }}</p><a class="text-xs text-primary" [routerLink]="['/inventory/orders/details', request.order_id]">View order</a></div>
+      <span class="h-fit rounded-full bg-gray-100 px-3 py-1 text-xs font-medium uppercase">{{ request.status }}</span>
+    </div>
+    <p class="mt-3 text-sm"><strong>Customer:</strong> {{ request.customer_id?.name || 'Customer' }} · {{ request.customer_id?.email }}</p>
+    <p class="mt-1 text-sm"><strong>Reason:</strong> {{ request.reason }}</p>
+    <ul class="mt-3 list-disc pl-5 text-sm text-gray-600"><li *ngFor="let item of request.items">{{ item.product_name }} <span *ngIf="item.sku">({{ item.sku }})</span> × {{ item.quantity }}</li></ul>
+    <div *ngIf="request.evidence?.length" class="mt-3 flex gap-2"><a *ngFor="let media of request.evidence" [href]="media.url" target="_blank" rel="noopener" class="text-xs text-primary underline">View evidence</a></div>
+    <div *ngIf="request.status === 'requested'" class="mt-4 border-t pt-4">
+      <textarea [(ngModel)]="notes[request._id]" rows="2" maxlength="1000" class="w-full rounded-lg border p-2 text-sm" placeholder="Review note (required when rejecting)"></textarea>
+      <div class="mt-2 flex justify-end gap-2"><button class="rounded-lg border border-red-300 px-3 py-2 text-xs text-red-600" [disabled]="busyId === request._id" (click)="review(request, 'reject')">Reject</button><button class="btn-primary" [disabled]="busyId === request._id" (click)="review(request, 'approve')">Approve</button></div>
+    </div>
+    <p *ngIf="request.review_note" class="mt-3 rounded-lg bg-gray-50 p-3 text-xs"><strong>Review note:</strong> {{ request.review_note }}</p>
+  </article>
+</div>

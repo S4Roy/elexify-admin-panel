@@ -151,6 +151,12 @@ export class InventoryService {
       payload
     );
   }
+  returnRequests(params: URLSearchParams) {
+    return this.httpService.get(`admin/inventory/order/returns?${params.toString()}`);
+  }
+  reviewReturn(payload: any) {
+    return this.httpService.post(`admin/inventory/order/returns/review`, payload);
+  }
   downloadInvoice(orderId: string) {
     return this.httpService.downloadFile(
       `admin/inventory/order/invoice?order_id=${orderId}`

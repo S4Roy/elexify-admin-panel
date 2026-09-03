@@ -65,6 +65,11 @@ export class SideNavComponent {
           url: '/inventory/orders',
         },
         {
+          label: 'Returns',
+          icon: 'assignment_return',
+          url: '/inventory/orders/returns',
+        },
+        {
           label: 'Inventory',
           icon: 'inventory_2',
           url: '/inventory',

@@ -21,6 +21,7 @@ import { ShippingZonesComponent } from './shipping-zones/shipping-zones.componen
 import { NewShippingZoneComponent } from './shipping-zones/new-shipping-zone/new-shipping-zone.component';
 import { ShippingRatesComponent } from './shipping-rates/shipping-rates.component';
 import { SeoManagerComponent } from './products/seo-manager/seo-manager.component';
+import { ReturnsComponent } from './returns/returns.component';
 
 export const routes: Routes = [
   {
@@ -256,6 +257,11 @@ export const routes: Routes = [
               pageTitle: 'Order Details',
               breadcrumb: 'Details',
             },
+          },
+          {
+            path: 'returns',
+            component: ReturnsComponent,
+            data: { pageTitle: 'Return Requests', breadcrumb: 'Returns' },
           },
           {
             path: ':order_status',
