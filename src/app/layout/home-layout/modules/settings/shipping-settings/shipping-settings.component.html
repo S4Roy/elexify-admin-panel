@@ -192,6 +192,62 @@
       <p class="text-xs text-gray-500">Product, variation, category, brand, shipping-class and zone restrictions are also enforced by the backend configuration.</p>
     </div>
 
+    <div
+      class="rounded-lg p-4 sm:p-5"
+      style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+    >
+      <h2 class="text-sm font-semibold mb-1" style="color: var(--text-primary)">
+        Cancellation & Return Policy
+      </h2>
+      <p class="text-xs text-gray-500 mb-4">
+        These controls are enforced by the backend. Packed orders can only be cancelled before courier handover.
+      </p>
+
+      <div class="grid lg:grid-cols-2 gap-5">
+        <section class="space-y-3">
+          <h3 class="text-sm font-medium">Customer cancellation</h3>
+          <mat-checkbox formControlName="customer_cancellation_enabled">Allow customers to cancel orders</mat-checkbox>
+          <div *ngIf="formGroup.value.customer_cancellation_enabled">
+            <label>Eligible statuses</label>
+            <ng-select [multiple]="true" formControlName="customer_cancellation_statuses" placeholder="Select statuses" [ariaLabel]="'Customer cancellation statuses'">
+              <ng-option *ngFor="let status of cancellationStatuses" [value]="status.value">{{ status.label }}</ng-option>
+            </ng-select>
+            <mat-checkbox class="block mt-3" formControlName="customer_cancel_packed_before_dispatch">Allow packed orders before courier handover</mat-checkbox>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-sm font-medium">Admin cancellation</h3>
+          <mat-checkbox formControlName="admin_cancellation_enabled">Allow admins to cancel orders</mat-checkbox>
+          <div *ngIf="formGroup.value.admin_cancellation_enabled">
+            <label>Eligible statuses</label>
+            <ng-select [multiple]="true" formControlName="admin_cancellation_statuses" placeholder="Select statuses" [ariaLabel]="'Admin cancellation statuses'">
+              <ng-option *ngFor="let status of cancellationStatuses" [value]="status.value">{{ status.label }}</ng-option>
+            </ng-select>
+          </div>
+        </section>
+      </div>
+
+      <div class="border-t mt-5 pt-5" style="border-color: var(--border-color)">
+        <mat-checkbox formControlName="returns_enabled">Enable customer returns</mat-checkbox>
+        <div class="grid md:grid-cols-2 gap-4 mt-4" *ngIf="formGroup.value.returns_enabled">
+          <mat-form-field>
+            <mat-label>Return window (days after delivery)</mat-label>
+            <input matInput type="number" min="0" max="365" formControlName="return_window_days" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Allowed return reasons</mat-label>
+            <textarea matInput rows="5" formControlName="return_reasons_text" placeholder="One reason per line"></textarea>
+          </mat-form-field>
+          <mat-checkbox formControlName="return_require_images">Require supporting images</mat-checkbox>
+          <mat-checkbox formControlName="return_auto_approve">Automatically approve eligible requests</mat-checkbox>
+        </div>
+        <p class="text-xs text-amber-600 mt-3">
+          Return request processing will be enabled in Phase 2. These settings establish the policy now.
+        </p>
+      </div>
+    </div>
+
     <div class="flex justify-end">
       <button
         (click)="onSubmit()"

@@ -31,6 +31,13 @@ const WEEKDAYS = [
   { value: 6, label: 'Saturday' },
 ];
 
+const CANCELLATION_STATUSES = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'packed', label: 'Packed' },
+];
+
 @Component({
   selector: 'app-shipping-settings',
   imports: [
@@ -51,6 +58,7 @@ export class ShippingSettingsComponent {
   Global = Global;
   formGroup!: FormGroup;
   weekdays = WEEKDAYS;
+  cancellationStatuses = CANCELLATION_STATUSES;
 
   zones: any = [];
   zonePagination: PaginationOptions;
@@ -88,6 +96,16 @@ export class ShippingSettingsComponent {
       cod_disallowed_shipping_classes_text: [''],
       cod_disallowed_zones: [[]],
       cod_allowed_customer_types_text: ['customer'],
+      customer_cancellation_enabled: [true],
+      customer_cancellation_statuses: [['pending', 'confirmed', 'processing', 'packed']],
+      customer_cancel_packed_before_dispatch: [true],
+      admin_cancellation_enabled: [true],
+      admin_cancellation_statuses: [['pending', 'confirmed', 'processing', 'packed']],
+      returns_enabled: [true],
+      return_window_days: [7, [Validators.required, Validators.min(0), Validators.max(365)]],
+      return_auto_approve: [false],
+      return_require_images: [false],
+      return_reasons_text: ['Damaged item\nWrong item\nDefective item\nNot as described\nOther', Validators.required],
     });
   }
 
@@ -189,6 +207,16 @@ export class ShippingSettingsComponent {
           cod_disallowed_shipping_classes_text: (data.cod_disallowed_shipping_classes ?? []).map((v: any) => v?._id ?? v).join(', '),
           cod_disallowed_zones: (data.cod_disallowed_zones ?? []).map((v: any) => v?._id ?? v),
           cod_allowed_customer_types_text: (data.cod_allowed_customer_types ?? []).join(', '),
+          customer_cancellation_enabled: data.customer_cancellation_enabled ?? true,
+          customer_cancellation_statuses: data.customer_cancellation_statuses ?? ['pending', 'confirmed', 'processing', 'packed'],
+          customer_cancel_packed_before_dispatch: data.customer_cancel_packed_before_dispatch ?? true,
+          admin_cancellation_enabled: data.admin_cancellation_enabled ?? true,
+          admin_cancellation_statuses: data.admin_cancellation_statuses ?? ['pending', 'confirmed', 'processing', 'packed'],
+          returns_enabled: data.returns_enabled ?? true,
+          return_window_days: data.return_window_days ?? 7,
+          return_auto_approve: data.return_auto_approve ?? false,
+          return_require_images: data.return_require_images ?? false,
+          return_reasons_text: (data.return_reasons ?? []).join('\n'),
         });
         this.holidays.clear();
         (data.holidays ?? []).forEach((holiday: any) => {
@@ -217,12 +245,14 @@ export class ShippingSettingsComponent {
       payload.cod_disallowed_brands = this.parseIds(payload.cod_disallowed_brands_text);
       payload.cod_disallowed_shipping_classes = this.parseIds(payload.cod_disallowed_shipping_classes_text);
       payload.cod_allowed_customer_types = String(payload.cod_allowed_customer_types_text || '').split(/[\s,]+/).map((v: string) => v.trim()).filter(Boolean);
+      payload.return_reasons = [...new Set(String(payload.return_reasons_text || '').split(/\r?\n/).map((v: string) => v.trim()).filter(Boolean))];
       delete payload.cod_allowed_pincodes_text;
       delete payload.cod_disallowed_pincodes_text;
       delete payload.cod_disallowed_categories_text;
       delete payload.cod_disallowed_brands_text;
       delete payload.cod_disallowed_shipping_classes_text;
       delete payload.cod_allowed_customer_types_text;
+      delete payload.return_reasons_text;
       payload.holidays = (payload.holidays ?? []).filter((h: any) => !!h);
       this.inventoryService.shippingSettingsUpdate(payload).subscribe({
         next: (res: any) => {
