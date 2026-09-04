@@ -19,6 +19,7 @@ export class ReturnsComponent implements OnInit {
   notes: Record<string, string> = {};
   inspection: Record<string, Record<string, { accepted_quantity: number; disposition: 'restock' | 'damaged'; note: string }>> = {};
   settlementReferences: Record<string, string> = {};
+  pickup: Record<string, { status: string; provider: string; tracking_number: string; failure_reason: string }> = {};
 
   constructor(private inventory: InventoryService, private toastr: ToastrService) {}
   ngOnInit() { this.load(); }
@@ -76,6 +77,29 @@ export class ReturnsComponent implements OnInit {
     if (!reference) { this.toastr.error('Enter the bank, PayPal, or cash settlement reference.'); return; }
     this.busyId = request._id;
     this.inventory.completeManualReturnRefund({ return_request_id: request._id, reference, note: this.notes[request._id] || '' }).subscribe({
+      next: (response: any) => { this.toastr.success(response?.message); this.busyId = null; this.load(); },
+      error: () => { this.busyId = null; },
+    });
+  }
+
+  pickupFor(request: any) {
+    this.pickup[request._id] ??= {
+      status: request.pickup?.status === 'not_scheduled' ? 'scheduled' : (request.pickup?.status || 'scheduled'),
+      provider: request.pickup?.provider || '', tracking_number: request.pickup?.tracking_number || '', failure_reason: '',
+    };
+    return this.pickup[request._id];
+  }
+
+  updatePickup(request: any): void {
+    const pickup = this.pickupFor(request);
+    if (pickup.status === 'scheduled' && (!pickup.provider.trim() || !pickup.tracking_number.trim())) {
+      this.toastr.error('Provider and tracking number are required.'); return;
+    }
+    if (pickup.status === 'failed' && !pickup.failure_reason.trim()) {
+      this.toastr.error('Failure reason is required.'); return;
+    }
+    this.busyId = request._id;
+    this.inventory.updateReturnPickup({ return_request_id: request._id, ...pickup }).subscribe({
       next: (response: any) => { this.toastr.success(response?.message); this.busyId = null; this.load(); },
       error: () => { this.busyId = null; },
     });

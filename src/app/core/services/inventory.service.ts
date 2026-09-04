@@ -166,6 +166,9 @@ export class InventoryService {
   completeManualReturnRefund(payload: any) {
     return this.httpService.post(`admin/inventory/order/returns/manual-refund/complete`, payload);
   }
+  updateReturnPickup(payload: any) {
+    return this.httpService.post(`admin/inventory/order/returns/pickup`, payload);
+  }
   downloadInvoice(orderId: string) {
     return this.httpService.downloadFile(
       `admin/inventory/order/invoice?order_id=${orderId}`

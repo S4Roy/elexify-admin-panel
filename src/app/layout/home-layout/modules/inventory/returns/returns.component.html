@@ -22,7 +22,16 @@
       <div class="mt-2 flex justify-end gap-2"><button class="rounded-lg border border-red-300 px-3 py-2 text-xs text-red-600" [disabled]="busyId === request._id" (click)="review(request, 'reject')">Reject</button><button class="btn-primary" [disabled]="busyId === request._id" (click)="review(request, 'approve')">Approve</button></div>
     </div>
     <div *ngIf="request.status === 'approved'" class="mt-4 flex justify-end border-t pt-4">
-      <button class="btn-primary" [disabled]="busyId === request._id" (click)="receive(request)">Mark received at warehouse</button>
+      <div class="w-full space-y-2">
+        <h3 class="text-sm font-semibold">Reverse pickup</h3>
+        <div class="grid gap-2 md:grid-cols-4">
+          <select class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).status"><option value="scheduled">Scheduled</option><option value="in_transit">In transit</option><option value="delivered">Delivered to warehouse</option><option value="failed">Failed</option></select>
+          <input class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).provider" placeholder="Courier/provider" />
+          <input class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).tracking_number" placeholder="Tracking number" />
+          <input *ngIf="pickupFor(request).status === 'failed'" class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).failure_reason" placeholder="Failure reason" />
+        </div>
+        <div class="flex justify-end gap-2"><button class="rounded-lg border px-3 py-2 text-xs" [disabled]="busyId === request._id" (click)="receive(request)">Received manually</button><button class="btn-primary" [disabled]="busyId === request._id" (click)="updatePickup(request)">Update pickup</button></div>
+      </div>
     </div>
     <div *ngIf="request.status === 'received'" class="mt-4 space-y-3 border-t pt-4">
       <h3 class="text-sm font-semibold">Warehouse inspection</h3>
