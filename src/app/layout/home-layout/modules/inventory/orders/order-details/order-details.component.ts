@@ -231,20 +231,35 @@ export class OrderDetailsComponent {
     );
   }
 
+  itemRate(item: any): number {
+    const regular = Number(item?.regular_price);
+    const quantity = Number(item?.quantity) || 0;
+    const netRate = quantity > 0
+      ? Number(item?.total_price ?? 0) / quantity
+      : Number(item?.unit_price ?? 0);
+    return Number.isFinite(regular) && regular > 0
+      ? Math.max(regular, netRate)
+      : netRate;
+  }
+
+  itemProductDiscount(item: any): number {
+    return Math.max(0, Number((
+      this.itemRate(item) * (Number(item?.quantity) || 0) -
+      Number(item?.total_price ?? 0)
+    ).toFixed(2)));
+  }
+
   get mrpSubtotal(): number {
-    return (this.data?.order_items ?? []).reduce((sum: number, item: any) => {
-      const quantity = Number(item?.quantity) || 0;
-      const regular = Number(item?.regular_price);
-      const unit = Number(item?.unit_price) || 0;
-      return (
-        sum +
-        (Number.isFinite(regular) && regular > 0 ? regular : unit) * quantity
-      );
-    }, 0);
+    if (!this.data?.order_items?.length) return Number(this.data?.total_amount || 0);
+    return Number(this.data.order_items.reduce((sum: number, item: any) =>
+      sum + this.itemRate(item) * (Number(item?.quantity) || 0), 0
+    ).toFixed(2));
   }
 
   get productDiscount(): number {
-    return Math.max(0, this.mrpSubtotal - this.itemsPayable);
+    return Number((this.data?.order_items ?? []).reduce(
+      (sum: number, item: any) => sum + this.itemProductDiscount(item), 0
+    ).toFixed(2));
   }
 
   get totalSavings(): number {

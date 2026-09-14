@@ -1,8 +1,8 @@
 <div class="space-y-4">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div><h1 class="text-lg font-semibold">Return requests</h1><p class="text-sm text-gray-500">Review customer requests before pickup, refund, or stock movement.</p></div>
-    <select class="rounded-lg border px-3 py-2 text-sm" [(ngModel)]="status" (change)="load()">
-      <option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="received">Received</option><option value="refund_pending">Refund pending</option><option value="refund_failed">Refund failed</option><option value="manual_action_required">Manual settlement</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option>
+    <select class="rounded-lg border px-3 py-2 text-sm" [(ngModel)]="status" (change)="page = 1; load()">
+      <option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="received">Received</option><option value="refund_pending">Refund pending</option><option value="refund_failed">Refund failed</option><option value="manual_action_required">Manual settlement</option><option value="replacement_pending">Replacement processing</option><option value="replacement_shipped">Replacement shipped</option><option value="qc_failed">QC failed</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option>
     </select>
   </div>
 
@@ -14,7 +14,7 @@
       <span class="h-fit rounded-full bg-gray-100 px-3 py-1 text-xs font-medium uppercase">{{ request.status }}</span>
     </div>
     <p class="mt-3 text-sm"><strong>Customer:</strong> {{ request.customer_id?.name || 'Customer' }} · {{ request.customer_id?.email }}</p>
-    <p class="mt-1 text-sm"><strong>Reason:</strong> {{ request.reason }}</p>
+    <p class="mt-1 text-sm"><strong>{{ request.return_type === "replacement" ? "Replacement" : "Refund" }} · Reason:</strong> {{ request.reason }}</p>
     <ul class="mt-3 list-disc pl-5 text-sm text-gray-600"><li *ngFor="let item of request.items">{{ item.product_name }} <span *ngIf="item.sku">({{ item.sku }})</span> × {{ item.quantity }}</li></ul>
     <div *ngIf="request.evidence?.length" class="mt-3 flex gap-2"><a *ngFor="let media of request.evidence" [href]="media.url" target="_blank" rel="noopener" class="text-xs text-primary underline">View evidence</a></div>
     <div *ngIf="request.status === 'requested'" class="mt-4 border-t pt-4">
@@ -24,17 +24,38 @@
     <div *ngIf="request.status === 'approved'" class="mt-4 flex justify-end border-t pt-4">
       <div class="w-full space-y-2">
         <h3 class="text-sm font-semibold">Reverse pickup</h3>
-        <div class="grid gap-2 md:grid-cols-4">
-          <select class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).status"><option value="scheduled">Scheduled</option><option value="in_transit">In transit</option><option value="delivered">Delivered to warehouse</option><option value="failed">Failed</option></select>
+        <p class="text-xs text-gray-500">Generate pickup using the existing Shiprocket account. Use the warehouse pickup-location name configured in Shiprocket.</p>
+        <div class="grid gap-2 md:grid-cols-5" *ngIf="!request.pickup?.shiprocket_shipment_id">
+          <label class="text-xs">Warehouse<input class="w-full rounded border p-2" [(ngModel)]="bookingFor(request).warehouse" placeholder="Pickup-location name" /></label>
+          <label class="text-xs" *ngFor="let dimension of ['length', 'breadth', 'height', 'weight']">{{ dimension }} ({{ dimension === 'weight' ? 'kg' : 'cm' }})<input class="w-full rounded border p-2" type="number" min="0.01" step="0.01" [(ngModel)]="bookingFor(request)[dimension]" /></label>
+        </div>
+        <p *ngIf="request.pickup?.last_error" class="text-xs text-amber-700">{{ request.pickup.last_error }}</p>
+        <label *ngIf="request.pickup?.integration_status === 'unknown'" class="block text-xs">Existing Shiprocket return order ID (for reconciliation)<input class="ml-2 rounded border p-2" [(ngModel)]="bookingFor(request).external_order_id" /></label>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn-primary" [disabled]="busyId === request._id" (click)="operate(request, 'book')">Generate / resume reverse pickup</button>
+          <button *ngIf="request.pickup?.shiprocket_shipment_id" class="rounded border px-3 py-2 text-xs" [disabled]="busyId === request._id" (click)="operate(request, 'track')">Refresh tracking</button>
+        </div>
+        <p class="text-xs" *ngIf="request.pickup?.shiprocket_shipment_id">Shipment {{ request.pickup.shiprocket_shipment_id }} · AWB {{ request.pickup.shiprocket_awb }} · {{ request.pickup.provider }} · {{ request.pickup.raw_status }}</p>
+        <a *ngIf="request.pickup?.tracking_url" [href]="request.pickup.tracking_url" target="_blank" rel="noopener" class="text-xs text-primary underline">Open tracking</a>
+        <details><summary class="text-xs text-gray-500">Manual pickup update / reconciliation</summary>
+        <div class="grid gap-2 md:grid-cols-5">
+          <select class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).status"><option value="scheduled">Schedule pickup</option><option value="rescheduled">Reschedule pickup</option><option value="out_for_pickup">Out for pickup</option><option value="picked_up">Picked up</option><option value="in_transit">In transit</option><option value="delivered">Delivered to warehouse</option><option value="failed">Pickup failed</option><option value="cancelled">Pickup cancelled</option></select>
           <input class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).provider" placeholder="Courier/provider" />
           <input class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).tracking_number" placeholder="Tracking number" />
+          <input *ngIf="pickupFor(request).status === 'scheduled' || pickupFor(request).status === 'rescheduled'" class="rounded border p-2 text-sm" type="datetime-local" [(ngModel)]="pickupFor(request).expected_at" aria-label="Expected pickup date" />
           <input *ngIf="pickupFor(request).status === 'failed'" class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).failure_reason" placeholder="Failure reason" />
         </div>
+        <p *ngIf="request.pickup?.reschedule_count" class="text-xs text-amber-700">Rescheduled {{ request.pickup.reschedule_count }} time(s). Latest pickup: {{ request.pickup.expected_at | date:'medium' }}</p>
         <div class="flex justify-end gap-2"><button class="rounded-lg border px-3 py-2 text-xs" [disabled]="busyId === request._id" (click)="receive(request)">Received manually</button><button class="btn-primary" [disabled]="busyId === request._id" (click)="updatePickup(request)">Update pickup</button></div>
+        </details>
       </div>
     </div>
+    <div *ngIf="request.timeline?.length" class="mt-4 border-t pt-4">
+      <h3 class="text-sm font-semibold">Status log</h3>
+      <ol class="mt-2 space-y-2 border-l-2 border-gray-200 pl-4"><li *ngFor="let entry of request.timeline" class="text-xs"><strong>{{ entry.label }}</strong><span class="text-gray-500"> · {{ entry.occurred_at | date:'medium' }}</span><p *ngIf="entry.note" class="text-gray-500">{{ entry.note }}</p></li></ol>
+    </div>
     <div *ngIf="request.status === 'received'" class="mt-4 space-y-3 border-t pt-4">
-      <h3 class="text-sm font-semibold">Warehouse inspection</h3>
+      <h3 class="text-sm font-semibold">Quality check — accepted quantity 0 means QC failed</h3>
       <div *ngFor="let item of request.items" class="grid gap-2 rounded-lg bg-gray-50 p-3 md:grid-cols-4 md:items-center">
         <span class="text-sm">{{ item.product_name }} × {{ item.quantity }}</span>
         <label class="text-xs">Accepted quantity<input class="mt-1 w-full rounded border p-2" type="number" min="0" [max]="item.quantity" [(ngModel)]="inspectionFor(request, item).accepted_quantity" /></label>
@@ -44,6 +65,11 @@
       <textarea [(ngModel)]="notes[request._id]" rows="2" maxlength="1000" class="w-full rounded-lg border p-2 text-sm" placeholder="Overall inspection note"></textarea>
       <div class="flex justify-end"><button class="btn-primary" [disabled]="busyId === request._id" (click)="submitInspection(request)">Complete inspection</button></div>
     </div>
+    <div *ngIf="request.status === 'replacement_pending'" class="mt-3 rounded-lg border p-3">
+      <a *ngIf="request.replacement_order_id" [routerLink]="['/inventory/orders/details', request.replacement_order_id]" class="text-sm text-primary">Fulfill replacement order</a>
+      <button *ngIf="!request.replacement_order_id" class="btn-primary" [disabled]="busyId === request._id" (click)="operate(request, 'replacement')">Create replacement / retry stock allocation</button>
+    </div>
+    <button *ngIf="request.status === 'refund_pending'" class="mt-3 rounded border px-3 py-2 text-xs" [disabled]="busyId === request._id" (click)="operate(request, 'refund')">Reconcile refund</button>
     <div *ngIf="request.refund?.amount" class="mt-3 rounded-lg bg-blue-50 p-3 text-xs"><strong>Refund:</strong> {{ request.refund.amount | currency:'INR' }} · {{ request.refund.status }}<span *ngIf="request.refund.provider_ref"> · {{ request.refund.provider_ref }}</span></div>
     <div *ngIf="request.status === 'manual_action_required'" class="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
       <p class="text-xs text-amber-800">Complete the refund outside the platform, then record its immutable settlement reference here.</p>
@@ -53,4 +79,5 @@
     </div>
     <p *ngIf="request.review_note" class="mt-3 rounded-lg bg-gray-50 p-3 text-xs"><strong>Review note:</strong> {{ request.review_note }}</p>
   </article>
+  <div class="flex justify-end gap-3 text-sm"><button class="rounded border px-3 py-2" [disabled]="page <= 1 || loading" (click)="page = page - 1; load()">Previous</button><span>Page {{ page }} of {{ totalPages }}</span><button class="rounded border px-3 py-2" [disabled]="page >= totalPages || loading" (click)="page = page + 1; load()">Next</button></div>
 </div>
