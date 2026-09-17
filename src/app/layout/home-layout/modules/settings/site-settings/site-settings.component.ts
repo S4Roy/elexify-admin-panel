@@ -64,7 +64,12 @@ const OPTIONAL_SETTING_SLUGS = new Set([
   'social_instagram_url',
   'social_facebook_url',
   'social_youtube_url',
+  'social_twitter_url',
+  'social_telegram_url',
   'contact_mobile_2',
+  'company_lat',
+  'company_lng',
+  'map_embed_url',
   'homepage_video_url',
   'homepage_video_poster_url',
   // Company/GST invoice fields — blank is a valid, working state (the

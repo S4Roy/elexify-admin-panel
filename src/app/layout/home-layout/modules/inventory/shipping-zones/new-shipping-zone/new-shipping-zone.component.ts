@@ -186,8 +186,6 @@ export class NewShippingZoneComponent {
         if (!zone) return;
         this.formGroup.patchValue({
           name: zone.name,
-          countries: zone.countries ?? [],
-          states: zone.states ?? [],
           is_default: zone.is_default ?? false,
           status: zone.status ?? 'active',
         });
@@ -195,6 +193,47 @@ export class NewShippingZoneComponent {
         (zone.pincode_prefixes ?? []).forEach((prefix: string) => {
           this.pincode_prefixes.push(this.newPrefix(prefix));
         });
+        this.applySelectedCountries(zone.countries ?? []);
+        this.applySelectedStates(zone.states ?? []);
+      },
+      error: (err) => {},
+    });
+  }
+
+  // Zones only store raw country/state ids, and the ng-select options are
+  // paginated, so an id selected on the zone may not be in the loaded page
+  // yet and its name won't render. Fetch those specific ids directly and
+  // merge them into the options list so the select has something to
+  // resolve the label from.
+  applySelectedCountries(ids: number[]) {
+    this.formGroup.patchValue({ countries: ids });
+    if (!ids.length) return;
+    let params = new URLSearchParams();
+    params.set('limit', String(ids.length));
+    params.set('ids', ids.join(','));
+    this.apiService.countryList(params).subscribe({
+      next: (res: any) => {
+        const docs = res?.data?.docs ?? [];
+        const existingIds = new Set(this.countries.map((c: any) => c.id));
+        const missing = docs.filter((d: any) => !existingIds.has(d.id));
+        this.countries = [...this.countries, ...missing];
+      },
+      error: (err) => {},
+    });
+  }
+
+  applySelectedStates(ids: number[]) {
+    this.formGroup.patchValue({ states: ids });
+    if (!ids.length) return;
+    let params = new URLSearchParams();
+    params.set('limit', String(ids.length));
+    params.set('ids', ids.join(','));
+    this.apiService.stateList(params).subscribe({
+      next: (res: any) => {
+        const docs = res?.data?.docs ?? [];
+        const existingIds = new Set(this.states.map((s: any) => s.id));
+        const missing = docs.filter((d: any) => !existingIds.has(d.id));
+        this.states = [...this.states, ...missing];
       },
       error: (err) => {},
     });

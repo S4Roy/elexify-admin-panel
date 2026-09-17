@@ -25,15 +25,15 @@
                 <ng-select
                   placeholder="Select Zone"
                   formControlName="zone"
+                  [items]="zones"
+                  bindLabel="name"
+                  bindValue="_id"
                   matInput
                   [class.is-invalid]="!Global.isInputValid(formGroup, 'zone')"
                   (scrollToEnd)="loadMoreZones()"
                   (search)="zoneSearchSubject.next($event)"
                   [ariaLabel]="'Select Zone'"
                 >
-                  <ng-option *ngFor="let zone of zones" [value]="zone?._id">
-                    {{ zone?.name }}
-                  </ng-option>
                 </ng-select>
                 <mat-error
                   *ngIf="!Global.isInputRuleValid(formGroup, 'zone', 'required')"
@@ -46,18 +46,15 @@
                 <ng-select
                   placeholder="Any Class (Default)"
                   formControlName="shipping_class"
+                  [items]="shipping_classes"
+                  bindLabel="name"
+                  bindValue="_id"
                   matInput
                   [clearable]="true"
                   (scrollToEnd)="loadMoreShippingClasses()"
                   (search)="shippingClassSearchSubject.next($event)"
                   [ariaLabel]="'Select Shipping Class'"
                 >
-                  <ng-option
-                    *ngFor="let sc of shipping_classes"
-                    [value]="sc?._id"
-                  >
-                    {{ sc?.name }}
-                  </ng-option>
                 </ng-select>
                 <div class="text-xs text-gray-500 mt-1">
                   Leave blank to use as the default rate for any class not

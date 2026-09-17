@@ -25,7 +25,7 @@
     "@angular/router": "^20.3.30",
     "@ckeditor/ckeditor5-angular": "^10.0.0",
     "@highcharts/map-collection": "^2.3.3",
-    "@ng-select/ng-select": "^16.0.0",
+    "@ng-select/ng-select": "20.7.0",
     "autoprefixer": "^10.4.20",
     "ckeditor5": "^46.0.3",
     "highcharts": "^13.0.1",

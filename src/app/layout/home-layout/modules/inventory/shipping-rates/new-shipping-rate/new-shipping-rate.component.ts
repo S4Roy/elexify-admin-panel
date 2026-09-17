@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import {
   FormGroup,
@@ -47,7 +47,6 @@ function deliveryDaysValidator(control: AbstractControl): ValidationErrors | nul
     MatSelectModule,
     MatDialogModule,
     NgIf,
-    NgFor,
     NgSelectModule,
     AmountNumberDirective,
   ],
