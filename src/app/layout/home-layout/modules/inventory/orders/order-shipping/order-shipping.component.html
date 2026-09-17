@@ -123,6 +123,86 @@
     </div>
     <div class="w-1/4 px-5">
       <div class="grid grid-cols-1 gap-4" [formGroup]="formGroup">
+        <!-- Pickup Address (Ship From) -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-sm font-semibold text-gray-700"
+              >Ship From</label
+            >
+            <mat-spinner
+              *ngIf="loadingPickupLocations"
+              diameter="16"
+            ></mat-spinner>
+          </div>
+
+          <mat-form-field
+            class="w-full"
+            *ngIf="pickupLocations.length; else pickupFallback"
+          >
+            <mat-select
+              formControlName="pickup_location"
+              placeholder="Select a pickup address"
+            >
+              <mat-option
+                *ngFor="let loc of pickupLocations"
+                [value]="loc.pickup_location"
+              >
+                {{ loc.pickup_location
+                }}{{
+                  loc.pickup_location === defaultPickupLocation
+                    ? " (Default)"
+                    : ""
+                }}
+                — {{ loc.city }}, {{ loc.pincode }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <ng-template #pickupFallback>
+            <p
+              *ngIf="loadingPickupLocations"
+              class="text-xs text-gray-500 py-2"
+            >
+              Loading pickup addresses…
+            </p>
+            <p
+              *ngIf="!loadingPickupLocations && pickupLocationsError"
+              class="text-xs text-amber-600 py-2"
+            >
+              {{ pickupLocationsError }}
+            </p>
+            <p
+              *ngIf="
+                !loadingPickupLocations &&
+                !pickupLocationsError &&
+                !pickupLocations.length
+              "
+              class="text-xs text-gray-500 py-2"
+            >
+              No pickup addresses found on Shiprocket. The default configured
+              address will be used.
+            </p>
+          </ng-template>
+
+          <!-- Selected address preview -->
+          <div
+            *ngIf="
+              formGroup.get('pickup_location')?.value as selectedPickupLocation
+            "
+            class="text-xs text-gray-600 bg-gray-50 border rounded p-2 -mt-2"
+          >
+            <ng-container
+              *ngFor="let loc of pickupLocations"
+              [ngSwitch]="loc.pickup_location === selectedPickupLocation"
+            >
+              <div *ngSwitchCase="true">
+                <p>{{ loc.address }}</p>
+                <p>{{ loc.city }}, {{ loc.state }} — {{ loc.pincode }}</p>
+                <p *ngIf="loc.phone">Phone: {{ loc.phone }}</p>
+              </div>
+            </ng-container>
+          </div>
+        </div>
         <!-- Weight -->
         <mat-form-field>
           <mat-label>Weight (KG)</mat-label>
