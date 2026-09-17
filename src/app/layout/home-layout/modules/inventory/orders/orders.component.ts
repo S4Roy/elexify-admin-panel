@@ -41,7 +41,6 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod: 'Cash on Delivery',
   razorpay: 'Razorpay',
-  paypal: 'PayPal',
 };
 
 @Component({
@@ -157,7 +156,6 @@ export class OrdersComponent {
         options: [
           { value: 'cod', label: 'Cash on Delivery' },
           { value: 'razorpay', label: 'Razorpay' },
-          { value: 'paypal', label: 'PayPal' },
         ],
       },
       {
