@@ -8,7 +8,7 @@ import { ToastrService } from 'ngx-toastr';
 import { ApiService } from 'app/core/services/api.service';
 import { ReasonDialogComponent } from '../../../includes/reason-dialog/reason-dialog.component';
 
-interface CredentialField { configured: boolean; masked: string | null; secret: boolean; }
+interface CredentialField { configured: boolean; masked: string | null; secret: boolean; value?: string | null; }
 interface IntegrationItem {
   provider: string; label: string; enabled: boolean; configured: boolean;
   fields: Record<string, CredentialField>; last_tested_at: string | null;
@@ -28,6 +28,13 @@ export class IntegrationCredentialsComponent implements OnInit {
   loading = true;
   show: Record<string, boolean> = {};
 
+  // Shiprocket's "pickup_location" must exactly match a nickname registered
+  // on the connected Shiprocket account, or order push fails with an opaque
+  // Shiprocket error — fetched live so the admin picks from a dropdown of
+  // real, valid options instead of typing a value blind.
+  shiprocketPickupLocations: { pickup_location: string; city: string; pincode: string }[] = [];
+  loadingPickupLocations = false;
+
   constructor(private api: ApiService, private toastr: ToastrService, private dialog: MatDialog) {}
 
   ngOnInit(): void { this.load(); }
@@ -37,10 +44,24 @@ export class IntegrationCredentialsComponent implements OnInit {
     this.api.integrationCredentialList().subscribe({
       next: (res: any) => {
         this.integrations = res?.data ?? [];
-        for (const item of this.integrations) this.drafts[item.provider] ??= {};
+        for (const item of this.integrations) {
+          this.drafts[item.provider] ??= {};
+          if (item.provider === 'shiprocket') {
+            this.drafts['shiprocket']['pickup_location'] = item.fields?.['pickup_location']?.value || '';
+            if (item.enabled && item.configured) this.fetchPickupLocations();
+          }
+        }
         this.loading = false;
       },
       error: () => { this.loading = false; },
+    });
+  }
+
+  fetchPickupLocations(): void {
+    this.loadingPickupLocations = true;
+    this.api.shiprocketPickupLocations().subscribe({
+      next: (res: any) => { this.shiprocketPickupLocations = res?.data ?? []; this.loadingPickupLocations = false; },
+      error: () => { this.loadingPickupLocations = false; },
     });
   }
 

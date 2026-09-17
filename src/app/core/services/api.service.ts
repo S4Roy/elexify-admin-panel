@@ -327,4 +327,7 @@ export class ApiService {
   clearIntegrationCredential(provider: string, reason: string) {
     return this.httpService.delete(`admin/integration-credentials/${provider}`, { reason });
   }
+  shiprocketPickupLocations() {
+    return this.httpService.get(`admin/integration-credentials/shiprocket/pickup-locations`);
+  }
 }
