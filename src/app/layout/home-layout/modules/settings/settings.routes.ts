@@ -13,6 +13,8 @@ import { ShippingSettingsComponent } from './shipping-settings/shipping-settings
 import { SeoSettingsComponent } from './seo-settings/seo-settings.component';
 import { EmailTemplatesListComponent } from './email-templates/email-templates-list/email-templates-list.component';
 import { EmailTemplateEditComponent } from './email-templates/email-template-edit/email-template-edit.component';
+import { SmsTemplatesListComponent } from './sms-templates/sms-templates-list/sms-templates-list.component';
+import { SmsTemplateEditComponent } from './sms-templates/sms-template-edit/sms-template-edit.component';
 import { IntegrationCredentialsComponent } from './integration-credentials/integration-credentials.component';
 
 export const routes: Routes = [
@@ -80,6 +82,16 @@ export const routes: Routes = [
     path: 'email-templates/:action',
     data: { pageTitle: 'Edit Email Template', breadcrumb: 'Edit Template' },
     component: EmailTemplateEditComponent,
+  },
+  {
+    path: 'sms-templates',
+    data: { pageTitle: 'SMS Templates', breadcrumb: 'SMS Templates' },
+    component: SmsTemplatesListComponent,
+  },
+  {
+    path: 'sms-templates/:event',
+    data: { pageTitle: 'Edit SMS Template', breadcrumb: 'Edit Template' },
+    component: SmsTemplateEditComponent,
   },
   {
     path: 'integration-credentials',

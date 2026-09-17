@@ -259,6 +259,25 @@ export class ApiService {
     return this.httpService.post(`admin/email-templates/seed-run`, { type });
   }
 
+  // --- SMS Templates ---
+  smsTemplateList(params?: URLSearchParams) {
+    const query = params?.toString();
+    return this.httpService.get(
+      `admin/sms-templates${query ? `?${query}` : ''}`,
+    );
+  }
+  smsTemplateDetails(event: string) {
+    return this.httpService.get(`admin/sms-templates/${event}`);
+  }
+  updateSmsTemplate(event: string, payload: any) {
+    return this.httpService.put(`admin/sms-templates/${event}`, payload);
+  }
+  resetSmsTemplate(event: string) {
+    return this.httpService.post(`admin/sms-templates/${event}/reset`, {
+      confirm: true,
+    });
+  }
+
   // --- Data Operations (Seeder / Migration / Backfill / Repair registry) ---
   dataOperationList() {
     return this.httpService.get(`admin/data-operations`);

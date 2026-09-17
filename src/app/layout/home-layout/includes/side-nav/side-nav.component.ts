@@ -334,6 +334,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'SMS Templates',
+              url: '/settings/sms-templates',
+              exact: true,
+            },
+            {
               label: 'Integration Credentials',
               url: '/settings/integration-credentials',
               exact: true,

@@ -1,0 +1,56 @@
+<div class="flex justify-end mb-2">
+  <a
+    class="text-xs text-primary hover:underline cursor-pointer"
+    (click)="viewInDataOperations()"
+  >
+    Run seed / monitor in Data Operations →
+  </a>
+</div>
+
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col">Event</th>
+        <th scope="col">Message</th>
+        <th scope="col" class="text-center">DLT Message ID</th>
+        <th scope="col" class="text-center">Category</th>
+        <th scope="col" class="text-center">Status</th>
+        <th scope="col" class="text-center">Updated</th>
+        <th scope="col" class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of templateList">
+        <tr class="cursor-pointer" (click)="editTemplate(item?.event)">
+          <td scope="row" class="font-medium text-gray-900 whitespace-nowrap">
+            {{ item?.event }}
+          </td>
+          <td class="max-w-xs truncate">{{ item?.message }}</td>
+          <td class="text-center font-mono">{{ item?.dlt_message_id }}</td>
+          <td class="text-center">{{ item?.category }}</td>
+          <td class="text-center">
+            <span class="table-status" [class]="item?.status">{{ item?.status }}</span>
+          </td>
+          <td class="text-center">{{ item?.updated_at | date: 'medium' }}</td>
+          <td class="text-center">
+            <button
+              type="button"
+              class="text-primary text-sm font-medium hover:underline"
+              (click)="$event.stopPropagation(); editTemplate(item?.event)"
+            >
+              {{ isPrivileged ? 'Edit' : 'View' }}
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!loading && !templateList?.length">
+        <tr>
+          <td class="text-center" colspan="7">
+            <app-empty-state message="No SMS templates found"></app-empty-state>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
