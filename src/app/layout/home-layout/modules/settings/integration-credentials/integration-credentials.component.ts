@@ -10,7 +10,7 @@ import { ReasonDialogComponent } from '../../../includes/reason-dialog/reason-di
 
 interface CredentialField { configured: boolean; masked: string | null; secret: boolean; value?: string | null; }
 interface IntegrationItem {
-  provider: string; label: string; enabled: boolean; configured: boolean;
+  provider: string; label: string; enabled: boolean; configured: boolean; mode?: 'live' | 'test' | 'unconfigured';
   fields: Record<string, CredentialField>; last_tested_at: string | null;
   last_test_status: 'success' | 'failed' | null; last_test_message: string | null;
 }
