@@ -156,6 +156,9 @@ export class InventoryService {
   cancelOrder(payload: any) {
     return this.httpService.post(`admin/inventory/order/cancel`, payload);
   }
+  updateOrderStatus(payload: { order_id: string; expected_status: string; status: string; reason: string }) {
+    return this.httpService.post(`admin/inventory/order/status`, payload);
+  }
   retryRefund(payload: any) {
     return this.httpService.post(
       `admin/inventory/order/refund/retry`,

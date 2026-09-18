@@ -21,6 +21,7 @@ import * as Global from 'app/global';
 import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { OrderShippingComponent } from '../order-shipping/order-shipping.component';
+import { OrderStatusDialogComponent } from './order-status-dialog/order-status-dialog.component';
 
 // Mirrors CANCELLABLE_ORDER_STATUSES in the backend
 // (elexify-backend/src/constants/orderStatus.js) — the backend is the real
@@ -49,6 +50,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   shipped: 'Shipped',
   out_for_delivery: 'Out for Delivery',
   delivered: 'Delivered',
+  failed: 'Failed',
   cancelled: 'Cancelled',
   return_requested: 'Return Requested',
   returned: 'Returned',
@@ -64,6 +66,7 @@ const ORDER_STATUS_STYLES: Record<string, string> = {
   shipped: 'bg-indigo-100 text-indigo-800',
   out_for_delivery: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-green-100 text-green-800',
+  failed: 'bg-red-100 text-red-800',
   cancelled: 'bg-red-100 text-red-800',
   return_requested: 'bg-gray-100 text-gray-700',
   returned: 'bg-gray-100 text-gray-700',
@@ -134,6 +137,7 @@ export class OrderDetailsComponent {
   Global = Global;
   filterOption: FilterOptions;
   cancelling = false;
+  updatingStatus = false;
   retryingRefund = false;
   downloadingInvoice = false;
   syncingZohoInvoice = false;
@@ -169,8 +173,10 @@ export class OrderDetailsComponent {
     this.dialogRef.close(false);
   }
   fetchOrderList() {
+    const orderId = this.filterOption._id || this.data?._id;
+    if (!orderId) return;
     let params = new URLSearchParams();
-    params.set('_id', String(this.filterOption._id));
+    params.set('_id', String(orderId));
     this.inventoryService.orderList(params).subscribe({
       next: (res: any) => {
         this.data = res?.data;
@@ -229,6 +235,35 @@ export class OrderDetailsComponent {
 
   get canManageZohoInvoice(): boolean {
     return ['superadmin', 'manager'].includes(this.helpersService.role());
+  }
+
+  get canManageOrderStatus(): boolean {
+    return ['superadmin', 'manager'].includes(this.helpersService.role());
+  }
+
+  openStatusDialog(): void {
+    if (!this.data?._id || this.updatingStatus) return;
+    const currentStatus = this.data.order_status;
+    this.dialog.open(OrderStatusDialogComponent, {
+      width: '560px', maxWidth: '96vw', disableClose: true,
+      data: { orderNumber: this.data.id, currentStatus },
+    }).afterClosed().subscribe((result: any) => {
+      if (!result?.status || !result?.reason) return;
+      this.updatingStatus = true;
+      this.inventoryService.updateOrderStatus({
+        order_id: this.data._id,
+        expected_status: currentStatus,
+        status: result.status,
+        reason: result.reason,
+      }).subscribe({
+        next: () => {
+          this.updatingStatus = false;
+          this.toastr.success('Order status updated');
+          this.fetchOrderList();
+        },
+        error: () => { this.updatingStatus = false; this.fetchOrderList(); },
+      });
+    });
   }
 
   get canManagePackages(): boolean {

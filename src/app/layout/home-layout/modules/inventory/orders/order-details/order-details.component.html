@@ -24,6 +24,15 @@
     </div>
     <div class="flex gap-2">
       <button
+        *ngIf="canManageOrderStatus"
+        type="button"
+        (click)="openStatusDialog()"
+        [disabled]="updatingStatus"
+        class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
+      >
+        {{ updatingStatus ? 'Updating…' : 'Change Status' }}
+      </button>
+      <button
         *ngIf="isCancellable"
         type="button"
         (click)="openCancelDialog()"
@@ -60,6 +69,15 @@
       </button>
     </div>
   </div>
+
+  <section *ngIf="data?.manual_status_history?.length" class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+    <h3 class="text-sm font-semibold text-gray-900">Manual status history</h3>
+    <div *ngFor="let change of data.manual_status_history" class="mt-3 border-t border-gray-200 pt-3 text-sm text-gray-700">
+      <p><strong>{{ orderStatusLabel(change.from) }}</strong> → <strong>{{ orderStatusLabel(change.to) }}</strong>
+        <span class="text-gray-500"> · {{ change.changed_at | date : 'medium' }}</span></p>
+      <p class="mt-1 text-gray-600">{{ change.reason }}</p>
+    </div>
+  </section>
 
   <!-- Payment / Cancellation / Refund -->
   <div class="mb-6 grid sm:grid-cols-3 gap-6">
