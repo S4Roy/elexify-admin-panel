@@ -85,7 +85,7 @@
     </mat-form-field>
   </div>
 
-  <div mat-dialog-actions class="flex justify-end gap-2">
+  <div mat-dialog-actions align="end" class="flex gap-2">
     <button type="button" mat-stroked-button (click)="closeDialog()">Cancel</button>
     <button type="submit" mat-flat-button color="primary" [disabled]="formGroup.disabled">
       {{ isEdit ? "Save Changes" : "Add Item" }}

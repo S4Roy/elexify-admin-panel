@@ -212,15 +212,23 @@
             {{ packageStatusLabel(pkg.status) }}
           </span>
         </div>
-        <ul class="mb-2 space-y-1" *ngIf="pkg.items?.length; else itemCountFallback">
-          <li class="text-sm text-gray-600" *ngFor="let line of pkg.items">
-            {{ orderItemFor(line.order_item_id)?.display_name || orderItemFor(line.order_item_id)?.name || 'Item' }}
-            <span class="text-xs text-gray-400" *ngIf="orderItemFor(line.order_item_id)?.sku">· SKU {{ orderItemFor(line.order_item_id)?.sku }}</span>
-            · ×{{ line.quantity }}
-          </li>
-        </ul>
+        <ng-container *ngIf="pkg.items?.length; else itemCountFallback">
+          <p class="text-sm text-gray-600">{{ pkg.items.length }} product line(s) · {{ packageQuantity(pkg) }} unit(s)</p>
+          <div class="mb-2 mt-3 divide-y divide-gray-100 border-y border-gray-100">
+          <div *ngFor="let line of pkg.items" class="flex items-center gap-2 py-2 text-sm">
+            <img *ngIf="orderItemFor(line.order_item_id)?.images?.[0]?.url"
+              [src]="orderItemFor(line.order_item_id).images[0].url" alt=""
+              class="h-9 w-9 flex-none rounded-md object-cover" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-medium text-gray-800">{{ orderItemFor(line.order_item_id)?.display_name || orderItemFor(line.order_item_id)?.name || 'Item unavailable' }}</p>
+              <p class="text-xs text-gray-500" *ngIf="orderItemFor(line.order_item_id)?.sku">SKU {{ orderItemFor(line.order_item_id)?.sku }}</p>
+            </div>
+            <span class="flex-none rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">×{{ line.quantity }}</span>
+          </div>
+          </div>
+        </ng-container>
         <ng-template #itemCountFallback>
-          <p class="text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
+          <p class="mb-2 text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
         </ng-template>
         <p class="text-sm text-gray-600" *ngIf="pkg.courier_name">Courier: {{ pkg.courier_name }}</p>
         <p class="text-sm text-gray-600" *ngIf="pkg.awb">AWB: {{ pkg.awb }}</p>

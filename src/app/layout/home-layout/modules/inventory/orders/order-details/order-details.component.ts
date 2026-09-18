@@ -276,6 +276,12 @@ export class OrderDetailsComponent {
     return this.data?.packages ?? [];
   }
 
+  packageQuantity(pkg: any): number {
+    return (pkg.items ?? []).reduce(
+      (total: number, line: any) => total + Number(line.quantity || 0), 0,
+    );
+  }
+
   orderItemFor(id: string): any {
     return (this.data?.order_items ?? []).find((item: any) => String(item._id) === String(id));
   }
