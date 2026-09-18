@@ -20,6 +20,7 @@ import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-dr
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
+  advance_paid: 'bg-blue-100 text-blue-800',
   pending: 'bg-yellow-100 text-yellow-800',
   failed: 'bg-red-100 text-red-800',
   refund_pending: 'bg-yellow-100 text-yellow-800',
@@ -30,6 +31,7 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: 'Paid',
+  advance_paid: 'Advance Paid',
   pending: 'Pending',
   failed: 'Failed',
   refund_pending: 'Refund Pending',
@@ -228,6 +230,14 @@ export class OrdersComponent {
   }
   paymentMethodLabel(method: string): string {
     return PAYMENT_METHOD_LABELS[method] ?? method;
+  }
+  // Percentage is derived from the order's own stored amounts, not the live
+  // admin-configured setting, so it always reflects what was actually
+  // charged even if the percentage changes later.
+  partialCodLabel(item: any): string | null {
+    if (!item?.is_partial_cod || !item?.grand_total) return null;
+    const advancePercent = Math.round((item.advance_amount / item.grand_total) * 100);
+    return `Partial COD – ${advancePercent}% Paid, ${100 - advancePercent}% Due on Delivery`;
   }
   fetchOrderList() {
     let params = new URLSearchParams({

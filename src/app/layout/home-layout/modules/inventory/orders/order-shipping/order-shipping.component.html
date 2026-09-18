@@ -118,6 +118,16 @@
               data?.grand_total | currency : data?.currency ?? "INR"
             }}</span>
           </div>
+          <div class="flex justify-between text-sm" *ngIf="data?.is_partial_cod">
+            <span class="text-gray-600">Advance Paid</span>
+            <span class="text-gray-800 font-medium">
+              {{ data?.advance_amount | currency : data?.currency ?? "INR" }}
+            </span>
+          </div>
+          <div class="border-t pt-2 flex justify-between font-bold text-lg text-amber-700" *ngIf="data?.is_partial_cod">
+            <span>COD to Collect</span>
+            <span>{{ data?.cod_due_amount | currency : data?.currency ?? "INR" }}</span>
+          </div>
         </div>
       </div>
     </div>

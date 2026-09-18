@@ -97,6 +97,9 @@
             <div class="text-xs text-gray-500 mt-1">
               {{ paymentMethodLabel(item?.payment_method) }}
             </div>
+            <div *ngIf="partialCodLabel(item) as codLabel" class="text-xs text-blue-700 mt-0.5">
+              {{ codLabel }}
+            </div>
           </td>
           <td>{{ item?.total_items }}</td>
           <td>

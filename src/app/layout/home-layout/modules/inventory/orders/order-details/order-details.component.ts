@@ -66,6 +66,7 @@ const ORDER_STATUS_STYLES: Record<string, string> = {
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: 'Paid',
+  advance_paid: 'Advance Paid',
   pending: 'Pending',
   failed: 'Failed',
   refund_pending: 'Refund Pending',
@@ -76,6 +77,7 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
+  advance_paid: 'bg-blue-100 text-blue-800',
   pending: 'bg-yellow-100 text-yellow-800',
   failed: 'bg-red-100 text-red-800',
   refund_pending: 'bg-yellow-100 text-yellow-800',
@@ -213,6 +215,15 @@ export class OrderDetailsComponent {
 
   paymentStatusClass(status: string): string {
     return PAYMENT_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  // Percentage is derived from the order's own stored amounts, not the live
+  // admin-configured setting, so it always reflects what was actually
+  // charged even if the percentage changes later.
+  get partialCodLabel(): string | null {
+    if (!this.data?.is_partial_cod || !this.data?.grand_total) return null;
+    const advancePercent = Math.round((this.data.advance_amount / this.data.grand_total) * 100);
+    return `Partial COD – ${advancePercent}% Paid, ${100 - advancePercent}% Due on Delivery`;
   }
 
   // Mirrors the MRP/discount breakdown shown on the customer order-detail

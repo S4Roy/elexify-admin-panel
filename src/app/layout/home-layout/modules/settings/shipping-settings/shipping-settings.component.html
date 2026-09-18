@@ -167,6 +167,12 @@
         <mat-label>COD Fee</mat-label>
         <input matInput type="number" min="0" formControlName="cod_charge" />
       </mat-form-field>
+      <mat-checkbox formControlName="cod_advance_enabled" class="block mt-3">Require an online advance for COD orders (Partial COD)</mat-checkbox>
+      <mat-form-field class="block mt-3" *ngIf="formGroup.value.cod_advance_enabled">
+        <mat-label>Advance Percentage</mat-label>
+        <input matInput type="number" min="0" max="100" formControlName="cod_advance_percent" />
+        <mat-hint>Collected online at checkout; the remaining {{ 100 - (formGroup.value.cod_advance_percent || 0) }}% is due on delivery.</mat-hint>
+      </mat-form-field>
       <div class="grid md:grid-cols-2 gap-4 mt-4">
         <mat-form-field>
           <mat-label>Allowed Pincodes</mat-label>

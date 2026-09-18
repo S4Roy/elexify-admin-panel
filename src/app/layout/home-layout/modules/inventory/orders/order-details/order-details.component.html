@@ -60,6 +60,9 @@
       <p class="text-gray-700 text-sm">
         Method: <span class="capitalize">{{ data?.payment_method }}</span>
       </p>
+      <p class="text-blue-700 text-sm font-medium" *ngIf="partialCodLabel">
+        {{ partialCodLabel }}
+      </p>
       <p class="text-gray-700 text-sm" *ngIf="data?.payment_meta?.razorpay_payment_id">
         Payment ID: {{ data?.payment_meta?.razorpay_payment_id }}
       </p>
@@ -329,6 +332,18 @@
         <span>{{
           data?.grand_total | currency : data?.currency ?? "INR"
         }}</span>
+      </div>
+      <div class="flex justify-between text-sm" *ngIf="data?.is_partial_cod">
+        <span class="text-gray-600">Advance Paid</span>
+        <span class="text-gray-800 font-medium">
+          {{ data?.advance_amount | currency : data?.currency ?? "INR" }}
+        </span>
+      </div>
+      <div class="flex justify-between text-sm" *ngIf="data?.is_partial_cod">
+        <span class="text-gray-600">Balance Due (COD)</span>
+        <span class="text-gray-800 font-medium">
+          {{ data?.cod_due_amount | currency : data?.currency ?? "INR" }}
+        </span>
       </div>
       <div
         *ngIf="totalSavings > 0"
