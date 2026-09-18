@@ -297,6 +297,8 @@ export function resetTableFilterOptions() {
     is_marketing: null,
     event: null,
     channel: null,
+    provider: null,
+    outcome: null,
   };
 }
 

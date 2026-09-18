@@ -225,6 +225,14 @@ export class ApiService {
     return this.httpService.get(`admin/notifications/summary?range=${range}`);
   }
 
+  // --- Operations: webhook audit log ---
+  webhookLogs(params: URLSearchParams) {
+    return this.httpService.get(`admin/operations/webhook-logs?${params.toString()}`);
+  }
+  webhookLogDetails(id: string) {
+    return this.httpService.get(`admin/operations/webhook-logs/${id}`);
+  }
+
   // --- Email Templates ---
   emailTemplateList(params?: URLSearchParams) {
     const query = params?.toString();

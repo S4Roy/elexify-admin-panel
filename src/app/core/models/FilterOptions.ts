@@ -28,4 +28,6 @@ export default class FilterOptions {
   is_marketing: string | null = null;
   event: string | null = null;
   channel: string | null = null;
+  provider: string | null = null;
+  outcome: string | null = null;
 }

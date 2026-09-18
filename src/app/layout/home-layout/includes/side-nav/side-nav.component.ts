@@ -246,6 +246,12 @@ export class SideNavComponent {
             },
           ],
         },
+        {
+          label: 'Webhook Logs',
+          icon: 'webhook',
+          url: '/webhook-logs',
+          exact: true,
+        },
       ],
     },
     {

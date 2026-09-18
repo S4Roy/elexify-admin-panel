@@ -1,0 +1,52 @@
+<div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
+
+<div *ngIf="!loading" class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col">Provider</th>
+        <th scope="col">Order ID</th>
+        <th scope="col">AWB</th>
+        <th scope="col">Status</th>
+        <th scope="col" class="text-center">Outcome</th>
+        <th scope="col" class="text-center">Received</th>
+        <th scope="col" class="text-center">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of itemList">
+        <tr>
+          <td class="capitalize">{{ item?.provider }}</td>
+          <td class="font-medium text-gray-900 whitespace-nowrap">{{ item?.order_id || '—' }}</td>
+          <td>{{ item?.awb || '—' }}</td>
+          <td>
+            {{ item?.incoming_status || '—' }}
+            <span class="text-gray-400" *ngIf="item?.mapped_status"> → {{ item?.mapped_status }}</span>
+          </td>
+          <td class="text-center">
+            <span class="table-status" [ngClass]="outcomeClass(item?.outcome)">{{ item?.outcome }}</span>
+          </td>
+          <td class="text-center">{{ item?.received_at | date : 'short' }}</td>
+          <td class="text-center">
+            <button
+              type="button"
+              (click)="viewDetails(item)"
+              class="text-xs font-medium text-primary hover:underline"
+            >
+              View
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!itemList?.length">
+        <tr>
+          <td class="text-center" colspan="7">
+            <app-empty-state message="No webhook calls found"></app-empty-state>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
