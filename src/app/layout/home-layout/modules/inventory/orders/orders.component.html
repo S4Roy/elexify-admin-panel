@@ -108,8 +108,8 @@
           <td class="text-center">
             <app-menu
               [details]="'/inventory/orders/details/' + item?._id"
-              [modalItem]="item?.shiprocket_order_id ? null : item"
-              [modalButtonText]="'Send to ShipRocket'"
+              [modalItem]="item?.fully_packed ? null : item"
+              [modalButtonText]="item?.package_count > 0 ? 'Ship Remaining Items' : 'Send to ShipRocket'"
               [modalButtonIcon]="'local_shipping'"
               (initModal)="shipItem($event)"
             ></app-menu>

@@ -50,6 +50,14 @@
       >
         {{ downloadingInvoice ? 'Preparing invoice…' : 'Download Invoice' }}
       </button>
+      <button
+        *ngIf="canManagePackages"
+        type="button"
+        (click)="openManagePackages()"
+        class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5"
+      >
+        Manage Packages
+      </button>
     </div>
   </div>
 
@@ -164,6 +172,47 @@
     <p *ngIf="!zohoInvoice?.eligible" class="mt-3 text-sm text-amber-700">
       The local invoice becomes available after the order is confirmed.
     </p>
+  </section>
+
+  <!-- Multi-package fulfillment: one card per shipment, each with its own
+       courier/AWB/tracking/status. Absent entirely for orders that predate
+       this feature or haven't been shipped yet — legacy single-shipment
+       orders keep no equivalent block here (there never was one). -->
+  <section class="mb-6" *ngIf="packages.length">
+    <h3 class="text-lg font-semibold mb-2">Packages &amp; Tracking</h3>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        *ngFor="let pkg of packages"
+        class="rounded-xl border border-gray-200 p-4"
+      >
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="font-semibold text-gray-800">Package #{{ pkg.package_number }}</span>
+          <span
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="packageStatusClass(pkg.status)"
+          >
+            {{ packageStatusLabel(pkg.status) }}
+          </span>
+        </div>
+        <p class="text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
+        <p class="text-sm text-gray-600" *ngIf="pkg.courier_name">Courier: {{ pkg.courier_name }}</p>
+        <p class="text-sm text-gray-600" *ngIf="pkg.awb">AWB: {{ pkg.awb }}</p>
+        <p class="text-sm text-gray-600" *ngIf="pkg.etd">Est. Delivery: {{ pkg.etd }}</p>
+        <a
+          *ngIf="pkg.tracking_url"
+          [href]="pkg.tracking_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sm text-primary hover:underline"
+        >Track shipment</a>
+        <p class="text-xs text-gray-400 mt-1" *ngIf="pkg.delivered_at">
+          Delivered {{ pkg.delivered_at | date : 'medium' }}
+        </p>
+        <p class="text-xs text-gray-400 mt-1" *ngIf="!pkg.delivered_at && pkg.shipped_at">
+          Shipped {{ pkg.shipped_at | date : 'medium' }}
+        </p>
+      </div>
+    </div>
   </section>
 
   <!-- Customer Info -->

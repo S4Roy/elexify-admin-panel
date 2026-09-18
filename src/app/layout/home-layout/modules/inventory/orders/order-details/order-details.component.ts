@@ -20,6 +20,7 @@ import { InventoryService } from 'app/core/services/inventory.service';
 import * as Global from 'app/global';
 import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
 import { HelpersService } from 'app/core/services/helpers.service';
+import { OrderShippingComponent } from '../order-shipping/order-shipping.component';
 
 // Mirrors CANCELLABLE_ORDER_STATUSES in the backend
 // (elexify-backend/src/constants/orderStatus.js) — the backend is the real
@@ -36,6 +37,8 @@ const INVOICE_ELIGIBLE_STATUSES = [
   'shipped',
   'out_for_delivery',
   'delivered',
+  'partially_shipped',
+  'partially_delivered',
 ];
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
@@ -49,6 +52,8 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelled',
   return_requested: 'Return Requested',
   returned: 'Returned',
+  partially_shipped: 'Partially Shipped',
+  partially_delivered: 'Partially Delivered',
 };
 
 const ORDER_STATUS_STYLES: Record<string, string> = {
@@ -62,6 +67,31 @@ const ORDER_STATUS_STYLES: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800',
   return_requested: 'bg-gray-100 text-gray-700',
   returned: 'bg-gray-100 text-gray-700',
+  partially_shipped: 'bg-sky-100 text-sky-800',
+  partially_delivered: 'bg-cyan-100 text-cyan-800',
+};
+
+// package.status -> display label/style for the Packages & Tracking card.
+const PACKAGE_STATUS_LABELS: Record<string, string> = {
+  packed: 'Packed',
+  shipped: 'Shipped',
+  out_for_delivery: 'Out for Delivery',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+  return_requested: 'Return Requested',
+  returned: 'Returned',
+  failed: 'Failed — needs retry',
+};
+
+const PACKAGE_STATUS_STYLES: Record<string, string> = {
+  packed: 'bg-blue-100 text-blue-800',
+  shipped: 'bg-indigo-100 text-indigo-800',
+  out_for_delivery: 'bg-indigo-100 text-indigo-800',
+  delivered: 'bg-green-100 text-green-800',
+  cancelled: 'bg-gray-100 text-gray-700',
+  return_requested: 'bg-gray-100 text-gray-700',
+  returned: 'bg-gray-100 text-gray-700',
+  failed: 'bg-red-100 text-red-800',
 };
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
@@ -199,6 +229,38 @@ export class OrderDetailsComponent {
 
   get canManageZohoInvoice(): boolean {
     return ['superadmin', 'manager'].includes(this.helpersService.role());
+  }
+
+  get canManagePackages(): boolean {
+    return !['cancelled', 'returned', 'return_requested', 'delivered', 'failed'].includes(
+      this.data?.order_status,
+    );
+  }
+
+  get packages(): any[] {
+    return this.data?.packages ?? [];
+  }
+
+  packageStatusLabel(status: string): string {
+    return PACKAGE_STATUS_LABELS[status] ?? status;
+  }
+
+  packageStatusClass(status: string): string {
+    return PACKAGE_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  openManagePackages(): void {
+    this.dialog
+      .open(OrderShippingComponent, {
+        width: '1440px',
+        maxWidth: '98vw',
+        maxHeight: '94vh',
+        data: { item: this.data },
+      })
+      .afterClosed()
+      .subscribe((res: any) => {
+        if (res) this.fetchOrderList();
+      });
   }
 
   orderStatusLabel(status: string): string {

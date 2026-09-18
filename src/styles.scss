@@ -874,6 +874,18 @@ button.cursor-pointer {
   background-color: #ede7f6;
   color: #4527a0;
 }
+
+/* Multi-package fulfillment — orders.component.html binds the raw
+   order_status value (with underscores) directly as a class name. */
+.partially_shipped {
+  background-color: #e0f2fe;
+  color: #075985;
+}
+
+.partially_delivered {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
 /* Enquiry statuses */
 .open {
   background-color: #e3f2fd; /* light blue */

@@ -322,7 +322,9 @@ export class OrdersComponent {
   shipItem(item: any) {
     this.dialog
       .open(OrderShippingComponent, {
-        width: '900px',
+        width: '1440px',
+        maxWidth: '98vw',
+        maxHeight: '94vh',
         data: { item: item },
       })
       .afterClosed()
