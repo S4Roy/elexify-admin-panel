@@ -54,8 +54,8 @@ export class StaticPageComponent {
     });
     this.route.params.subscribe((params: any) => {
       this.formGroup.patchValue({
-        slug: params?.slug,
-        title: params?.slug,
+        slug: params?.slug || this.route.snapshot.routeConfig?.path,
+        title: params?.slug || this.route.snapshot.routeConfig?.path,
         content: '',
       });
     });

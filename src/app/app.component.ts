@@ -11,6 +11,7 @@ import { Title } from '@angular/platform-browser';
 import * as Global from 'app/global';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { DeviceDetectorService } from './core/services/device-detector.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +32,8 @@ export class AppComponent {
     private activatedRoute: ActivatedRoute,
     private helperService: HelpersService,
     private titleService: Title,
-    public deviceService: DeviceDetectorService
+    public deviceService: DeviceDetectorService,
+    public themeService: ThemeService
   ) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))

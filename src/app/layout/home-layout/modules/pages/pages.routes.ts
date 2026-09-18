@@ -6,6 +6,8 @@ import { pageResolver } from '../../../../core/resolver/page.resolver';
 import { HomeComponent } from './home/home.component';
 import { WhyChooseElexifyComponent } from './why-choose-elexify/why-choose-elexify.component';
 import { HomepageComponent } from './homepage/homepage.component';
+import { StaticPageComponent } from '../settings/static-page/static-page.component';
+import { pageResolver as staticPageResolver } from '../settings/static-page/page.resolver';
 
 export const routes: Routes = [
   {
@@ -51,6 +53,28 @@ export const routes: Routes = [
           pageTitle: 'Why Elexify Industries',
           breadcrumb: 'Why Elexify Industries?',
         },
+      },
+      { path: 'terms-of-service', redirectTo: 'terms-conditions', pathMatch: 'full' },
+      { path: 'refund-policy', redirectTo: 'refund-cancellations-policy', pathMatch: 'full' },
+      ...[
+        ['about-us', 'About Us'],
+        ['contact-us', 'Contact Us'],
+        ['faq', 'FAQ Page'],
+        ['terms-conditions', 'Terms & Conditions'],
+        ['privacy-policy', 'Privacy Policy'],
+        ['refund-cancellations-policy', 'Refund & Cancellations'],
+        ['shipping-policy', 'Shipping Policy'],
+      ].map(([slug, label]) => ({
+        path: slug,
+        component: StaticPageComponent,
+        resolve: { page: staticPageResolver },
+        data: { pageTitle: label, breadcrumb: label },
+      })),
+      {
+        path: ':slug',
+        component: StaticPageComponent,
+        resolve: { page: staticPageResolver },
+        data: { pageTitle: 'CMS Page', breadcrumb: 'CMS Page' },
       },
       // {
       //   path: 'our-services',

@@ -2,8 +2,6 @@ import { Routes, ActivatedRouteSnapshot } from '@angular/router';
 import { MediaComponent } from './media/media.component';
 import { CurrencyComponent } from './currency/currency.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { StaticPageComponent } from './static-page/static-page.component';
-import { pageResolver } from './static-page/page.resolver';
 import { SiteSettingsComponent } from './site-settings/site-settings.component';
 import { CountriesComponent } from './countries/countries.component';
 import { StatesComponent } from './states/states.component';
@@ -104,15 +102,18 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./data-operations/data-operations.routes').then((m) => m.routes),
   },
+  ...[
+    ['terms-of-service', 'terms-conditions'],
+    ['refund-policy', 'refund-cancellations-policy'],
+    ['privacy-policy', 'privacy-policy'],
+    ['shipping-policy', 'shipping-policy'],
+  ].map(([legacySlug, cmsSlug]) => ({
+    path: legacySlug,
+    redirectTo: `/pages/${cmsSlug}`,
+    pathMatch: 'full' as const,
+  })),
   {
     path: ':slug',
-    component: StaticPageComponent,
-    resolve: {
-      page: pageResolver,
-    },
-    data: {
-      pageTitle: 'Page',
-      breadcrumb: (data: any) => data.page.title, // Gets name from resolver
-    },
+    redirectTo: '/pages/:slug',
   },
 ];

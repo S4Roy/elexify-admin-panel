@@ -1,18 +1,11 @@
 <router-outlet></router-outlet>
 <ngx-spinner
-  bdColor="rgba(51,51,51,0.8)"
-  size="medium"
-  color="#fff"
+  class="brand-spinner"
+  [bdColor]="themeService.isDark() ? 'rgba(7, 12, 22, 0.72)' : 'rgba(255, 255, 255, 0.68)'"
   type="ball-scale-multiple"
 >
-  <p style="font-size: 20px; color: white">
-    <img width="200" src="assets/logo.png" alt="" />
-  </p>
+  <div class="brand-loader" role="status" aria-live="polite" aria-label="Loading Elexify">
+    <img class="brand-loader__animation" src="assets/elexify-loader.gif" alt="" width="112" height="112" />
+    <span class="brand-loader__label">Loading</span>
+  </div>
 </ngx-spinner>
-<!-- <ngx-spinner
-  bdColor="rgba(51,51,51,0.8)"
-  size="medium"
-  color="#fff"
-  template="<img width='250' src='assets/loader.gif' />"
->
-</ngx-spinner> -->

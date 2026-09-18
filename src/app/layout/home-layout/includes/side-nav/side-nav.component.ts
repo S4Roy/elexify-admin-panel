@@ -175,6 +175,14 @@ export class SideNavComponent {
               url: '/pages/header-navigation',
               exact: false,
             },
+            { label: 'Why Elexify', url: '/pages/why-elexify', exact: true },
+            { label: 'About Us', url: '/pages/about-us', exact: true },
+            { label: 'Contact Us Page', url: '/pages/contact-us', exact: true },
+            { label: 'FAQ Page', url: '/pages/faq', exact: true },
+            { label: 'Terms & Conditions', url: '/pages/terms-conditions', exact: true },
+            { label: 'Privacy Policy', url: '/pages/privacy-policy', exact: true },
+            { label: 'Refund & Cancellations', url: '/pages/refund-cancellations-policy', exact: true },
+            { label: 'Shipping Policy', url: '/pages/shipping-policy', exact: true },
           ],
         },
 
@@ -302,26 +310,6 @@ export class SideNavComponent {
             {
               label: 'Currency',
               url: '/settings/currency',
-              exact: true,
-            },
-            {
-              label: 'Terms of Service',
-              url: '/settings/terms-of-service',
-              exact: true,
-            },
-            {
-              label: 'Privacy Policy',
-              url: '/settings/privacy-policy',
-              exact: true,
-            },
-            {
-              label: 'Refund Policy',
-              url: '/settings/refund-policy',
-              exact: true,
-            },
-            {
-              label: 'Shipping Policy',
-              url: '/settings/shipping-policy',
               exact: true,
             },
             {

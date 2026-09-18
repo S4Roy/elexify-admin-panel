@@ -7,7 +7,7 @@ export const pageResolver: ResolveFn<string> = (
   route: ActivatedRouteSnapshot
 ) => {
   const apiService = inject(ApiService);
-  const slug = route.paramMap.get("slug");
+  const slug = route.paramMap.get("slug") || route.routeConfig?.path;
 
   if (!slug) return of("Page");
   return apiService.getPage(slug).pipe(

@@ -1,0 +1,43 @@
+:host ::ng-deep .brand-spinner .ngx-spinner-overlay > div:not(.loading-text) {
+  display: none;
+}
+
+:host ::ng-deep .brand-spinner .loading-text {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.brand-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+}
+
+.brand-loader__animation {
+  display: block;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+}
+
+.brand-loader__label {
+  margin-top: -7px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-loader__animation { display: none; }
+  .brand-loader::before {
+    content: '';
+    display: block;
+    width: 112px;
+    height: 112px;
+    background: url('/assets/elexify-loader-static.png') center / contain no-repeat;
+  }
+}
