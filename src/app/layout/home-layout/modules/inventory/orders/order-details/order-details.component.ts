@@ -276,6 +276,10 @@ export class OrderDetailsComponent {
     return this.data?.packages ?? [];
   }
 
+  orderItemFor(id: string): any {
+    return (this.data?.order_items ?? []).find((item: any) => String(item._id) === String(id));
+  }
+
   packageStatusLabel(status: string): string {
     return PACKAGE_STATUS_LABELS[status] ?? status;
   }

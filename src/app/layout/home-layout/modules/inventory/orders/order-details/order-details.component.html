@@ -212,7 +212,16 @@
             {{ packageStatusLabel(pkg.status) }}
           </span>
         </div>
-        <p class="text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
+        <ul class="mb-2 space-y-1" *ngIf="pkg.items?.length; else itemCountFallback">
+          <li class="text-sm text-gray-600" *ngFor="let line of pkg.items">
+            {{ orderItemFor(line.order_item_id)?.display_name || orderItemFor(line.order_item_id)?.name || 'Item' }}
+            <span class="text-xs text-gray-400" *ngIf="orderItemFor(line.order_item_id)?.sku">· SKU {{ orderItemFor(line.order_item_id)?.sku }}</span>
+            · ×{{ line.quantity }}
+          </li>
+        </ul>
+        <ng-template #itemCountFallback>
+          <p class="text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
+        </ng-template>
         <p class="text-sm text-gray-600" *ngIf="pkg.courier_name">Courier: {{ pkg.courier_name }}</p>
         <p class="text-sm text-gray-600" *ngIf="pkg.awb">AWB: {{ pkg.awb }}</p>
         <p class="text-sm text-gray-600" *ngIf="pkg.etd">Est. Delivery: {{ pkg.etd }}</p>
