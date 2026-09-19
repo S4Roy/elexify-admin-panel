@@ -1,5 +1,11 @@
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { Subject, Subscription, takeUntil } from 'rxjs';
+import { HelpersService } from 'app/core/services/helpers.service';
+import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
+import { PaginationComponent } from '../../../includes/pagination/pagination.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { InventoryService } from 'app/core/services/inventory.service';
@@ -7,14 +13,40 @@ import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-returns',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, PaginationComponent],
   templateUrl: './returns.component.html',
   styleUrl: './returns.component.scss',
 })
-export class ReturnsComponent implements OnInit {
+export class ReturnsComponent implements OnInit, OnDestroy {
   requests: any[] = [];
   loading = true;
   status = '';
+  error = '';
+  pagination: any = {};
+  expanded: Record<string, boolean> = {};
+  readonly statuses = ['requested', 'approved', 'received', 'refund_pending', 'refund_failed', 'manual_action_required', 'replacement_pending', 'replacement_shipped', 'qc_failed', 'completed', 'rejected', 'cancelled'];
+  private destroy$ = new Subject<void>();
+  private listRequest?: Subscription;
+  label(value: string): string { return (value || '').replace(/_/g, ' '); }
+  tone(status: string): string {
+    if (['completed', 'replacement_shipped'].includes(status)) return 'success';
+    if (['refund_failed', 'qc_failed', 'rejected'].includes(status)) return 'danger';
+    if (['requested', 'manual_action_required'].includes(status)) return 'warning';
+    return 'neutral';
+  }
+  get awaitingReview(): number { return this.requests.filter(r => r.status === 'requested').length; }
+  get needsAttention(): number { return this.requests.filter(r => ['refund_failed', 'qc_failed', 'manual_action_required'].includes(r.status)).length; }
+  get inProgress(): number { return this.requests.filter(r => ['approved', 'received', 'refund_pending', 'replacement_pending'].includes(r.status)).length; }
+  openFilters(): void {
+    this.dialog.open(FilterDrawerComponent, { data: { fields: [{ key: 'status', label: 'Return status', type: 'select', options: this.statuses.map(value => ({ value, label: this.label(value) })) }], values: { status: this.status } } })
+      .afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+        if (!result) return;
+        this.status = result.status || ''; this.page = 1; this.load();
+      });
+  }
+  clearFilter(): void { this.status = ''; this.page = 1; this.load(); }
+  changePage(page: number): void { this.page = page; this.load(); }
+
   page = 1;
   totalPages = 1;
   booking: Record<string, any> = {};
@@ -24,16 +56,27 @@ export class ReturnsComponent implements OnInit {
   settlementReferences: Record<string, string> = {};
   pickup: Record<string, { status: string; provider: string; tracking_number: string; failure_reason: string; expected_at: string }> = {};
 
-  constructor(private inventory: InventoryService, private toastr: ToastrService) {}
-  ngOnInit() { this.load(); }
+  constructor(private inventory: InventoryService, private toastr: ToastrService, private helper: HelpersService, private dialog: MatDialog) {}
+  ngOnInit() {
+    this.helper.filterButtonClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openFilters());
+    this.load();
+  }
+  ngOnDestroy(): void {
+    this.listRequest?.unsubscribe();
+    this.helper.clearFilterButton();
+    this.destroy$.next(); this.destroy$.complete();
+  }
 
   load() {
+    this.listRequest?.unsubscribe();
+    this.helper.setFilterButton(this.status ? 1 : 0);
+    this.error = '';
     this.loading = true;
     const params = new URLSearchParams({ page: String(this.page), limit: '20' });
     if (this.status) params.set('status', this.status);
-    this.inventory.returnRequests(params).subscribe({
-      next: (response: any) => { this.requests = response?.data?.docs ?? []; this.totalPages = response?.data?.totalPages || 1; this.loading = false; },
-      error: () => { this.loading = false; },
+    this.listRequest = this.inventory.returnRequests(params).subscribe({
+      next: (response: any) => { this.requests = response?.data?.docs ?? []; this.pagination = response?.data || {}; this.totalPages = response?.data?.totalPages || 1; this.loading = false; },
+      error: () => { this.loading = false; this.error = 'Could not load return requests. Please try again.'; },
     });
   }
 
