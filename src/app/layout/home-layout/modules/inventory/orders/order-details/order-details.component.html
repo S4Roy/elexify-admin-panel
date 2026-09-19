@@ -52,6 +52,15 @@
         {{ forceCancelling ? 'Force cancelling…' : 'Force Cancel' }}
       </button>
       <button
+        *ngIf="canReopen"
+        type="button"
+        (click)="openReopenDialog()"
+        [disabled]="reopening"
+        class="inline-flex items-center rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-600 shadow-sm hover:bg-blue-50 disabled:opacity-50"
+      >
+        {{ reopening ? 'Reopening…' : 'Reopen Order' }}
+      </button>
+      <button
         *ngIf="canRetryRefund"
         type="button"
         (click)="retryRefund()"

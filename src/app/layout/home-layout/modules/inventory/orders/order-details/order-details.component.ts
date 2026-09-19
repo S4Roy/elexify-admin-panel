@@ -20,6 +20,7 @@ import { InventoryService } from 'app/core/services/inventory.service';
 import * as Global from 'app/global';
 import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
 import { ForceCancelOrderDialogComponent } from './force-cancel-order-dialog/force-cancel-order-dialog.component';
+import { ReopenOrderDialogComponent } from './reopen-order-dialog/reopen-order-dialog.component';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { OrderShippingComponent } from '../order-shipping/order-shipping.component';
 import { OrderStatusDialogComponent } from './order-status-dialog/order-status-dialog.component';
@@ -151,6 +152,7 @@ export class OrderDetailsComponent {
   filterOption: FilterOptions;
   cancelling = false;
   forceCancelling = false;
+  reopening = false;
   updatingStatus = false;
   retryingRefund = false;
   downloadingInvoice = false;
@@ -233,6 +235,15 @@ export class OrderDetailsComponent {
     return (
       !!this.data?.order_status &&
       CANCELLABLE_STATUSES.includes(this.data.order_status)
+    );
+  }
+
+  // Backend also refuses this if a refund already went through — this only
+  // controls whether the button is shown.
+  get canReopen(): boolean {
+    return (
+      ['superadmin', 'manager'].includes(this.helpersService.role()) &&
+      this.data?.order_status === 'cancelled'
     );
   }
 
@@ -472,6 +483,34 @@ export class OrderDetailsComponent {
           },
           error: () => {
             this.forceCancelling = false;
+          },
+        });
+    });
+  }
+
+  openReopenDialog() {
+    const ref = this.dialog.open(ReopenOrderDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { orderNumber: this.data?.id },
+    });
+
+    ref.afterClosed().subscribe((result: any) => {
+      if (!result?.confirm) return;
+      this.reopening = true;
+      this.inventoryService
+        .reopenOrder({
+          order_id: this.data?._id,
+          reason: result.reason,
+        })
+        .subscribe({
+          next: () => {
+            this.reopening = false;
+            this.toastr.success('Order reopened successfully');
+            this.fetchOrderList();
+          },
+          error: () => {
+            this.reopening = false;
           },
         });
     });
