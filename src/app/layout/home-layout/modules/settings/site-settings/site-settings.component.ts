@@ -51,6 +51,10 @@ const SECTION_META: Record<string, { label: string; icon: string }> = {
   // src/services/invoiceService/getCompanySettings.js) — leaving GSTIN
   // and GST Rate blank keeps GST columns hidden on invoices.
   company_info: { label: 'Company & Invoice Info', icon: 'business' },
+  // Google Tag Manager container ID — lets an admin wire up GA4 e-commerce
+  // tracking (the storefront pushes dataLayer events; GTM/GA4 config lives
+  // entirely in the GTM UI) without a code change or redeploy.
+  analytics: { label: 'Analytics & Tracking', icon: 'analytics' },
 };
 const SECTION_ORDER = Object.keys(SECTION_META);
 
@@ -81,6 +85,9 @@ const OPTIONAL_SETTING_SLUGS = new Set([
   'company_email',
   'company_phone',
   'company_gst_rate',
+  // Blank disables GTM/GA4 loading on the storefront entirely — a valid,
+  // working state until an admin sets up a GTM container.
+  'gtm_container_id',
 ]);
 
 @Component({
