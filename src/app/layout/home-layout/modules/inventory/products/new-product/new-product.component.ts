@@ -133,7 +133,7 @@ export class NewProductComponent {
   }
   initFormGroup() {
     this.formGroup = this.fb.group({
-      name: [this.data?.name ?? '', [Validators.required]],
+      name: [this.data?.name ?? '', [Validators.required, Validators.maxLength(200)]],
       product_type: [this.data?.type ?? 'simple', [Validators.required]],
       description: [this.data?.description ?? '', [Validators.required]],
       short_description: [this.data?.short_description ?? ''],
@@ -144,8 +144,11 @@ export class NewProductComponent {
       brand: [this.data?.brand?._id ?? null],
       status: [this.data?.status ?? 'active', [Validators.required]],
       images: this.fb.array([]),
-      meta_title: [this.data?.seo?.meta_title ?? ''],
-      meta_description: [this.data?.seo?.meta_description ?? ''],
+      // Industry-standard SEO length caps — see backend
+      // validations/admin/inventory/product/add.js|edit.js for the matching
+      // server-side enforcement.
+      meta_title: [this.data?.seo?.meta_title ?? '', [Validators.maxLength(60)]],
+      meta_description: [this.data?.seo?.meta_description ?? '', [Validators.maxLength(160)]],
       meta_keywords: [
         Array.isArray(this.data?.seo?.meta_keywords)
           ? this.data.seo.meta_keywords

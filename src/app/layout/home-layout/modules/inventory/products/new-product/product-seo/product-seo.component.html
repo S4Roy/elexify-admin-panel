@@ -35,7 +35,7 @@
         type="button"
         mat-raised-button
         color="primary"
-        [disabled]="saving || loading"
+        [disabled]="saving || loading || formGroup.invalid"
         (click)="onSave()"
       >
         {{ saving ? "Saving..." : "Save SEO" }}
@@ -80,7 +80,11 @@
               matInput
               formControlName="meta_title"
               placeholder="Meta Title"
+              [attr.maxlength]="settings.title_max_length"
             />
+            <mat-error *ngIf="formGroup.get('meta_title')?.hasError('maxlength')"
+              >Meta title exceeds {{ settings.title_max_length }} characters</mat-error
+            >
           </mat-form-field>
           <div class="counter-row" [ngClass]="'status-' + titleStatus">
             {{ titleLength }} / {{ settings.title_max_length }} characters
@@ -102,7 +106,11 @@
               rows="3"
               formControlName="meta_description"
               placeholder="Meta Description"
+              [attr.maxlength]="settings.description_max_length"
             ></textarea>
+            <mat-error *ngIf="formGroup.get('meta_description')?.hasError('maxlength')"
+              >Meta description exceeds {{ settings.description_max_length }} characters</mat-error
+            >
           </mat-form-field>
           <div class="counter-row" [ngClass]="'status-' + descriptionStatus">
             {{ descriptionLength }} / {{ settings.description_max_length }}
@@ -146,6 +154,7 @@
           matInput
           formControlName="focus_keyword"
           placeholder="e.g. 5 mukhi rudraksha"
+          maxlength="100"
         />
       </mat-form-field>
 
@@ -217,6 +226,7 @@
             matInput
             formControlName="canonical_url"
             placeholder="/product/slug"
+            maxlength="2048"
           />
         </mat-form-field>
 
@@ -252,7 +262,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <mat-form-field>
           <mat-label>Open Graph Title</mat-label>
-          <input matInput formControlName="og_title" />
+          <input matInput formControlName="og_title" maxlength="70" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Open Graph Image URL</mat-label>
@@ -260,11 +270,11 @@
         </mat-form-field>
         <mat-form-field class="lg:col-span-2">
           <mat-label>Open Graph Description</mat-label>
-          <textarea matInput rows="2" formControlName="og_description"></textarea>
+          <textarea matInput rows="2" formControlName="og_description" maxlength="200"></textarea>
         </mat-form-field>
         <mat-form-field>
           <mat-label>Twitter Title</mat-label>
-          <input matInput formControlName="twitter_title" />
+          <input matInput formControlName="twitter_title" maxlength="70" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Twitter Image URL</mat-label>
@@ -276,6 +286,7 @@
             matInput
             rows="2"
             formControlName="twitter_description"
+            maxlength="200"
           ></textarea>
         </mat-form-field>
       </div>

@@ -12,10 +12,15 @@
             <!-- Name -->
             <mat-form-field>
               <mat-label>Name </mat-label>
-              <input matInput formControlName="name" placeholder="Type Here" />
+              <input matInput formControlName="name" placeholder="Type Here" maxlength="200" />
+              <mat-hint align="end">{{ formGroup.get('name')?.value?.length ?? 0 }}/200</mat-hint>
               <mat-error
                 *ngIf="!Global.isInputRuleValid(formGroup, 'name', 'required')"
                 >This field is required</mat-error
+              >
+              <mat-error
+                *ngIf="!Global.isInputRuleValid(formGroup, 'name', 'maxlength')"
+                >Product name cannot exceed 200 characters</mat-error
               >
             </mat-form-field>
             <p class="text-md font-semibold text-gray-500 pt-2">
@@ -820,7 +825,9 @@
                   matInput
                   formControlName="meta_title"
                   placeholder="Meta Title"
+                  maxlength="60"
                 />
+                <mat-hint align="end">{{ formGroup.get('meta_title')?.value?.length ?? 0 }}/60</mat-hint>
                 <mat-error
                   *ngIf="
                     !Global.isInputRuleValid(
@@ -831,6 +838,16 @@
                   "
                   >This field is required</mat-error
                 >
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'meta_title',
+                      'maxlength'
+                    )
+                  "
+                  >Meta title should be 60 characters or fewer (Google truncates longer titles)</mat-error
+                >
               </mat-form-field>
 
               <mat-form-field>
@@ -839,7 +856,9 @@
                   matInput
                   formControlName="meta_description"
                   placeholder="Meta Description"
+                  maxlength="160"
                 ></textarea>
+                <mat-hint align="end">{{ formGroup.get('meta_description')?.value?.length ?? 0 }}/160</mat-hint>
                 <mat-error
                   *ngIf="
                     !Global.isInputRuleValid(
@@ -849,6 +868,16 @@
                     )
                   "
                   >This field is required</mat-error
+                >
+                <mat-error
+                  *ngIf="
+                    !Global.isInputRuleValid(
+                      formGroup,
+                      'meta_description',
+                      'maxlength'
+                    )
+                  "
+                  >Meta description should be 160 characters or fewer (Google truncates longer snippets)</mat-error
                 >
               </mat-form-field>
 

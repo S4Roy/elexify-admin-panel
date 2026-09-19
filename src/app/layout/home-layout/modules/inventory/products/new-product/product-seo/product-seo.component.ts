@@ -1,6 +1,6 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -67,19 +67,23 @@ export class ProductSeoComponent implements OnChanges {
     private inventoryService: InventoryService,
     private dialogService: DialogService
   ) {
+    // Length caps mirror the backend (validations/admin/seo/product/update.js,
+    // models/SEO.js) — industry-standard truncation points for SERP/social
+    // previews, same numbers used by this.settings above for the
+    // title/description good-warn-bad indicator.
     this.formGroup = this.fb.group({
-      meta_title: [''],
-      meta_description: [''],
-      meta_keywords: [''],
-      focus_keyword: [''],
-      canonical_url: [''],
+      meta_title: ['', [Validators.maxLength(60)]],
+      meta_description: ['', [Validators.maxLength(160)]],
+      meta_keywords: ['', [Validators.maxLength(500)]],
+      focus_keyword: ['', [Validators.maxLength(100)]],
+      canonical_url: ['', [Validators.maxLength(2048)]],
       robots: ['index,follow'],
       schema_enabled: [true],
-      og_title: [''],
-      og_description: [''],
+      og_title: ['', [Validators.maxLength(70)]],
+      og_description: ['', [Validators.maxLength(200)]],
       og_image: [''],
-      twitter_title: [''],
-      twitter_description: [''],
+      twitter_title: ['', [Validators.maxLength(70)]],
+      twitter_description: ['', [Validators.maxLength(200)]],
       twitter_image: [''],
     });
   }
