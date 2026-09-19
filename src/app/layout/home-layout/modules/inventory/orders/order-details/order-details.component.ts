@@ -19,14 +19,27 @@ import FilterOptions from 'app/core/models/FilterOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
 import * as Global from 'app/global';
 import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
+import { ForceCancelOrderDialogComponent } from './force-cancel-order-dialog/force-cancel-order-dialog.component';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { OrderShippingComponent } from '../order-shipping/order-shipping.component';
 import { OrderStatusDialogComponent } from './order-status-dialog/order-status-dialog.component';
 
-// Mirrors CANCELLABLE_ORDER_STATUSES in the backend
-// (elexify-backend/src/constants/orderStatus.js) — the backend is the real
-// enforcer of this rule; this only controls whether the button is shown.
-const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing'];
+// Mirrors the backend's default admin_cancellation_statuses policy
+// (elexify-backend/src/services/settings/shipping/model.js) — the backend is
+// the real enforcer of this rule; this only controls whether the button is
+// shown. Includes "packed" since a packed order without courier details
+// attached is still normally cancellable; if courier details are already
+// attached the backend rejects with "already handed to the courier" and the
+// superadmin-only Force Cancel button (see canForceCancel) is the fallback.
+const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
+
+// The one status where a normal cancel can plausibly be blocked by
+// already-attached courier details — mirrors
+// FORCE_CANCELLABLE_ORDER_STATUSES in the backend
+// (elexify-backend/src/constants/orderStatus.js), scoped down to just
+// "packed" here since pending/confirmed/processing never have courier
+// details and are already covered by the normal Cancel Order button.
+const FORCE_CANCEL_STATUSES = ['packed'];
 
 // Mirrors INVOICE_ELIGIBLE_STATUSES / canGenerateInvoice in the backend
 // (elexify-backend/src/constants/orderStatus.js) — the backend is the real
@@ -137,6 +150,7 @@ export class OrderDetailsComponent {
   Global = Global;
   filterOption: FilterOptions;
   cancelling = false;
+  forceCancelling = false;
   updatingStatus = false;
   retryingRefund = false;
   downloadingInvoice = false;
@@ -219,6 +233,14 @@ export class OrderDetailsComponent {
     return (
       !!this.data?.order_status &&
       CANCELLABLE_STATUSES.includes(this.data.order_status)
+    );
+  }
+
+  get canForceCancel(): boolean {
+    return (
+      this.helpersService.role() === 'superadmin' &&
+      !!this.data?.order_status &&
+      FORCE_CANCEL_STATUSES.includes(this.data.order_status)
     );
   }
 
@@ -415,6 +437,41 @@ export class OrderDetailsComponent {
           },
           error: () => {
             this.cancelling = false;
+          },
+        });
+    });
+  }
+
+  openForceCancelDialog() {
+    const ref = this.dialog.open(ForceCancelOrderDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { orderNumber: this.data?.id, orderStatus: this.orderStatusLabel(this.data?.order_status) },
+    });
+
+    ref.afterClosed().subscribe((result: any) => {
+      if (!result?.confirm) return;
+      this.forceCancelling = true;
+      this.inventoryService
+        .forceCancelOrder({
+          order_id: this.data?._id,
+          reason: result.reason,
+        })
+        .subscribe({
+          next: (res: any) => {
+            this.forceCancelling = false;
+            this.data = {
+              ...this.data,
+              order_status: res?.data?.order_status ?? 'cancelled',
+              payment_status:
+                res?.data?.payment_status ?? this.data.payment_status,
+              cancellation: res?.data?.cancellation ?? this.data.cancellation,
+              refund: res?.data?.refund ?? this.data.refund,
+            };
+            this.toastr.success('Order force-cancelled successfully');
+          },
+          error: () => {
+            this.forceCancelling = false;
           },
         });
     });

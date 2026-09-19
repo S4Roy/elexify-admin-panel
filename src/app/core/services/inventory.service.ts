@@ -156,6 +156,11 @@ export class InventoryService {
   cancelOrder(payload: any) {
     return this.httpService.post(`admin/inventory/order/cancel`, payload);
   }
+  // Superadmin-only override — bypasses the normal cancellation eligibility
+  // rules. See elexify-backend routes/admin/inventory/order.js "/cancel/force".
+  forceCancelOrder(payload: { order_id: string; reason: string }) {
+    return this.httpService.post(`admin/inventory/order/cancel/force`, payload);
+  }
   updateOrderStatus(payload: { order_id: string; expected_status: string; status: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/status`, payload);
   }

@@ -1,0 +1,51 @@
+<button type="button" class="dialog-btn-close" aria-label="Close" (click)="closeModal()"></button>
+<mat-dialog-content>
+  <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+      <div class="sm:flex sm:items-start">
+        <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
+          <svg class="size-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v3.75m0 3.75h.007v.008H12v-.008ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+        </div>
+        <div class="mt-3 w-full sm:ml-4 sm:mt-0 sm:text-left">
+          <h3 class="text-base font-semibold text-gray-900" id="modal-title">
+            Force-cancel Order #{{ data.orderNumber }}?
+          </h3>
+          <div class="mt-2 space-y-2">
+            <p class="text-sm text-gray-500">
+              This order's current status ({{ data.orderStatus }}) isn't normally cancellable — most likely
+              because courier details are already attached. Force-cancelling will attempt to cancel the
+              shipment on Shiprocket first; if the courier has already picked it up, this will fail rather
+              than cancel silently.
+            </p>
+            <p class="text-sm font-medium text-red-600">
+              This bypasses the normal safeguards. Only use this for a genuine exception.
+            </p>
+          </div>
+
+          <form [formGroup]="formGroup" class="mt-4 space-y-3">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Why does this order need to be force-cancelled?</mat-label>
+              <textarea matInput formControlName="reason" rows="3"></textarea>
+              <mat-error *ngIf="formGroup.get('reason')?.hasError('required') || formGroup.get('reason')?.hasError('minlength')">
+                Please explain why (min 10 characters)
+              </mat-error>
+            </mat-form-field>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+      <button (click)="onConfirmForceCancel()" type="button"
+        class="inline-flex w-full justify-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm hover:bg-red-50 sm:ml-3 sm:w-auto">
+        Force Cancel
+      </button>
+      <button (click)="onKeepOrder()" type="button"
+        class="mt-3 inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 sm:mt-0 sm:w-auto">
+        Keep Order
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>
