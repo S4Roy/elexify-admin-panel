@@ -1,12 +1,15 @@
+import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
+import { CreateOrderCustomerComponent } from './create-order-customer.component';
 import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { HttpService } from 'app/core/services/http.service';
 
 @Component({
   selector: 'app-create-order',
-  imports: [CommonModule, FormsModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, MatDialogModule, NgSelectModule],
   templateUrl: './create-order.component.html',
   styleUrl: './create-order.component.scss',
 })
@@ -24,12 +27,35 @@ export class CreateOrderComponent {
   }
   private key = crypto.randomUUID();
   private submitted = false;
-  constructor(private http: HttpService, public dialog: MatDialogRef<CreateOrderComponent>, @Inject(MAT_DIALOG_DATA) data: any) {
+  constructor(private dialogs: MatDialog, private http: HttpService, public dialog: MatDialogRef<CreateOrderComponent>, @Inject(MAT_DIALOG_DATA) data: any) {
     this.customerId = data?.customerId || '';
     if (this.customerId) {
       this.http.get(`admin/inventory/order/create-options?kind=customers&customer_id=${this.customerId}`).subscribe({ next: (r: any) => this.customers = r.data, error: e => this.fail(e) });
       this.loadAddresses();
     } else this.searchCustomers();
+  }
+  addCustomer() {
+    if (this.busy) return;
+    this.dialogs.open(CreateOrderCustomerComponent, { width: '540px', maxWidth: '94vw', maxHeight: '94vh' }).afterClosed().subscribe(customer => {
+      if (!customer?._id) return;
+      this.customers = [customer, ...this.customers.filter(c => c._id !== customer._id)];
+      this.customerId = customer._id;
+      this.loadAddresses();
+    });
+  }
+  addAddress() {
+    if (this.busy || !this.customerId) return;
+    const customerId = this.customerId;
+    const customer = this.customers.find(c => c._id === customerId);
+    this.dialogs.open(CustomerAddressDialogComponent, { width: '740px', maxWidth: '94vw', maxHeight: '94vh', data: {
+      create: true, customerId, address: { full_name: customer?.name, email: customer?.email,
+        phone: customer?.mobile, phone_code: customer?.phone_code || '91', country: 101, address_type: 'home', purpose: 'both' },
+    } }).afterClosed().subscribe(address => {
+      if (!address?._id || customerId !== this.customerId) return;
+      this.addresses = [address, ...this.addresses];
+      this.addressId = address._id;
+      this.invalidate();
+    });
   }
   invalidate() { this.quote = null; if (this.submitted) { this.key = crypto.randomUUID(); this.submitted = false; } }
   searchCustomers() {

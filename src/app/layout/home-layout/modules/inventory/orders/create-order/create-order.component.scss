@@ -12,10 +12,10 @@ h3 { font-size: 14px; font-weight: 650; margin: 0; }
 .badge, .count, .currency-badge { font-size: 11px; border-radius: 5px; padding: 2px 7px; background: #f1f5f9; color: #64748b; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
-input, select, textarea { width: 100%; min-width: 0; border: 1px solid #dbe1ea; border-radius: 6px; padding: 8px 10px; font: inherit; color: #334155; background: white; }
-input, select { height: 36px; }
+input, textarea { width: 100%; min-width: 0; border: 1px solid #dbe1ea; border-radius: 6px; padding: 8px 10px; font: inherit; color: #334155; background: white; }
+input { height: 36px; }
 textarea { resize: vertical; min-height: 62px; }
-input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid #93b4ff; outline-offset: 2px; }
+input:focus, textarea:focus, button:focus-visible { outline: 2px solid #93b4ff; outline-offset: 2px; }
 button { border: 1px solid #dbe1ea; border-radius: 6px; padding: 8px 12px; font: inherit; font-weight: 600; background: white; color: #334155; cursor: pointer; white-space: nowrap; }
 button:hover:not(:disabled) { background: #f1f5f9; }
 button:disabled { opacity: .5; cursor: not-allowed; }
@@ -59,3 +59,7 @@ button.primary:hover:not(:disabled) { background: #254fce; }
 .footer-actions { display: flex; gap: 8px; }
 @media (max-width: 850px) { .order-layout { grid-template-columns: minmax(0, 1fr); } .side-column { display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
 @media (max-width: 580px) { .dialog-header, .dialog-footer { padding: 14px; } .dialog-content { padding: 12px !important; } .field-grid, .side-column { grid-template-columns: 1fr; } .footer-hint { display: none; } .dialog-footer { justify-content: flex-end; } .line-heading, .line-item { grid-template-columns: minmax(0, 1fr) 48px 72px 20px; gap: 6px; } .product-result { gap: 6px; } .card { padding: 12px; } }
+
+.label-action { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+.label-action label { margin: 0; }
+.label-action button { padding: 0; border: 0; color: #3563e9; font-size: 11px; background: transparent; }

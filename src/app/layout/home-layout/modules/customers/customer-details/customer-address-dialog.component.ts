@@ -11,8 +11,9 @@ import { ApiService } from 'app/core/services/api.service';
   imports: [CurrencyPipe, NgFor, NgIf, FormsModule, MatDialogModule, NgSelectModule],
   template: `
     <form #form="ngForm" (ngSubmit)="save()" class="p-6">
-      <h2 class="text-xl font-bold">{{ data.orderId ? 'Edit order ' + data.addressKind + ' address' : 'Edit customer address' }}</h2>
-      <p *ngIf="!data.orderId" class="mt-2 text-sm text-gray-600">Changes apply to future orders. Your name, reason and changes will be recorded in the audit trail.</p>
+      <h2 class="text-xl font-bold">{{ data.orderId ? 'Edit order ' + data.addressKind + ' address' : data.create ? 'Add delivery address' : 'Edit customer address' }}</h2>
+      <p *ngIf="!data.orderId && !data.create" class="mt-2 text-sm text-gray-600">Changes apply to future orders. Your name, reason and changes will be recorded in the audit trail.</p>
+      <p *ngIf="data.create" class="mt-2 text-sm text-gray-600">Save a delivery address to this customer’s address book and select it for the order.</p>
       <p *ngIf="data.orderId" class="mt-2 text-sm text-gray-600">This updates the selected address on order #{{ data.orderNumber }}. The customer’s saved addresses and other orders stay unchanged. Your changes and reason are recorded.</p>
       <p class="mt-2 text-xs text-gray-500">Address lines must use English letters, numbers, spaces and common punctuation.</p>
       <fieldset [disabled]="saving" class="mt-5 grid sm:grid-cols-2 gap-4">
@@ -57,13 +58,13 @@ import { ApiService } from 'app/core/services/api.service';
             [items]="types" [(ngModel)]="value.address_type" [clearable]="false"
             [disabled]="saving" required></ng-select>
         </div>
-        <div *ngIf="!data.orderId" class="text-sm">
+        <div *ngIf="!data.orderId && !data.create" class="text-sm">
           <label for="address-purpose">Purpose</label>
           <ng-select class="mt-1" labelForId="address-purpose" name="purpose"
             [items]="purposes" bindLabel="label" bindValue="value" [(ngModel)]="value.purpose"
             [clearable]="false" [disabled]="saving" required></ng-select>
         </div>
-        <label class="block text-sm sm:col-span-2">Reason for correction *
+        <label *ngIf="!data.create" class="block text-sm sm:col-span-2">Reason for correction *
           <textarea name="reason" [(ngModel)]="value.reason" required minlength="10" maxlength="500" rows="2"
             placeholder="Explain the customer's requested correction (at least 10 characters)"
             class="mt-1 w-full rounded-lg border p-2"></textarea>
@@ -78,7 +79,7 @@ import { ApiService } from 'app/core/services/api.service';
       <button *ngIf="optionsError" type="button" (click)="loadOptions()" class="mt-2 text-sm underline">Retry loading countries and states</button>
       <div class="mt-6 flex justify-end gap-3">
         <button type="button" [disabled]="saving" (click)="dialogRef.close()" class="rounded-lg border px-4 py-2">Cancel</button>
-        <button type="submit" [disabled]="form.invalid || !addressLinesValid || (data.orderId && !chargesConfirmed) || saving || optionsLoading || optionsError || !value.state || value.reason.trim().length < 10"
+        <button type="submit" [disabled]="form.invalid || !addressLinesValid || (data.orderId && !chargesConfirmed) || saving || optionsLoading || optionsError || !value.state || (!data.create && value.reason.trim().length < 10)"
           class="rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-50">{{ saving ? 'Saving…' : 'Save address' }}</button>
       </div>
     </form>
@@ -111,10 +112,10 @@ export class CustomerAddressDialogComponent implements OnInit, OnDestroy {
   constructor(
     public dialogRef: MatDialogRef<CustomerAddressDialogComponent>,
     private api: ApiService,
-    @Inject(MAT_DIALOG_DATA) public data: { customerId?: string; address: any; orderId?: string; orderNumber?: string; addressKind?: string; expectedUpdatedAt?: string | null; shipping?: number; grandTotal?: number; currency?: string },
+    @Inject(MAT_DIALOG_DATA) public data: { create?: boolean; customerId?: string; address: any; orderId?: string; orderNumber?: string; addressKind?: string; expectedUpdatedAt?: string | null; shipping?: number; grandTotal?: number; currency?: string },
   ) {
     this.value = { phone: data.address.phone || '', phone_code: String(data.address.phone_code || '').replace(/[^0-9]/g, ''), country: data.address.country, state: data.address.state,
-      address_type: data.address.address_type, purpose: data.address.purpose, reason: '',
+      address_type: data.address.address_type || 'home', purpose: data.address.purpose || 'both', reason: '',
       expected_updated_at: (data.orderId ? data.expectedUpdatedAt : data.address.updated_at) || null };
     for (const field of this.textFields) this.value[field.key] = data.address[field.key] || '';
   }
@@ -158,17 +159,20 @@ export class CustomerAddressDialogComponent implements OnInit, OnDestroy {
   }
 
   save(): void {
-    if (!this.addressLinesValid || (this.data.orderId && !this.chargesConfirmed) || !this.callingCodes.some(c => c.code === this.value.phone_code) || this.saving || this.optionsLoading || this.optionsError || !this.value.state || this.value.reason.trim().length < 10) return;
+    if (!this.addressLinesValid || (this.data.orderId && !this.chargesConfirmed) || !this.callingCodes.some(c => c.code === this.value.phone_code) || this.saving || this.optionsLoading || this.optionsError || !this.value.state || (!this.data.create && this.value.reason.trim().length < 10)) return;
     this.saving = true;
     this.error = '';
-    const request = this.data.orderId ? this.api.updateOrderAddress({ ...this.value,
+    this.dialogRef.disableClose = true;
+    const { reason, expected_updated_at, ...createFields } = this.value;
+    const request = this.data.create ? this.api.createCustomerAddress(this.data.customerId!, createFields) : this.data.orderId ? this.api.updateOrderAddress({ ...this.value,
       order_id: this.data.orderId, address_kind: this.data.addressKind,
       expected_address_id: this.data.address._id, charges_confirmed: this.chargesConfirmed,
     }) : this.api.editCustomerAddress(this.data.customerId!, this.data.address._id, this.value);
     request.pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => { this.saving = false; this.dialogRef.close(true); },
+      next: (res: any) => { this.saving = false; this.dialogRef.close(this.data.create ? res.data : true); },
       error: (err: any) => {
         this.saving = false;
+        this.dialogRef.disableClose = false;
         this.error = err?.error?.message || 'Unable to save address. Check the details and try again.';
       },
     });

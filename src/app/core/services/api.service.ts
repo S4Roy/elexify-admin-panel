@@ -202,6 +202,9 @@ export class ApiService {
   customerAddressOptions(id: string, country?: number) {
     return this.httpService.get(`admin/customers/${id}/address-options${country ? '?country=' + country : ''}`);
   }
+  createCustomerAddress(id: string, payload: any) {
+    return this.httpService.post(`admin/customers/${id}/addresses`, payload);
+  }
   editCustomerAddress(id: string, addressId: string, payload: any) {
     return this.httpService.put(`admin/customers/${id}/addresses/${addressId}`, payload);
   }
