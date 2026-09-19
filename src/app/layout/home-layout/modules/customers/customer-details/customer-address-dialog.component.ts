@@ -14,6 +14,7 @@ import { ApiService } from 'app/core/services/api.service';
       <h2 class="text-xl font-bold">{{ data.orderId ? 'Edit order ' + data.addressKind + ' address' : 'Edit customer address' }}</h2>
       <p *ngIf="!data.orderId" class="mt-2 text-sm text-gray-600">Changes apply to future orders. Your name, reason and changes will be recorded in the audit trail.</p>
       <p *ngIf="data.orderId" class="mt-2 text-sm text-gray-600">This updates the selected address on order #{{ data.orderNumber }}. The customer’s saved addresses and other orders stay unchanged. Your changes and reason are recorded.</p>
+      <p class="mt-2 text-xs text-gray-500">Address lines must use English letters, numbers, spaces and common punctuation.</p>
       <fieldset [disabled]="saving" class="mt-5 grid sm:grid-cols-2 gap-4">
         <label *ngFor="let field of textFields" class="block text-sm" [class.sm:col-span-2]="field.key === 'address_line_1'">
           {{ field.label }}{{ field.required ? ' *' : '' }}
@@ -72,11 +73,12 @@ import { ApiService } from 'app/core/services/api.service';
         <input type="checkbox" name="charges_confirmed" [(ngModel)]="chargesConfirmed" [disabled]="saving" required>
         <span>I reviewed the address change and approve keeping the existing shipping charge ({{ data.shipping | currency:data.currency }}) and order total ({{ data.grandTotal | currency:data.currency }}). This change does not collect or refund money.</span>
       </label>
+      <p *ngIf="!addressLinesValid" role="alert" class="mt-3 text-sm text-red-700">Address lines must use English letters (A-Z), numbers, spaces and common punctuation only.</p>
       <p *ngIf="error" role="alert" class="mt-3 text-sm text-red-700">{{ error }}</p>
       <button *ngIf="optionsError" type="button" (click)="loadOptions()" class="mt-2 text-sm underline">Retry loading countries and states</button>
       <div class="mt-6 flex justify-end gap-3">
         <button type="button" [disabled]="saving" (click)="dialogRef.close()" class="rounded-lg border px-4 py-2">Cancel</button>
-        <button type="submit" [disabled]="form.invalid || (data.orderId && !chargesConfirmed) || saving || optionsLoading || optionsError || !value.state || value.reason.trim().length < 10"
+        <button type="submit" [disabled]="form.invalid || !addressLinesValid || (data.orderId && !chargesConfirmed) || saving || optionsLoading || optionsError || !value.state || value.reason.trim().length < 10"
           class="rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-50">{{ saving ? 'Saving…' : 'Save address' }}</button>
       </div>
     </form>
@@ -150,8 +152,13 @@ export class CustomerAddressDialogComponent implements OnInit, OnDestroy {
     });
   }
 
+  get addressLinesValid(): boolean {
+    const invalid = /[^A-Za-z0-9 .,\/#&()'":+\-]/;
+    return !invalid.test(this.value.address_line_1 || '') && !invalid.test(this.value.address_line_2 || '');
+  }
+
   save(): void {
-    if ((this.data.orderId && !this.chargesConfirmed) || !this.callingCodes.some(c => c.code === this.value.phone_code) || this.saving || this.optionsLoading || this.optionsError || !this.value.state || this.value.reason.trim().length < 10) return;
+    if (!this.addressLinesValid || (this.data.orderId && !this.chargesConfirmed) || !this.callingCodes.some(c => c.code === this.value.phone_code) || this.saving || this.optionsLoading || this.optionsError || !this.value.state || this.value.reason.trim().length < 10) return;
     this.saving = true;
     this.error = '';
     const request = this.data.orderId ? this.api.updateOrderAddress({ ...this.value,
