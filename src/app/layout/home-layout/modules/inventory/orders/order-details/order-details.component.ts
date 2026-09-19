@@ -1,3 +1,4 @@
+import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
 import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
 import {
   CurrencyPipe,
@@ -270,6 +271,35 @@ export class OrderDetailsComponent {
 
   get canManageZohoInvoice(): boolean {
     return ['superadmin', 'manager'].includes(this.helpersService.role());
+  }
+
+  get canEditOrderAddress(): boolean {
+    return ['superadmin', 'manager'].includes(this.helpersService.role()) &&
+      ['pending', 'confirmed', 'processing'].includes(this.data?.order_status) &&
+      !this.data?.invoice?.generated && !this.data?.package_count && !this.packages.length &&
+      !this.data?.awb && !this.data?.shiprocket_order_id && !this.data?.shipped_at &&
+      !this.data?.inventory_reverted && (!this.data?.refund?.status || this.data.refund.status === 'not_required');
+  }
+
+  editOrderAddress(kind: 'shipping' | 'billing'): void {
+    if (!this.canEditOrderAddress) return;
+    const address = this.data?.[kind + '_address'];
+    if (!address?._id) return;
+    const normalized = { ...address,
+      country: address.country?.id ?? address.country,
+      state: address.state?.id ?? address.state,
+      city_name: address.city_name || address.city?.name || '',
+      address_type: kind, purpose: kind,
+    };
+    this.dialog.open(CustomerAddressDialogComponent, {
+      width: '680px', maxWidth: '96vw', maxHeight: '92vh', disableClose: true,
+      data: { orderId: this.data._id, orderNumber: this.data.id, addressKind: kind,
+        expectedUpdatedAt: this.data.updated_at, address: normalized,
+        shipping: this.data.shipping || 0, grandTotal: this.data.grand_total, currency: this.data.currency || 'INR' },
+    }).afterClosed().subscribe(saved => {
+      if (saved) this.toastr.success(`${kind === 'shipping' ? 'Shipping' : 'Billing'} address updated`);
+      this.fetchOrderList();
+    });
   }
 
   get canManageOrderStatus(): boolean {

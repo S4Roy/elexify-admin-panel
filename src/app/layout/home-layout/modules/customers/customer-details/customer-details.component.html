@@ -81,6 +81,34 @@
     </div>
   </div>
 
+  <section class="p-6 bg-white shadow-xl rounded-2xl">
+    <h3 class="text-lg font-semibold">Saved Addresses</h3>
+    <p class="mt-1 mb-4 text-sm text-gray-500">Manage customer addresses for future orders. Existing orders retain their original addresses.</p>
+    <p *ngIf="addressesLoading" class="text-sm text-gray-500">Loading addresses…</p>
+    <div *ngIf="addressesError" class="text-sm text-red-700">
+      Addresses could not be loaded.
+      <button type="button" (click)="fetchAddresses()" class="underline">Retry</button>
+    </div>
+    <p *ngIf="!addressesLoading && !addressesError && !addresses.length" class="text-sm text-gray-500">No saved addresses.</p>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <article *ngFor="let address of addresses" class="rounded-lg border p-4 text-sm break-words">
+        <div class="flex justify-between items-start gap-3">
+          <p class="font-semibold">{{ address.full_name }}</p>
+          <button *ngIf="isPrivileged" type="button" (click)="editAddress(address)" class="rounded border border-primary px-3 py-1 text-primary">Edit address</button>
+        </div>
+        <p class="mt-1 capitalize text-gray-500">{{ address.address_type }} · {{ address.purpose }} <span *ngIf="address.is_default">· Default</span></p>
+        <p class="mt-2">{{ address.address_line_1 }}</p>
+        <p *ngIf="address.address_line_2">{{ address.address_line_2 }}</p>
+        <p *ngIf="address.land_mark">{{ address.land_mark }}</p>
+        <p>{{ address.city_name }}, {{ address.state_name }} {{ address.postcode }}</p>
+        <p>{{ address.country_name }}</p>
+        <p class="mt-2">+{{ address.phone_code }} {{ address.phone }}</p>
+        <p *ngIf="address.email">{{ address.email }}</p>
+        <p *ngIf="address.updated_at" class="mt-2 text-xs text-gray-500">Updated {{ address.updated_at | date:'medium' }}</p>
+      </article>
+    </div>
+  </section>
+
   <!-- Notification preferences -->
   <div class="p-6 bg-white shadow-xl rounded-2xl">
     <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4 mb-4">

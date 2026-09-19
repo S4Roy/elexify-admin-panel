@@ -190,6 +190,21 @@ export class ApiService {
   }
 
   // --- Phase 2: customer profile / notification preferences ---
+  customerAddresses(id: string) {
+    return this.httpService.get(`admin/customers/${id}/addresses`);
+  }
+  orderAddressOptions(country?: number) {
+    return this.httpService.get(`admin/inventory/order/address/options${country ? '?country=' + country : ''}`);
+  }
+  updateOrderAddress(payload: any) {
+    return this.httpService.put('admin/inventory/order/address', payload);
+  }
+  customerAddressOptions(id: string, country?: number) {
+    return this.httpService.get(`admin/customers/${id}/address-options${country ? '?country=' + country : ''}`);
+  }
+  editCustomerAddress(id: string, addressId: string, payload: any) {
+    return this.httpService.put(`admin/customers/${id}/addresses/${addressId}`, payload);
+  }
   customerDetails(id: string) {
     return this.httpService.get(`admin/customers/${id}/details`);
   }

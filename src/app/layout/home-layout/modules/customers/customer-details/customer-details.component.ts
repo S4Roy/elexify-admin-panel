@@ -1,3 +1,4 @@
+import { CustomerAddressDialogComponent } from './customer-address-dialog.component';
 import { DatePipe, LowerCasePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -89,6 +90,9 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   customerId: string | null = null;
   customer: any = null;
   loading = true;
+  addresses: any[] = [];
+  addressesLoading = false;
+  addressesError = false;
 
   preferences: any = null;
   preferenceGroups = PREFERENCE_GROUPS;
@@ -123,6 +127,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.customerId = params.get('_id');
       if (this.customerId) {
+        this.fetchAddresses();
         this.fetchCustomerDetails();
         this.fetchNotificationPreferences();
         this.fetchNotificationHistory();
@@ -143,6 +148,27 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   get isPrivileged(): boolean {
     const role = this.helperService.role();
     return role === 'superadmin' || role === 'manager';
+  }
+
+  fetchAddresses(): void {
+    if (!this.customerId) return;
+    this.addresses = [];
+    this.addressesLoading = true;
+    this.addressesError = false;
+    this.apiService.customerAddresses(this.customerId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => { this.addresses = res?.data || []; this.addressesLoading = false; },
+      error: () => { this.addressesLoading = false; this.addressesError = true; },
+    });
+  }
+
+  editAddress(address: any): void {
+    if (!this.isPrivileged || !this.customerId) return;
+    this.dialog.open(CustomerAddressDialogComponent, {
+      width: '680px', maxWidth: '96vw', maxHeight: '92vh', disableClose: true,
+      data: { customerId: this.customerId, address },
+    }).afterClosed().subscribe(saved => {
+      if (saved) { this.fetchAddresses(); this.toastr.success('Customer address updated'); }
+    });
   }
 
   // --- Profile / verification ---

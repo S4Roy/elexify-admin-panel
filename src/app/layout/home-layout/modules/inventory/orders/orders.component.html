@@ -71,6 +71,9 @@
             >
               {{ item?.user?.name || 'Unnamed customer' }}
               <span *ngIf="item?.user?.email" class="block text-xs font-normal text-gray-500">{{ item.user.email }}</span>
+              <span *ngIf="item?.user?.mobile" class="block text-xs font-normal text-gray-500">
+                {{ item.user.phone_code ? '+' + item.user.phone_code + ' ' : '' }}{{ item.user.mobile }}
+              </span>
             </a>
             <ng-template #unavailableCustomer><span class="text-gray-500">Customer unavailable</span></ng-template>
           </td>
