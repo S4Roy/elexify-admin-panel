@@ -9,9 +9,9 @@ import { ApiService } from 'app/core/services/api.service';
   selector: 'app-create-order-customer',
   imports: [CommonModule, FormsModule, MatDialogModule, NgSelectModule],
   template: `
-    <form #form="ngForm" (ngSubmit)="save()">
-      <h2 mat-dialog-title>Add customer</h2>
-      <mat-dialog-content>
+    <form class="customer-form" #form="ngForm" (ngSubmit)="save()">
+      <header class="customer-header"><div><h2 id="new-customer-title">Add customer</h2><p>Create a profile for this order.</p></div><button type="button" class="close-button" aria-label="Close add customer" [disabled]="saving" (click)="dialog.close()">×</button></header>
+      <mat-dialog-content class="customer-content">
         <p class="hint">Create a customer profile and use it for this order. Provide an email or mobile number.</p>
         <fieldset [disabled]="saving">
           <label for="new-customer-name">Full name *</label>
@@ -27,9 +27,9 @@ import { ApiService } from 'app/core/services/api.service';
         <p *ngIf="error" role="alert" class="error">{{ error }}</p>
         <button *ngIf="optionsError" type="button" (click)="loadCountries()">Retry calling codes</button>
       </mat-dialog-content>
-      <mat-dialog-actions align="end"><button type="button" [disabled]="saving" (click)="dialog.close()">Cancel</button><button class="primary" type="submit" [disabled]="form.invalid || saving || (!value.email.trim() && !value.mobile.trim()) || (!!value.mobile && (loading || optionsError))">{{ saving ? 'Saving…' : 'Create customer' }}</button></mat-dialog-actions>
+      <mat-dialog-actions class="customer-actions" align="end"><button type="button" [disabled]="saving" (click)="dialog.close()">Cancel</button><button class="primary" type="submit" [disabled]="form.invalid || saving || (!value.email.trim() && !value.mobile.trim()) || (!!value.mobile && (loading || optionsError))">{{ saving ? 'Saving…' : 'Create customer' }}</button></mat-dialog-actions>
     </form>`,
-  styles: [`:host{display:block}fieldset{border:0;padding:0;margin:0}label{display:block;font-size:12px;font-weight:600;margin:12px 0 5px}input{width:100%;height:36px;padding:8px 10px;border:1px solid #dbe1ea;border-radius:6px;box-sizing:border-box}.phone-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hint{font-size:12px;color:#64748b}button{border:1px solid #dbe1ea;padding:8px 12px;border-radius:6px;margin-left:8px}.primary{background:#3563e9;color:white}button:disabled{opacity:.5}.error{color:#b91c1c;font-size:12px;margin-top:12px}`],
+  styleUrl: './create-order-customer.component.scss',
 })
 export class CreateOrderCustomerComponent {
   value = { name: '', email: '', phone_code: '91', mobile: '' };

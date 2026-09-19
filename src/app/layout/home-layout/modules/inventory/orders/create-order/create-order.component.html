@@ -7,11 +7,18 @@
     <div class="main-column">
       <section class="card">
         <div class="section-heading"><h3>Customer & delivery</h3><span class="badge">1</span></div>
-        <div class="field-grid">
-          <div><label for="customer-search">Find customer</label><div class="search-field"><input id="customer-search" placeholder="Name, email or phone" [(ngModel)]="customerSearch" (keyup.enter)="searchCustomers()" /><button type="button" (click)="searchCustomers()">Search</button></div></div>
-          <div><div class="label-action"><label for="customer">Customer</label><button type="button" (click)="addCustomer()">+ Add customer</button></div><ng-select labelForId="customer" [ngModel]="customerId || null" (ngModelChange)="customerId = $event || ''; loadAddresses()" [disabled]="busy" placeholder="Select customer" notFoundText="No matching customers" [searchable]="true"><ng-option *ngFor="let c of customers" [value]="c._id">{{ c.name }} · {{ c.email || c.mobile }}</ng-option></ng-select></div>
-        </div>
-        <div class="label-action"><label for="address">Delivery address</label><button type="button" [disabled]="!customerId" (click)="addAddress()">+ Add address</button></div><ng-select labelForId="address" [ngModel]="addressId || null" (ngModelChange)="addressId = $event || ''; invalidate()" [disabled]="busy || !customerId" placeholder="Select saved address" notFoundText="No matching addresses" [searchable]="true"><ng-option *ngFor="let a of addresses" [value]="a._id">{{ a.full_name }} · {{ a.address_line_1 }}, {{ a.city_name }} {{ a.postcode }}</ng-option></ng-select>
+        <div class="label-action"><label for="customer">Customer</label><button type="button" (click)="addCustomer()">+ Add customer</button></div>
+        <ng-select labelForId="customer" [ngModel]="customerId || null" (ngModelChange)="customerId = $event || ''; loadAddresses()" [disabled]="busy" placeholder="Search name, email or phone" [searchFn]="serverSearch" [loading]="lookup.customers.loading" (search)="searchLookup('customers', $event.term)" (scrollToEnd)="fetchLookup('customers', true)" notFoundText="No customers found">
+          <ng-option *ngFor="let c of customers" [value]="c._id">{{ c.name }} · {{ c.email || c.mobile }}</ng-option>
+          <ng-template ng-footer-tmp><div class="lookup-footer"><span>{{ lookup.customers.total }} matching customers</span><button type="button" *ngIf="lookup.customers.more" [disabled]="lookup.customers.loading" (click)="fetchLookup('customers', true)">Load more</button></div></ng-template>
+        </ng-select>
+        <p class="lookup-error" *ngIf="lookup.customers.error">{{ lookup.customers.error }} <button type="button" (click)="fetchLookup('customers')">Retry</button></p>
+        <div class="label-action address-label"><label for="address">Delivery address</label><button type="button" [disabled]="!customerId" (click)="addAddress()">+ Add address</button></div>
+        <ng-select labelForId="address" [ngModel]="addressId || null" (ngModelChange)="addressId = $event || ''; invalidate()" [disabled]="busy || !customerId" placeholder="Search address, city or postal code" [searchFn]="serverSearch" [loading]="lookup.addresses.loading" (search)="searchLookup('addresses', $event.term)" (scrollToEnd)="fetchLookup('addresses', true)" notFoundText="No addresses found">
+          <ng-option *ngFor="let a of addresses" [value]="a._id">{{ a.full_name }} · {{ a.address_line_1 }}, {{ a.city_name }} {{ a.postcode }}</ng-option>
+          <ng-template ng-footer-tmp><div class="lookup-footer"><span>{{ lookup.addresses.total }} matching addresses</span><button type="button" *ngIf="lookup.addresses.more" [disabled]="lookup.addresses.loading" (click)="fetchLookup('addresses', true)">Load more</button></div></ng-template>
+        </ng-select>
+        <p class="lookup-error" *ngIf="lookup.addresses.error">{{ lookup.addresses.error }} <button type="button" (click)="fetchLookup('addresses')">Retry</button></p>
         <div class="address-preview" *ngIf="selectedAddress as address"><strong>{{ address.full_name }}</strong><span>{{ address.address_line_1 }} {{ address.address_line_2 }}, {{ address.city_name }} {{ address.state_name }} {{ address.postcode }}</span><span>{{ address.phone }}</span></div>
         <p class="hint" *ngIf="!addressId">Select a saved address or add a new delivery address for this customer.</p>
       </section>

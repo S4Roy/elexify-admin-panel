@@ -9,8 +9,9 @@ import { ApiService } from 'app/core/services/api.service';
 @Component({
   selector: 'app-customer-address-dialog',
   imports: [CurrencyPipe, NgFor, NgIf, FormsModule, MatDialogModule, NgSelectModule],
+  styles: [`:host{display:block;max-height:90vh;overflow:auto}.address-form{padding:24px;box-sizing:border-box}.address-form h2{font-size:19px;line-height:1.4;margin:0}.address-form input,.address-form textarea{box-sizing:border-box;font-size:13px}.address-form label,.address-form .text-sm{font-size:12px}.address-form fieldset{gap:12px;margin-top:16px}.address-form button{font-size:12px}.address-form .mt-6{margin-top:18px}@media(max-width:480px){.address-form{padding:16px}}`],
   template: `
-    <form #form="ngForm" (ngSubmit)="save()" class="p-6">
+    <form #form="ngForm" (ngSubmit)="save()" class="address-form">
       <h2 class="text-xl font-bold">{{ data.orderId ? 'Edit order ' + data.addressKind + ' address' : data.create ? 'Add delivery address' : 'Edit customer address' }}</h2>
       <p *ngIf="!data.orderId && !data.create" class="mt-2 text-sm text-gray-600">Changes apply to future orders. Your name, reason and changes will be recorded in the audit trail.</p>
       <p *ngIf="data.create" class="mt-2 text-sm text-gray-600">Save a delivery address to this customer’s address book and select it for the order.</p>

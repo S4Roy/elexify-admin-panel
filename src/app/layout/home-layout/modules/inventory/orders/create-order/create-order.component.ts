@@ -1,7 +1,8 @@
+import { Subject, Subscription, debounceTime, takeUntil } from 'rxjs';
 import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
 import { CreateOrderCustomerComponent } from './create-order-customer.component';
 import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -13,7 +14,50 @@ import { HttpService } from 'app/core/services/http.service';
   templateUrl: './create-order.component.html',
   styleUrl: './create-order.component.scss',
 })
-export class CreateOrderComponent {
+export class CreateOrderComponent implements OnDestroy {
+  private destroy$ = new Subject<void>();
+  private lookupSearch = { customers: new Subject<void>(), addresses: new Subject<void>() };
+  lookup = {
+    customers: { term: '', page: 0, total: 0, more: false, loading: false, error: '', version: 0, request: null as Subscription | null },
+    addresses: { term: '', page: 0, total: 0, more: false, loading: false, error: '', version: 0, request: null as Subscription | null },
+  };
+  readonly serverSearch = () => true;
+  searchLookup(kind: 'customers' | 'addresses', term: string) {
+    const state = this.lookup[kind];
+    state.term = term.slice(0, 100); state.version++; state.request?.unsubscribe();
+    state.loading = true; state.error = ''; state.page = 0; state.more = false; state.total = 0;
+    const selectedId = kind === 'customers' ? this.customerId : this.addressId;
+    this[kind] = this[kind].filter(record => record._id === selectedId);
+    this.lookupSearch[kind].next();
+  }
+  fetchLookup(kind: 'customers' | 'addresses', append = false) {
+    const state = this.lookup[kind];
+    if (append && (state.loading || !state.more)) return;
+    if (kind === 'addresses' && !this.customerId) { state.loading = false; return; }
+    state.request?.unsubscribe();
+    const version = ++state.version;
+    const page = append ? state.page + 1 : 1;
+    const customerId = this.customerId;
+    state.loading = true; state.error = '';
+    const params = new URLSearchParams({ page: String(page), limit: '20', search: state.term });
+    if (kind === 'customers') params.set('kind', 'customers'); else params.set('customer_id', customerId);
+    state.request = this.http.get(`admin/inventory/order/create-options?${params}`).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r: any) => {
+        if (version !== state.version || (kind === 'addresses' && customerId !== this.customerId)) return;
+        const current = this[kind];
+        const selectedId = kind === 'customers' ? this.customerId : this.addressId;
+        const selected = current.find(record => record._id === selectedId);
+        const records = [...(append ? current : selected ? [selected] : []), ...r.data];
+        this[kind] = [...new Map(records.map(record => [record._id, record])).values()];
+        state.page = page; state.total = r.pagination.total; state.more = r.pagination.has_more; state.loading = false;
+      },
+      error: () => { if (version === state.version) { state.loading = false; state.error = 'Unable to load results. Try again.'; } },
+    });
+  }
+  ngOnDestroy() {
+    this.destroy$.next(); this.destroy$.complete();
+    this.lookup.customers.request?.unsubscribe(); this.lookup.addresses.request?.unsubscribe();
+  }
   customers: any[] = []; products: any[] = []; addresses: any[] = []; lines: any[] = [];
   customerId = ''; addressId = ''; customerSearch = ''; productSearch = '';
   paymentMethod = 'cod'; note = ''; quote: any = null; busy = false; error = '';
@@ -28,15 +72,20 @@ export class CreateOrderComponent {
   private key = crypto.randomUUID();
   private submitted = false;
   constructor(private dialogs: MatDialog, private http: HttpService, public dialog: MatDialogRef<CreateOrderComponent>, @Inject(MAT_DIALOG_DATA) data: any) {
+    for (const kind of ['customers', 'addresses'] as const) this.lookupSearch[kind].pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(() => this.fetchLookup(kind));
     this.customerId = data?.customerId || '';
     if (this.customerId) {
-      this.http.get(`admin/inventory/order/create-options?kind=customers&customer_id=${this.customerId}`).subscribe({ next: (r: any) => this.customers = r.data, error: e => this.fail(e) });
+      const selectedId = this.customerId;
+      this.http.get(`admin/inventory/order/create-options?kind=customers&customer_id=${selectedId}`).pipe(takeUntil(this.destroy$)).subscribe({ next: (r: any) => {
+        if (this.customerId === selectedId) this.customers = [...new Map([...this.customers, ...r.data].map(c => [c._id, c])).values()];
+      }, error: e => this.fail(e) });
+      this.searchCustomers();
       this.loadAddresses();
     } else this.searchCustomers();
   }
   addCustomer() {
     if (this.busy) return;
-    this.dialogs.open(CreateOrderCustomerComponent, { width: '540px', maxWidth: '94vw', maxHeight: '94vh' }).afterClosed().subscribe(customer => {
+    this.dialogs.open(CreateOrderCustomerComponent, { width: '540px', maxWidth: '94vw', maxHeight: '90vh', ariaLabelledBy: 'new-customer-title' }).afterClosed().subscribe(customer => {
       if (!customer?._id) return;
       this.customers = [customer, ...this.customers.filter(c => c._id !== customer._id)];
       this.customerId = customer._id;
@@ -58,14 +107,13 @@ export class CreateOrderComponent {
     });
   }
   invalidate() { this.quote = null; if (this.submitted) { this.key = crypto.randomUUID(); this.submitted = false; } }
-  searchCustomers() {
-    this.http.get(`admin/inventory/order/create-options?kind=customers&search=${encodeURIComponent(this.customerSearch)}`).subscribe({ next: (r: any) => this.customers = r.data, error: e => this.fail(e) });
-  }
+  searchCustomers() { this.fetchLookup('customers'); }
   loadAddresses() {
     this.invalidate(); this.addressId = ''; this.addresses = [];
-    const customer = this.customerId;
-    if (!customer) return;
-    this.http.get(`admin/inventory/order/create-options?customer_id=${customer}`).subscribe({ next: (r: any) => { if (customer === this.customerId) this.addresses = r.data; }, error: e => this.fail(e) });
+    const state = this.lookup.addresses;
+    state.request?.unsubscribe(); state.version++; state.term = ''; state.page = 0;
+    state.total = 0; state.more = false; state.loading = false; state.error = '';
+    if (this.customerId) this.fetchLookup('addresses');
   }
   searchProducts() {
     this.productsSearched = true;

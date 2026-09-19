@@ -63,3 +63,8 @@ button.primary:hover:not(:disabled) { background: #254fce; }
 .label-action { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
 .label-action label { margin: 0; }
 .label-action button { padding: 0; border: 0; color: #3563e9; font-size: 11px; background: transparent; }
+
+.address-label { margin-top: 14px; }
+.lookup-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: #64748b; }
+.lookup-footer button, .lookup-error button { padding: 3px 8px; font-size: 11px; color: #3563e9; }
+.lookup-error { color: #b91c1c; font-size: 12px; margin-top: 6px; }
