@@ -98,6 +98,8 @@ export class OrdersComponent {
   public sortKey: string = 'created_at';
   public sortDirection: 'asc' | 'desc' = 'desc';
   ngOnInit(): void {
+    if (this.canCreateOrder) this.helperService.setActionButton({ label: 'Create order', icon: 'add' });
+    this.helperService.actionButtonClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.addItem());
     combineLatest([
       this.route.paramMap,
       this.route.queryParamMap,
@@ -224,7 +226,7 @@ export class OrdersComponent {
   get canCreateOrder(): boolean { return ['superadmin', 'manager'].includes(this.helperService.role()); }
   addItem(data: any = null) {
     if (!this.canCreateOrder) return;
-    this.dialog.open(CreateOrderComponent, { width: '900px', maxWidth: '96vw', maxHeight: '94vh', data: { customerId: this.customerId } })
+    this.dialog.open(CreateOrderComponent, { width: '1240px', maxWidth: '96vw', maxHeight: '94vh', autoFocus: 'first-tabbable', ariaLabelledBy: 'create-order-title', data: { customerId: this.customerId } })
       .afterClosed().subscribe(order => { if (order?._id) this.orderDetails(order); });
   }
   stockItem(data: any = null) {}
@@ -341,6 +343,7 @@ export class OrdersComponent {
       });
   }
   ngOnDestroy(): void {
+    this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();

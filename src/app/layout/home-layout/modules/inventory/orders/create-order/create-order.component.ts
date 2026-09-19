@@ -8,12 +8,20 @@ import { HttpService } from 'app/core/services/http.service';
   selector: 'app-create-order',
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './create-order.component.html',
-  styles: [`:host{display:block;padding:24px} h2{font-size:24px;font-weight:600} h3{font-weight:600;margin:20px 0 8px} input,select,textarea{border:1px solid #cbd5e1;border-radius:6px;padding:9px;width:100%;margin:4px 0} button{padding:8px 14px;border-radius:6px;background:#eef2ff;color:#312e81} button:disabled{opacity:.5} .row{display:flex;gap:12px;align-items:center;margin:8px 0}.row input{width:90px} .grow{flex:1}.error{color:#b91c1c;margin:12px 0}.muted{color:#64748b;font-size:13px}.summary{background:#f8fafc;padding:16px;border-radius:8px} footer{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}`],
+  styleUrl: './create-order.component.scss',
 })
 export class CreateOrderComponent {
   customers: any[] = []; products: any[] = []; addresses: any[] = []; lines: any[] = [];
   customerId = ''; addressId = ''; customerSearch = ''; productSearch = '';
   paymentMethod = 'cod'; note = ''; quote: any = null; busy = false; error = '';
+  productsSearched = false;
+  get unitCount() { return this.lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0); }
+  get selectedAddress() { return this.addresses.find(a => a._id === this.addressId); }
+  cataloguePrice(product: any): number {
+    const regular = Number(product.regular_price);
+    const sale = product.sale_price;
+    return sale != null && sale !== '' && Number(sale) >= 0 && Number(sale) < regular ? Number(sale) : regular;
+  }
   private key = crypto.randomUUID();
   private submitted = false;
   constructor(private http: HttpService, public dialog: MatDialogRef<CreateOrderComponent>, @Inject(MAT_DIALOG_DATA) data: any) {
@@ -34,6 +42,7 @@ export class CreateOrderComponent {
     this.http.get(`admin/inventory/order/create-options?customer_id=${customer}`).subscribe({ next: (r: any) => { if (customer === this.customerId) this.addresses = r.data; }, error: e => this.fail(e) });
   }
   searchProducts() {
+    this.productsSearched = true;
     this.http.get(`admin/inventory/order/create-options?kind=products&search=${encodeURIComponent(this.productSearch)}`).subscribe({ next: (r: any) => this.products = r.data, error: e => this.fail(e) });
   }
   add(product: any) {
