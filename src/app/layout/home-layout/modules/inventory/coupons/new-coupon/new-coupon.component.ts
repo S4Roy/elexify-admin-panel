@@ -69,9 +69,9 @@ export class NewCouponComponent implements OnInit {
   initForm() {
     this.formGroup = this.fb.group({
       /* BASIC */
-      code: [this.data?.code ?? null, Validators.required],
-      title: [this.data?.title ?? null, Validators.required],
-      description: [this.data?.description ?? null],
+      code: [this.data?.code ?? null, [Validators.required, Validators.minLength(3), Validators.maxLength(30)]],
+      title: [this.data?.title ?? null, [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      description: [this.data?.description ?? "", Validators.maxLength(500)],
 
       /* DISCOUNT */
       discount_type: [
@@ -80,7 +80,7 @@ export class NewCouponComponent implements OnInit {
       ],
       discount_value: [this.data?.discount_value ?? null, Validators.required],
       max_discount_amount: [this.data?.max_discount_amount ?? null],
-      min_cart_value: [this.data?.min_cart_value ?? 0],
+      min_cart_value: [this.data?.min_cart_value ?? 0, [Validators.required, Validators.min(0)]],
 
       /* USER TYPE */
       applicable_for: [
@@ -121,7 +121,16 @@ export class NewCouponComponent implements OnInit {
 
       /* STATUS */
       status: [this.data?.status ?? 'active', Validators.required],
-    });
+    }, { validators: (control) => {
+      const v = control.value;
+      if (!(Number(v.discount_value) > 0) || (v.discount_type === 'percentage' && Number(v.discount_value) > 100)) return { rules: 'Enter a positive discount; percentages cannot exceed 100%.' };
+      if (v.discount_type === 'percentage' && v.max_discount_amount != null && v.max_discount_amount !== '' && !(Number(v.max_discount_amount) > 0)) return { rules: 'Maximum discount must be greater than zero.' };
+      if ((v.usage_limit != null && v.usage_limit !== '' && (!Number.isInteger(Number(v.usage_limit)) || Number(v.usage_limit) < 1)) || !Number.isInteger(Number(v.usage_per_email)) || Number(v.usage_per_email) < 1) return { rules: 'Usage limits must be positive whole numbers.' };
+      const target = ({ product: 'applicable_products', category: 'applicable_categories', brand: 'applicable_brands', variation: 'applicable_variations' } as Record<string, string>)[v.applicable_scope];
+      if (target && !v[target]?.length) return { rules: 'Select at least one item for the chosen scope.' };
+      if (v.start_date && v.end_date && v.end_date < v.start_date) return { rules: 'End date cannot be before start date.' };
+      return null;
+    }});
     if (this.data) {
       // patch targets
       switch (this.data.applicable_scope) {
@@ -129,7 +138,7 @@ export class NewCouponComponent implements OnInit {
           this.formGroup
             .get('applicable_products')
             ?.setValue(
-              this.data.applicable_products.map((res: any) => res?._id) ?? []
+              (this.data.applicable_products ?? []).map((res: any) => res?._id ?? res) ?? []
             );
           break;
 
@@ -137,7 +146,7 @@ export class NewCouponComponent implements OnInit {
           this.formGroup
             .get('applicable_categories')
             ?.setValue(
-              this.data.applicable_categories.map((res: any) => res?._id) ?? []
+              (this.data.applicable_categories ?? []).map((res: any) => res?._id ?? res) ?? []
             );
           break;
 
@@ -145,7 +154,7 @@ export class NewCouponComponent implements OnInit {
           this.formGroup
             .get('applicable_brands')
             ?.setValue(
-              this.data.applicable_brands.map((res: any) => res?._id) ?? []
+              (this.data.applicable_brands ?? []).map((res: any) => res?._id ?? res) ?? []
             );
           break;
 
@@ -153,7 +162,7 @@ export class NewCouponComponent implements OnInit {
           this.formGroup
             .get('applicable_variations')
             ?.setValue(
-              this.data.applicable_variations.map((res: any) => res?._id) ?? []
+              (this.data.applicable_variations ?? []).map((res: any) => res?._id ?? res) ?? []
             );
           break;
       }
@@ -174,11 +183,15 @@ export class NewCouponComponent implements OnInit {
   }
 
   onSubmit() {
+    if (this.formGroup.disabled) return;
+    this.formGroup.patchValue({ code: this.formGroup.value.code?.trim().toUpperCase(), title: this.formGroup.value.title?.trim() });
     this.formGroup.markAllAsTouched();
     if (!this.formGroup.valid) return;
 
     this.formGroup.disable();
     const payload: any = { ...this.formGroup.getRawValue() };
+
+    payload.usage_limit = payload.usage_limit === "" ? null : payload.usage_limit;
 
     /* FIX percentage logic */
     if (payload.discount_type !== 'percentage') {
@@ -248,7 +261,7 @@ export class NewCouponComponent implements OnInit {
     payload.start_date = moment(payload.start_date)
       .startOf('day')
       .toISOString();
-    payload.end_date = moment(payload.end_date).startOf('day').toISOString();
+    payload.end_date = moment(payload.end_date).endOf('day').toISOString();
 
     if (this.data?._id) payload._id = this.data._id;
 

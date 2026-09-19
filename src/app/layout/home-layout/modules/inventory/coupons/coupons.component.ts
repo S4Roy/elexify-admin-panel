@@ -1,3 +1,4 @@
+import { CouponUsageComponent } from './coupon-usage/coupon-usage.component';
 import { DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -153,6 +154,9 @@ export class CouponsComponent {
         this.updateFilterButton();
       });
   }
+  openUsage(coupon: any = null): void {
+    this.dialog.open(CouponUsageComponent, { data: coupon, width: '1200px', maxWidth: '96vw', autoFocus: false });
+  }
   addItem(data: any = null) {
     this.dialog
       .open(NewCouponComponent, {
@@ -221,6 +225,13 @@ export class CouponsComponent {
     //   },
     // });
   }
+  lifecycle(item: any): string {
+    if (item.status !== 'active') return 'Inactive';
+    if (new Date(item.end_date).getTime() < Date.now()) return 'Expired';
+    if (item.usage_limit != null && item.total_used >= item.usage_limit) return 'Exhausted';
+    if (new Date(item.start_date).getTime() > Date.now()) return 'Scheduled';
+    return 'Live';
+  }
   updateStatus(item: any) {
     const currentStatus = item?.status;
     if (!item?._id || !currentStatus) {
@@ -235,7 +246,7 @@ export class CouponsComponent {
       title: 'Are you sure?',
       message: `Do you want to ${
         newStatus === 'active' ? 'activate' : 'deactivate'
-      } the Coupon ${item?.name ?? ''}?`,
+      } the Coupon ${item?.code ?? ''}?`,
       cancelText: 'Cancel',
       saveText: 'Confirm',
     };

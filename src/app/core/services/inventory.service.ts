@@ -294,6 +294,10 @@ export class InventoryService {
       payload
     );
   }
+  couponUsage(params: URLSearchParams) {
+    return this.httpService.get(`admin/inventory/coupon/usage?${params.toString()}`);
+  }
+
   couponList(params: any) {
     return this.httpService.get(
       `admin/inventory/coupon/list?${params.toString()}`

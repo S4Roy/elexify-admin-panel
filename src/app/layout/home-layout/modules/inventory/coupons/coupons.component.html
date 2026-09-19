@@ -1,3 +1,4 @@
+<div class="flex justify-end mb-3"><button type="button" class="btn-primary" (click)="openUsage()">View all usage history</button></div>
 <div class="table-wrapper">
   <table class="table-base">
     <thead>
@@ -8,6 +9,7 @@
         <th>Applicable For</th>
         <th>Scope</th>
         <th>Validity</th>
+        <th>Redemptions</th>
         <th class="text-center">Status</th>
         <th class="text-center">Action</th>
       </tr>
@@ -96,10 +98,11 @@
             </small>
           </td>
 
+          <td><button type="button" class="text-indigo-600 underline" (click)="openUsage(item)" [attr.aria-label]="'View usage history for ' + item.code">{{ item?.total_used || 0 }} / {{ item?.usage_limit ?? 'Unlimited' }}</button><br /><small>{{ item?.usage_per_email }} per email</small></td>
           <!-- Status -->
           <td class="text-center">
             <button type="button" class="table-status cursor-pointer" [class]="item?.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
-              {{ item?.status }}
+              {{ lifecycle(item) }}
             </button>
           </td>
 
@@ -118,7 +121,7 @@
       <!-- Empty State -->
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="8"><app-empty-state message="No Coupons Found"></app-empty-state></td>
+          <td class="text-center" colspan="9"><app-empty-state message="No Coupons Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
