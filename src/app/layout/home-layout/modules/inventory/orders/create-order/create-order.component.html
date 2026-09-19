@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Create order</h2>
+<mat-dialog-content>
+<p class="muted">Create an order for an existing customer using current catalogue prices. Add customers and delivery addresses from Customers first.</p>
+<fieldset [disabled]="busy">
+<h3>Customer and delivery</h3>
+<label>Search customers by name, email or phone<input [(ngModel)]="customerSearch" (keyup.enter)="searchCustomers()" /></label>
+<button type="button" (click)="searchCustomers()">Find customers</button>
+<label>Customer<select [(ngModel)]="customerId" (ngModelChange)="loadAddresses()"><option value="">Select customer</option><option *ngFor="let c of customers" [value]="c._id">{{ c.name }} · {{ c.email || c.mobile }}</option></select></label>
+<label>Delivery address<select [(ngModel)]="addressId" (ngModelChange)="invalidate()"><option value="">Select address</option><option *ngFor="let a of addresses" [value]="a._id">{{ a.full_name }} · {{ a.address_line_1 }}, {{ a.city_name }} {{ a.postcode }}</option></select></label>
+<p *ngIf="customerId && !addresses.length" class="muted">No saved delivery addresses found. Add one in the customer profile.</p>
+<h3>Products</h3>
+<label>Search catalogue by product name or SKU<input [(ngModel)]="productSearch" (keyup.enter)="searchProducts()" /></label>
+<button type="button" (click)="searchProducts()">Find products</button>
+<div *ngFor="let p of products" class="row"><span class="grow">{{ p.name }} <small>{{ p.sku }} · Stock: {{ p.stock_quantity }}</small></span><button type="button" (click)="add(p)" [disabled]="p.stock_quantity <= 0">Add</button></div>
+<div *ngFor="let l of lines; let i = index" class="row"><span class="grow">{{ l.name }}</span><input type="number" min="1" max="10000" step="1" [attr.aria-label]="'Quantity for ' + l.name" [(ngModel)]="l.quantity" (ngModelChange)="invalidate()" /><button type="button" (click)="remove(i)">Remove</button></div>
+<h3>Payment and notes</h3>
+<label>Payment method<select [(ngModel)]="paymentMethod" (ngModelChange)="invalidate()"><option value="cod">Cash on delivery</option><option value="razorpay">Online payment — awaiting customer payment</option></select></label>
+<p class="muted">COD eligibility, fees and any required advance follow your store settings. Online payments remain pending until payment is verified. Customers can complete payment from their order page within one hour.</p>
+<label>Order note<textarea maxlength="500" [(ngModel)]="note" (ngModelChange)="invalidate()"></textarea></label>
+</fieldset>
+<div *ngIf="quote" class="summary" aria-live="polite">
+<div>Items: {{ quote.subtotal | currency:'INR' }}</div><div>Shipping: {{ quote.shipping | currency:'INR' }}</div><div>COD fee: {{ quote.cod_fee | currency:'INR' }}</div>
+<strong>Total: {{ quote.grand_total | currency:'INR' }}</strong>
+<p *ngIf="quote.payment_required" class="muted">Awaiting customer payment{{ quote.advance_amount ? ' of ' + (quote.advance_amount | currency:'INR') + ' advance' : '' }}. This does not record money received.</p>
+</div>
+<p *ngIf="error" class="error" role="alert">{{ error }}</p>
+</mat-dialog-content>
+<footer><button type="button" [disabled]="busy" (click)="dialog.close()">Cancel</button><button type="button" [disabled]="busy || !valid" (click)="review()">{{ busy ? 'Please wait…' : 'Review total' }}</button><button type="button" *ngIf="quote" [disabled]="busy || !valid" (click)="create()">Create order</button></footer>

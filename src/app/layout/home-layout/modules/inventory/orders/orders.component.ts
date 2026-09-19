@@ -1,3 +1,4 @@
+import { CreateOrderComponent } from './create-order/create-order.component';
 import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -220,7 +221,12 @@ export class OrdersComponent {
     if (this.sortKey !== field) return 'sort-icon';
     return this.sortDirection === 'asc' ? 'sort-icon-up' : 'sort-icon-down';
   }
-  addItem(data: any = null) {}
+  get canCreateOrder(): boolean { return ['superadmin', 'manager'].includes(this.helperService.role()); }
+  addItem(data: any = null) {
+    if (!this.canCreateOrder) return;
+    this.dialog.open(CreateOrderComponent, { width: '900px', maxWidth: '96vw', maxHeight: '94vh', data: { customerId: this.customerId } })
+      .afterClosed().subscribe(order => { if (order?._id) this.orderDetails(order); });
+  }
   stockItem(data: any = null) {}
   paymentStatusClass(status: string): string {
     return PAYMENT_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';

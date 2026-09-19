@@ -1,3 +1,4 @@
+<div class="flex justify-end mb-4" *ngIf="canCreateOrder"><button type="button" class="context-link" (click)="addItem()">+ Create order</button></div>
 <section *ngIf="customerId" class="customer-context mb-4">
   <div class="min-w-0">
     <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Orders for customer</div>
