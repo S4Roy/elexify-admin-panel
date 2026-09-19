@@ -1,4 +1,3 @@
-import { CouponUsageComponent } from './coupon-usage/coupon-usage.component';
 import { DatePipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,7 +8,7 @@ import { ToastrService } from 'ngx-toastr';
 import { MenuComponent } from 'app/layout/home-layout/includes/menu/menu.component';
 import * as Global from 'app/global';
 import { InventoryService } from 'app/core/services/inventory.service';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { MatIconModule } from '@angular/material/icon';
@@ -56,6 +55,7 @@ export class CouponsComponent {
     private inventoryService: InventoryService,
     private helperService: HelpersService,
     private route: ActivatedRoute,
+    private router: Router,
     private toastr: ToastrService,
     private dialogService: DialogService
   ) {
@@ -78,6 +78,7 @@ export class CouponsComponent {
       });
   }
   ngOnInit(): void {
+    this.helperService.secondaryLink.next({ label: 'Usage history', icon: 'history', url: '/inventory/coupons/usage-history' });
     if (this.permissions.includes('add')) {
       this.helperService.setActionButton({
         label: 'Add New Coupon',
@@ -93,6 +94,7 @@ export class CouponsComponent {
     this.updateFilterButton();
   }
   ngOnDestroy(): void {
+    this.helperService.secondaryLink.next(null);
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
     this.destroy$.next();
@@ -155,7 +157,7 @@ export class CouponsComponent {
       });
   }
   openUsage(coupon: any = null): void {
-    this.dialog.open(CouponUsageComponent, { data: coupon, width: '1200px', maxWidth: '96vw', autoFocus: false });
+    this.router.navigate(['/inventory/coupons/usage-history'], { queryParams: coupon ? { coupon: coupon._id, code: coupon.code } : {} });
   }
   addItem(data: any = null) {
     this.dialog

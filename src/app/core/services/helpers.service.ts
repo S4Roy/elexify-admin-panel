@@ -22,6 +22,7 @@ export class HelpersService {
   // count badge) that renders on the right side of the shared breadcrumb
   // bar, and lets that same page know when it was clicked — keeps the
   // filter drawer trigger common/reusable instead of duplicated per page.
+  readonly secondaryLink = new BehaviorSubject<{ label: string; icon: string; url: string } | null>(null);
   private filterButton = new BehaviorSubject<{ count: number } | null>(null);
   filterButton$ = this.filterButton.asObservable();
   private filterButtonClick = new Subject<void>();

@@ -15,6 +15,7 @@ import { OrdersComponent } from './orders/orders.component';
 import { TagsComponent } from './tags/tags.component';
 import { ClassificationComponent } from './classification/classification.component';
 import { NewCategoryComponent } from './categories/new-category/new-category.component';
+import { CouponUsageComponent } from './coupons/coupon-usage/coupon-usage.component';
 import { CouponsComponent } from './coupons/coupons.component';
 import { ShippingClassesComponent } from './shipping-classes/shipping-classes.component';
 import { ShippingZonesComponent } from './shipping-zones/shipping-zones.component';
@@ -319,9 +320,9 @@ export const routes: Routes = [
         data: { pageTitle: 'Coupons', breadcrumb: 'Coupons' },
         children: [
           {
-            path: '',
-            redirectTo: '',
-            pathMatch: 'full',
+            path: 'usage-history',
+            component: CouponUsageComponent,
+            data: { pageTitle: 'Coupon Usage History', breadcrumb: 'Usage History' },
           },
           {
             path: '',

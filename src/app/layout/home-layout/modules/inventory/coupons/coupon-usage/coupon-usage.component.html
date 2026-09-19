@@ -1,18 +1,17 @@
+<section class="usage-page">
 <header>
-  <div><p class="eyebrow">COUPON ACTIVITY</p><h2 mat-dialog-title>Usage history</h2><p>{{ coupon?.code || 'All coupons' }} · Recorded redemptions and reversals</p></div>
-  <button type="button" mat-dialog-close aria-label="Close usage history" class="close">✕</button>
+  <div><p class="eyebrow">COUPON ACTIVITY</p><h2>Usage history</h2><p>{{ coupon?.code || 'All coupons' }} · Recorded redemptions and reversals</p></div>
+  <a routerLink="/inventory/coupons" class="back-link">← Back to coupons</a>
 </header>
-<mat-dialog-content>
+<div class="page-content">
   <form class="filters" (ngSubmit)="load()">
     <label class="search">Search<input name="search" [(ngModel)]="filters.search_key" maxlength="100" placeholder="Coupon, customer, email or order number" /></label>
-    <label>Usage status<select name="status" [(ngModel)]="filters.status"><option value="">All statuses</option><option value="applied">Applied</option><option value="refunded">Refunded</option></select></label>
-    <label>From date<input type="date" name="from" [(ngModel)]="filters.from_date" /></label>
-    <label>To date<input type="date" name="to" [(ngModel)]="filters.to_date" /></label>
     <label>Sort<select name="sort" [(ngModel)]="filters.sort_order"><option value="-1">Newest first</option><option value="1">Oldest first</option></select></label>
     <label>Rows<select name="limit" [(ngModel)]="filters.limit"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
-    <button type="submit" class="btn-primary" [disabled]="loading">Apply filters</button>
+    <button type="submit" class="search-button" [disabled]="loading">Search</button>
     <button type="button" class="reset" (click)="reset()">Reset</button>
   </form>
+  <div class="active-filters" *ngIf="filters.status || filters.from_date || filters.to_date"><span *ngIf="filters.status">{{ filters.status | titlecase }}</span><span *ngIf="filters.from_date || filters.to_date">{{ filters.from_date || 'Any date' }} — {{ filters.to_date || 'Any date' }}</span></div>
   <p class="hint">Dates and times use your local timezone. Totals reflect all matching records, grouped by currency and usage status.</p>
   <p *ngIf="error" role="alert" class="error">{{ error }} <button type="button" (click)="load()">Retry</button></p>
   <p *ngIf="loading" role="status" class="empty">Loading usage history…</p>
@@ -33,7 +32,7 @@
           <td>{{ row.applied_at | date:'dd MMM yyyy' }}<small>{{ row.applied_at | date:'HH:mm:ss' }}</small></td>
           <td><strong>{{ row.coupon_details?.code || 'Unavailable coupon' }}</strong><small>{{ row.coupon_details?.title }}</small></td>
           <td>{{ row.customer?.name || 'Guest / unavailable customer' }}<small>{{ row.email }}</small></td>
-          <td><a *ngIf="row.order_details; else missingOrder" [routerLink]="['/inventory/orders/details', row.order]" mat-dialog-close>{{ row.order_details.id }}</a><ng-template #missingOrder>Unavailable order<small>{{ row.order }}</small></ng-template><small *ngIf="row.order_details">Order: {{ row.order_details.order_status | titlecase }}<br />Payment: {{ row.order_details.payment_status | titlecase }}</small></td>
+          <td><a *ngIf="row.order_details; else missingOrder" [routerLink]="['/inventory/orders/details', row.order]">{{ row.order_details.id }}</a><ng-template #missingOrder>Unavailable order<small>{{ row.order }}</small></ng-template><small *ngIf="row.order_details">Order: {{ row.order_details.order_status | titlecase }}<br />Payment: {{ row.order_details.payment_status | titlecase }}</small></td>
           <td class="amount">{{ row.currency }} {{ row.discount_amount | number:'1.2-2' }}</td>
           <td><span class="status" [class.refunded]="row.status === 'refunded'">{{ row.status | titlecase }}</span></td>
         </tr></tbody>
@@ -42,4 +41,5 @@
     <ng-template #empty><div class="empty"><h3>No usage records found</h3><p>Try another search or date range. History appears when coupon usage is recorded for an order.</p></div></ng-template>
     <pagination *ngIf="pagination.totalDocs > 0" [pagination]="pagination" (pageChange)="load($event)"></pagination>
   </ng-container>
-</mat-dialog-content>
+</div>
+</section>

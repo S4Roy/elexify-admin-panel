@@ -60,6 +60,10 @@
       {{ actionButton.label }}
     </button>
 
+    <a *ngIf="helperService.secondaryLink | async as link" class="filters-btn" [routerLink]="link.url" [attr.aria-label]="link.label" [title]="link.label">
+      <mat-icon class="text-base">{{ link.icon }}</mat-icon>{{ link.label }}
+    </a>
+
     <button
       type="button"
       *ngIf="filterButton"

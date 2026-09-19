@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import {
   ActivatedRoute,
@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-breadcums',
-  imports: [NgFor, RouterModule, NgIf, MatIconModule],
+  imports: [AsyncPipe, NgFor, RouterModule, NgIf, MatIconModule],
   templateUrl: './breadcums.component.html',
   styleUrl: './breadcums.component.scss',
 })
@@ -27,7 +27,7 @@ export class BreadcumsComponent {
     active: string;
     extraActions?: { key: string; label: string; icon?: string }[];
   } | null = null;
-  constructor(private helperService: HelpersService) {
+  constructor(public helperService: HelpersService) {
     this.helperService.breadcrumbs$.subscribe((res: any) => {
 
       this.breadcrumbs = res;
