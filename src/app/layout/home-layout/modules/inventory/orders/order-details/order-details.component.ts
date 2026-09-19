@@ -1,3 +1,4 @@
+import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
 import {
   CurrencyPipe,
   DatePipe,
@@ -154,6 +155,7 @@ export class OrderDetailsComponent {
   forceCancelling = false;
   reopening = false;
   updatingStatus = false;
+  recordingPayment = false;
   retryingRefund = false;
   downloadingInvoice = false;
   syncingZohoInvoice = false;
@@ -256,7 +258,7 @@ export class OrderDetailsComponent {
   }
 
   get canRetryRefund(): boolean {
-    return this.data?.payment_status === 'refund_failed';
+    return this.data?.payment_status === 'refund_failed' && this.data?.payment_meta?.payment_provider !== 'manual';
   }
 
   get canDownloadInvoice(): boolean {
@@ -274,7 +276,37 @@ export class OrderDetailsComponent {
     return ['superadmin', 'manager'].includes(this.helpersService.role());
   }
 
+  get canRecordPayment(): boolean {
+    return this.canManageOrderStatus &&
+      ['pending', 'failed'].includes(this.data?.payment_status) &&
+      ['pending', 'confirmed', 'failed'].includes(this.data?.order_status) &&
+      (this.data?.payment_method === 'razorpay' || this.data?.is_partial_cod) &&
+      !this.data?.stock_reserved && !this.data?.inventory_reverted;
+  }
+
+  openManualPaymentDialog(): void {
+    if (!this.canRecordPayment || this.recordingPayment) return;
+    const orderId = this.data._id;
+    this.dialog.open(ManualPaymentDialogComponent, {
+      width: '560px', maxWidth: '96vw', disableClose: true,
+      data: { amount: this.data.is_partial_cod ? this.data.advance_amount : this.data.grand_total,
+        currency: this.data.currency || 'INR', partialCod: this.data.is_partial_cod },
+    }).afterClosed().subscribe(result => {
+      if (!result) return;
+      this.recordingPayment = true;
+      this.inventoryService.recordManualPayment({ order_id: orderId, ...result }).subscribe({
+        next: () => {
+          this.recordingPayment = false;
+          this.toastr.success('Payment recorded. Order is ready for fulfillment.');
+          this.fetchOrderList();
+        },
+        error: () => { this.recordingPayment = false; this.fetchOrderList(); },
+      });
+    });
+  }
+
   openStatusDialog(): void {
+    if (this.canRecordPayment) { this.openManualPaymentDialog(); return; }
     if (!this.data?._id || this.updatingStatus) return;
     const currentStatus = this.data.order_status;
     this.dialog.open(OrderStatusDialogComponent, {

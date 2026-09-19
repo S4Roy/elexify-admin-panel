@@ -166,6 +166,9 @@ export class InventoryService {
   reopenOrder(payload: { order_id: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/reopen`, payload);
   }
+  recordManualPayment(payload: any) {
+    return this.httpService.post('admin/inventory/order/payment/manual', payload);
+  }
   updateOrderStatus(payload: { order_id: string; expected_status: string; status: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/status`, payload);
   }

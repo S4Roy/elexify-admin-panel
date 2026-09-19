@@ -102,6 +102,20 @@
   <div class="mb-6 grid sm:grid-cols-3 gap-6">
     <div>
       <h3 class="text-lg font-semibold mb-1">Payment</h3>
+      <div *ngIf="canRecordPayment" class="my-3 rounded-lg bg-amber-50 p-3 text-sm">
+        <p>Record the received payment before advancing fulfillment.</p>
+        <button type="button" (click)="openManualPaymentDialog()" [disabled]="recordingPayment"
+          class="mt-2 rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-50">
+          {{ recordingPayment ? 'Recording…' : 'Record manual payment' }}
+        </button>
+      </div>
+      <div *ngIf="data?.manual_payment as payment" class="my-3 rounded-lg bg-green-50 p-3 text-sm break-words">
+        <p class="font-semibold">Manual payment received: {{ payment.amount | currency:payment.currency }}</p>
+        <p>Method: {{ payment.method }} · Reference: {{ payment.reference }}</p>
+        <p>Received: {{ payment.received_at | date:'medium' }}</p>
+        <p>Recorded by {{ payment.recorded_by }} on {{ payment.recorded_at | date:'medium' }}</p>
+        <p>Reason: {{ payment.reason }}</p>
+      </div>
       <p class="text-gray-700 text-sm">
         Method: <span class="capitalize">{{ data?.payment_method }}</span>
       </p>
