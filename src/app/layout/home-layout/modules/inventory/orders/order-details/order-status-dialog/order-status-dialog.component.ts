@@ -1,4 +1,4 @@
-import { NgFor } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -9,9 +9,15 @@ const STATUSES = [
   ['delivered', 'Delivered'], ['failed', 'Failed'],
 ];
 
+// Kept in sync with PACKAGE_CASCADE_STATUSES in elexify-backend
+// services/orderService/manualOrderStatus.js — the only statuses an order
+// that's already been split into packages can move to, since applying one
+// cascades the same status onto every one of its packages.
+const PACKAGE_CASCADE_STATUSES = new Set(['packed', 'shipped', 'out_for_delivery', 'delivered', 'failed']);
+
 @Component({
   selector: 'app-order-status-dialog',
-  imports: [NgFor, FormsModule, MatDialogModule],
+  imports: [NgFor, NgIf, FormsModule, MatDialogModule],
   template: `
     <div class="p-6 sm:p-8">
       <h2 class="text-xl font-bold text-gray-900">Correct order status</h2>
@@ -19,11 +25,15 @@ const STATUSES = [
       <p class="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
         This updates the fulfillment label and is recorded in the order history. It does not charge, refund, cancel, or book a courier shipment.
       </p>
+      <p *ngIf="data.hasPackages" class="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+        This order has already been split into packages, so only shipment-stage statuses are available below — applying one updates every package too.
+      </p>
       <label for="order-status-target" class="mt-5 block text-sm font-semibold text-gray-800">New status</label>
       <select id="order-status-target" [(ngModel)]="status"
         class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm focus:border-primary focus:outline-none">
         <option value="">Select a status</option>
-        <option *ngFor="let option of statuses" [value]="option[0]" [disabled]="option[0] === data.currentStatus">{{ option[1] }}</option>
+        <option *ngFor="let option of statuses" [value]="option[0]"
+          [disabled]="option[0] === data.currentStatus || (data.hasPackages && !isPackageEligible(option[0]))">{{ option[1] }}</option>
       </select>
       <label for="order-status-reason" class="mt-5 block text-sm font-semibold text-gray-800">Reason for correction</label>
       <textarea id="order-status-reason" [(ngModel)]="reason" rows="3" maxlength="500"
@@ -44,8 +54,12 @@ export class OrderStatusDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<OrderStatusDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { orderNumber: string; currentStatus: string },
+    @Inject(MAT_DIALOG_DATA) public data: { orderNumber: string; currentStatus: string; hasPackages?: boolean },
   ) {}
+
+  isPackageEligible(status: string): boolean {
+    return PACKAGE_CASCADE_STATUSES.has(status);
+  }
 
   confirm(): void {
     if (!this.status || this.status === this.data.currentStatus || this.reason.trim().length < 10) return;

@@ -242,26 +242,29 @@ export class OrdersComponent {
 
   // Bulk order-status selection — a page of checked rows feeds the
   // comma-separated order_ids the bulk dialog (and backend) expects.
-  // Kept per-page rather than across the whole filtered result set, same
-  // as most admin table bulk-actions, since selecting "all matching" would
-  // need a separate server-side query.
+  // Keyed by the human-readable Order.id (e.g. "ORD-010708"), the same
+  // identifier shown in the table's ID column and the one the bulk
+  // endpoint looks orders up by — not the Mongo _id, which never appears
+  // in this UI. Kept per-page rather than across the whole filtered result
+  // set, same as most admin table bulk-actions, since selecting "all
+  // matching" would need a separate server-side query.
   selectedIds = new Set<string>();
 
   isSelected(item: any): boolean {
-    return this.selectedIds.has(item?._id);
+    return this.selectedIds.has(item?.id);
   }
   toggleSelected(item: any, checked: boolean): void {
-    if (!item?._id) return;
-    if (checked) this.selectedIds.add(item._id);
-    else this.selectedIds.delete(item._id);
+    if (!item?.id) return;
+    if (checked) this.selectedIds.add(item.id);
+    else this.selectedIds.delete(item.id);
   }
   get allOnPageSelected(): boolean {
-    return !!this.item_list?.length && this.item_list.every((item: any) => this.selectedIds.has(item?._id));
+    return !!this.item_list?.length && this.item_list.every((item: any) => this.selectedIds.has(item?.id));
   }
   toggleSelectAllOnPage(checked: boolean): void {
     for (const item of this.item_list || []) {
-      if (checked) this.selectedIds.add(item._id);
-      else this.selectedIds.delete(item._id);
+      if (checked) this.selectedIds.add(item.id);
+      else this.selectedIds.delete(item.id);
     }
   }
   clearSelection(): void {

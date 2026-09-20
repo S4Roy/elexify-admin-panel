@@ -339,9 +339,10 @@ export class OrderDetailsComponent {
     if (this.canRecordPayment) { this.openManualPaymentDialog(); return; }
     if (!this.data?._id || this.updatingStatus) return;
     const currentStatus = this.data.order_status;
+    const hasPackages = !!(this.data?.package_count > 0 || this.data?.awb || this.data?.shiprocket_order_id);
     this.dialog.open(OrderStatusDialogComponent, {
       width: '560px', maxWidth: '96vw', disableClose: true,
-      data: { orderNumber: this.data.id, currentStatus },
+      data: { orderNumber: this.data.id, currentStatus, hasPackages },
     }).afterClosed().subscribe((result: any) => {
       if (!result?.status || !result?.reason) return;
       this.updatingStatus = true;

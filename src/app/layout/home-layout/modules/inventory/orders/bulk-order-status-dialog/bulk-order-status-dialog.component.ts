@@ -16,7 +16,12 @@ const STATUSES = [
 // elexify-backend/src/controllers/admin/inventory/order/bulkUpdateStatus.js
 const BULK_LIMIT = 100;
 
-const ID_PATTERN = /^[0-9a-fA-F]{24}$/;
+// Order.id (elexify-backend models/Order.js) — the human-readable order
+// number shown in the Orders table's ID column (e.g. "ORD-010708"), not
+// the Mongo _id. Kept loose since older/imported orders may not follow the
+// current "ORD-######" format; this only rules out obviously-bad input,
+// matching the backend's own validation in routes/admin/inventory/order.js.
+const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 @Component({
   selector: 'app-bulk-order-status-dialog',
@@ -26,12 +31,13 @@ const ID_PATTERN = /^[0-9a-fA-F]{24}$/;
       <h2 class="text-xl font-bold text-gray-900">Bulk update order status</h2>
       <p class="mt-2 text-sm text-gray-600">
         Paste or edit a comma-separated list of order IDs, pick the new status, and apply it to all of them at once.
-        Each order is checked independently — orders that aren't eligible (cancelled, returned, shipped, unpaid, etc.) are skipped and reported, not silently failed.
+        Each order is checked independently — orders that aren't eligible (cancelled, returned, unpaid, etc.) are skipped and reported, not silently failed.
+        For an order already split into packages, only Packed/Shipped/Out for Delivery/Delivered/Failed are allowed — applying one of these updates every one of its packages too.
       </p>
 
       <label for="bulk-order-ids" class="mt-5 block text-sm font-semibold text-gray-800">Order IDs (comma-separated)</label>
       <textarea id="bulk-order-ids" [(ngModel)]="orderIdsText" rows="3" maxlength="4000"
-        placeholder="64f1a2b3c4d5e6f7a8b9c0d1, 64f1a2b3c4d5e6f7a8b9c0d2, ..."
+        placeholder="ORD-010708, ORD-010712, ..."
         class="mt-2 w-full resize-none rounded-lg border border-gray-300 px-3 py-3 text-sm font-mono focus:border-primary focus:outline-none"></textarea>
       <div class="mt-1 flex justify-between text-xs">
         <span [class]="idCount > BULK_LIMIT ? 'text-red-600' : 'text-gray-500'">
