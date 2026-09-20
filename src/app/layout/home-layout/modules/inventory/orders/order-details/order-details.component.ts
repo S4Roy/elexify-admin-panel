@@ -380,10 +380,13 @@ export class OrderDetailsComponent {
   // link to resync (same hasPackages check openStatusDialog uses) — an
   // order with nothing linked yet needs "Link Shiprocket order" instead
   // (via Change Status), not this button.
+  // Always available (permission aside) — the backend now decides what's
+  // possible: an already-linked order gets resynced from a live lookup;
+  // one with nothing linked yet gets searched on Shiprocket by its own
+  // order id and linked on an unambiguous match. See
+  // services/orderService/fetchShiprocketDetails.js on the backend.
   get canSyncShiprocket(): boolean {
-    return this.canManageOrderStatus &&
-      !!(this.data?.package_count > 0 || this.data?.awb || this.data?.shiprocket_order_id) &&
-      !['cancelled', 'returned', 'return_requested', 'delivered', 'failed'].includes(this.data?.order_status);
+    return this.canManageOrderStatus;
   }
 
   syncShiprocketStatus(): void {
@@ -394,7 +397,7 @@ export class OrderDetailsComponent {
         this.syncingShiprocket = false;
         const changed = res?.data?.changed;
         this.toastr.success(
-          changed ? `Synced from Shiprocket — order is now ${this.orderStatusLabel(res?.data?.order_status)}` : 'Already up to date with Shiprocket',
+          changed ? `Fetched from Shiprocket — order is now ${this.orderStatusLabel(res?.data?.order_status)}` : 'Already up to date with Shiprocket',
         );
         this.fetchOrderList();
       },

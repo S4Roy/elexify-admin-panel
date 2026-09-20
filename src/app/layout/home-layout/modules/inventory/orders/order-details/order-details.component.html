@@ -37,10 +37,10 @@
         type="button"
         (click)="syncShiprocketStatus()"
         [disabled]="syncingShiprocket"
-        title="Fetch this order's current status live from Shiprocket, for when a webhook was missed or delayed"
+        title="Fetch this order's shipment details live from Shiprocket by its order ID — resyncs an existing link, or finds and links one if it doesn't have one yet"
         class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
       >
-        {{ syncingShiprocket ? 'Fetching…' : 'Fetch current status' }}
+        {{ syncingShiprocket ? 'Fetching…' : 'Fetch Shiprocket details' }}
       </button>
       <button
         *ngIf="isCancellable"
