@@ -190,6 +190,13 @@ a:focus-visible, button:focus-visible {
   }
 }
 
+.selection-count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 .link-btn {
   display: inline-flex;
   align-items: center;

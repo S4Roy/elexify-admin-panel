@@ -105,6 +105,8 @@ export class OrdersComponent {
   ngOnInit(): void {
     if (this.canCreateOrder) this.helperService.setActionButton({ label: 'Create order', icon: 'add' });
     this.helperService.actionButtonClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.addItem());
+    this.helperService.selectionActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openBulkStatusDialog());
+    this.helperService.selectionClear$.pipe(takeUntil(this.destroy$)).subscribe(() => this.clearSelection());
     combineLatest([
       this.route.paramMap,
       this.route.queryParamMap,
@@ -257,6 +259,7 @@ export class OrdersComponent {
     if (!item?.id) return;
     if (checked) this.selectedIds.add(item.id);
     else this.selectedIds.delete(item.id);
+    this.syncSelectionAction();
   }
   get allOnPageSelected(): boolean {
     return !!this.item_list?.length && this.item_list.every((item: any) => this.selectedIds.has(item?.id));
@@ -266,9 +269,25 @@ export class OrdersComponent {
       if (checked) this.selectedIds.add(item.id);
       else this.selectedIds.delete(item.id);
     }
+    this.syncSelectionAction();
   }
   clearSelection(): void {
     this.selectedIds.clear();
+    this.syncSelectionAction();
+  }
+  // Mirrors the current selection into the shared breadcrumb-bar toolbar
+  // (see HelpersService.selectionAction$) so "Update status" renders next
+  // to Create order/Filters instead of a separate row under the table.
+  private syncSelectionAction(): void {
+    if (!this.canManageOrderStatus || !this.selectedIds.size) {
+      this.helperService.clearSelectionAction();
+      return;
+    }
+    this.helperService.setSelectionAction({
+      count: this.selectedIds.size,
+      label: 'Update status',
+      icon: 'edit',
+    });
   }
   openBulkStatusDialog(): void {
     if (!this.canManageOrderStatus) return;
@@ -423,6 +442,7 @@ export class OrdersComponent {
   ngOnDestroy(): void {
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
+    this.helperService.clearSelectionAction();
     this.destroy$.next();
     this.destroy$.complete();
   }

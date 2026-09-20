@@ -51,7 +51,33 @@ export class HelpersService {
   viewToggleChange$ = this.viewToggleChange.asObservable();
   private viewToggleAction = new Subject<string>();
   viewToggleAction$ = this.viewToggleAction.asObservable();
+  // Lets a list page register a bulk-selection toolbar (e.g. "3 selected —
+  // Update status — Clear") that renders on the breadcrumb bar beside Add
+  // New/Filters while 1+ rows are checked, instead of the page floating
+  // its own separate toolbar row underneath the table.
+  private selectionAction = new BehaviorSubject<{
+    count: number;
+    label: string;
+    icon?: string;
+  } | null>(null);
+  selectionAction$ = this.selectionAction.asObservable();
+  private selectionActionClick = new Subject<void>();
+  selectionActionClick$ = this.selectionActionClick.asObservable();
+  private selectionClear = new Subject<void>();
+  selectionClear$ = this.selectionClear.asObservable();
   constructor(private authService: AuthService) {}
+  setSelectionAction(config: { count: number; label: string; icon?: string } | null) {
+    this.selectionAction.next(config);
+  }
+  clearSelectionAction() {
+    this.selectionAction.next(null);
+  }
+  triggerSelectionActionClick() {
+    this.selectionActionClick.next();
+  }
+  triggerSelectionClear() {
+    this.selectionClear.next();
+  }
   setViewToggle(config: {
     options: { value: string; label: string; icon?: string }[];
     active: string;

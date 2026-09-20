@@ -50,6 +50,23 @@
       </button>
     </div>
 
+    <ng-container *ngIf="selectionAction as sel">
+      <span class="selection-count">{{ sel.count }} selected</span>
+      <button
+        type="button"
+        class="add-new-btn"
+        [attr.aria-label]="sel.label"
+        [title]="sel.label"
+        (click)="triggerSelectionAction()"
+      >
+        <mat-icon class="text-base" *ngIf="sel.icon">{{ sel.icon }}</mat-icon>
+        {{ sel.label }}
+      </button>
+      <button type="button" class="link-btn" aria-label="Clear selection" (click)="clearSelection()">
+        Clear
+      </button>
+    </ng-container>
+
     <button
       type="button"
       *ngIf="actionButton"
