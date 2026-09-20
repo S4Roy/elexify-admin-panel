@@ -346,12 +346,19 @@ export class OrderDetailsComponent {
     }).afterClosed().subscribe((result: any) => {
       if (!result?.status || !result?.reason) return;
       this.updatingStatus = true;
-      this.inventoryService.updateOrderStatus({
-        order_id: this.data._id,
-        expected_status: currentStatus,
-        status: result.status,
-        reason: result.reason,
-      }).subscribe({
+      const request$ = result.shiprocketOrderId
+        ? this.inventoryService.registerExternalPackage({
+            order_id: this.data._id,
+            shiprocket_order_id: result.shiprocketOrderId,
+            reason: result.reason,
+          })
+        : this.inventoryService.updateOrderStatus({
+            order_id: this.data._id,
+            expected_status: currentStatus,
+            status: result.status,
+            reason: result.reason,
+          });
+      request$.subscribe({
         next: () => {
           this.updatingStatus = false;
           this.toastr.success('Order status updated');

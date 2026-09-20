@@ -187,6 +187,12 @@ export class InventoryService {
   bulkUpdateOrderStatus(payload: { order_ids: string; status: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/status/bulk`, payload);
   }
+  // Links an order to a Shiprocket order booked out-of-band (verified live
+  // against Shiprocket server-side before anything is saved) instead of a
+  // bare "packed" label with nothing behind it. Single-order only.
+  registerExternalPackage(payload: { order_id: string; shiprocket_order_id: string; reason: string }) {
+    return this.httpService.post(`admin/inventory/order/package/register-external`, payload);
+  }
   retryRefund(payload: any) {
     return this.httpService.post(
       `admin/inventory/order/refund/retry`,

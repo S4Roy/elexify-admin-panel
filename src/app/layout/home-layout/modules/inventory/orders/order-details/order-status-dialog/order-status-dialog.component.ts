@@ -35,13 +35,22 @@ const PACKAGE_CASCADE_STATUSES = new Set(['packed', 'shipped', 'out_for_delivery
         <option *ngFor="let option of statuses" [value]="option[0]"
           [disabled]="option[0] === data.currentStatus || (data.hasPackages && !isPackageEligible(option[0]))">{{ option[1] }}</option>
       </select>
+      <ng-container *ngIf="needsShiprocketReference">
+        <p class="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+          This order has no package yet, so "Packed" requires the Shiprocket order it was actually booked under — it's verified live against Shiprocket before anything is saved.
+        </p>
+        <label for="order-status-shiprocket-id" class="mt-4 block text-sm font-semibold text-gray-800">Shiprocket order ID</label>
+        <input id="order-status-shiprocket-id" type="text" inputmode="numeric" [(ngModel)]="shiprocketOrderId"
+          placeholder="e.g. 123456789"
+          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-primary focus:outline-none" />
+      </ng-container>
       <label for="order-status-reason" class="mt-5 block text-sm font-semibold text-gray-800">Reason for correction</label>
       <textarea id="order-status-reason" [(ngModel)]="reason" rows="3" maxlength="500"
         placeholder="Explain why this status needs to change (at least 10 characters)"
         class="mt-2 w-full resize-none rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-primary focus:outline-none"></textarea>
       <div class="mt-6 flex justify-end gap-3">
         <button type="button" (click)="dialogRef.close()" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700">Keep current status</button>
-        <button type="button" (click)="confirm()" [disabled]="!status || status === data.currentStatus || reason.trim().length < 10"
+        <button type="button" (click)="confirm()" [disabled]="!canConfirm"
           class="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Confirm change</button>
       </div>
     </div>
@@ -51,6 +60,7 @@ export class OrderStatusDialogComponent {
   statuses = STATUSES;
   status = '';
   reason = '';
+  shiprocketOrderId = '';
 
   constructor(
     public dialogRef: MatDialogRef<OrderStatusDialogComponent>,
@@ -61,8 +71,26 @@ export class OrderStatusDialogComponent {
     return PACKAGE_CASCADE_STATUSES.has(status);
   }
 
+  // "Packed" on an order with no packages at all needs a verified
+  // Shiprocket reference (see registerExternalPackage on the backend) —
+  // once it already has packages, correcting back to "packed" is the
+  // ordinary cascade path and needs no reference.
+  get needsShiprocketReference(): boolean {
+    return this.status === 'packed' && !this.data.hasPackages;
+  }
+
+  get canConfirm(): boolean {
+    if (!this.status || this.status === this.data.currentStatus || this.reason.trim().length < 10) return false;
+    if (this.needsShiprocketReference && !/^\d+$/.test(this.shiprocketOrderId.trim())) return false;
+    return true;
+  }
+
   confirm(): void {
-    if (!this.status || this.status === this.data.currentStatus || this.reason.trim().length < 10) return;
-    this.dialogRef.close({ status: this.status, reason: this.reason.trim() });
+    if (!this.canConfirm) return;
+    this.dialogRef.close({
+      status: this.status,
+      reason: this.reason.trim(),
+      ...(this.needsShiprocketReference ? { shiprocketOrderId: this.shiprocketOrderId.trim() } : {}),
+    });
   }
 }
