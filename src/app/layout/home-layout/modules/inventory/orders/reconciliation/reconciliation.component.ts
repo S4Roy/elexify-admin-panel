@@ -1,5 +1,5 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { InventoryService } from 'app/core/services/inventory.service';
@@ -47,7 +47,17 @@ interface ReconciliationReport {
   imports: [NgIf, NgFor, FormsModule, DatePipe],
   templateUrl: './reconciliation.component.html',
 })
-export class ReconciliationComponent implements OnInit {
+export class ReconciliationComponent implements OnInit, OnDestroy {
+  fetchingDetails = false;
+  detailsProcessed = 0;
+  detailsOutcomes: any[] = [];
+  mode = 'force_status';
+  auditMode = 'force_status';
+  private destroyed = false;
+  processed = 0;
+  total = 0;
+  outcomes: { reference: string; status: string; reason?: string }[] = [];
+  ngOnDestroy(): void { this.destroyed = true; }
   selectedFile: File | null = null;
   auditing = false;
   applying = false;
@@ -77,23 +87,29 @@ export class ReconciliationComponent implements OnInit {
   }
 
   get canApply(): boolean {
-    return !!this.auditId && !this.applied && !this.applying &&
+    return !!this.auditId && this.total > 0 && !this.applied && !this.applying && !this.auditing &&
       this.confirmationText.trim() === this.requiredConfirmation;
   }
 
   runAudit(): void {
-    if (!this.selectedFile || this.auditing) return;
+    if (!this.selectedFile || this.auditing || this.applying || this.fetchingDetails) return;
+    this.detailsProcessed = 0;
+    this.detailsOutcomes = [];
+    this.processed = 0;
+    this.outcomes = [];
     this.auditing = true;
     this.report = null;
     this.auditId = null;
     this.applied = false;
     this.confirmationText = '';
-    this.inventoryService.auditReconciliation(this.selectedFile).subscribe({
+    this.inventoryService.auditReconciliation(this.selectedFile, this.mode).subscribe({
       next: (res: any) => {
         this.auditing = false;
+        this.auditMode = res?.data?.mode || this.mode;
         this.auditId = res?.data?.audit_id || null;
         this.filename = res?.data?.filename || this.selectedFile?.name || null;
         this.report = res?.data?.report || null;
+        this.total = res?.data?.total || 0;
         this.toastr.success('Audit complete — review the report below before applying.');
         this.loadHistory();
       },
@@ -104,18 +120,75 @@ export class ReconciliationComponent implements OnInit {
   applyChanges(): void {
     if (!this.canApply || !this.auditId) return;
     this.applying = true;
+    this.applyNext();
+  }
+
+  private applyNext(): void {
+    if (this.destroyed || !this.auditId) return;
     this.inventoryService.applyReconciliation({
       audit_id: this.auditId,
       confirmation: this.confirmationText.trim(),
     }).subscribe({
       next: (res: any) => {
+        const result = res?.data;
+        this.processed = result.cursor;
+        if (result.outcome) this.outcomes.push(result.outcome);
+        if (!result.done) {
+          // Pace requests below the provider's published rate limit.
+          setTimeout(() => this.applyNext(), this.auditMode === 'force_status' ? 0 : 1000);
+          return;
+        }
         this.applying = false;
         this.applied = true;
-        this.report = res?.data?.report || this.report;
-        this.toastr.success('Reconciliation applied.');
+        this.toastr.success('Sync finished. Review the results for any blocked orders.');
         this.loadHistory();
       },
-      error: () => { this.applying = false; },
+      error: () => { this.applying = false; this.loadHistory(); },
+    });
+  }
+
+  resume(item: any): void {
+    if (this.applying || this.fetchingDetails || this.auditing || item.processing) return;
+    this.detailsProcessed = item.details_cursor || 0;
+    this.detailsOutcomes = item.details_outcomes || [];
+    this.auditMode = item.mode;
+    this.mode = item.mode;
+    this.auditId = item._id;
+    this.filename = item.filename;
+    this.report = item.dry_run_report;
+    this.processed = item.cursor || 0;
+    this.total = item.dry_run_report?.applied?.length || 0;
+    this.outcomes = item.outcomes || [];
+    this.applied = item.status === 'applied';
+    this.confirmationText = '';
+  }
+
+  get detailsTotal(): number {
+    return this.outcomes.filter(item => item.status === 'synced').length;
+  }
+
+  fetchShiprocketDetails(): void {
+    if (!this.auditId || !this.applied || this.auditMode !== 'force_status' || this.fetchingDetails || this.detailsProcessed >= this.detailsTotal) return;
+    this.fetchingDetails = true;
+    this.fetchNextDetails();
+  }
+
+  private fetchNextDetails(): void {
+    if (this.destroyed || !this.auditId) return;
+    this.inventoryService.fetchReconciliationDetails(this.auditId).subscribe({
+      next: (res: any) => {
+        const data = res.data;
+        this.detailsProcessed = data.cursor;
+        if (data.outcome) this.detailsOutcomes.push(data.outcome);
+        if (!data.done) {
+          setTimeout(() => this.fetchNextDetails(), 1500);
+          return;
+        }
+        this.fetchingDetails = false;
+        this.toastr.success('Shiprocket details fetch finished. Review the results below.');
+        this.loadHistory();
+      },
+      error: () => { this.fetchingDetails = false; this.loadHistory(); },
     });
   }
 

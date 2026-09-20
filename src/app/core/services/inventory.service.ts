@@ -204,11 +204,14 @@ export class InventoryService {
   // reconcileShiprocketOrderStatus.js on the backend for the matching
   // logic and controllers/admin/inventory/order/reconciliation/*.js for
   // the three endpoints below.
-  auditReconciliation(file: File) {
-    return this.httpService.postFormData(`admin/inventory/order/reconciliation/audit`, { file });
+  auditReconciliation(file: File, mode = 'live_delivered') {
+    return this.httpService.postFormData(`admin/inventory/order/reconciliation/audit`, { file, mode });
   }
   applyReconciliation(payload: { audit_id: string; confirmation: string }) {
     return this.httpService.post(`admin/inventory/order/reconciliation/apply`, payload);
+  }
+  fetchReconciliationDetails(auditId: string) {
+    return this.httpService.post('admin/inventory/order/reconciliation/fetch-details', { audit_id: auditId });
   }
   listReconciliationAudits() {
     return this.httpService.get(`admin/inventory/order/reconciliation/list`, {});
