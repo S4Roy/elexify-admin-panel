@@ -5,13 +5,20 @@
 .crumb-bar {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  box-shadow: none;
+  min-height: 54px;
+  padding: 10px 16px;
+  gap: 12px;
 }
+
+.crumb-trail { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; }
 
 .crumb-link {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.55rem;
+  padding: 0.2rem 0.15rem;
+  font-size: 13px;
+  line-height: 20px;
   border-radius: 0.375rem;
   color: var(--text-secondary);
   font-weight: 500;
@@ -32,15 +39,15 @@
   }
 }
 
-.crumb-active {
-  color: var(--nav-primary) !important;
-  background-color: var(--active-tint-bg);
-  font-weight: 600;
-
-  &:hover {
-    background-color: var(--active-tint-bg);
-    color: var(--nav-primary) !important;
-  }
+.crumb-current {
+  color: var(--text-primary);
+  font-weight: 650;
+  &:hover { background: transparent; }
+}
+.crumb-parent:hover { color: var(--nav-primary); background: transparent; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--nav-primary);
+  outline-offset: 3px;
 }
 
 .crumb-sep {
@@ -60,9 +67,10 @@
   gap: 0.3rem;
   padding: 0.3rem 0.75rem;
   border: 1px solid var(--nav-primary);
-  border-radius: 999px;
-  background-color: transparent;
-  color: var(--nav-primary);
+  border-radius: 7px;
+  min-height: 34px;
+  background-color: var(--nav-primary);
+  color: #fff;
   font-weight: 600;
   font-size: 0.8125rem;
   cursor: pointer;
@@ -79,12 +87,12 @@
   }
 
   &:hover {
-    background-color: var(--nav-primary);
-    color: #fff;
+    filter: brightness(0.94);
   }
 }
 
 .filters-btn {
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -129,20 +137,7 @@
   line-height: 18px;
 }
 
-// Icon-only on mobile — the "Filters"/"Add New X" label text is a bare
-// text node (not wrapped in its own element), so `font-size: 0` on the
-// button collapses it to nothing while the icon and count badge stay
-// visible: both already declare their own explicit font-size, which
-// (being each element's own property, not inherited) isn't affected by
-// the parent's.
-//
-// Breadcrumb trail also collapses to just the active/last crumb — the
-// full "Inventory > Products > Connectors" chain plus two action buttons
-// competing for ~370px is what forced this bar into two visibly
-// mismatched rows to begin with. `.crumb-link:not(:last-child)` catches
-// every non-active link (including the optional "Others" lead-in) since
-// the last DOM child is always the active crumb — the loop never renders
-// a trailing separator after it.
+// Keep the current page and accessible icon actions visible on small screens.
 @media (max-width: 767px) {
   // The bar itself (mx-3 mt-2 px-3 py-2 from the template's Tailwind
   // classes) was sized for a full breadcrumb chain plus two labeled
@@ -190,7 +185,7 @@
   .crumb-sep {
     display: none !important;
   }
-  .crumb-link:not(:last-child) {
+  .crumb-parent {
     display: none;
   }
 }

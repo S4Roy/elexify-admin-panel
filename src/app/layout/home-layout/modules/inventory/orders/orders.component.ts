@@ -73,6 +73,7 @@ export class OrdersComponent {
   // driven by the /inventory/orders/:order_status route (status tiles /
   // sidebar links), so a drawer filter for it would just duplicate that nav.
   filterValues: Record<string, any> = {
+    import_source: null,
     payment_status: [],
     payment_method: [],
     from_date: null,
@@ -145,6 +146,14 @@ export class OrdersComponent {
   get filterFields(): FilterFieldDef[] {
     return [
       {
+        key: 'import_source', label: 'Import source', type: 'select',
+        options: [
+          { value: '', label: 'All records' },
+          { value: 'backup', label: 'WooCommerce backup import' },
+          { value: 'other', label: 'Other records' },
+        ],
+      },
+      {
         key: 'payment_status',
         label: 'Payment Status',
         type: 'multiselect',
@@ -174,6 +183,7 @@ export class OrdersComponent {
   }
   filterCount(): number {
     let count = 0;
+    if (this.filterValues['import_source']) count++;
     if (this.filterValues['payment_status']?.length) count++;
     if (this.filterValues['payment_method']?.length) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
@@ -252,6 +262,7 @@ export class OrdersComponent {
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',
     });
+    if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
     if (this.paginationOption.limit) {
       params.set('limit', String(this.paginationOption.limit));
     }

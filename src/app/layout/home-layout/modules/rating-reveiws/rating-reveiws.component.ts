@@ -39,6 +39,7 @@ export class RatingReveiwsComponent {
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
   filterValues: Record<string, any> = {
+    import_source: null,
     status: [],
     rating: [],
   };
@@ -77,6 +78,14 @@ export class RatingReveiwsComponent {
   get filterFields(): FilterFieldDef[] {
     return [
       {
+        key: 'import_source', label: 'Import source', type: 'select',
+        options: [
+          { value: '', label: 'All records' },
+          { value: 'backup', label: 'WooCommerce backup import' },
+          { value: 'other', label: 'Other records' },
+        ],
+      },
+      {
         key: 'status',
         label: 'Status',
         type: 'multiselect',
@@ -102,6 +111,7 @@ export class RatingReveiwsComponent {
   }
   filterCount(): number {
     let count = 0;
+    if (this.filterValues['import_source']) count++;
     if (this.filterValues['status']?.length) count++;
     if (this.filterValues['rating']?.length) count++;
     return count;
@@ -133,6 +143,7 @@ export class RatingReveiwsComponent {
 
   fetchRating() {
     let params = new URLSearchParams();
+    if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
     }

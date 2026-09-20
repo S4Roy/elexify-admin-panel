@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
-import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { Subject, combineLatest, takeUntil } from 'rxjs';
+import { Subject, Subscription, combineLatest, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
 import { MenuComponent } from '../../includes/menu/menu.component';
 import PaginationOptions from 'app/core/models/PaginationOptions';
@@ -16,17 +16,17 @@ import { NewCustomerComponent } from './new-customer/new-customer.component';
 import { MatIconModule } from '@angular/material/icon';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from '../../includes/confirm-dialog/confirm-dialog.component';
-import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawer.component';
 @Component({
   selector: 'app-customers',
   imports: [
-    EmptyStateComponent,
     MenuComponent,
     NgFor,
     NgIf,
     PaginationComponent,
     DatePipe,
+    DecimalPipe,
+    RouterLink,
     MatIconModule,
   ],
   templateUrl: './customers.component.html',
@@ -34,6 +34,41 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
 })
 export class CustomersComponent {
   Global = Global;
+  loading = false;
+  loadError = false;
+  private listRequest?: Subscription;
+
+  initials(name: string): string {
+    return (name || '?').trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase();
+  }
+  trackCustomer(_index: number, customer: any): string { return customer._id; }
+  setSource(source: string | null): void {
+    this.filterValues['import_source'] = source;
+    this.paginationOption.page = 1;
+    this.updateFilterButton();
+    this.fetchCutomerList();
+  }
+  setPageSize(value: string): void {
+    this.paginationOption.limit = Number(value);
+    this.paginationOption.page = 1;
+    this.fetchCutomerList();
+  }
+  clearFilters(): void {
+    this.filterValues = { status: [], import_source: null, email_verified: null, mobile_verified: null, from_date: null, to_date: null };
+    this.paginationOption.page = 1;
+    this.updateFilterButton();
+    this.router.navigate([], { relativeTo: this.route, queryParams: { from_date: null, to_date: null }, queryParamsHandling: 'merge' });
+    this.fetchCutomerList();
+  }
+  get activeFilterLabels(): string[] {
+    const f = this.filterValues;
+    return [
+      f['status']?.length ? 'Status: ' + f['status'].join(', ') : '',
+      f['email_verified'] ? 'Email verified: ' + f['email_verified'] : '',
+      f['mobile_verified'] ? 'Mobile verified: ' + f['mobile_verified'] : '',
+      f['from_date'] || f['to_date'] ? 'Joined: ' + (f['from_date'] || 'Any date') + ' – ' + (f['to_date'] || 'Today') : '',
+    ].filter(Boolean);
+  }
   item_list: any = [];
   paginationOption: PaginationOptions;
 
@@ -41,6 +76,7 @@ export class CustomersComponent {
   // Working filter values, keyed to match filterFields below — this is what
   // gets handed to the (page-agnostic) filter drawer and read back from it.
   filterValues: Record<string, any> = {
+    import_source: null,
     status: [],
     email_verified: null,
     mobile_verified: null,
@@ -101,6 +137,14 @@ export class CustomersComponent {
   get filterFields(): FilterFieldDef[] {
     return [
       {
+        key: 'import_source', label: 'Import source', type: 'select',
+        options: [
+          { value: '', label: 'All records' },
+          { value: 'backup', label: 'WooCommerce backup import' },
+          { value: 'other', label: 'Other records' },
+        ],
+      },
+      {
         key: 'status',
         label: 'Status',
         type: 'multiselect',
@@ -129,6 +173,7 @@ export class CustomersComponent {
   }
   filterCount(): number {
     let count = 0;
+    if (this.filterValues['import_source']) count++;
     if (this.filterValues['status']?.length) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
     if (this.filterValues['email_verified']) count++;
@@ -162,7 +207,7 @@ export class CustomersComponent {
       });
   }
   sort(field: string): void {
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption.page = 1;
 
     if (this.sortKey === field) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -192,10 +237,19 @@ export class CustomersComponent {
       });
   }
   fetchCutomerList() {
+    this.listRequest?.unsubscribe();
+    this.loading = true;
+    this.loadError = false;
+    this.filterOption.status = this.filterValues['status']?.length ? this.filterValues['status'].join(',') : null;
+    this.filterOption.from_date = this.filterValues['from_date'] || null;
+    this.filterOption.to_date = this.filterValues['to_date'] || null;
+    this.filterOption.email_verified = this.filterValues['email_verified'] || null;
+    this.filterOption.mobile_verified = this.filterValues['mobile_verified'] || null;
     let params = new URLSearchParams({
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',
     });
+    if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
     if (this.paginationOption.limit) {
       params.set('limit', String(this.paginationOption.limit));
     }
@@ -222,14 +276,15 @@ export class CustomersComponent {
       params.set('mobile_verified', this.filterOption.mobile_verified);
     }
 
-    this.apiService.customerList(params).subscribe({
+    this.listRequest = this.apiService.customerList(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
+        this.loading = false;
         this.item_list = res?.data?.docs ?? [];
         this.paginationOption = {
           ...res?.data,
         };
       },
-      error: (err) => {},
+      error: () => { this.loading = false; this.loadError = true; this.item_list = []; },
     });
   }
   deleteItem(item: any) {
@@ -248,6 +303,7 @@ export class CustomersComponent {
   permissions: any = ['add', 'edit', 'delete'];
 
   ngOnDestroy(): void {
+    this.listRequest?.unsubscribe();
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
     this.destroy$.next();

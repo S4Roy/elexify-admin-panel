@@ -42,6 +42,18 @@ export class OperationDetailComponent implements OnInit {
     public helperService: HelpersService,
   ) {}
 
+  get isLegacyImport(): boolean {
+    return this.operation?.key === 'woocommerce-missing-data';
+  }
+
+  get importSummary() {
+    return Object.entries(this.dryRunResult?.result?.summary ?? {}).map(([kind, counts]) => ({ kind, ...counts }));
+  }
+
+  get canImport(): boolean {
+    return !this.isLegacyImport || (this.dryRunResult?.status === 'SUCCESS' && (this.dryRunResult?.result?.wouldInsert ?? 0) > 0);
+  }
+
   get isSuperadmin(): boolean {
     return this.helperService.role() === 'superadmin';
   }
@@ -108,7 +120,11 @@ export class OperationDetailComponent implements OnInit {
       next: (res: any) => {
         this.runningAction = false;
         this.dryRunResult = res?.data ?? null;
-        this.toastr.info('Dry run complete.');
+        if (this.dryRunResult?.status === 'FAILED') {
+          this.toastr.error(this.dryRunResult.error?.safe_message || 'Audit failed.');
+        } else {
+          this.toastr.info(this.isLegacyImport ? 'Audit complete. Review the results before importing.' : 'Dry run complete.');
+        }
       },
       error: (err: any) => {
         this.runningAction = false;
@@ -118,7 +134,7 @@ export class OperationDetailComponent implements OnInit {
   }
 
   run(): void {
-    if (!this.operation) return;
+    if (!this.operation || !this.canImport || this.runningAction) return;
     const data: RunConfirmationDialogData = {
       operation: this.operation,
       environment: environment.production ? 'production' : 'development',
@@ -140,7 +156,9 @@ export class OperationDetailComponent implements OnInit {
       next: (res: any) => {
         this.runningAction = false;
         const executionId = res?.data?.execution_id;
-        this.toastr.success('Operation started.');
+        this.dryRunResult = null;
+        if (res?.data?.status === 'SUCCESS') this.toastr.success('Operation complete.');
+        else this.toastr.error(res?.data?.error?.safe_message || 'Operation did not complete. Review the execution log.');
         if (executionId) {
           this.router.navigateByUrl(`/settings/data-operations/executions/${executionId}`);
         }

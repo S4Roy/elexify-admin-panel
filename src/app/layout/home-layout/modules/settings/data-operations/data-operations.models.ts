@@ -64,8 +64,13 @@ export interface DataOperation {
 }
 
 export interface DryRunResult {
+  status?: ExecutionStatus;
+  error?: { safe_message?: string } | null;
   execution_id: string;
   result: {
+    summary?: Record<string, { total: number; missing: number; existing: number; blocked: number }>;
+    issues?: { type: string; sourceId: string; reason: string }[];
+    blocked?: number;
     wouldInsert?: number;
     wouldUpdate?: number;
     wouldSkip?: number;

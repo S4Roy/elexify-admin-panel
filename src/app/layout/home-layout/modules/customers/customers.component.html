@@ -1,61 +1,65 @@
-<div class="table-wrapper">
-  <table class="table-base">
-    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-      <tr class="sticky">
-        <th scope="col" (click)="sort('name')" class="sortable">
-          Name <span [class]="getSortIcon('name')"></span>
-        </th>
-        <th scope="col" (click)="sort('email')" class="sortable">
-          Email <span [class]="getSortIcon('email')"></span>
-        </th>
-        <th scope="col" (click)="sort('mobile')" class="sortable">
-          Mobile <span [class]="getSortIcon('mobile')"></span>
-        </th>
-        <th scope="col" (click)="sort('created_at')" class="sortable text-center">
-          Date of Registered
-          <span [class]="getSortIcon('created_at')"></span>
-        </th>
-        <th scope="col" (click)="sort('status')" class="sortable text-center">
-          Status
-          <span [class]="getSortIcon('status')"></span>
-        </th>
-        <th scope="col" class="text-center">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let item of item_list">
-        <tr>
-          <td scope="row" class="font-medium text-gray-900 whitespace-nowrap">
-            {{ item?.name }}
+<section class="customer-directory" [attr.aria-busy]="loading">
+  <div class="directory-header">
+    <div class="directory-heading">
+      <div class="heading-icon" aria-hidden="true"><mat-icon>people_outline</mat-icon></div>
+      <div>
+        <h2>Customer directory</h2>
+        <p aria-live="polite">{{ loading ? 'Updating customer list…' : loadError ? 'Customer list unavailable' : (paginationOption.totalDocs | number) + ' customers match your view' }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="directory-toolbar">
+    <div class="source-options" role="group" aria-label="Import source">
+      <button type="button" [class.selected]="!filterValues['import_source']" [attr.aria-pressed]="!filterValues['import_source']" (click)="setSource(null)">All customers</button>
+      <button type="button" [class.selected]="filterValues['import_source'] === 'backup'" [attr.aria-pressed]="filterValues['import_source'] === 'backup'" (click)="setSource('backup')">Backup imported</button>
+      <button type="button" [class.selected]="filterValues['import_source'] === 'other'" [attr.aria-pressed]="filterValues['import_source'] === 'other'" (click)="setSource('other')">Other customers</button>
+    </div>
+    <div class="toolbar-actions">
+      <label for="customer-page-size">Rows per page</label>
+      <select id="customer-page-size" #pageSize [value]="paginationOption.limit" (change)="setPageSize(pageSize.value)">
+        <option value="25">25</option><option value="50">50</option><option value="100">100</option>
+      </select>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <button type="button" class="refresh-button" (click)="fetchCutomerList()" [disabled]="loading" aria-label="Refresh customer list" title="Refresh customer list"><mat-icon [class.refreshing]="loading">refresh</mat-icon></button>
+    </div>
+  </div>
+  <div class="applied-filters" *ngIf="filterCount()">
+    <span *ngFor="let label of activeFilterLabels" class="filter-chip">{{ label }}</span>
+    <button type="button" (click)="clearFilters()">Clear filters</button>
+  </div>
+  <div *ngIf="loading" class="list-message" role="status">Loading customers…</div>
+  <div *ngIf="loadError" class="list-message error" role="alert">Could not load customers. <button type="button" (click)="fetchCutomerList()">Try again</button></div>
+  <div class="table-wrapper directory-table" *ngIf="!loadError">
+    <table class="table-base">
+      <caption class="sr-only">Customers with contact information, order activity, import source and account status</caption>
+      <thead><tr>
+        <th scope="col" [attr.aria-sort]="sortKey === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"><button type="button" (click)="sort('name')">Customer <span [class]="getSortIcon('name')"></span></button></th>
+        <th scope="col">Contact &amp; verification</th>
+        <th scope="col">Order activity</th>
+        <th scope="col" [attr.aria-sort]="sortKey === 'created_at' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"><button type="button" (click)="sort('created_at')">Joined <span [class]="getSortIcon('created_at')"></span></button></th>
+        <th scope="col">Source</th>
+        <th scope="col">Status</th>
+        <th scope="col" class="text-center">Actions</th>
+      </tr></thead>
+      <tbody>
+        <tr *ngFor="let item of item_list; trackBy: trackCustomer">
+          <td><div class="customer-identity"><span class="avatar" aria-hidden="true">{{ initials(item.name) }}</span><div>
+            <a class="customer-name" [routerLink]="['/customers/details', item._id]">{{ item.name || 'Unnamed customer' }}</a>
+            <span class="secondary">Customer account</span>
+          </div></div></td>
+          <td class="contact-cell">
+            <div class="contact-line"><mat-icon aria-hidden="true">mail_outline</mat-icon><span class="contact-value">{{ item.email || 'Email not provided' }}</span><span *ngIf="item.email" class="verification" [class.verified]="item.email_verified_at">{{ item.email_verified_at ? 'Verified' : 'Unverified' }}</span></div>
+            <div class="contact-line"><mat-icon aria-hidden="true">phone</mat-icon><span class="contact-value">{{ item.mobile ? ((item.phone_code ? '+' + item.phone_code + ' ' : '') + item.mobile) : 'Mobile not provided' }}</span><span *ngIf="item.mobile" class="verification" [class.verified]="item.mobile_verified_at">{{ item.mobile_verified_at ? 'Verified' : 'Unverified' }}</span></div>
           </td>
-
-          <td>{{ item?.email }}</td>
-
-          <td>{{ item?.mobile }}</td>
-          <td class="text-center">
-            {{ item?.created_at | date }}
-          </td>
-          <td class="text-center">
-            <button type="button" class="cursor-pointer" [class]="item?.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
-              {{ item?.status }}
-            </button>
-          </td>
-          <td class="text-center">
-            <app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="addItem($event)"
-              (deleteItem)="deleteItem($event)" [delete]="permissions.includes('deledte') ? item : null"
-              [details]="['/customers/details', item?._id]"></app-menu>
-          </td>
+          <td><a *ngIf="item.order_count; else noOrders" class="order-link" [routerLink]="['/inventory/orders/customer', item._id]">{{ item.order_count | number }} {{ item.order_count === 1 ? 'order' : 'orders' }}</a><ng-template #noOrders><span class="secondary">No linked orders</span></ng-template><span *ngIf="item.last_order_at" class="secondary">Latest {{ item.last_order_at | date:'mediumDate' }}</span></td>
+          <td><span>{{ item.created_at ? (item.created_at | date:'mediumDate') : 'Not available' }}</span></td>
+          <td><span class="source-badge" [class.imported]="item.imported_from_backup">{{ item.imported_from_backup ? 'Backup import' : 'Other' }}</span></td>
+          <td><button type="button" class="status-badge" [class.active-status]="item.status === 'active'" (click)="updateStatus(item)" [attr.aria-label]="'Change account status for ' + item.name + ': ' + item.status"><span aria-hidden="true">●</span> {{ item.status === 'active' ? 'Active' : 'Inactive' }}</button></td>
+          <td class="text-center"><app-menu [modalItem]="permissions.includes('edit') ? item : null" (initModal)="addItem($event)" [details]="['/customers/details', item._id]"></app-menu></td>
         </tr>
-      </ng-container>
-      <ng-container *ngIf="!item_list?.length">
-        <tr>
-          <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
-</div>
-
-<ng-container>
-  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
-</ng-container>
+        <tr *ngIf="!loading && !item_list.length"><td colspan="7"><div class="no-results"><mat-icon aria-hidden="true">person_search</mat-icon><h3>No customers found</h3><p>Try another search or adjust your filters.</p><button *ngIf="filterCount()" type="button" class="outline-button" (click)="clearFilters()">Clear filters</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<pagination *ngIf="!loadError" [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>

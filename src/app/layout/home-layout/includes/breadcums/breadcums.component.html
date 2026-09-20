@@ -3,24 +3,24 @@
   aria-label="Breadcrumb"
   class="crumb-bar mx-3 mt-2 flex flex-wrap items-center justify-between gap-1 rounded-lg px-3 py-2 text-sm"
 >
-  <div class="flex flex-wrap items-center gap-1">
+  <div class="crumb-trail">
     <!-- Optional OTHERS section -->
     <ng-container *ngIf="settingsOutlet || usersOutlet">
-      <a class="crumb-link" [routerLink]="">Others</a>
-      <mat-icon class="crumb-sep">chevron_right</mat-icon>
+      <span class="crumb-link crumb-parent">Others</span>
+      <mat-icon class="crumb-sep" aria-hidden="true">chevron_right</mat-icon>
     </ng-container>
 
     <!-- Breadcrumb items -->
     <ng-container *ngFor="let item of breadcrumbs; let l = last">
       <a
-        class="crumb-link"
+        *ngIf="!l"
+        class="crumb-link crumb-parent"
         [routerLink]="[item?.url]"
-        [routerLinkActiveOptions]="{ exact: true }"
-        routerLinkActive="crumb-active"
       >
         {{ item?.label }}
       </a>
-      <mat-icon *ngIf="!l" class="crumb-sep">chevron_right</mat-icon>
+      <span *ngIf="l" class="crumb-link crumb-current" aria-current="page">{{ item?.label }}</span>
+      <mat-icon *ngIf="!l" class="crumb-sep" aria-hidden="true">chevron_right</mat-icon>
     </ng-container>
   </div>
 
@@ -54,6 +54,8 @@
       type="button"
       *ngIf="actionButton"
       class="add-new-btn"
+      [attr.aria-label]="actionButton.label"
+      [title]="actionButton.label"
       (click)="triggerAction()"
     >
       <mat-icon class="text-base">{{ actionButton.icon || 'add' }}</mat-icon>
@@ -68,6 +70,8 @@
       type="button"
       *ngIf="filterButton"
       class="filters-btn"
+      aria-label="Open filters"
+      title="Open filters"
       (click)="openFilters()"
     >
       <mat-icon class="text-base">tune</mat-icon>

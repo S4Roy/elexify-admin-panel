@@ -14,16 +14,16 @@
         [disabled]="runningAction"
         (click)="dryRun()"
       >
-        Dry Run
+        {{ isLegacyImport ? 'Audit Missing Data' : 'Dry Run' }}
       </button>
       <button
         *ngIf="isSuperadmin"
         type="button"
         class="do-action-btn do-action-run"
-        [disabled]="runningAction"
+        [disabled]="runningAction || !canImport"
         (click)="run()"
       >
-        Run
+        {{ isLegacyImport ? 'Import Missing Records' : 'Run' }}
       </button>
     </div>
   </div>
@@ -76,7 +76,24 @@
     </div>
   </div>
 
-  <div *ngIf="dryRunResult" class="mt-4">
+  <div *ngIf="isLegacyImport" class="mt-4 text-sm text-gray-600">
+    Audit the old-store backup to compare customers, orders and reviews with this system.
+    Existing records are preserved. Records needing review are excluded from the import.
+    <span *ngIf="runningAction">Processing… Large backups may take several minutes.</span>
+  </div>
+  <div *ngIf="dryRunResult?.error" class="do-failure-banner">{{ dryRunResult?.error?.safe_message }}</div>
+  <div *ngIf="dryRunResult && dryRunResult.result" class="mt-4">
+    <div *ngIf="isLegacyImport && importSummary.length" class="table-wrapper">
+      <table class="table-base">
+        <thead><tr><th>Data</th><th>Source records</th><th>Missing</th><th>Existing</th><th>Needs review</th></tr></thead>
+        <tbody><tr *ngFor="let row of importSummary"><td>{{ row.kind }}</td><td>{{ row.total }}</td><td>{{ row.missing }}</td><td>{{ row.existing }}</td><td>{{ row.blocked }}</td></tr></tbody>
+      </table>
+      <p class="mt-2 text-sm" *ngIf="dryRunResult.result.blocked">{{ dryRunResult.result.blocked }} records need review. Showing up to 100 issues below.</p>
+      <table class="table-base" *ngIf="dryRunResult.result.issues?.length">
+        <thead><tr><th>Data</th><th>Old record ID</th><th>Reason</th></tr></thead>
+        <tbody><tr *ngFor="let issue of dryRunResult.result.issues"><td>{{ issue.type }}</td><td>{{ issue.sourceId }}</td><td>{{ issue.reason }}</td></tr></tbody>
+      </table>
+    </div>
     <div class="text-sm font-medium text-gray-700 mb-2">Latest Dry Run Result</div>
     <div class="flex flex-wrap gap-2">
       <span class="summary-pill">Insert: {{ dryRunResult.result.wouldInsert ?? 0 }}</span>
