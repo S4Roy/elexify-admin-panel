@@ -12,10 +12,11 @@ import * as Global from 'app/global';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
-import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
+import { FilterFieldDef, FilterFieldOption } from 'app/core/models/FilterFieldDef';
 import { OrderDetailsComponent } from './order-details/order-details.component';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { Subject, combineLatest, takeUntil } from 'rxjs';
+import { Observable, Subject, combineLatest, takeUntil } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { OrderShippingComponent } from './order-shipping/order-shipping.component';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
@@ -78,6 +79,7 @@ export class OrdersComponent {
   // sidebar links), so a drawer filter for it would just duplicate that nav.
   filterValues: Record<string, any> = {
     import_source: null,
+    customer: null,
     payment_status: [],
     payment_method: [],
     from_date: null,
@@ -117,7 +119,12 @@ export class OrdersComponent {
         this.filterOption = Global.resetTableFilterOptions();
         this.filterOption.slug = params.get('slug');
         this.customerId = params.get('customer_id');
-        this.filterOption.customer_id = this.customerId;
+        // The route param (customer-context page) wins when present;
+        // otherwise fall back to the drawer-selected Customer filter, which
+        // must be re-applied here since resetTableFilterOptions() above
+        // wipes filterOption back to defaults on every route change (same
+        // reasoning as payment_status/payment_method below).
+        this.filterOption.customer_id = this.customerId || this.filterValues['customer']?.value || null;
         this.filterOption.order_status =
           params.get('order_status') || queryParams.get('order_status');
         this.filterOption.search_key = searchKey;
@@ -160,6 +167,19 @@ export class OrdersComponent {
         ],
       },
       {
+        key: 'customer',
+        label: 'Customer',
+        type: 'async-select',
+        placeholder: 'Search by name, email, or phone',
+        searchFn: (term: string): Observable<FilterFieldOption[]> =>
+          this.inventoryService.orderCustomerOptions(term).pipe(
+            map((res: any) => (res?.data || []).map((c: any) => ({
+              value: c._id,
+              label: c.name + (c.email || c.mobile ? ` (${c.email || c.mobile})` : ''),
+            }))),
+          ),
+      },
+      {
         key: 'payment_status',
         label: 'Payment Status',
         type: 'multiselect',
@@ -190,6 +210,7 @@ export class OrdersComponent {
   filterCount(): number {
     let count = 0;
     if (this.filterValues['import_source']) count++;
+    if (this.filterValues['customer']) count++;
     if (this.filterValues['payment_status']?.length) count++;
     if (this.filterValues['payment_method']?.length) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
@@ -207,6 +228,7 @@ export class OrdersComponent {
       .subscribe((result: Record<string, any> | undefined) => {
         if (!result) return;
         this.filterValues = result;
+        this.filterOption.customer_id = this.customerId || this.filterValues['customer']?.value || null;
         this.filterOption.payment_status = this.filterValues['payment_status']
           ?.length
           ? this.filterValues['payment_status'].join(',')

@@ -139,6 +139,14 @@ export class InventoryService {
       `admin/inventory/order/list?${params.toString()}`
     );
   }
+  // Typeahead source for the Orders list's "Customer" filter — a small,
+  // ungated endpoint (routes/admin/inventory/order.js "/customer-options")
+  // separate from create-options, since viewing/filtering orders shouldn't
+  // require the order-creation permission that endpoint is gated behind.
+  orderCustomerOptions(search: string) {
+    const params = new URLSearchParams({ search: search || '' });
+    return this.httpService.get(`admin/inventory/order/customer-options?${params.toString()}`);
+  }
   sendToShipRocket(payload: any) {
     return this.httpService.post(`admin/inventory/order/shipping`, payload);
   }
