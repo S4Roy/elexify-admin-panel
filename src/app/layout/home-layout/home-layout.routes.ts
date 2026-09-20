@@ -4,7 +4,6 @@ import { CustomersComponent } from './modules/customers/customers.component';
 import { DashboardComponent } from './modules/dashboard/dashboard/dashboard.component';
 import { TestimonialComponent } from './modules/testimonial/testimonial.component';
 import { FaqComponent } from './modules/faq/faq.component';
-import { ConsultationComponent } from './modules/consultation/consultation.component';
 import { BlogsComponent } from './modules/blogs/blogs.component';
 import { NewBlogsComponent } from './modules/blogs/new-blogs/new-blogs.component';
 import { BlogDetailsComponent } from './modules/blogs/blog-details/blog-details.component';
@@ -89,11 +88,6 @@ export const routes: Routes = [
         path: 'faqs',
         component: FaqComponent,
         data: { pageTitle: 'FAQs', breadcrumb: 'FAQs' },
-      },
-      {
-        path: 'consultation',
-        component: ConsultationComponent,
-        data: { pageTitle: 'Consultation', breadcrumb: 'Consultation' },
       },
       {
         path: 'contact-us',

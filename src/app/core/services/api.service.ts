@@ -49,10 +49,6 @@ export class ApiService {
     return this.httpService.delete(`admin/faq/delete`, payload);
   }
 
-  consultationList(params: any) {
-    return this.httpService.get(`admin/consultation/list?${params.toString()}`);
-  }
-
   bannerList(params: any) {
     return this.httpService.get(`admin/banner/list?${params.toString()}`);
   }

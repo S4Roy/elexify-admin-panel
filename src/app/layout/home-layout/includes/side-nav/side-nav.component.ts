@@ -218,11 +218,6 @@ export class SideNavComponent {
           exact: true,
         },
         {
-          label: 'Consultation',
-          icon: 'support_agent',
-          url: '/consultation',
-        },
-        {
           label: 'Contact us',
           icon: 'contact_phone',
           url: '/contact-us',
