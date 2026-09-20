@@ -12,6 +12,7 @@ import { HelpersService } from 'app/core/services/helpers.service';
 export class DashboardComponent {
   // Keep this overview in the same order as the Settings sidebar.
   readonly nav_list = [
+    { label: 'Zoho Books', description: 'Accounting integration and synchronization', router_path: '/settings/integrations/zoho-books', roles: ['superadmin', 'manager'] },
     { label: 'Site Settings', description: 'Store and company details', router_path: '/settings/site' },
     { label: 'Media', description: 'Manage uploaded assets', router_path: '/settings/media' },
     { label: 'Countries', description: 'Manage countries', router_path: '/settings/countries' },

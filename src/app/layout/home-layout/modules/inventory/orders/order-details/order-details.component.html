@@ -204,6 +204,7 @@
 
   <!-- Zoho Books synchronization is explicit and observable. The local
        immutable invoice remains available independently if Zoho is down. -->
+  <app-zoho-salesorder *ngIf="data?._id" [orderId]="data._id"></app-zoho-salesorder>
   <section class="zoho-card mb-6" *ngIf="zohoInvoice">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>

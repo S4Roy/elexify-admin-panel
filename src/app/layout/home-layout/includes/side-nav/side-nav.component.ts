@@ -334,6 +334,12 @@ export class SideNavComponent {
               roles: ['superadmin'],
             },
             {
+              label: 'Zoho Books',
+              url: '/settings/integrations/zoho-books',
+              exact: true,
+              roles: ['superadmin', 'manager'],
+            },
+            {
               label: 'Data Operations',
               url: '/settings/data-operations',
               exact: false,

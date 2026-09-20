@@ -17,6 +17,11 @@ import { IntegrationCredentialsComponent } from './integration-credentials/integ
 
 export const routes: Routes = [
   {
+    path: 'integrations/zoho-books',
+    data: { pageTitle: 'Zoho Books', breadcrumb: 'Zoho Books' },
+    loadComponent: () => import('./zoho-books/zoho-books.component').then(module => module.ZohoBooksComponent),
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full',

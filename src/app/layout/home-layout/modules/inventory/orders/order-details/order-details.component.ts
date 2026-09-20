@@ -1,4 +1,5 @@
 import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
+import { ZohoSalesorderComponent } from './zoho-salesorder.component';
 import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
 import {
   CurrencyPipe,
@@ -142,6 +143,7 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
 @Component({
   selector: 'app-order-details',
   imports: [
+    ZohoSalesorderComponent,
     MatDialogModule,
     FormsModule,
     NgSelectModule,

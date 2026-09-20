@@ -1,0 +1,54 @@
+<h1>Integrations → Zoho Books</h1>
+<p class="muted">One Sales Order per customer order. Packages remain fulfillment references; Zoho outages never block shipping.</p>
+<p class="error" role="alert" *ngIf="error">{{ error }}</p>
+<section>
+  <h2>Connection: {{ connection?.connected ? 'Connected' : 'Disconnected' }}</h2>
+  <p>Automatic synchronization: {{ connection?.enabled ? 'Enabled' : 'Disabled' }}</p>
+  <p>Last successful sync: {{ (connection?.last_success_at | date:'medium') || 'Never' }}</p>
+  <div *ngIf="canConfigure">
+    <p><a routerLink="/settings/integration-credentials">Configure OAuth client credentials</a> before connecting.</p>
+    <label>Data center <select [(ngModel)]="region" [disabled]="!!connection?.organization_id"><option *ngFor="let value of ['in','com','eu','au','jp','ca']" [value]="value">{{ value }}</option></select></label>
+    <button *ngIf="!connection?.connected" [disabled]="busy" (click)="connect()">Connect Zoho Books</button>
+    <div *ngIf="connection?.revocation_pending"><p class="error">Disconnected locally; token revocation needs retry.</p><label>Reason <input [(ngModel)]="reason"></label><button [disabled]="busy || reason.trim().length < 10" (click)="disconnect()">Retry token revocation</button></div>
+    <div *ngIf="connection?.connected">
+      <label>Organization <select [(ngModel)]="organizationId" [disabled]="!!connection?.organization_id"><option value="">Select organization</option><option *ngFor="let organization of organizations" [value]="organization.organization_id">{{ organization.name }} ({{ organization.currency_code }})</option></select></label>
+      <label><input type="checkbox" [(ngModel)]="enabled"> Enable background synchronization</label>
+      <label>Tax mapping JSON: intra:rate / inter:rate / cod:0 → Zoho tax ID<textarea rows="5" [(ngModel)]="taxMap" spellcheck="false"></textarea></label>
+      <p class="muted">Example keys: "intra:18", "inter:18", "intra:0". Configure your organization's actual tax IDs; missing or inconsistent financial snapshots require review.</p>
+      <button [disabled]="busy || !organizationId" (click)="save()">Save configuration</button>
+      <label>Reason for disconnecting <input [(ngModel)]="reason" maxlength="500"></label>
+      <button [disabled]="busy || reason.trim().length < 10" (click)="disconnect()">Disconnect and pause sync</button>
+    </div>
+  </div>
+</section>
+<section *ngIf="connection?.connected">
+  <h2>Sync / Re-sync</h2>
+  <p><span *ngFor="let count of counts">{{ count._id }}: {{ count.count }} · </span></p>
+  <label>Record type <select [(ngModel)]="kind"><option value="item">Simple product</option><option value="variation">Product variation</option><option value="contact">Customer</option><option value="salesorder">Packed order</option></select></label>
+  <label>Local record IDs (comma or newline separated, maximum 100)<textarea rows="3" [(ngModel)]="ids"></textarea></label>
+  <button [disabled]="busy || !connection?.enabled" (click)="sync()">Queue synchronization</button>
+  <button [disabled]="busy" (click)="load()">Refresh status</button>
+</section>
+<section *ngIf="canConfigure && connection?.connected">
+  <h2>Accounting metadata</h2>
+  <label>Record type <select [(ngModel)]="accountingKind"><option value="item">Product</option><option value="variation">Variation</option><option value="contact">Customer</option></select></label>
+  <label>Local record ID <input [(ngModel)]="accountingId"></label>
+  <ng-container *ngIf="accountingKind !== 'contact'"><label>HSN/SAC <input [(ngModel)]="hsn"></label><label>Unit <input [(ngModel)]="unit"></label><label>Zoho tax ID <input [(ngModel)]="taxId"></label></ng-container>
+  <ng-container *ngIf="accountingKind === 'contact'"><label>GSTIN <input [(ngModel)]="gstin"></label><label>GST treatment <select [(ngModel)]="gstTreatment"><option *ngFor="let value of ['consumer','business_gst','business_none','overseas']" [value]="value">{{ value }}</option></select></label></ng-container>
+  <button [disabled]="busy || !accountingId" (click)="saveAccounting()">Save metadata</button>
+</section>
+<section *ngIf="connection?.organization_id">
+  <h2>Synchronization jobs</h2>
+  <label>Status <select [(ngModel)]="filter" (change)="page = 1; loadJobs()"><option value="">All</option><option *ngFor="let status of ['queued','running','retrying','synced','dead_letter','review']" [value]="status">{{ status }}</option></select></label>
+  <p class="muted">Review jobs may have succeeded remotely. Retry reconciles existing records and will not blindly repeat an uncertain create.</p>
+  <div class="scroll"><table><thead><tr><th>Type / local ID</th><th>Status</th><th>Attempts</th><th>Error</th><th>Action</th></tr></thead><tbody>
+    <tr *ngFor="let job of jobs"><td>{{ job.kind }}<br>{{ job.entity_id }}</td><td>{{ job.status }}</td><td>{{ job.attempts }}</td><td>{{ job.last_error || '—' }}</td><td><button *ngIf="['dead_letter','review','retrying'].includes(job.status)" [disabled]="busy || !connection?.enabled" (click)="retry(job._id)">Retry</button></td></tr>
+    <tr *ngIf="!jobs.length"><td colspan="5">No jobs</td></tr>
+  </tbody></table></div>
+  <button [disabled]="page <= 1" (click)="page = page - 1; loadJobs()">Previous</button><span>Page {{ page }}</span><button [disabled]="page * 50 >= total" (click)="page = page + 1; loadJobs()">Next</button>
+</section>
+<section *ngIf="connection?.organization_id">
+  <h2>Integration logs</h2>
+  <div class="scroll"><table><thead><tr><th>Time</th><th>Event</th><th>Entity</th><th>Code</th></tr></thead><tbody><tr *ngFor="let log of logs"><td>{{ log.created_at | date:'medium' }}</td><td>{{ log.event }}</td><td>{{ log.entity_id || 'Connection' }}</td><td>{{ log.code || '—' }}</td></tr></tbody></table></div>
+  <button [disabled]="logPage <= 1" (click)="logPage = logPage - 1; loadLogs()">Previous</button><span>Page {{ logPage }}</span><button [disabled]="logs.length < 50" (click)="logPage = logPage + 1; loadLogs()">Next</button>
+</section>
