@@ -2,6 +2,7 @@ import { CreateOrderComponent } from './create-order/create-order.component';
 import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import PaginationOptions from 'app/core/models/PaginationOptions';
 import { MasterService } from 'app/core/services/master.service';
 import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
@@ -18,6 +19,8 @@ import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { OrderShippingComponent } from './order-shipping/order-shipping.component';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
+import { BulkOrderStatusDialogComponent } from './bulk-order-status-dialog/bulk-order-status-dialog.component';
+import { BulkOrderStatusResultDialogComponent } from './bulk-order-status-result-dialog/bulk-order-status-result-dialog.component';
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
@@ -58,6 +61,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
     CurrencyPipe,
     RouterLink,
     MenuComponent,
+    MatCheckboxModule,
   ],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss',
@@ -234,6 +238,65 @@ export class OrdersComponent {
     return this.sortDirection === 'asc' ? 'sort-icon-up' : 'sort-icon-down';
   }
   get canCreateOrder(): boolean { return ['superadmin', 'manager'].includes(this.helperService.role()); }
+  get canManageOrderStatus(): boolean { return ['superadmin', 'manager'].includes(this.helperService.role()); }
+
+  // Bulk order-status selection — a page of checked rows feeds the
+  // comma-separated order_ids the bulk dialog (and backend) expects.
+  // Kept per-page rather than across the whole filtered result set, same
+  // as most admin table bulk-actions, since selecting "all matching" would
+  // need a separate server-side query.
+  selectedIds = new Set<string>();
+
+  isSelected(item: any): boolean {
+    return this.selectedIds.has(item?._id);
+  }
+  toggleSelected(item: any, checked: boolean): void {
+    if (!item?._id) return;
+    if (checked) this.selectedIds.add(item._id);
+    else this.selectedIds.delete(item._id);
+  }
+  get allOnPageSelected(): boolean {
+    return !!this.item_list?.length && this.item_list.every((item: any) => this.selectedIds.has(item?._id));
+  }
+  toggleSelectAllOnPage(checked: boolean): void {
+    for (const item of this.item_list || []) {
+      if (checked) this.selectedIds.add(item._id);
+      else this.selectedIds.delete(item._id);
+    }
+  }
+  clearSelection(): void {
+    this.selectedIds.clear();
+  }
+  openBulkStatusDialog(): void {
+    if (!this.canManageOrderStatus) return;
+    this.dialog.open(BulkOrderStatusDialogComponent, {
+      width: '640px', maxWidth: '96vw', disableClose: true,
+      data: { orderIds: Array.from(this.selectedIds) },
+    }).afterClosed().subscribe((result: any) => {
+      if (!result?.orderIds?.length || !result?.status || !result?.reason) return;
+      this.inventoryService.bulkUpdateOrderStatus({
+        order_ids: result.orderIds.join(','),
+        status: result.status,
+        reason: result.reason,
+      }).subscribe({
+        next: (res: any) => {
+          const summary = res?.data?.summary;
+          if (summary?.failed) {
+            this.toastr.warning(`${summary.updated} updated, ${summary.failed} skipped`);
+          } else {
+            this.toastr.success(`${summary?.updated ?? 0} order(s) updated`);
+          }
+          this.dialog.open(BulkOrderStatusResultDialogComponent, {
+            width: '560px', maxWidth: '96vw',
+            data: { summary, results: res?.data?.results ?? [] },
+          });
+          this.clearSelection();
+          this.fetchOrderList();
+        },
+        error: () => {},
+      });
+    });
+  }
   addItem(data: any = null) {
     if (!this.canCreateOrder) return;
     this.dialog.open(CreateOrderComponent, { width: '1240px', maxWidth: '96vw', maxHeight: '94vh', autoFocus: 'first-tabbable', ariaLabelledBy: 'create-order-title', data: { customerId: this.customerId } })
@@ -258,6 +321,7 @@ export class OrdersComponent {
     return `Partial COD – ${advancePercent}% Paid, ${100 - advancePercent}% Due on Delivery`;
   }
   fetchOrderList() {
+    this.clearSelection();
     let params = new URLSearchParams({
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',

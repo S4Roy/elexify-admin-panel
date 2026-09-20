@@ -172,6 +172,13 @@ export class InventoryService {
   updateOrderStatus(payload: { order_id: string; expected_status: string; status: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/status`, payload);
   }
+  // order_ids is a comma-separated string of order ObjectIds — the backend
+  // (routes/admin/inventory/order.js "/status/bulk") splits and validates
+  // it. Each order is evaluated independently server-side, so this can
+  // partially succeed; see the `summary`/`results` shape in the response.
+  bulkUpdateOrderStatus(payload: { order_ids: string; status: string; reason: string }) {
+    return this.httpService.post(`admin/inventory/order/status/bulk`, payload);
+  }
   retryRefund(payload: any) {
     return this.httpService.post(
       `admin/inventory/order/refund/retry`,
