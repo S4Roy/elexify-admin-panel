@@ -23,6 +23,8 @@ import { ApiService } from 'app/core/services/api.service';
           <input [name]="field.key" [(ngModel)]="value[field.key]" [type]="field.type || 'text'"
             [required]="field.required" [minlength]="field.min || 0" [maxlength]="field.max"
             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+          <span *ngIf="field.key === 'city_name'" class="mt-1 block text-xs text-gray-500">Maximum 40 characters. Put locality and landmark details in address line 2.</span>
+          <span *ngIf="field.key === 'city_name' && value.city_name?.length > 40" role="alert" class="block text-xs text-red-700">City must be 40 characters or fewer.</span>
         </label>
         <div class="text-sm">
           <label for="address-calling-code">Calling code *</label>
@@ -93,7 +95,7 @@ export class CustomerAddressDialogComponent implements OnInit, OnDestroy {
     { key: 'address_line_1', label: 'Address line 1', required: true, min: 5, max: 200 },
     { key: 'address_line_2', label: 'Address line 2', required: false, max: 200 },
     { key: 'land_mark', label: 'Landmark', required: false, max: 100 },
-    { key: 'city_name', label: 'City / town', required: true, max: 100 },
+    { key: 'city_name', label: 'City / town', required: true, max: 40 },
     { key: 'postcode', label: 'Postal code', required: true, min: 2, max: 20 },
   ];
   types = ['home', 'office', 'billing', 'shipping', 'other'];

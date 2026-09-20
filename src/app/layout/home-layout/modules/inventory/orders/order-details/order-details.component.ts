@@ -304,9 +304,9 @@ export class OrderDetailsComponent {
 
   get canEditOrderAddress(): boolean {
     return ['superadmin', 'manager'].includes(this.helpersService.role()) &&
-      ['pending', 'confirmed', 'processing'].includes(this.data?.order_status) &&
-      !this.data?.invoice?.generated && !this.data?.package_count && !this.packages.length &&
-      !this.data?.awb && !this.data?.shiprocket_order_id && !this.data?.shipped_at &&
+      ['pending', 'confirmed', 'processing', 'partially_shipped', 'partially_delivered'].includes(this.data?.order_status) &&
+      !this.data?.invoice?.generated && !this.data?.fully_packed &&
+      !this.data?.awb && !this.data?.shiprocket_order_id &&
       !this.data?.inventory_reverted && (!this.data?.refund?.status || this.data.refund.status === 'not_required');
   }
 

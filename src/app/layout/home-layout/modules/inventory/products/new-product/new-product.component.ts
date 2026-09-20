@@ -205,13 +205,8 @@ export class NewProductComponent {
       specifications: this.fb.array([]),
       quantity_discounts: this.fb.array([]),
     });
-    this.formGroup.get('name')?.valueChanges.subscribe((value: any) => {
-      this.autoGenerateSKU();
-    });
-
-    this.formGroup.get('category')?.valueChanges.subscribe((value: any) => {
-      this.autoGenerateSKU();
-    });
+    this.formGroup.get('name')?.valueChanges.subscribe(() => this.autoGenerateSKU());
+    this.formGroup.get('category')?.valueChanges.subscribe(() => this.autoGenerateSKU());
 
     if (this.data?.sub_categories?.length) {
       let subCategoryIds = this.data.sub_categories.map((cat: any) => cat._id);
@@ -695,6 +690,10 @@ export class NewProductComponent {
     return `${categoryCode}-${productCode}-${random}`;
   }
   autoGenerateSKU() {
+    // Only new products regenerate their SKU when name/category inputs change.
+    // Submit saves the current input, including any manual SKU correction.
+    if (this.data?._id || this.product_id ||
+        this.formGroup.get('product_type')?.value !== 'simple') return;
     const name = this.formGroup.get('name')?.value;
     const selectedCategoryIds: string[] = this.formGroup.get('category')?.value;
 

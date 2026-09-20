@@ -2,6 +2,7 @@
   <table class="table-base">
     <thead>
       <tr class="sticky">
+        <th scope="col"><input type="checkbox" aria-label="Select all products on this page" [checked]="allSelected" [indeterminate]="selectedIds.size > 0 && !allSelected" (change)="toggleSelectAll()" /></th>
         <th scope="col"></th>
         <!-- <th scope="col">Brand</th> -->
         <th scope="col">Category</th>
@@ -19,6 +20,7 @@
     <tbody>
       <ng-container *ngFor="let item of item_list">
         <tr>
+          <td><input type="checkbox" [attr.aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)" /></td>
           <td>
             <img
               *ngIf="item?.images?.length"
@@ -366,7 +368,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="8"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

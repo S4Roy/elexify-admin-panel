@@ -327,7 +327,7 @@
       <h3 class="text-lg font-semibold mb-1">Billing Address</h3>
       <button *ngIf="canEditOrderAddress && data?.billing_address?._id" type="button"
         (click)="editOrderAddress('billing')" class="mb-3 rounded-lg border border-primary px-3 py-1.5 text-sm text-primary">Edit billing address</button>
-      <p *ngIf="!canEditOrderAddress" class="mb-2 text-xs text-gray-500">Address changes require manager access and an order awaiting fulfillment, before invoicing or shipment preparation.</p>
+      <p *ngIf="!canEditOrderAddress" class="mb-2 text-xs text-gray-500">Address changes require manager access and an order awaiting fulfillment, before invoicing or full packing.</p>
 
       <p class="text-gray-700" *ngIf="data?.billing_address">
         <span class="block font-medium">{{ data?.billing_address?.full_name }}</span>
@@ -350,7 +350,8 @@
       <h3 class="text-lg font-semibold mb-1">Shipping Address</h3>
       <button *ngIf="canEditOrderAddress && data?.shipping_address?._id" type="button"
         (click)="editOrderAddress('shipping')" class="mb-3 rounded-lg border border-primary px-3 py-1.5 text-sm text-primary">Edit shipping address</button>
-      <p *ngIf="!canEditOrderAddress" class="mb-2 text-xs text-gray-500">Address changes require manager access and an order awaiting fulfillment, before invoicing or shipment preparation.</p>
+      <p *ngIf="!canEditOrderAddress" class="mb-2 text-xs text-gray-500">Address changes require manager access and an order awaiting fulfillment, before invoicing or full packing.</p>
+      <p *ngIf="canEditOrderAddress && packages.length" class="mb-2 text-xs text-gray-500">Address edits apply to future shipment requests. Existing Shiprocket shipments keep their original address.</p>
       <p class="text-gray-700" *ngIf="data?.shipping_address">
         <span class="block font-medium">{{ data?.shipping_address?.full_name }}</span>
         {{ data?.shipping_address?.address_line_1 }}<br />

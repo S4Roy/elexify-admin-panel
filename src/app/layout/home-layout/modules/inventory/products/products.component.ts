@@ -1,3 +1,4 @@
+import { ExportProductsDialogComponent } from './export-products-dialog/export-products-dialog.component';
 import { CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -85,6 +86,8 @@ export class ProductsComponent {
     // this.checkPermission();
   }
   ngOnInit(): void {
+    this.helperService.setExportAction({ label: 'Export', icon: 'download' });
+    this.helperService.exportActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openExportDialog());
     if (this.permissions.includes('add')) {
       this.helperService.setActionButton({
         label: 'Add New Product',
@@ -285,6 +288,7 @@ export class ProductsComponent {
       });
   }
   ngOnDestroy(): void {
+    this.helperService.clearExportAction();
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
     this.destroy$.next();
@@ -336,14 +340,65 @@ export class ProductsComponent {
         }
       });
   }
-  fetchProductList() {
+  selectedIds = new Set<string>();
+  get allSelected(): boolean { return this.item_list.length > 0 && this.item_list.every((item: any) => this.selectedIds.has(item._id)); }
+  toggleSelect(id: string): void { this.selectedIds.has(id) ? this.selectedIds.delete(id) : this.selectedIds.add(id); }
+  toggleSelectAll(): void {
+    if (this.allSelected) this.selectedIds.clear();
+    else this.item_list.forEach((item: any) => this.selectedIds.add(item._id));
+  }
+  exporting = false;
+  openExportDialog(): void {
+    this.dialog.open(ExportProductsDialogComponent, {
+      width: '480px', maxWidth: '96vw',
+      data: {
+        filterCount: this.filterCount(),
+        searchKey: this.filterOption.search_key,
+        selectionCount: this.selectedIds.size,
+      },
+    }).afterClosed().subscribe((result: any) => {
+      if (!result?.scope || this.exporting) return;
+      const params = this.buildFilterParams();
+      if (result.scope === 'selected') params.set('product_ids', Array.from(this.selectedIds).join(','));
+      this.exporting = true;
+      this.inventoryService.exportProducts(params).subscribe({
+        next: (res: any) => {
+          this.exporting = false;
+          const blob: Blob = res;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `products-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          this.toastr.success('Products exported');
+        },
+        error: (err: any) => {
+          this.exporting = false;
+          // With responseType 'blob', an error body arrives as a Blob too
+          // (not parsed JSON) — read it back out so a specific message
+          // (e.g. "no orders match", "over the row limit") still reaches
+          // the admin instead of a generic failure.
+          const blob = err?.error;
+          if (blob instanceof Blob && blob.type?.includes('json')) {
+            blob.text().then((text: string) => {
+              try { this.toastr.error(JSON.parse(text)?.message || 'Export failed'); }
+              catch { this.toastr.error('Export failed'); }
+            });
+          } else {
+            this.toastr.error(err?.error?.message || 'Export failed');
+          }
+        },
+      });
+    });
+  }
+  private buildFilterParams(): URLSearchParams {
     let params = new URLSearchParams({
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',
     });
-    if (this.paginationOption.page) {
-      params.set('page', String(this.paginationOption.page));
-    }
     if (this.filterOption.category) {
       params.set('category', this.filterOption.category);
     }
@@ -374,6 +429,12 @@ export class ProductsComponent {
     if (this.filterOption.max_price) {
       params.set('max_price', this.filterOption.max_price);
     }
+    return params;
+  }
+  fetchProductList() {
+    this.selectedIds.clear();
+    const params = this.buildFilterParams();
+    if (this.paginationOption.page) params.set('page', String(this.paginationOption.page));
     this.inventoryService.productList(params).subscribe({
       next: (res: any) => {
         this.item_list = res?.data?.docs ?? [];
