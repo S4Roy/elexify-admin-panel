@@ -22,6 +22,7 @@ export class BreadcumsComponent {
   usersOutlet : boolean =false;
   filterButton: { count: number } | null = null;
   actionButton: { label: string; icon?: string } | null = null;
+  exportAction: { label: string; icon?: string } | null = null;
   selectionAction: { count: number; label: string; icon?: string } | null = null;
   viewToggle: {
     options: { value: string; label: string; icon?: string }[];
@@ -41,6 +42,9 @@ export class BreadcumsComponent {
     this.helperService.actionButton$.subscribe((res) => {
       this.actionButton = res;
     });
+    this.helperService.exportAction$.subscribe((res) => {
+      this.exportAction = res;
+    });
     this.helperService.selectionAction$.subscribe((res) => {
       this.selectionAction = res;
     });
@@ -53,6 +57,9 @@ export class BreadcumsComponent {
   }
   triggerAction() {
     this.helperService.triggerActionButtonClick();
+  }
+  triggerExportAction() {
+    this.helperService.triggerExportActionClick();
   }
   triggerSelectionAction() {
     this.helperService.triggerSelectionActionClick();

@@ -139,6 +139,11 @@ export class InventoryService {
       `admin/inventory/order/list?${params.toString()}`
     );
   }
+  // Excel export — same filter/search/sort query params as orderList,
+  // optionally scoped to a hand-picked set of order_ids (checkbox selection).
+  exportOrders(params: URLSearchParams) {
+    return this.httpService.downloadFile(`admin/inventory/order/export?${params.toString()}`);
+  }
   // Typeahead source for the Orders list's "Customer" filter — a small,
   // ungated endpoint (routes/admin/inventory/order.js "/customer-options")
   // separate from create-options, since viewing/filtering orders shouldn't

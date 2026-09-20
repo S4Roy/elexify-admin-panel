@@ -37,6 +37,16 @@ export class HelpersService {
   actionButton$ = this.actionButton.asObservable();
   private actionButtonClick = new Subject<void>();
   actionButtonClick$ = this.actionButtonClick.asObservable();
+  // Same pattern as Add New — lets a list page register an "Export" action
+  // (e.g. Orders' export-to-Excel) on the shared breadcrumb bar instead of
+  // floating its own button over the table.
+  private exportAction = new BehaviorSubject<{
+    label: string;
+    icon?: string;
+  } | null>(null);
+  exportAction$ = this.exportAction.asObservable();
+  private exportActionClick = new Subject<void>();
+  exportActionClick$ = this.exportActionClick.asObservable();
   // Lets a list page register a view-mode switch (e.g. Tree/Table) plus a
   // small set of secondary actions (e.g. Expand all/Collapse all) that
   // render on the same breadcrumb-bar row as Add New/Filters, instead of
@@ -111,6 +121,15 @@ export class HelpersService {
   }
   triggerActionButtonClick() {
     this.actionButtonClick.next();
+  }
+  setExportAction(config: { label: string; icon?: string } | null) {
+    this.exportAction.next(config);
+  }
+  clearExportAction() {
+    this.exportAction.next(null);
+  }
+  triggerExportActionClick() {
+    this.exportActionClick.next();
   }
   updateSearchTerm(searchKey: string) {
     this.searchKey.next(searchKey.trim());

@@ -85,6 +85,18 @@
 
     <button
       type="button"
+      *ngIf="exportAction"
+      class="filters-btn"
+      [attr.aria-label]="exportAction.label"
+      [title]="exportAction.label"
+      (click)="triggerExportAction()"
+    >
+      <mat-icon class="text-base">{{ exportAction.icon || 'download' }}</mat-icon>
+      {{ exportAction.label }}
+    </button>
+
+    <button
+      type="button"
       *ngIf="filterButton"
       class="filters-btn"
       aria-label="Open filters"

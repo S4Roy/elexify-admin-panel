@@ -22,6 +22,7 @@ import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.c
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 import { BulkOrderStatusDialogComponent } from './bulk-order-status-dialog/bulk-order-status-dialog.component';
 import { BulkOrderStatusResultDialogComponent } from './bulk-order-status-result-dialog/bulk-order-status-result-dialog.component';
+import { ExportOrdersDialogComponent } from './export-orders-dialog/export-orders-dialog.component';
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
@@ -111,7 +112,9 @@ export class OrdersComponent {
   ngOnInit(): void {
     if (this.canCreateOrder) this.helperService.setActionButton({ label: 'Create order', icon: 'add' });
     if (this.canManageOrderStatus) this.helperService.secondaryLink.next({ label: 'Reconcile from Shiprocket', icon: 'sync', url: '/inventory/orders/reconciliation' });
+    this.helperService.setExportAction({ label: 'Export', icon: 'download' });
     this.helperService.actionButtonClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.addItem());
+    this.helperService.exportActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openExportDialog());
     this.helperService.selectionActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openBulkStatusDialog());
     this.helperService.selectionClear$.pipe(takeUntil(this.destroy$)).subscribe(() => this.clearSelection());
     combineLatest([
@@ -376,6 +379,53 @@ export class OrdersComponent {
       });
     });
   }
+  exporting = false;
+  openExportDialog(): void {
+    this.dialog.open(ExportOrdersDialogComponent, {
+      width: '480px', maxWidth: '96vw',
+      data: {
+        filterCount: this.filterCount(),
+        searchKey: this.filterOption.search_key,
+        selectionCount: this.selectedIds.size,
+      },
+    }).afterClosed().subscribe((result: any) => {
+      if (!result?.scope || this.exporting) return;
+      const params = this.buildFilterParams();
+      if (result.scope === 'selected') params.set('order_ids', Array.from(this.selectedIds).join(','));
+      this.exporting = true;
+      this.inventoryService.exportOrders(params).subscribe({
+        next: (res: any) => {
+          this.exporting = false;
+          const blob: Blob = res;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `orders-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          this.toastr.success('Orders exported');
+        },
+        error: (err: any) => {
+          this.exporting = false;
+          // With responseType 'blob', an error body arrives as a Blob too
+          // (not parsed JSON) — read it back out so a specific message
+          // (e.g. "no orders match", "over the row limit") still reaches
+          // the admin instead of a generic failure.
+          const blob = err?.error;
+          if (blob instanceof Blob && blob.type?.includes('json')) {
+            blob.text().then((text: string) => {
+              try { this.toastr.error(JSON.parse(text)?.message || 'Export failed'); }
+              catch { this.toastr.error('Export failed'); }
+            });
+          } else {
+            this.toastr.error(err?.error?.message || 'Export failed');
+          }
+        },
+      });
+    });
+  }
   addItem(data: any = null) {
     if (!this.canCreateOrder) return;
     this.dialog.open(CreateOrderComponent, { width: '1240px', maxWidth: '96vw', maxHeight: '94vh', autoFocus: 'first-tabbable', ariaLabelledBy: 'create-order-title', data: { customerId: this.customerId } })
@@ -399,42 +449,32 @@ export class OrdersComponent {
     const advancePercent = Math.round((item.advance_amount / item.grand_total) * 100);
     return `Partial COD – ${advancePercent}% Paid, ${100 - advancePercent}% Due on Delivery`;
   }
-  fetchOrderList() {
-    this.clearSelection();
-    let params = new URLSearchParams({
+  // Shared with exportOrders() below — "export what I'm looking at" must
+  // never drift from what the table itself is actually showing.
+  private buildFilterParams(): URLSearchParams {
+    const params = new URLSearchParams({
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',
     });
     if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
+    if (this.filterOption.category) params.set('category', this.filterOption.category);
+    if (this.filterOption.search_key) params.set('search_key', this.filterOption.search_key);
+    if (this.filterOption.order_status) params.set('order_status', this.filterOption.order_status);
+    if (this.filterOption.customer_id) params.set('customer_id', this.filterOption.customer_id);
+    if (this.filterOption.payment_status) params.set('payment_status', this.filterOption.payment_status);
+    if (this.filterOption.payment_method) params.set('payment_method', this.filterOption.payment_method);
+    if (this.filterOption.from_date) params.set('from_date', this.filterOption.from_date);
+    if (this.filterOption.to_date) params.set('to_date', this.filterOption.to_date);
+    return params;
+  }
+  fetchOrderList() {
+    this.clearSelection();
+    const params = this.buildFilterParams();
     if (this.paginationOption.limit) {
       params.set('limit', String(this.paginationOption.limit));
     }
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
-    }
-    if (this.filterOption.category) {
-      params.set('category', this.filterOption.category);
-    }
-    if (this.filterOption.search_key) {
-      params.set('search_key', this.filterOption.search_key);
-    }
-    if (this.filterOption.order_status) {
-      params.set('order_status', this.filterOption.order_status);
-    }
-    if (this.filterOption.customer_id) {
-      params.set('customer_id', this.filterOption.customer_id);
-    }
-    if (this.filterOption.payment_status) {
-      params.set('payment_status', this.filterOption.payment_status);
-    }
-    if (this.filterOption.payment_method) {
-      params.set('payment_method', this.filterOption.payment_method);
-    }
-    if (this.filterOption.from_date) {
-      params.set('from_date', this.filterOption.from_date);
-    }
-    if (this.filterOption.to_date) {
-      params.set('to_date', this.filterOption.to_date);
     }
 
     this.inventoryService.orderList(params).subscribe({
@@ -498,6 +538,7 @@ export class OrdersComponent {
   }
   ngOnDestroy(): void {
     this.helperService.clearActionButton();
+    this.helperService.clearExportAction();
     this.helperService.clearFilterButton();
     this.helperService.clearSelectionAction();
     this.helperService.secondaryLink.next(null);
