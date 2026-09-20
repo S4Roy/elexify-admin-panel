@@ -13,17 +13,23 @@ interface ShiprocketDetails {
   etd: string | null;
 }
 
-// Read-only display for the "Fetch Shiprocket details" button — this
-// never changes anything in the database (see
-// services/orderService/fetchShiprocketDetails.js on the backend), it
-// only shows exactly what Shiprocket currently reports.
+// Display for the "Fetch Shiprocket details" button. An order already
+// linked locally is only ever looked up and shown here — nothing is
+// written. An order with nothing linked yet, when Shiprocket has exactly
+// one matching order for its reference, gets that link written on the
+// backend before this dialog opens (see
+// services/orderService/fetchShiprocketDetails.js) — `linked_now` says
+// when that just happened, so the admin isn't left wondering whether
+// this changed anything.
 @Component({
   selector: 'app-shiprocket-details-dialog',
   imports: [NgFor, NgIf],
   template: `
     <div class="p-6 sm:p-8">
       <h2 class="text-xl font-bold text-gray-900">Shiprocket details</h2>
-      <p class="mt-1 text-xs text-gray-500">Fetched live from Shiprocket — nothing on this order was changed.</p>
+      <p class="mt-1 text-xs text-gray-500">
+        {{ data.linked_now ? 'Found on Shiprocket and linked to this order just now.' : 'Fetched live from Shiprocket — nothing on this order was changed.' }}
+      </p>
 
       <div *ngIf="data.found" class="mt-4 divide-y divide-gray-100 rounded-lg border border-gray-200">
         <div *ngFor="let row of rows" class="flex justify-between gap-4 px-4 py-2.5 text-sm">
@@ -47,7 +53,7 @@ export class ShiprocketDetailsDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<ShiprocketDetailsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { found: boolean; details?: ShiprocketDetails; message?: string },
+    @Inject(MAT_DIALOG_DATA) public data: { found: boolean; linked_now?: boolean; details?: ShiprocketDetails; message?: string },
   ) {
     if (data.found && data.details) {
       const d = data.details;

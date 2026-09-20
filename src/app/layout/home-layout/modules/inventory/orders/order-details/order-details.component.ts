@@ -377,16 +377,12 @@ export class OrderDetailsComponent {
     );
   }
 
-  // Shows "Fetch current status" only when there's an existing Shiprocket
-  // link to resync (same hasPackages check openStatusDialog uses) — an
-  // order with nothing linked yet needs "Link Shiprocket order" instead
-  // (via Change Status), not this button.
-  // Always available (permission aside), for an order in any status —
-  // this is read-only, so there's nothing it could do wrong on a
-  // cancelled/delivered/etc. order. The backend looks up an existing
-  // link directly, or searches Shiprocket live by the order's own id if
-  // there's no link yet — either way it only returns what Shiprocket
-  // reports, it never writes anything. See
+  // Always available (permission aside), for an order in any status. An
+  // order already linked to Shiprocket is only ever looked up and shown —
+  // never written to. An order with nothing linked yet is searched live
+  // by its own order id, and on a single unambiguous match, that link
+  // gets written now (verified, same as any other manual-link action);
+  // an ambiguous or missing match writes nothing. See
   // services/orderService/fetchShiprocketDetails.js on the backend.
   get canSyncShiprocket(): boolean {
     return this.canManageOrderStatus;
@@ -402,6 +398,7 @@ export class OrderDetailsComponent {
           width: '480px', maxWidth: '96vw',
           data: res?.data || { found: false, message: 'No response from server.' },
         });
+        if (res?.data?.linked_now) this.fetchOrderList();
       },
       error: () => { this.syncingShiprocket = false; },
     });
