@@ -193,6 +193,12 @@ export class InventoryService {
   registerExternalPackage(payload: { order_id: string; shiprocket_order_id: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/package/register-external`, payload);
   }
+  // Resyncs an order that's already linked to Shiprocket from a live
+  // lookup (for when the webhook missed or was delayed) — does not
+  // establish a new link, see registerExternalPackage for that.
+  syncShiprocketStatus(payload: { order_id: string }) {
+    return this.httpService.post(`admin/inventory/order/sync-shiprocket-status`, payload);
+  }
   // Shiprocket export reconciliation: upload -> audit (dry run, zero
   // writes) -> review -> apply. See services/orderService/
   // reconcileShiprocketOrderStatus.js on the backend for the matching

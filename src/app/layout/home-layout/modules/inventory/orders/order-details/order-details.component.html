@@ -33,6 +33,16 @@
         {{ updatingStatus ? 'Updating…' : 'Change Status' }}
       </button>
       <button
+        *ngIf="canSyncShiprocket"
+        type="button"
+        (click)="syncShiprocketStatus()"
+        [disabled]="syncingShiprocket"
+        title="Fetch this order's current status live from Shiprocket, for when a webhook was missed or delayed"
+        class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
+      >
+        {{ syncingShiprocket ? 'Fetching…' : 'Fetch current status' }}
+      </button>
+      <button
         *ngIf="isCancellable"
         type="button"
         (click)="openCancelDialog()"

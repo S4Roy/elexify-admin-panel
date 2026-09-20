@@ -156,6 +156,7 @@ export class OrderDetailsComponent {
   forceCancelling = false;
   reopening = false;
   updatingStatus = false;
+  syncingShiprocket = false;
   recordingPayment = false;
   retryingRefund = false;
   downloadingInvoice = false;
@@ -373,6 +374,32 @@ export class OrderDetailsComponent {
     return !['cancelled', 'returned', 'return_requested', 'delivered', 'failed'].includes(
       this.data?.order_status,
     );
+  }
+
+  // Shows "Fetch current status" only when there's an existing Shiprocket
+  // link to resync (same hasPackages check openStatusDialog uses) — an
+  // order with nothing linked yet needs "Link Shiprocket order" instead
+  // (via Change Status), not this button.
+  get canSyncShiprocket(): boolean {
+    return this.canManageOrderStatus &&
+      !!(this.data?.package_count > 0 || this.data?.awb || this.data?.shiprocket_order_id) &&
+      !['cancelled', 'returned', 'return_requested', 'delivered', 'failed'].includes(this.data?.order_status);
+  }
+
+  syncShiprocketStatus(): void {
+    if (!this.canSyncShiprocket || this.syncingShiprocket || !this.data?._id) return;
+    this.syncingShiprocket = true;
+    this.inventoryService.syncShiprocketStatus({ order_id: this.data._id }).subscribe({
+      next: (res: any) => {
+        this.syncingShiprocket = false;
+        const changed = res?.data?.changed;
+        this.toastr.success(
+          changed ? `Synced from Shiprocket — order is now ${this.orderStatusLabel(res?.data?.order_status)}` : 'Already up to date with Shiprocket',
+        );
+        this.fetchOrderList();
+      },
+      error: () => { this.syncingShiprocket = false; },
+    });
   }
 
   get packages(): any[] {
