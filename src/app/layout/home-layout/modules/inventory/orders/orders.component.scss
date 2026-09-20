@@ -11,6 +11,8 @@
 
 .customer-link { color: var(--primary-color, #2563eb); font-weight: 600; }
 .customer-link:hover { text-decoration: underline; }
+.order-id-link { color: var(--primary-color, #2563eb); font-weight: 600; cursor: pointer; }
+.order-id-link:hover { text-decoration: underline; }
 .context-link { border: 1px solid var(--border-color, #d1d5db); border-radius: .5rem; padding: .45rem .75rem; color: var(--text-primary, #374151); font-size: .8rem; font-weight: 600; white-space: nowrap; }
 .context-link:hover { background: var(--bg-surface-alt, #f9fafb); }
 .summary-chip { border-radius: 999px; background: var(--bg-surface-alt, #f3f4f6); padding: .3rem .6rem; }

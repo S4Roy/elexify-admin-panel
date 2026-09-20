@@ -59,8 +59,8 @@
           <td *ngIf="canManageOrderStatus" (click)="$event.stopPropagation()">
             <mat-checkbox [checked]="isSelected(item)" (change)="toggleSelected(item, $event.checked)" [aria-label]="'Select order ' + item?.id"></mat-checkbox>
           </td>
-          <td (click)="orderDetails(item)">
-            <a href="javascript:void(0)"
+          <td>
+            <a [routerLink]="['/inventory/orders/details', item?._id]" class="order-id-link" [attr.aria-label]="'View order ' + item?.id"
               >{{ item?.id }} <span *ngIf="item?.imported_from_backup" class="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800" title="Created by the WooCommerce backup import">Imported</span>
               <small *ngIf="item?.shiprocket_order_id">
                 <br />{{ item?.shiprocket_order_id }}
