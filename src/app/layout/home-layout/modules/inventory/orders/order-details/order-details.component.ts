@@ -26,6 +26,7 @@ import { ReopenOrderDialogComponent } from './reopen-order-dialog/reopen-order-d
 import { HelpersService } from 'app/core/services/helpers.service';
 import { OrderShippingComponent } from '../order-shipping/order-shipping.component';
 import { OrderStatusDialogComponent } from './order-status-dialog/order-status-dialog.component';
+import { ShiprocketDetailsDialogComponent } from './shiprocket-details-dialog/shiprocket-details-dialog.component';
 
 // Mirrors the backend's default admin_cancellation_statuses policy
 // (elexify-backend/src/services/settings/shipping/model.js) — the backend is
@@ -380,10 +381,12 @@ export class OrderDetailsComponent {
   // link to resync (same hasPackages check openStatusDialog uses) — an
   // order with nothing linked yet needs "Link Shiprocket order" instead
   // (via Change Status), not this button.
-  // Always available (permission aside) — the backend now decides what's
-  // possible: an already-linked order gets resynced from a live lookup;
-  // one with nothing linked yet gets searched on Shiprocket by its own
-  // order id and linked on an unambiguous match. See
+  // Always available (permission aside), for an order in any status —
+  // this is read-only, so there's nothing it could do wrong on a
+  // cancelled/delivered/etc. order. The backend looks up an existing
+  // link directly, or searches Shiprocket live by the order's own id if
+  // there's no link yet — either way it only returns what Shiprocket
+  // reports, it never writes anything. See
   // services/orderService/fetchShiprocketDetails.js on the backend.
   get canSyncShiprocket(): boolean {
     return this.canManageOrderStatus;
@@ -395,11 +398,10 @@ export class OrderDetailsComponent {
     this.inventoryService.syncShiprocketStatus({ order_id: this.data._id }).subscribe({
       next: (res: any) => {
         this.syncingShiprocket = false;
-        const changed = res?.data?.changed;
-        this.toastr.success(
-          changed ? `Fetched from Shiprocket — order is now ${this.orderStatusLabel(res?.data?.order_status)}` : 'Already up to date with Shiprocket',
-        );
-        this.fetchOrderList();
+        this.dialog.open(ShiprocketDetailsDialogComponent, {
+          width: '480px', maxWidth: '96vw',
+          data: res?.data || { found: false, message: 'No response from server.' },
+        });
       },
       error: () => { this.syncingShiprocket = false; },
     });

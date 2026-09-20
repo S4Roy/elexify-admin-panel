@@ -37,7 +37,7 @@
         type="button"
         (click)="syncShiprocketStatus()"
         [disabled]="syncingShiprocket"
-        title="Fetch this order's shipment details live from Shiprocket by its order ID — resyncs an existing link, or finds and links one if it doesn't have one yet"
+        title="Read-only: looks up this order's shipment details live from Shiprocket by its order ID. Nothing here is written to the database."
         class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
       >
         {{ syncingShiprocket ? 'Fetching…' : 'Fetch Shiprocket details' }}
