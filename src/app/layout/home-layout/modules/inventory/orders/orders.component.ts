@@ -110,6 +110,7 @@ export class OrdersComponent {
   public sortDirection: 'asc' | 'desc' = 'desc';
   ngOnInit(): void {
     if (this.canCreateOrder) this.helperService.setActionButton({ label: 'Create order', icon: 'add' });
+    if (this.canManageOrderStatus) this.helperService.secondaryLink.next({ label: 'Reconcile from Shiprocket', icon: 'sync', url: '/inventory/orders/reconciliation' });
     this.helperService.actionButtonClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.addItem());
     this.helperService.selectionActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openBulkStatusDialog());
     this.helperService.selectionClear$.pipe(takeUntil(this.destroy$)).subscribe(() => this.clearSelection());
@@ -499,6 +500,7 @@ export class OrdersComponent {
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
     this.helperService.clearSelectionAction();
+    this.helperService.secondaryLink.next(null);
     this.destroy$.next();
     this.destroy$.complete();
   }

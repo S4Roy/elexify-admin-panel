@@ -193,6 +193,20 @@ export class InventoryService {
   registerExternalPackage(payload: { order_id: string; shiprocket_order_id: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/package/register-external`, payload);
   }
+  // Shiprocket export reconciliation: upload -> audit (dry run, zero
+  // writes) -> review -> apply. See services/orderService/
+  // reconcileShiprocketOrderStatus.js on the backend for the matching
+  // logic and controllers/admin/inventory/order/reconciliation/*.js for
+  // the three endpoints below.
+  auditReconciliation(file: File) {
+    return this.httpService.postFormData(`admin/inventory/order/reconciliation/audit`, { file });
+  }
+  applyReconciliation(payload: { audit_id: string; confirmation: string }) {
+    return this.httpService.post(`admin/inventory/order/reconciliation/apply`, payload);
+  }
+  listReconciliationAudits() {
+    return this.httpService.get(`admin/inventory/order/reconciliation/list`, {});
+  }
   retryRefund(payload: any) {
     return this.httpService.post(
       `admin/inventory/order/refund/retry`,

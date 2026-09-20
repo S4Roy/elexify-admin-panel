@@ -23,6 +23,7 @@ import { NewShippingZoneComponent } from './shipping-zones/new-shipping-zone/new
 import { ShippingRatesComponent } from './shipping-rates/shipping-rates.component';
 import { SeoManagerComponent } from './products/seo-manager/seo-manager.component';
 import { ReturnsComponent } from './returns/returns.component';
+import { ReconciliationComponent } from './orders/reconciliation/reconciliation.component';
 
 export const routes: Routes = [
   {
@@ -257,6 +258,14 @@ export const routes: Routes = [
             data: {
               pageTitle: 'Order Details',
               breadcrumb: 'Details',
+            },
+          },
+          {
+            path: 'reconciliation',
+            component: ReconciliationComponent,
+            data: {
+              pageTitle: 'Shiprocket Reconciliation',
+              breadcrumb: 'Reconciliation',
             },
           },
           {

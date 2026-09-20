@@ -1,0 +1,149 @@
+<div class="space-y-6">
+  <p class="text-sm text-gray-600">
+    Upload a Shiprocket order export (CSV, with "Order ID" and "Status" columns) to reconcile order/package status
+    from it. This matches each row to your DB by Shiprocket's own order id — a field we already populated when the
+    order/package was created or last linked, never a guess — and only ever moves a status forward. Uploading only
+    runs a dry-run audit; nothing is written until you review the report and explicitly apply it.
+  </p>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-5">
+    <label for="reconciliation-file" class="block text-sm font-semibold text-gray-800">Shiprocket export (.csv)</label>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <input id="reconciliation-file" type="file" accept=".csv" (change)="onFileSelected($event)"
+        class="block text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200" />
+      <button type="button" (click)="runAudit()" [disabled]="!selectedFile || auditing"
+        class="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+        {{ auditing ? 'Running audit…' : 'Run audit (dry run)' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="report" class="space-y-6">
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h3 class="text-base font-bold text-gray-900">
+          {{ applied ? 'Applied report' : 'Dry-run report' }} — {{ filename }}
+        </h3>
+        <span *ngIf="applied" class="table-status delivered">Applied</span>
+        <span *ngIf="!applied" class="table-status pending">Not applied yet</span>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-lg bg-gray-50 p-3">
+          <div class="text-xs uppercase tracking-wide text-gray-500">Total rows</div>
+          <div class="mt-1 text-xl font-bold text-gray-900">{{ report.counters.total_rows }}</div>
+        </div>
+        <div class="rounded-lg bg-blue-50 p-3">
+          <div class="text-xs uppercase tracking-wide text-blue-600">Package matched</div>
+          <div class="mt-1 text-xl font-bold text-blue-900">{{ report.counters.package_matched_updated }}</div>
+          <div class="text-xs text-blue-600">{{ report.counters.package_matched_noop }} already current</div>
+        </div>
+        <div class="rounded-lg bg-purple-50 p-3">
+          <div class="text-xs uppercase tracking-wide text-purple-600">Order matched</div>
+          <div class="mt-1 text-xl font-bold text-purple-900">{{ report.counters.order_matched_updated }}</div>
+          <div class="text-xs text-purple-600">{{ report.counters.order_matched_noop }} already current, {{ report.counters.order_matched_blocked }} blocked</div>
+        </div>
+        <div class="rounded-lg bg-amber-50 p-3">
+          <div class="text-xs uppercase tracking-wide text-amber-600">Unmatched</div>
+          <div class="mt-1 text-xl font-bold text-amber-900">{{ report.counters.unmatched }}</div>
+          <div class="text-xs text-amber-600">{{ report.counters.unsupported_status }} unsupported status, {{ report.counters.skipped_missing_fields }} skipped</div>
+        </div>
+      </div>
+
+      <p *ngIf="!applied" class="mt-3 text-xs text-gray-500">
+        Order-matched counts above are an upper bound — a few may still be blocked (cancellation/return/refund
+        effects, unpaid balance) once you actually apply, and will show up under "Blocked" instead.
+      </p>
+    </div>
+
+    <div *ngIf="!applied" class="rounded-lg border border-amber-300 bg-amber-50 p-5">
+      <h3 class="text-sm font-bold text-amber-900">Apply this reconciliation</h3>
+      <p class="mt-1 text-sm text-amber-800">
+        This writes to every matched order/package above. Type <strong>{{ requiredConfirmation }}</strong> to confirm.
+      </p>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <input type="text" [(ngModel)]="confirmationText" [placeholder]="requiredConfirmation"
+          class="w-72 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary focus:outline-none" />
+        <button type="button" (click)="applyChanges()" [disabled]="!canApply"
+          class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+          {{ applying ? 'Applying…' : 'Apply changes' }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="report.blocked?.length" class="table-wrapper">
+      <h3 class="border-b border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">Blocked ({{ report.blocked.length }})</h3>
+      <table class="table-base">
+        <thead><tr><th>Shiprocket order ID</th><th>Order</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of report.blocked">
+            <td>{{ row.shiprocket_order_id }}</td>
+            <td>{{ row.order_id }}</td>
+            <td>{{ row.reason }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="report.applied?.length" class="table-wrapper">
+      <h3 class="border-b border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
+        {{ applied ? 'Updated' : 'Would update' }} ({{ report.applied.length }})
+      </h3>
+      <table class="table-base">
+        <thead><tr><th>Type</th><th>Shiprocket order ID</th><th>Order / Package</th><th>From</th><th>To</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of report.applied">
+            <td>{{ row.type }}</td>
+            <td>{{ row.shiprocket_order_id }}</td>
+            <td>{{ row.order_id || row.package_id }}</td>
+            <td>{{ row.from }}</td>
+            <td>{{ row.to }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="report.unmatched?.length" class="table-wrapper">
+      <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+        <h3 class="text-sm font-bold text-gray-900">Unmatched ({{ report.unmatched.length }})</h3>
+        <button type="button" (click)="downloadUnmatchedCsv()" class="link-btn text-sm">Download CSV</button>
+      </div>
+      <p class="px-4 pt-3 text-xs text-gray-500">
+        No local Package or Order carries this Shiprocket order id yet. Use "Link Shiprocket order" from each order's
+        details page to establish the link (verified live against Shiprocket) — never guessed automatically.
+      </p>
+      <table class="table-base">
+        <thead><tr><th>Shiprocket order ID</th><th>Status</th><th>Channel</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of report.unmatched.slice(0, 200)">
+            <td>{{ row.shiprocket_order_id }}</td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.channel }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="report.unmatched.length > 200" class="px-4 py-3 text-xs text-gray-500">
+        Showing the first 200 of {{ report.unmatched.length }} — download the CSV for the full list.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <h3 class="border-b border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">Recent uploads</h3>
+    <table class="table-base">
+      <thead><tr><th>File</th><th>Status</th><th>Uploaded by</th><th>Uploaded</th><th>Applied</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of history">
+          <td>{{ item.filename }}</td>
+          <td><span class="table-status" [class]="item.status">{{ item.status }}</span></td>
+          <td>{{ item.uploaded_by?.name }}</td>
+          <td>{{ item.created_at | date: 'medium' }}</td>
+          <td>{{ item.applied_at ? (item.applied_at | date: 'medium') : '—' }}</td>
+        </tr>
+        <tr *ngIf="!historyLoading && !history.length">
+          <td colspan="5" class="py-6 text-center text-sm text-gray-500">No uploads yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
