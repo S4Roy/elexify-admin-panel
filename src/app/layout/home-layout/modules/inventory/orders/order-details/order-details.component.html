@@ -33,15 +33,19 @@
         {{ updatingStatus ? 'Updating…' : 'Change Status' }}
       </button>
       <ng-container *ngIf="canSyncShiprocket">
-        <select
+        <ng-select
           *ngIf="shiprocketChannels.length"
+          [items]="shiprocketChannels"
+          bindLabel="name"
+          bindValue="id"
+          [clearable]="false"
+          [searchable]="false"
           [(ngModel)]="selectedChannelId"
           [disabled]="syncingShiprocket"
+          [ariaLabel]="'Shiprocket channel to search'"
           title="Shiprocket channel to search — defaults to the account's configured channel."
-          class="rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 shadow-sm disabled:opacity-50"
-        >
-          <option *ngFor="let channel of shiprocketChannels" [value]="channel.id">{{ channel.name }}</option>
-        </select>
+          style="min-width: 180px"
+        ></ng-select>
         <button
           type="button"
           (click)="syncShiprocketStatus()"

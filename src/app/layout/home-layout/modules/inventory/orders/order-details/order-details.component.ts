@@ -10,6 +10,7 @@ import {
 } from '@angular/common';
 import { Component, Inject, Optional } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import {
   MatDialog,
   MatDialogRef,
@@ -143,6 +144,7 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
   imports: [
     MatDialogModule,
     FormsModule,
+    NgSelectModule,
     DatePipe,
     NgFor,
     NgIf,
