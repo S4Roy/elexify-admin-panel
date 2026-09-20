@@ -33,7 +33,7 @@ const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
         Paste or edit a comma-separated list of order IDs, pick the new status, and apply it to all of them at once.
         Each order is checked independently — orders that aren't eligible (cancelled, returned, unpaid, etc.) are skipped and reported, not silently failed.
         For an order already split into packages, only Packed/Shipped/Out for Delivery/Delivered/Failed are allowed — applying one of these updates every one of its packages too.
-        An order with no package yet can't be bulk-marked "Packed" — that needs a verified Shiprocket reference, entered one order at a time from its details page.
+        An order with no package yet can't be bulk-moved to any of those statuses — each one needs a verified Shiprocket reference, entered one order at a time from its details page.
       </p>
 
       <label for="bulk-order-ids" class="mt-5 block text-sm font-semibold text-gray-800">Order IDs (comma-separated)</label>

@@ -37,7 +37,7 @@ const PACKAGE_CASCADE_STATUSES = new Set(['packed', 'shipped', 'out_for_delivery
       </select>
       <ng-container *ngIf="needsShiprocketReference">
         <p class="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
-          This order has no package yet, so "Packed" requires the Shiprocket order it was actually booked under — it's verified live against Shiprocket before anything is saved.
+          This order has no package yet, so any shipment-stage status requires the Shiprocket order it was actually booked under — it's verified live against Shiprocket before anything is saved, and the status actually recorded is whatever Shiprocket currently reports for that shipment (which may differ from your selection above).
         </p>
         <label for="order-status-shiprocket-id" class="mt-4 block text-sm font-semibold text-gray-800">Shiprocket order ID</label>
         <input id="order-status-shiprocket-id" type="text" inputmode="numeric" [(ngModel)]="shiprocketOrderId"
@@ -71,12 +71,12 @@ export class OrderStatusDialogComponent {
     return PACKAGE_CASCADE_STATUSES.has(status);
   }
 
-  // "Packed" on an order with no packages at all needs a verified
-  // Shiprocket reference (see registerExternalPackage on the backend) —
-  // once it already has packages, correcting back to "packed" is the
-  // ordinary cascade path and needs no reference.
+  // Any shipment-stage status on an order with no packages at all needs a
+  // verified Shiprocket reference (see registerExternalPackage on the
+  // backend) — once it already has packages, correcting one of these
+  // statuses is the ordinary cascade path and needs no reference.
   get needsShiprocketReference(): boolean {
-    return this.status === 'packed' && !this.data.hasPackages;
+    return PACKAGE_CASCADE_STATUSES.has(this.status) && !this.data.hasPackages;
   }
 
   get canConfirm(): boolean {
