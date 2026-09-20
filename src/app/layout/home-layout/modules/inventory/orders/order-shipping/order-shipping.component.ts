@@ -11,7 +11,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 interface PackLine { order_item_id: string; quantity: number }
-interface DraftPackage { key: number; items: PackLine[]; weight: number; length: number; width: number; height: number }
+interface DraftPackage { key: number; items: PackLine[]; length: number; width: number; height: number }
 
 @Component({
   selector: 'app-order-shipping',
@@ -60,7 +60,7 @@ export class OrderShippingComponent {
     return !this.busy && !this.confirmingShipment && !this.loading && !this.loadingPackages && !this.error &&
       this.drafts.length > 0 && this.remainingQuantity === 0 &&
       this.drafts.every(draft => this.quantity(draft.items) > 0 &&
-        [draft.weight, draft.length, draft.width, draft.height].every(v => Number.isFinite(Number(v)) && Number(v) > 0)) &&
+        [this.packageWeight(draft.items), draft.length, draft.width, draft.height].every(v => Number.isFinite(Number(v)) && Number(v) > 0)) &&
       this.orderItems.every(item => this.available(item) === 0);
   }
   get dropIds(): string[] { return ['unpacked', ...this.drafts.map(d => `draft-${d.key}`)]; }
@@ -73,6 +73,15 @@ export class OrderShippingComponent {
   itemFor(id: string): any { return this.orderItems.find(item => String(item._id) === String(id)); }
   value(lines: PackLine[]): number {
     return lines.reduce((n, line) => n + Number(this.itemFor(line.order_item_id)?.unit_price || 0) * line.quantity, 0);
+  }
+  packageWeight(lines: PackLine[]): number {
+    let total = 0;
+    for (const line of lines) {
+      const weight = Number(this.itemFor(line.order_item_id)?.weight);
+      if (!Number.isFinite(weight) || weight <= 0) return 0;
+      total += weight * Number(line.quantity);
+    }
+    return Number(total.toFixed(6));
   }
   draftName(index: number): string { return `Package ${Math.max(0, ...this.packages.map(p => Number(p.package_number) || 0)) + index + 1}`; }
 
@@ -104,7 +113,7 @@ export class OrderShippingComponent {
       this.pickupLocation = this.pickupLocations.find(loc => loc.pickup_location === preferred)?.pickup_location || this.pickupLocations[0]?.pickup_location || '';
     });
   }
-  addPackage() { this.drafts.push({ key: ++this.nextKey, items: [], weight: 0.5, length: 10, width: 10, height: 10 }); }
+  addPackage() { this.drafts.push({ key: ++this.nextKey, items: [], length: 10, width: 10, height: 10 }); }
   removePackage(draft: DraftPackage) {
     const count = this.quantity(draft.items);
     this.dialogService.confirmDialog({
@@ -173,7 +182,7 @@ export class OrderShippingComponent {
     if (!draft) { this.busy = false; this.toastr.success('Shipments created.'); this.loadOrder(); this.loadPackages(); return; }
     this.inventoryService.sendToShipRocket({
       _id: this.orderId, items: draft.items.map(line => ({ ...line })), pickup_location: this.pickupLocation || undefined,
-      weight: Number(draft.weight), length: Number(draft.length), width: Number(draft.width), height: Number(draft.height),
+      weight: this.packageWeight(draft.items), length: Number(draft.length), width: Number(draft.width), height: Number(draft.height),
     }).subscribe({
       next: () => { this.anyChangeMade = true; this.drafts.shift(); this.submitNext(); },
       error: (err: any) => {

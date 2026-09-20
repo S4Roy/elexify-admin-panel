@@ -19,6 +19,17 @@ describe('OrderShippingComponent', () => {
     fixture.detectChanges();
   });
 
+  it('recalculates weight as package contents and quantities change', () => {
+    component.order = { order_items: [{ _id: 'a', weight: 2 }, { _id: 'b', weight: 0.5 }] };
+    const lines = [{ order_item_id: 'a', quantity: 3 }, { order_item_id: 'b', quantity: 4 }];
+    expect(component.packageWeight(lines)).toBe(8);
+    lines[0].quantity = 1;
+    expect(component.packageWeight(lines)).toBe(4);
+    lines.pop();
+    expect(component.packageWeight(lines)).toBe(2);
+    expect(component.packageWeight([])).toBe(0);
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
