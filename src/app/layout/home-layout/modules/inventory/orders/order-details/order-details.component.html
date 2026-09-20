@@ -32,16 +32,26 @@
       >
         {{ updatingStatus ? 'Updating…' : 'Change Status' }}
       </button>
-      <button
-        *ngIf="canSyncShiprocket"
-        type="button"
-        (click)="syncShiprocketStatus()"
-        [disabled]="syncingShiprocket"
-        title="Read-only: looks up this order's shipment details live from Shiprocket by its order ID. Nothing here is written to the database."
-        class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
-      >
-        {{ syncingShiprocket ? 'Fetching…' : 'Fetch Shiprocket details' }}
-      </button>
+      <ng-container *ngIf="canSyncShiprocket">
+        <select
+          *ngIf="shiprocketChannels.length"
+          [(ngModel)]="selectedChannelId"
+          [disabled]="syncingShiprocket"
+          title="Shiprocket channel to search — defaults to the account's configured channel."
+          class="rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 shadow-sm disabled:opacity-50"
+        >
+          <option *ngFor="let channel of shiprocketChannels" [value]="channel.id">{{ channel.name }}</option>
+        </select>
+        <button
+          type="button"
+          (click)="syncShiprocketStatus()"
+          [disabled]="syncingShiprocket"
+          title="Looks up this order's shipment details live from Shiprocket by its order ID. Already-linked details are only shown; a not-yet-linked, confirmed-delivered match gets linked."
+          class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
+        >
+          {{ syncingShiprocket ? 'Fetching…' : 'Fetch Shiprocket details' }}
+        </button>
+      </ng-container>
       <button
         *ngIf="isCancellable"
         type="button"

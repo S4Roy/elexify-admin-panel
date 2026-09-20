@@ -9,6 +9,7 @@ import {
   TitleCasePipe,
 } from '@angular/common';
 import { Component, Inject, Optional } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   MatDialog,
   MatDialogRef,
@@ -19,6 +20,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
+import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
 import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-dialog.component';
 import { ForceCancelOrderDialogComponent } from './force-cancel-order-dialog/force-cancel-order-dialog.component';
@@ -140,6 +142,7 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
   selector: 'app-order-details',
   imports: [
     MatDialogModule,
+    FormsModule,
     DatePipe,
     NgFor,
     NgIf,
@@ -163,12 +166,15 @@ export class OrderDetailsComponent {
   downloadingInvoice = false;
   syncingZohoInvoice = false;
   zohoInvoice: any = null;
+  shiprocketChannels: { id: string; name: string }[] = [];
+  selectedChannelId = '';
 
   constructor(
     @Optional() public dialogRef: MatDialogRef<OrderDetailsComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: any,
     private route: ActivatedRoute,
     private inventoryService: InventoryService,
+    private apiService: ApiService,
     private dialog: MatDialog,
     private toastr: ToastrService,
     private helpersService: HelpersService
@@ -181,6 +187,23 @@ export class OrderDetailsComponent {
       if (this.filterOption._id) {
         this.fetchOrderList();
       }
+    });
+    this.loadShiprocketChannels();
+  }
+
+  // Populates the channel dropdown next to "Fetch Shiprocket details" —
+  // defaults to the account's configured channel_id (.env or managed
+  // credentials) so the button works unchanged for admins who never touch
+  // it, while still letting a multi-channel account scope the search.
+  loadShiprocketChannels() {
+    this.apiService.shiprocketChannels().subscribe({
+      next: (res: any) => {
+        this.shiprocketChannels = res?.data || [];
+        this.selectedChannelId = res?.default_channel_id
+          ? String(res.default_channel_id)
+          : this.shiprocketChannels[0]?.id || '';
+      },
+      error: () => {},
     });
   }
   onConfirm(): void {
@@ -391,7 +414,10 @@ export class OrderDetailsComponent {
   syncShiprocketStatus(): void {
     if (!this.canSyncShiprocket || this.syncingShiprocket || !this.data?._id) return;
     this.syncingShiprocket = true;
-    this.inventoryService.syncShiprocketStatus({ order_id: this.data._id }).subscribe({
+    this.inventoryService.syncShiprocketStatus({
+      order_id: this.data._id,
+      channel_id: this.selectedChannelId || undefined,
+    }).subscribe({
       next: (res: any) => {
         this.syncingShiprocket = false;
         this.dialog.open(ShiprocketDetailsDialogComponent, {

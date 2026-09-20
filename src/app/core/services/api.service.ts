@@ -352,4 +352,7 @@ export class ApiService {
   shiprocketPickupLocations() {
     return this.httpService.get(`admin/integration-credentials/shiprocket/pickup-locations`);
   }
+  shiprocketChannels() {
+    return this.httpService.get(`admin/integration-credentials/shiprocket/channels`);
+  }
 }
