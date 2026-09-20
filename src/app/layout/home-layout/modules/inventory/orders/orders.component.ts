@@ -74,12 +74,10 @@ export class OrdersComponent {
   filterOption: FilterOptions;
   // Working filter values, keyed to match filterFields below — this is what
   // gets handed to the (page-agnostic) filter drawer and read back from it.
-  // Note: order_status is intentionally NOT included here — it's already
-  // driven by the /inventory/orders/:order_status route (status tiles /
-  // sidebar links), so a drawer filter for it would just duplicate that nav.
   filterValues: Record<string, any> = {
     import_source: null,
     customer: null,
+    order_status: [],
     payment_status: [],
     payment_method: [],
     from_date: null,
@@ -89,6 +87,12 @@ export class OrdersComponent {
   customerId: string | null = null;
   customerContext: any = null;
   customerSummary: any = null;
+  // The /inventory/orders/:order_status route (status tiles/sidebar links)
+  // always wins over the drawer's Status filter when present — same
+  // precedence as customer_id above. Tracked separately from
+  // filterOption.order_status since that field gets overwritten on every
+  // route change by resetTableFilterOptions() and needs re-deriving.
+  private routeOrderStatus: string | null = null;
 
   constructor(
     private dialog: MatDialog,
@@ -125,8 +129,9 @@ export class OrdersComponent {
         // wipes filterOption back to defaults on every route change (same
         // reasoning as payment_status/payment_method below).
         this.filterOption.customer_id = this.customerId || this.filterValues['customer']?.value || null;
-        this.filterOption.order_status =
-          params.get('order_status') || queryParams.get('order_status');
+        this.routeOrderStatus = params.get('order_status') || queryParams.get('order_status');
+        this.filterOption.order_status = this.routeOrderStatus ||
+          (this.filterValues['order_status']?.length ? this.filterValues['order_status'].join(',') : null);
         this.filterOption.search_key = searchKey;
         // Seed the date-range filter from ?from_date=&to_date= if present
         // (e.g. links from the dashboard KPI cards) so it's reflected in
@@ -180,6 +185,32 @@ export class OrdersComponent {
           ),
       },
       {
+        // Only the app-managed statuses (constants/orderStatus.js
+        // ORDER_STATUS on the backend) — legacy/imported orders can carry
+        // other free-text carrier statuses (see Global.statusColor's
+        // SEMANTIC_STATUS_COLORS comment) that aren't offered here; those
+        // are still reachable via search or a direct status-tile link.
+        key: 'order_status',
+        label: 'Status',
+        type: 'multiselect',
+        options: [
+          { value: 'pending', label: 'Pending' },
+          { value: 'confirmed', label: 'Confirmed' },
+          { value: 'processing', label: 'Processing' },
+          { value: 'packed', label: 'Packed' },
+          { value: 'shipped', label: 'Shipped' },
+          { value: 'partially_shipped', label: 'Partially Shipped' },
+          { value: 'out_for_delivery', label: 'Out for Delivery' },
+          { value: 'delivered', label: 'Delivered' },
+          { value: 'partially_delivered', label: 'Partially Delivered' },
+          { value: 'cancel_requested', label: 'Cancel Requested' },
+          { value: 'cancelled', label: 'Cancelled' },
+          { value: 'return_requested', label: 'Return Requested' },
+          { value: 'returned', label: 'Returned' },
+          { value: 'failed', label: 'Failed' },
+        ],
+      },
+      {
         key: 'payment_status',
         label: 'Payment Status',
         type: 'multiselect',
@@ -211,6 +242,7 @@ export class OrdersComponent {
     let count = 0;
     if (this.filterValues['import_source']) count++;
     if (this.filterValues['customer']) count++;
+    if (this.filterValues['order_status']?.length) count++;
     if (this.filterValues['payment_status']?.length) count++;
     if (this.filterValues['payment_method']?.length) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
@@ -229,6 +261,8 @@ export class OrdersComponent {
         if (!result) return;
         this.filterValues = result;
         this.filterOption.customer_id = this.customerId || this.filterValues['customer']?.value || null;
+        this.filterOption.order_status = this.routeOrderStatus ||
+          (this.filterValues['order_status']?.length ? this.filterValues['order_status'].join(',') : null);
         this.filterOption.payment_status = this.filterValues['payment_status']
           ?.length
           ? this.filterValues['payment_status'].join(',')
