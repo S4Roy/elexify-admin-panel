@@ -141,6 +141,9 @@ export class InventoryService {
   }
   // Excel export — same filter/search/sort query params as orderList,
   // optionally scoped to a hand-picked set of order_ids (checkbox selection).
+  exportCategories(params: URLSearchParams) {
+    return this.httpService.downloadFile(`admin/inventory/category/export?${params.toString()}`);
+  }
   exportProducts(params: URLSearchParams) {
     return this.httpService.downloadFile(`admin/inventory/product/export?${params.toString()}`);
   }

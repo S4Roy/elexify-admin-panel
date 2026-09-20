@@ -31,7 +31,7 @@
                 alt="Image"
                 height="24"
               />
-              <a [routerLink]="'/inventory/categories/' + root?.slug">{{ root?.name }}</a>
+              <input type="checkbox" [attr.aria-label]="'Select ' + root.name" [checked]="selectedIds.has(root._id)" (change)="toggleSelect(root._id)" /><a [routerLink]="'/inventory/categories/' + root?.slug">{{ root?.name }}</a>
               <span class="sub-count-badge" *ngIf="root?.children?.length">
                 {{ root.children.length }} sub-{{ root.children.length > 1 ? 'categories' : 'category' }}
               </span>
@@ -69,7 +69,7 @@
                   alt="Image"
                   height="24"
                 />
-                <a [routerLink]="'/inventory/categories/' + child?.slug">{{ child?.name }}</a>
+                <input type="checkbox" [attr.aria-label]="'Select ' + child.name" [checked]="selectedIds.has(child._id)" (change)="toggleSelect(child._id)" /><a [routerLink]="'/inventory/categories/' + child?.slug">{{ child?.name }}</a>
               </div>
             </td>
             <td>
@@ -131,7 +131,7 @@
             />
           </td>
           <td cdkDrag class="cursor-move">
-            <a [routerLink]="'/inventory/categories/' + item?.slug">{{
+            <input type="checkbox" [attr.aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)" /><a [routerLink]="'/inventory/categories/' + item?.slug">{{
               item?.name
             }}</a>
           </td>

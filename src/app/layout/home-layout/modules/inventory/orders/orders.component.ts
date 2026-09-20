@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
+import { ExportDownloadService } from 'app/core/services/export-download.service';
 import { CreateOrderComponent } from './create-order/create-order.component';
 import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
@@ -22,7 +25,6 @@ import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.c
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 import { BulkOrderStatusDialogComponent } from './bulk-order-status-dialog/bulk-order-status-dialog.component';
 import { BulkOrderStatusResultDialogComponent } from './bulk-order-status-result-dialog/bulk-order-status-result-dialog.component';
-import { ExportOrdersDialogComponent } from './export-orders-dialog/export-orders-dialog.component';
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
@@ -379,11 +381,12 @@ export class OrdersComponent {
       });
     });
   }
+  private exportDownload = inject(ExportDownloadService);
   exporting = false;
   openExportDialog(): void {
-    this.dialog.open(ExportOrdersDialogComponent, {
+    this.dialog.open(ExportDialogComponent, {
       width: '480px', maxWidth: '96vw',
-      data: {
+      data: { entity: 'orders',
         filterCount: this.filterCount(),
         searchKey: this.filterOption.search_key,
         selectionCount: this.selectedIds.size,
@@ -393,37 +396,7 @@ export class OrdersComponent {
       const params = this.buildFilterParams();
       if (result.scope === 'selected') params.set('order_ids', Array.from(this.selectedIds).join(','));
       this.exporting = true;
-      this.inventoryService.exportOrders(params).subscribe({
-        next: (res: any) => {
-          this.exporting = false;
-          const blob: Blob = res;
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `orders-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          this.toastr.success('Orders exported');
-        },
-        error: (err: any) => {
-          this.exporting = false;
-          // With responseType 'blob', an error body arrives as a Blob too
-          // (not parsed JSON) — read it back out so a specific message
-          // (e.g. "no orders match", "over the row limit") still reaches
-          // the admin instead of a generic failure.
-          const blob = err?.error;
-          if (blob instanceof Blob && blob.type?.includes('json')) {
-            blob.text().then((text: string) => {
-              try { this.toastr.error(JSON.parse(text)?.message || 'Export failed'); }
-              catch { this.toastr.error('Export failed'); }
-            });
-          } else {
-            this.toastr.error(err?.error?.message || 'Export failed');
-          }
-        },
-      });
+      this.exportDownload.download(this.inventoryService.exportOrders(params), 'orders', () => this.exporting = false);
     });
   }
   addItem(data: any = null) {

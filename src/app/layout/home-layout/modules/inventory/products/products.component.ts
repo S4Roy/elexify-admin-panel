@@ -1,4 +1,6 @@
-import { ExportProductsDialogComponent } from './export-products-dialog/export-products-dialog.component';
+import { inject } from '@angular/core';
+import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
+import { ExportDownloadService } from 'app/core/services/export-download.service';
 import { CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -347,11 +349,12 @@ export class ProductsComponent {
     if (this.allSelected) this.selectedIds.clear();
     else this.item_list.forEach((item: any) => this.selectedIds.add(item._id));
   }
+  private exportDownload = inject(ExportDownloadService);
   exporting = false;
   openExportDialog(): void {
-    this.dialog.open(ExportProductsDialogComponent, {
+    this.dialog.open(ExportDialogComponent, {
       width: '480px', maxWidth: '96vw',
-      data: {
+      data: { entity: 'products',
         filterCount: this.filterCount(),
         searchKey: this.filterOption.search_key,
         selectionCount: this.selectedIds.size,
@@ -361,37 +364,7 @@ export class ProductsComponent {
       const params = this.buildFilterParams();
       if (result.scope === 'selected') params.set('product_ids', Array.from(this.selectedIds).join(','));
       this.exporting = true;
-      this.inventoryService.exportProducts(params).subscribe({
-        next: (res: any) => {
-          this.exporting = false;
-          const blob: Blob = res;
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `products-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          this.toastr.success('Products exported');
-        },
-        error: (err: any) => {
-          this.exporting = false;
-          // With responseType 'blob', an error body arrives as a Blob too
-          // (not parsed JSON) — read it back out so a specific message
-          // (e.g. "no orders match", "over the row limit") still reaches
-          // the admin instead of a generic failure.
-          const blob = err?.error;
-          if (blob instanceof Blob && blob.type?.includes('json')) {
-            blob.text().then((text: string) => {
-              try { this.toastr.error(JSON.parse(text)?.message || 'Export failed'); }
-              catch { this.toastr.error('Export failed'); }
-            });
-          } else {
-            this.toastr.error(err?.error?.message || 'Export failed');
-          }
-        },
-      });
+      this.exportDownload.download(this.inventoryService.exportProducts(params), 'products', () => this.exporting = false);
     });
   }
   private buildFilterParams(): URLSearchParams {

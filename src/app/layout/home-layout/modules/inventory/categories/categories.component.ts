@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
+import { ExportDownloadService } from 'app/core/services/export-download.service';
 import { NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -137,18 +140,10 @@ export class CategoriesComponent {
     this.expandedIds.clear();
   }
   fetchCategoryTree(): void {
-    let params = new URLSearchParams({
-      sort_by: this.sortKey,
-      sort_order: this.sortDirection === 'asc' ? '1' : '-1',
-      limit: '1000',
-      page: '1',
-    });
-    if (this.filterOption.search_key) {
-      params.set('search_key', this.filterOption.search_key);
-    }
-    if (this.filterOption.status) {
-      params.set('status', this.filterOption.status);
-    }
+    this.selectedIds.clear();
+    const params = this.buildFilterParams();
+    params.set('limit', '1000');
+    params.set('page', '1');
     this.inventoryService.categoryList(params).subscribe({
       next: (res: any) => {
         const allItems: any[] = res?.data?.docs ?? [];
@@ -181,6 +176,8 @@ export class CategoriesComponent {
     this.refetch();
   }
   ngOnInit(): void {
+    this.helperService.setExportAction({ label: 'Export', icon: 'download' });
+    this.helperService.exportActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openExportDialog());
     if (this.permissions.includes('add')) {
       this.helperService.setActionButton({ label: 'Add New', icon: 'add' });
     }
@@ -252,17 +249,27 @@ export class CategoriesComponent {
     //     }
     //   });
   }
-  fetchCategoryList() {
+  selectedIds = new Set<string>();
+  toggleSelect(id: string): void { this.selectedIds.has(id) ? this.selectedIds.delete(id) : this.selectedIds.add(id); }
+  private exportDownload = inject(ExportDownloadService);
+  exporting = false;
+  openExportDialog(): void {
+    if (this.exporting) return;
+    this.dialog.open(ExportDialogComponent, { width: '480px', maxWidth: '96vw',
+      data: { entity: 'categories', filterCount: this.filterCount(), searchKey: this.filterOption.search_key, selectionCount: this.selectedIds.size },
+    }).afterClosed().subscribe(result => {
+      if (!result?.scope || this.exporting) return;
+      const params = this.buildFilterParams();
+      if (result.scope === 'selected') params.set('category_ids', [...this.selectedIds].join(','));
+      this.exporting = true;
+      this.exportDownload.download(this.inventoryService.exportCategories(params), 'categories', () => this.exporting = false);
+    });
+  }
+  private buildFilterParams(): URLSearchParams {
     let params = new URLSearchParams({
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',
     });
-    if (this.paginationOption.page) {
-      params.set('page', String(this.paginationOption.page));
-    }
-    if (this.paginationOption.limit) {
-      params.set('limit', String(this.paginationOption.limit));
-    }
     if (this.filterOption.slug) {
       params.set('slug', this.filterOption.slug);
     }
@@ -272,6 +279,13 @@ export class CategoriesComponent {
     if (this.filterOption.status) {
       params.set('status', this.filterOption.status);
     }
+    return params;
+  }
+  fetchCategoryList() {
+    this.selectedIds.clear();
+    const params = this.buildFilterParams();
+    params.set('page', String(this.paginationOption.page || 1));
+    params.set('limit', String(this.paginationOption.limit || 20));
     this.inventoryService.categoryList(params).subscribe({
       next: (res: any) => {
         this.item_list = res?.data?.docs ?? [];
@@ -305,6 +319,7 @@ export class CategoriesComponent {
     // });
   }
   ngOnDestroy(): void {
+    this.helperService.clearExportAction();
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
     this.helperService.clearViewToggle();
