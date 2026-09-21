@@ -1,3 +1,4 @@
+import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_STYLES } from './order-status-display';
 import { inject } from '@angular/core';
 import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
 import { ExportDownloadService } from 'app/core/services/export-download.service';
@@ -18,7 +19,7 @@ import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef, FilterFieldOption } from 'app/core/models/FilterFieldDef';
 import { OrderDetailsComponent } from './order-details/order-details.component';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { Observable, Subject, combineLatest, takeUntil } from 'rxjs';
+import { Observable, Subject, Subscription, combineLatest, takeUntil } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { OrderShippingComponent } from './order-shipping/order-shipping.component';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
@@ -26,27 +27,7 @@ import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-dr
 import { BulkOrderStatusDialogComponent } from './bulk-order-status-dialog/bulk-order-status-dialog.component';
 import { BulkOrderStatusResultDialogComponent } from './bulk-order-status-result-dialog/bulk-order-status-result-dialog.component';
 
-const PAYMENT_STATUS_STYLES: Record<string, string> = {
-  paid: 'bg-green-100 text-green-800',
-  advance_paid: 'bg-blue-100 text-blue-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  failed: 'bg-red-100 text-red-800',
-  refund_pending: 'bg-yellow-100 text-yellow-800',
-  partially_refunded: 'bg-yellow-100 text-yellow-800',
-  refunded: 'bg-green-100 text-green-800',
-  refund_failed: 'bg-red-100 text-red-800',
-};
 
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  paid: 'Paid',
-  advance_paid: 'Advance Paid',
-  pending: 'Pending',
-  failed: 'Failed',
-  refund_pending: 'Refund Pending',
-  partially_refunded: 'Partially Refunded',
-  refunded: 'Refunded',
-  refund_failed: 'Refund Failed',
-};
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod: 'Cash on Delivery',
@@ -58,8 +39,8 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   imports: [
     EmptyStateComponent,
     NgFor,
-    NgIf,
     NgClass,
+    NgIf,
     PaginationComponent,
     DatePipe,
     CurrencyPipe,
@@ -72,6 +53,22 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 })
 export class OrdersComponent {
   Global = Global;
+  loading = false;
+  loadError = false;
+  private listRequest?: Subscription;
+
+  statusLabel(status: string): string {
+    return ORDER_STATUS_LABELS[status] ?? status;
+  }
+
+  orderStatusClass(status: string): string {
+    return ORDER_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  trackOrder(index: number, item: any): string {
+    return item._id || item.id;
+  }
+
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
@@ -297,7 +294,7 @@ export class OrdersComponent {
       });
   }
   sort(field: string): void {
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption.page = 1;
 
     if (this.sortKey === field) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -432,7 +429,7 @@ export class OrdersComponent {
   partialCodLabel(item: any): string | null {
     if (!item?.is_partial_cod || !item?.grand_total) return null;
     const advancePercent = Math.round((item.advance_amount / item.grand_total) * 100);
-    return `Partial COD – ${advancePercent}% Paid, ${100 - advancePercent}% Due on Delivery`;
+    return `${advancePercent}% paid · ${100 - advancePercent}% due on delivery`;
   }
   // Shared with exportOrders() below — "export what I'm looking at" must
   // never drift from what the table itself is actually showing.
@@ -453,6 +450,9 @@ export class OrdersComponent {
     return params;
   }
   fetchOrderList() {
+    this.listRequest?.unsubscribe();
+    this.loading = true;
+    this.loadError = false;
     this.clearSelection();
     const params = this.buildFilterParams();
     if (this.paginationOption.limit) {
@@ -462,8 +462,9 @@ export class OrdersComponent {
       params.set('page', String(this.paginationOption.page));
     }
 
-    this.inventoryService.orderList(params).subscribe({
+    this.listRequest = this.inventoryService.orderList(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
+        this.loading = false;
         this.item_list = res?.data?.docs ?? [];
         this.paginationOption = {
           ...res?.data,
@@ -471,7 +472,11 @@ export class OrdersComponent {
         this.customerContext = res?.data?.filter_context?.customer ?? null;
         this.customerSummary = res?.data?.filter_context?.summary ?? null;
       },
-      error: (err) => {},
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+        this.item_list = [];
+      },
     });
   }
   deleteItem(item: any) {

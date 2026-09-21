@@ -179,6 +179,22 @@ body {
   overflow: auto !important;
   height: calc(100vh - 111px) !important;
 }
+// Only the main dashboard has no breadcrumb bar. Fill the remaining shell
+// height instead of subtracting the space reserved by .full-outlet.
+.page-wrapper .right-wrapper:has(> .outlet > .dashboard-overview) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  > app-header, > app-breadcums { flex-shrink: 0; }
+
+  > .outlet {
+    flex: 1;
+    min-height: 0;
+    height: auto !important; // Override the shared .full-outlet fixed height.
+  }
+}
+
 .content-box {
   height: calc(100% - 0px);
   background: var(--bg-surface);

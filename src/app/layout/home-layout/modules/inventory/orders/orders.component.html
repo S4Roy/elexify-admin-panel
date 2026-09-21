@@ -1,3 +1,8 @@
+<div *ngIf="loading" class="orders-feedback" role="status">Loading orders…</div>
+<div *ngIf="loadError" class="orders-feedback orders-error" role="alert">
+  <strong>Orders couldn’t be loaded.</strong> Please try again.
+  <button type="button" class="context-link" (click)="fetchOrderList()">Retry</button>
+</div>
 <section *ngIf="customerId" class="customer-context mb-4">
   <div class="min-w-0">
     <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Orders for customer</div>
@@ -22,41 +27,52 @@
   </div>
 </section>
 
-<div class="table-wrapper">
-  <table class="table-base">
+<div class="table-wrapper" [attr.aria-busy]="loading" [hidden]="loading || loadError">
+  <table class="table-base" aria-label="Orders">
+    <colgroup>
+      <col *ngIf="canManageOrderStatus" class="col-select" />
+      <col class="col-id" />
+      <col class="col-customer" />
+      <col class="col-date" />
+      <col class="col-status" />
+      <col class="col-payment" />
+      <col class="col-items" />
+      <col class="col-total" />
+      <col class="col-action" />
+    </colgroup>
     <thead>
       <tr class="sticky">
-        <th *ngIf="canManageOrderStatus" scope="col" class="w-10">
-          <mat-checkbox [checked]="allOnPageSelected" (change)="toggleSelectAllOnPage($event.checked)" [aria-label]="'Select all orders on this page'"></mat-checkbox>
+        <th *ngIf="canManageOrderStatus" scope="col" class="selection-column">
+          <mat-checkbox [checked]="allOnPageSelected" [indeterminate]="selectedIds.size > 0 && !allOnPageSelected" (change)="toggleSelectAllOnPage($event.checked)" [aria-label]="'Select all orders on this page'"></mat-checkbox>
         </th>
-        <th scope="col" (click)="sort('id')" class="sortable">
-          ID <span [class]="getSortIcon('id')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'id' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('id')">ID <span [class]="getSortIcon('id')"></span></button>
         </th>
-        <th scope="col" (click)="sort('user.name')" class="sortable">
-          Customer <span [class]="getSortIcon('user.name')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'user.name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('user.name')">Customer <span [class]="getSortIcon('user.name')"></span></button>
         </th>
-        <th scope="col" (click)="sort('created_at')" class="sortable">
-          Date <span [class]="getSortIcon('created_at')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'created_at' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('created_at')">Date <span [class]="getSortIcon('created_at')"></span></button>
         </th>
-        <th scope="col" (click)="sort('order_status')" class="sortable">
-          Status <span [class]="getSortIcon('order_status')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'order_status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('order_status')">Status <span [class]="getSortIcon('order_status')"></span></button>
         </th>
-        <th scope="col" (click)="sort('payment_status')" class="sortable">
-          Payment <span [class]="getSortIcon('payment_status')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'payment_status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('payment_status')">Payment <span [class]="getSortIcon('payment_status')"></span></button>
         </th>
-        <th scope="col" (click)="sort('total_items')" class="sortable">
-          Items <span [class]="getSortIcon('total_items')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'total_items' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('total_items')">Items <span [class]="getSortIcon('total_items')"></span></button>
         </th>
-        <th scope="col" (click)="sort('grand_total')" class="sortable">
-          Total <span [class]="getSortIcon('grand_total')"></span>
+        <th scope="col" [attr.aria-sort]="sortKey === 'grand_total' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+          <button type="button" class="sort-button" (click)="sort('grand_total')">Total <span [class]="getSortIcon('grand_total')"></span></button>
         </th>
         <th class="text-center">Action</th>
       </tr>
     </thead>
     <tbody>
-      <ng-container *ngFor="let item of item_list">
-        <tr>
-          <td *ngIf="canManageOrderStatus" (click)="$event.stopPropagation()">
+      <ng-container *ngFor="let item of item_list; trackBy: trackOrder">
+        <tr [class.order-selected]="isSelected(item)">
+          <td *ngIf="canManageOrderStatus" class="selection-column" (click)="$event.stopPropagation()">
             <mat-checkbox [checked]="isSelected(item)" (change)="toggleSelected(item, $event.checked)" [aria-label]="'Select order ' + item?.id"></mat-checkbox>
           </td>
           <td>
@@ -67,7 +83,7 @@
               </small>
             </a>
           </td>
-          <td class="">
+          <td class="customer-cell">
             <a
               *ngIf="item?.user?._id; else unavailableCustomer"
               [routerLink]="customerOrdersUrl(item)"
@@ -75,39 +91,40 @@
               [attr.aria-label]="'View all orders for ' + (item?.user?.name || 'customer')"
               title="View all orders for this customer"
             >
-              {{ item?.user?.name || 'Unnamed customer' }}
-              <span *ngIf="item?.user?.email" class="block text-xs font-normal text-gray-500">{{ item.user.email }}</span>
-              <span *ngIf="item?.user?.mobile" class="block text-xs font-normal text-gray-500">
+              <span class="customer-text" [title]="item?.user?.name || 'Unnamed customer'">{{ item?.user?.name || 'Unnamed customer' }}</span>
+              <span *ngIf="item?.user?.email" [title]="item.user.email" class="customer-text text-xs font-normal text-gray-500">{{ item.user.email }}</span>
+              <span *ngIf="item?.user?.mobile" [title]="(item.user.phone_code ? '+' + item.user.phone_code + ' ' : '') + item.user.mobile" class="customer-text text-xs font-normal text-gray-500">
                 {{ item.user.phone_code ? '+' + item.user.phone_code + ' ' : '' }}{{ item.user.mobile }}
               </span>
             </a>
             <ng-template #unavailableCustomer>
-              <span>{{ item?.customer_contact?.name || 'Name unavailable' }}</span>
-              <span *ngIf="item?.customer_contact?.email" class="block text-xs text-gray-500">{{ item.customer_contact.email }}</span>
-              <span *ngIf="item?.customer_contact?.phone" class="block text-xs text-gray-500">
+              <span class="customer-text" [title]="item?.customer_contact?.name || 'Name unavailable'">{{ item?.customer_contact?.name || 'Name unavailable' }}</span>
+              <span *ngIf="item?.customer_contact?.email" [title]="item.customer_contact.email" class="customer-text text-xs text-gray-500">{{ item.customer_contact.email }}</span>
+              <span *ngIf="item?.customer_contact?.phone" [title]="(item.customer_contact.phone_code ? '+' + item.customer_contact.phone_code + ' ' : '') + item.customer_contact.phone" class="customer-text text-xs text-gray-500">
                 {{ item.customer_contact.phone_code ? '+' + item.customer_contact.phone_code + ' ' : '' }}{{ item.customer_contact.phone }}
               </span>
-              <span class="block text-xs text-gray-500">
+              <span class="customer-text text-xs text-gray-500">
                 {{ item?.customer_contact?.account_status === 'guest' ? 'Guest checkout' : 'Customer account unavailable' }}
               </span>
             </ng-template>
           </td>
           <td class="">
-            {{ item?.created_at | date : "medium" }}
+            <span class="order-date">{{ item?.created_at | date : "mediumDate" }}</span>
+            <span class="order-time">{{ item?.created_at | date : "shortTime" }}</span>
           </td>
           <td>
             <a
               [routerLink]="customerId ? ['/inventory/orders/customer', customerId] : ['/inventory/orders', item?.order_status]"
               [queryParams]="customerId ? { order_status: item?.order_status } : null"
-              class="status-label cursor-pointer"
-              [class]="item?.order_status"
+              class="order-status-link"
             >
-              {{ item?.order_status }}</a
-            >
+              <span class="order-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                [ngClass]="orderStatusClass(item?.order_status)">{{ statusLabel(item?.order_status) }}</span>
+            </a>
           </td>
           <td>
             <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              class="order-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
               [ngClass]="paymentStatusClass(item?.payment_status)"
             >
               {{ paymentStatusLabel(item?.payment_status) }}
@@ -115,12 +132,12 @@
             <div class="text-xs text-gray-500 mt-1">
               {{ paymentMethodLabel(item?.payment_method) }}
             </div>
-            <div *ngIf="partialCodLabel(item) as codLabel" class="text-xs text-blue-700 mt-0.5">
+            <div *ngIf="partialCodLabel(item) as codLabel" class="cod-detail">
               {{ codLabel }}
             </div>
           </td>
           <td>{{ item?.total_items }}</td>
-          <td>
+          <td class="order-total">
             {{ item?.grand_total | currency : item?.currency }}
           </td>
           <td class="text-center">
@@ -136,13 +153,13 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" [attr.colspan]="canManageOrderStatus ? 9 : 8"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" [attr.colspan]="canManageOrderStatus ? 9 : 8"><app-empty-state message="No orders match your current search or filters"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
   </table>
 </div>
-<ng-container>
+<ng-container *ngIf="!loading && !loadError && item_list.length">
   <pagination
     [pagination]="paginationOption"
     (pageChange)="onPageChange($event)"

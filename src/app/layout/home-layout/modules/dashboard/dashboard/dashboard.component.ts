@@ -47,6 +47,7 @@ type GeoMetric = 'revenue' | 'orders' | 'new_customers';
 
 @Component({
   selector: 'app-dashboard',
+  host: { class: 'dashboard-overview' },
   imports: [
     NgFor,
     RouterLink,
@@ -406,7 +407,8 @@ export class DashboardComponent {
           lineWidth: 2.5,
         },
         column: {
-          borderRadius: 4,
+          borderRadius: 3,
+          borderWidth: 0,
           maxPointWidth: 18,
         },
       },
@@ -443,7 +445,7 @@ export class DashboardComponent {
     this.statusChartOptions = {
       chart: {
         type: 'pie',
-        height: 260,
+        height: 180,
         style: { fontFamily: CHART_FONT },
         backgroundColor: 'var(--bg-surface)',
       },
@@ -555,7 +557,7 @@ export class DashboardComponent {
     this.geoMapOptions = {
       chart: {
         map: this.indiaMapData,
-        height: 420,
+        height: 340,
         style: { fontFamily: CHART_FONT },
         backgroundColor: 'var(--bg-surface)',
       },
@@ -605,7 +607,7 @@ export class DashboardComponent {
     };
   }
 
-  private toTitleCase(value: string): string {
-    return (value || '').replace(/\b\w/g, (c) => c.toUpperCase());
+  toTitleCase(value: string): string {
+    return (value || '').replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 }

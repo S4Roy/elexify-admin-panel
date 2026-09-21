@@ -1,3 +1,4 @@
+import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_STYLES } from '../order-status-display';
 import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
 import { ZohoSalesorderComponent } from './zoho-salesorder.component';
 import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
@@ -63,37 +64,9 @@ const INVOICE_ELIGIBLE_STATUSES = [
   'partially_delivered',
 ];
 
-const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  processing: 'Processing',
-  packed: 'Packed',
-  shipped: 'Shipped',
-  out_for_delivery: 'Out for Delivery',
-  delivered: 'Delivered',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
-  return_requested: 'Return Requested',
-  returned: 'Returned',
-  partially_shipped: 'Partially Shipped',
-  partially_delivered: 'Partially Delivered',
-};
 
-const ORDER_STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  processing: 'bg-blue-100 text-blue-800',
-  packed: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-indigo-100 text-indigo-800',
-  out_for_delivery: 'bg-indigo-100 text-indigo-800',
-  delivered: 'bg-green-100 text-green-800',
-  failed: 'bg-red-100 text-red-800',
-  cancelled: 'bg-red-100 text-red-800',
-  return_requested: 'bg-gray-100 text-gray-700',
-  returned: 'bg-gray-100 text-gray-700',
-  partially_shipped: 'bg-sky-100 text-sky-800',
-  partially_delivered: 'bg-cyan-100 text-cyan-800',
-};
+
+
 
 // package.status -> display label/style for the Packages & Tracking card.
 const PACKAGE_STATUS_LABELS: Record<string, string> = {
@@ -118,27 +91,9 @@ const PACKAGE_STATUS_STYLES: Record<string, string> = {
   failed: 'bg-red-100 text-red-800',
 };
 
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  paid: 'Paid',
-  advance_paid: 'Advance Paid',
-  pending: 'Pending',
-  failed: 'Failed',
-  refund_pending: 'Refund Pending',
-  partially_refunded: 'Partially Refunded',
-  refunded: 'Refunded',
-  refund_failed: 'Refund Failed',
-};
 
-const PAYMENT_STATUS_STYLES: Record<string, string> = {
-  paid: 'bg-green-100 text-green-800',
-  advance_paid: 'bg-blue-100 text-blue-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  failed: 'bg-red-100 text-red-800',
-  refund_pending: 'bg-yellow-100 text-yellow-800',
-  partially_refunded: 'bg-yellow-100 text-yellow-800',
-  refunded: 'bg-green-100 text-green-800',
-  refund_failed: 'bg-red-100 text-red-800',
-};
+
+
 
 @Component({
   selector: 'app-order-details',

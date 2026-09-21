@@ -1,20 +1,20 @@
 <ng-container *ngIf="!isLoading">
-  <div class="space-y-5 p-1" style="background-color: var(--bg-page)">
+  <div class="dashboard-page" style="background-color: var(--bg-page)">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-bold" style="color: var(--text-primary)">
-        Admin Dashboard
+      <h1 class="dashboard-title" style="color: var(--text-primary)">
+        Dashboard
       </h1>
 
       <div class="trend-filter">
-        <select class="trend-select" [ngModel]="trendPreset" (ngModelChange)="selectTrendPreset($event)">
+        <select aria-label="Dashboard date range" class="trend-select" [ngModel]="trendPreset" (ngModelChange)="selectTrendPreset($event)">
           <option *ngFor="let p of trendPresets" [value]="p.value">
             {{ p.label }}
           </option>
         </select>
         <ng-container *ngIf="trendPreset === 'custom'">
-          <input type="date" class="trend-date-input" [(ngModel)]="customFrom" [max]="customTo || today" />
+          <input type="date" aria-label="Start date" class="trend-date-input" [(ngModel)]="customFrom" [max]="customTo || today" />
           <span class="trend-range-sep">to</span>
-          <input type="date" class="trend-date-input" [(ngModel)]="customTo" [min]="customFrom || ''" [max]="today" />
+          <input type="date" aria-label="End date" class="trend-date-input" [(ngModel)]="customTo" [min]="customFrom || ''" [max]="today" />
           <button type="button" class="trend-apply-btn" [disabled]="!customFrom || !customTo"
             (click)="applyCustomRange()">
             Apply
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Trend + status charts -->
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <div class="analytics-grid">
       <div class="chart-card lg:col-span-2">
         <h2 class="chart-title mb-2">Revenue &amp; Orders</h2>
         <highcharts-chart *ngIf="trendChartOptions.series?.length" [options]="trendChartOptions"
@@ -94,16 +94,16 @@
       </div>
 
       <div class="chart-card">
-        <h2 class="chart-title mb-2">Orders by Status</h2>
+        <div class="status-heading"><h2 class="chart-title">Orders by Status</h2><span class="leaderboard-total">{{ data?.total || 0 }} orders</span></div>
         <highcharts-chart *ngIf="statusChartOptions.series?.length" [options]="statusChartOptions"
-          style="display: block; width: 100%; height: 260px"></highcharts-chart>
-        <ul class="mt-2 space-y-1">
+          style="display: block; width: 100%; height: 180px"></highcharts-chart>
+        <ul class="status-list" tabindex="0" aria-label="Order statuses">
           <li *ngFor="let status of data?.status">
             <a class="status-row" [routerLink]="'/inventory/orders/' + status?.order_status"
               [queryParams]="{ from_date: appliedRange.from, to_date: appliedRange.to }">
               <span class="status-dot" [style.background-color]="statusColor(status?.order_status)"></span>
               <span class="capitalize" style="color: var(--text-secondary)">{{
-                status?.order_status
+                toTitleCase(status?.order_status)
                 }}</span>
               <span class="ml-auto font-semibold" style="color: var(--text-primary)">{{
                 status?.count
@@ -111,16 +111,17 @@
             </a>
           </li>
         </ul>
+        <p *ngIf="!data?.status?.length" class="dashboard-empty">No orders in this period</p>
       </div>
     </div>
 
-    <!-- Leaderboards -->
+    <!-- Best sellers -->
     <div>
-      <h2 class="section-heading">Leaderboards</h2>
+      <h2 class="section-heading">Best sellers</h2>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div class="chart-card">
           <div class="leaderboard-header">
-            <h3 class="chart-title">Top Categories - Items Sold</h3>
+            <h3 class="chart-title">Top categories</h3>
             <span class="leaderboard-total" *ngIf="leaderboardCategoriesMeta?.total_items_sold">
               {{ leaderboardCategoriesMeta.total_items_sold }} items sold total
             </span>
@@ -136,7 +137,7 @@
             <tbody>
               <tr *ngFor="let row of leaderboardCategories">
                 <td>
-                  <a [routerLink]="['/inventory/categories']">{{ row.name }}</a>
+                  <a [title]="row.name" [routerLink]="['/inventory/categories']">{{ row.name }}</a>
                 </td>
                 <td class="text-right">{{ row.items_sold }}</td>
                 <td class="text-right">{{ row.net_sales | currency : "INR" }}</td>
@@ -156,7 +157,7 @@
 
         <div class="chart-card">
           <div class="leaderboard-header">
-            <h3 class="chart-title">Top Products - Items Sold</h3>
+            <h3 class="chart-title">Top products</h3>
             <span class="leaderboard-total" *ngIf="leaderboardProductsMeta?.total_items_sold">
               {{ leaderboardProductsMeta.total_items_sold }} items sold total
             </span>
@@ -172,7 +173,7 @@
             <tbody>
               <tr *ngFor="let row of leaderboardProducts">
                 <td>
-                  <a [routerLink]="['/inventory/products']">{{ row.name }}</a>
+                  <a [title]="row.name" [routerLink]="['/inventory/products']">{{ row.name }}</a>
                 </td>
                 <td class="text-right">{{ row.items_sold }}</td>
                 <td class="text-right">{{ row.net_sales | currency : "INR" }}</td>
@@ -201,7 +202,7 @@
         </h2>
         <div class="geo-metric-switch">
           <button type="button" *ngFor="let opt of geoMetricOptions" class="geo-metric-btn"
-            [class.active]="geoMetric === opt.value" (click)="selectGeoMetric(opt.value)">
+            [class.active]="geoMetric === opt.value" [attr.aria-pressed]="geoMetric === opt.value" (click)="selectGeoMetric(opt.value)">
             {{ opt.label }}
           </button>
         </div>
@@ -209,9 +210,9 @@
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div class="chart-card lg:col-span-2">
           <highcharts-chart *ngIf="geoMapOptions.series?.length" [constructorType]="mapChartConstructor"
-            [options]="geoMapOptions" style="display: block; width: 100%; height: 420px"></highcharts-chart>
+            [options]="geoMapOptions" style="display: block; width: 100%; height: 340px"></highcharts-chart>
           <div *ngIf="!geoMapOptions.series?.length" class="flex items-center justify-center"
-            style="height: 420px; color: var(--text-secondary)">
+            style="height: 340px; color: var(--text-secondary)">
             No geographic data for this period
           </div>
         </div>
