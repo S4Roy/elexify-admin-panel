@@ -8,7 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { Subject, combineLatest, takeUntil } from 'rxjs';
+import { Subject, Subscription, combineLatest, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
 import { MenuComponent } from '../../includes/menu/menu.component';
 import PaginationOptions from 'app/core/models/PaginationOptions';
@@ -36,6 +36,9 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
 export class RatingReveiwsComponent {
   Global = Global;
   item_list: any = [];
+  loading = false;
+  loadError = false;
+  private ratingRequest?: Subscription;
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
   filterValues: Record<string, any> = {
@@ -55,9 +58,8 @@ export class RatingReveiwsComponent {
     this.filterOption = Global.resetTableFilterOptions();
     combineLatest([
       this.route.paramMap,
-      this.helperService.searchKey$,
-    ]).subscribe(([params, searchKey]) => {
-      this.filterOption = Global.resetTableFilterOptions();
+      this.helperService.searchKey$.pipe(debounceTime(250), distinctUntilChanged()),
+    ]).pipe(takeUntil(this.destroy$)).subscribe(([params, searchKey]) => {
       this.filterOption.slug = params.get('slug');
       this.filterOption.search_key = searchKey;
       this.paginationOption.page = 1;
@@ -71,6 +73,7 @@ export class RatingReveiwsComponent {
     this.updateFilterButton();
   }
   ngOnDestroy(): void {
+    this.ratingRequest?.unsubscribe();
     this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();
@@ -142,7 +145,11 @@ export class RatingReveiwsComponent {
   }
 
   fetchRating() {
+    this.ratingRequest?.unsubscribe();
+    this.loading = true;
+    this.loadError = false;
     let params = new URLSearchParams();
+    params.set("limit", "20");
     if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
@@ -159,14 +166,15 @@ export class RatingReveiwsComponent {
     if (this.filterOption.rating) {
       params.set('rating', this.filterOption.rating);
     }
-    this.apiService.ratingList(params).subscribe({
+    this.ratingRequest = this.apiService.ratingList(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
+        this.loading = false;
         this.item_list = res?.data?.docs ?? [];
         this.paginationOption = {
           ...res?.data,
         };
       },
-      error: (err) => {},
+      error: () => { this.loading = false; this.loadError = true; },
     });
   }
   updateStatus(item: any) {

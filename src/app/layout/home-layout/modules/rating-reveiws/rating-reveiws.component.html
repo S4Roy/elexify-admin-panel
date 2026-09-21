@@ -1,4 +1,8 @@
-<div class="table-wrapper">
+<p *ngIf="loading" role="status" class="p-4 text-sm text-gray-500">Loading reviews…</p>
+<div *ngIf="loadError" role="alert" class="p-4 text-sm">
+  Reviews could not be loaded. <button type="button" class="underline" (click)="fetchRating()">Try again</button>
+</div>
+<div class="table-wrapper" [attr.aria-busy]="loading">
   <table class="table-base">
     <thead class="">
       <tr class="">
@@ -15,7 +19,7 @@
       <ng-container *ngFor="let item of item_list">
         <tr>
           <td>
-            <img *ngIf="item?.image?.url" [src]="item?.image?.url" alt="Image" />
+            <img *ngIf="item?.image?.url" [src]="item?.image?.url" alt="Image" loading="lazy" />
           </td>
           <td>{{ item?.user?.name }} <span *ngIf="item?.imported_from_backup" class="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800" title="Created by the WooCommerce backup import">Imported</span></td>
           <td>{{ item?.product?.name }}</td>
@@ -36,7 +40,7 @@
           </td>
         </tr>
       </ng-container>
-      <ng-container *ngIf="!item_list?.length">
+      <ng-container *ngIf="!loading && !loadError && !item_list?.length">
         <tr>
           <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
