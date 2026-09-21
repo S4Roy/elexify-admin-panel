@@ -2,8 +2,8 @@
   <table class="table-base">
     <thead class="">
       <tr class="">
-        <th scope="col"></th>
-        <th scope="col">Name</th>
+
+        <th scope="col">Brand</th>
         <th scope="col">Description</th>
         <th scope="col">Products</th>
         <th scope="col" class="text-center">Status</th>
@@ -13,15 +13,13 @@
     <tbody>
       <ng-container *ngFor="let item of item_list">
         <tr>
-          <td>
-            <img *ngIf="item?.image?.url" [src]="item?.image?.url" alt="Image" />
-          </td>
-          <td>
+          <td><div class="catalog-identity">
+            <img *ngIf="item?.image?.url" [src]="item.image.url" alt="" class="brand-thumbnail" />
             <a [routerLink]="'/inventory/brands/' + item?.slug">{{
               item?.name
-              }}</a>
+              }}</a></div>
           </td>
-          <td>{{ item?.description }}</td>
+          <td>{{ item?.description && item.description !== 'null' ? item.description : '—' }}</td>
           <td>
             <a [routerLink]="'/inventory/products/'" [queryParams]="{ brand: item?.slug }">{{
               item?.products
@@ -43,7 +41,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="5"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

@@ -1,4 +1,5 @@
 import { inject } from '@angular/core';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
 import { ExportDownloadService } from 'app/core/services/export-download.service';
@@ -31,6 +32,7 @@ import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-dr
   selector: 'app-products',
   imports: [
     MatCheckboxModule,
+    MatMenuModule,
     EmptyStateComponent,
     NgFor,
     NgIf,

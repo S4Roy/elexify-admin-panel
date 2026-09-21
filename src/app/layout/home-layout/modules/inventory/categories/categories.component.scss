@@ -68,3 +68,59 @@
 .table-base tr.row-selected > td {
   background-color: color-mix(in srgb, var(--nav-primary) 8%, var(--bg-surface));
 }
+
+// Compact, consistent rows in both tree and table views.
+.table-wrapper { border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; overflow-x: auto; }
+.table-base {
+  border-collapse: collapse;
+  th { height: 44px; background: var(--bg-surface-alt, #f8fafc); color: var(--text-secondary, #64748b); font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+  td { height: 64px; padding: 10px 16px; vertical-align: middle; border-bottom: 1px solid var(--border-color, #e2e8f0); }
+  td a { font-size: 13px; font-weight: 500; text-decoration: none; }
+  td a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:not(.row-selected):hover td { background: var(--bg-surface-alt, #f8fafc); }
+  .selection-column { width: 48px; min-width: 48px; padding: 0 4px; }
+  .category-thumbnail, .category-placeholder { width: 40px; height: 40px; min-width: 40px; flex-shrink: 0; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; }
+  .category-thumbnail { object-fit: contain; padding: 4px; background: #fff; }
+  .category-placeholder { display: inline-flex; align-items: center; justify-content: center; color: var(--text-secondary, #64748b); background: var(--bg-surface-alt, #f8fafc); font-size: 20px; }
+}
+.tree-row { gap: 12px; min-width: 240px; }
+.tree-row > a { color: var(--text-primary, #1e293b); line-height: 1.5; }
+.tree-row-child { padding-left: 24px; }
+.tree-toggle { width: 24px; height: 32px; border-radius: 6px; }
+.tree-toggle:hover { background: var(--bg-surface-alt, #f1f5f9); }
+.tree-spacer { width: 24px; }
+.tree-toggle:focus-visible, a:focus-visible { outline: 2px solid var(--nav-primary, #2563eb); outline-offset: 3px; }
+.sub-count-badge { margin-left: auto; }
+@media (max-width: 640px) {
+  .table-base td { padding: 8px; }
+  .table-base .selection-column { padding: 0 2px; }
+  .tree-row { gap: 8px; }
+}
+
+@import "../catalog-table";
+
+.table-base td:has(> .catalog-identity), .tree-table td:nth-child(2) { width: 48%; }
+.tree-row { gap: 10px; }
+.tree-spacer { display: none; }
+.tree-row-child { padding-left: 34px; border-left: 1px solid var(--border-color, #e2e8f0); }
+.tree-row > a { flex: 1; }
+.table-base .category-thumbnail, .table-base .category-placeholder { width: 36px; height: 36px; min-width: 36px; }
+
+// Keep the select-all control from adding its height to header padding.
+.table-base thead th {
+  height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+.table-base thead th.selection-column {
+  padding: 0 2px;
+  line-height: 0;
+}
+.table-base thead mat-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}

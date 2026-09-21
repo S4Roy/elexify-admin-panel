@@ -23,16 +23,19 @@
                 class="tree-toggle"
                 *ngIf="root?.children?.length; else treeSpacer"
                 (click)="toggleExpand(root._id)"
+                [attr.aria-expanded]="isExpanded(root._id)"
                 [attr.aria-label]="isExpanded(root._id) ? 'Collapse ' + root?.name : 'Expand ' + root?.name"
               >
                 <mat-icon>{{ isExpanded(root._id) ? 'expand_more' : 'chevron_right' }}</mat-icon>
               </button>
               <ng-template #treeSpacer><span class="tree-spacer"></span></ng-template>
-              <mat-icon class="tree-folder-icon" *ngIf="root?.children?.length">folder</mat-icon>
+              <mat-icon class="category-placeholder" *ngIf="!root?.image?.url">folder</mat-icon>
               <img
-                *ngIf="!root?.children?.length && root?.image?.url"
+                *ngIf="root?.image?.url"
                 [src]="root?.image?.url"
-                alt="Image"
+                alt=""
+                class="category-thumbnail"
+                loading="lazy"
                 height="24"
               />
               <a [routerLink]="'/inventory/categories/' + root?.slug">{{ root?.name }}</a>
@@ -68,10 +71,13 @@
             <td>
               <div class="tree-row tree-row-child">
                 <span class="tree-spacer"></span>
+                <mat-icon class="category-placeholder" *ngIf="!child?.image?.url">folder</mat-icon>
                 <img
                   *ngIf="child?.image?.url"
                   [src]="child?.image?.url"
-                  alt="Image"
+                  alt=""
+                class="category-thumbnail"
+                loading="lazy"
                   height="24"
                 />
                 <a [routerLink]="'/inventory/categories/' + child?.slug">{{ child?.name }}</a>
@@ -117,7 +123,7 @@
         <th scope="col" class="selection-column">
           <mat-checkbox aria-label="Select all visible categories" [checked]="allSelected" [indeterminate]="someSelected" [disabled]="!selectableRows.length" (change)="toggleSelectAll()"></mat-checkbox>
         </th>
-        <th scope="col" class="text-center"></th>
+
         <th scope="col">Name</th>
         <th scope="col" (click)="sort('parent_category')" class="sortable">
           Parent Category <span [class]="getSortIcon('parent_category')"></span>
@@ -131,21 +137,15 @@
       <ng-container *ngFor="let item of item_list">
         <tr [class.row-selected]="selectedIds.has(item._id)">
           <td class="selection-column"><mat-checkbox [aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)"></mat-checkbox></td>
-          <td class="text-center">
-            <img
-              *ngIf="item?.image?.url"
-              [src]="item?.image?.url"
-              alt="Image"
-              height="40"
-            />
-          </td>
           <td cdkDrag class="cursor-move">
-            <a [routerLink]="'/inventory/categories/' + item?.slug">{{
-              item?.name
-            }}</a>
+            <div class="catalog-identity">
+              <img *ngIf="item?.image?.url; else categoryPlaceholder" [src]="item.image.url" alt="" class="category-thumbnail" loading="lazy" />
+              <ng-template #categoryPlaceholder><mat-icon class="category-placeholder">folder</mat-icon></ng-template>
+              <a [routerLink]="'/inventory/categories/' + item?.slug">{{ item?.name }}</a>
+            </div>
           </td>
           <td scope="col">
-            {{ item?.parent_category?.name }}
+            {{ item?.parent_category?.name || '—' }}
           </td>
 
           <td>
@@ -172,7 +172,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

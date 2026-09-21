@@ -1,0 +1,5 @@
+
+@import "../catalog-table";
+
+.table-base td:first-child { width: 32%; }
+.table-base td:nth-child(2) { width: 32%; color: var(--text-secondary, #64748b); }

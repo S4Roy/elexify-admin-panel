@@ -3,12 +3,13 @@
     <thead>
       <tr class="sticky">
         <th scope="col" class="selection-column"><mat-checkbox aria-label="Select all products on this page" [checked]="allSelected" [indeterminate]="selectedIds.size > 0 && !allSelected" (change)="toggleSelectAll()"></mat-checkbox></th>
-        <th scope="col"></th>
+
         <!-- <th scope="col">Brand</th> -->
-        <th scope="col">Category</th>
+
         <th scope="col" (click)="sort('name')" class="sortable">
-          Name <span [class]="getSortIcon('name')"></span>
+          Product <span [class]="getSortIcon('name')"></span>
         </th>
+        <th scope="col">Category</th>
         <!-- <th scope="col" (click)="sort('type')" class="sortable">
           Type <span [class]="getSortIcon('type')"></span>
         </th> -->
@@ -21,46 +22,54 @@
       <ng-container *ngFor="let item of item_list">
         <tr [class.row-selected]="selectedIds.has(item._id)">
           <td class="selection-column"><mat-checkbox [aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)"></mat-checkbox></td>
-          <td>
-            <img
-              *ngIf="item?.images?.length"
-              [src]="item?.images[0]?.url"
-              alt="Image"
-            />
-          </td>
           <!-- <td class="">
             <a>{{ item?.brand?.name }}</a>
           </td> -->
-          <td class="">
-            <ng-container *ngFor="let category of item?.categories">
-              <a
-                class="block"
-                [routerLink]="'/inventory/products/' + category?.slug"
-                >{{ category?.name }}</a
-              >
-            </ng-container>
-
-            <!-- <ng-container *ngFor="let category of item?.sub_categories">
-              <a
-                class="block"
-                [routerLink]="'/inventory/products/' + category?.slug"
-                >{{ category?.name }}</a
-              >
-            </ng-container> -->
-            <span [truncateList]="item?.sub_categories" labelKey="name"></span>
-          </td>
-          <td class="">
+          <td class="product-name-column">
+            <div class="catalog-identity">
+              <div class="catalog-image">
+            <span *ngIf="!item?.images?.[0]?.url" class="product-thumbnail thumbnail-placeholder"><mat-icon aria-hidden="true">image</mat-icon></span>
+            <img
+              *ngIf="item?.images?.[0]?.url"
+              [src]="item?.images[0]?.url"
+              alt=""
+              class="product-thumbnail"
+              loading="lazy"
+            />
+          </div>
+              <div class="catalog-copy">
             <a [routerLink]="'/inventory/products/details/' + item?.slug">{{
               item?.name
             }}</a>
             <ng-container *ngIf="item?.sku">
               <div class="text-xs text-gray-500">SKU: {{ item?.sku }}</div>
             </ng-container>
+              </div>
+            </div>
           </td>
+          <td class="category-column">
+            <div class="category-tags">
+              <a *ngFor="let category of (item?.categories || []).slice(0, 2)"
+                class="category-tag" [title]="category.name"
+                [routerLink]="'/inventory/products/' + category.slug">{{ category.name }}</a>
+              <button *ngIf="item?.categories?.length > 2" type="button"
+                class="category-more" [matMenuTriggerFor]="categoryMenu"
+                [attr.aria-label]="'View all ' + item.categories.length + ' categories for ' + item.name">
+                +{{ item.categories.length - 2 }} more
+              </button>
+              <span *ngIf="!item?.categories?.length" class="text-gray-400">—</span>
+            </div>
+            <mat-menu #categoryMenu="matMenu">
+              <a mat-menu-item *ngFor="let category of item?.categories"
+                [routerLink]="'/inventory/products/' + category.slug">{{ category.name }}</a>
+            </mat-menu>
+            <span [truncateList]="item?.sub_categories" labelKey="name"></span>
+          </td>
+
           <!-- <td>
             {{ item?.type }}
           </td> -->
-          <td class="w-96">
+          <td class="w-96 stock-column">
             <ng-container *ngIf="item?.type === 'variable'; else simpleProduct">
               <ng-container *ngIf="item?.variations?.length; else noVariants">
                 <!-- collapsed: show first variant -->
@@ -368,7 +377,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
