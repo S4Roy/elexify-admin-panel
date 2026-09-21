@@ -56,3 +56,15 @@
   font-weight: 500;
   white-space: nowrap;
 }
+
+.table-base .selection-column {
+  width: 56px;
+  min-width: 56px;
+  padding: 0 8px;
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+.table-base tr.row-selected > td {
+  background-color: color-mix(in srgb, var(--nav-primary) 8%, var(--bg-surface));
+}

@@ -2,7 +2,7 @@
   <table class="table-base">
     <thead>
       <tr class="sticky">
-        <th scope="col"><input type="checkbox" aria-label="Select all products on this page" [checked]="allSelected" [indeterminate]="selectedIds.size > 0 && !allSelected" (change)="toggleSelectAll()" /></th>
+        <th scope="col" class="selection-column"><mat-checkbox aria-label="Select all products on this page" [checked]="allSelected" [indeterminate]="selectedIds.size > 0 && !allSelected" (change)="toggleSelectAll()"></mat-checkbox></th>
         <th scope="col"></th>
         <!-- <th scope="col">Brand</th> -->
         <th scope="col">Category</th>
@@ -19,8 +19,8 @@
     </thead>
     <tbody>
       <ng-container *ngFor="let item of item_list">
-        <tr>
-          <td><input type="checkbox" [attr.aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)" /></td>
+        <tr [class.row-selected]="selectedIds.has(item._id)">
+          <td class="selection-column"><mat-checkbox [aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)"></mat-checkbox></td>
           <td>
             <img
               *ngIf="item?.images?.length"

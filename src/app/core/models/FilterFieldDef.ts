@@ -20,6 +20,7 @@ export interface FilterFieldDef {
   type: FilterFieldType;
   options?: FilterFieldOption[];
   placeholder?: string;
+  showCheckboxes?: boolean;
   // number-range / daterange store their two values under separate keys
   fromKey?: string;
   toKey?: string;

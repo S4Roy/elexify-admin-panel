@@ -1,4 +1,5 @@
 import { inject } from '@angular/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
 import { ExportDownloadService } from 'app/core/services/export-download.service';
 import { NgFor, NgIf } from '@angular/common';
@@ -32,6 +33,7 @@ import {
 @Component({
   selector: 'app-categories',
   imports: [
+    MatCheckboxModule,
     EmptyStateComponent,
     NgFor,
     NgIf,
@@ -250,6 +252,24 @@ export class CategoriesComponent {
     //   });
   }
   selectedIds = new Set<string>();
+  get selectableRows(): any[] {
+    if (this.viewMode === 'table' || this.isDrillDown) return this.item_list;
+    return this.treeNodes.flatMap(root => [root, ...(this.isExpanded(root._id) ? root.children || [] : [])]);
+  }
+  get allSelected(): boolean {
+    const rows = this.selectableRows;
+    return rows.length > 0 && rows.every(row => this.selectedIds.has(row._id));
+  }
+  get someSelected(): boolean {
+    return !this.allSelected && this.selectableRows.some(row => this.selectedIds.has(row._id));
+  }
+  toggleSelectAll(): void {
+    const clear = this.allSelected;
+    for (const row of this.selectableRows) {
+      if (clear) this.selectedIds.delete(row._id);
+      else this.selectedIds.add(row._id);
+    }
+  }
   toggleSelect(id: string): void { this.selectedIds.has(id) ? this.selectedIds.delete(id) : this.selectedIds.add(id); }
   private exportDownload = inject(ExportDownloadService);
   exporting = false;

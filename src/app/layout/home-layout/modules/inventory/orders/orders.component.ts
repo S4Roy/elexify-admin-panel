@@ -96,6 +96,7 @@ export class OrdersComponent {
   // filterOption.order_status since that field gets overwritten on every
   // route change by resetTableFilterOptions() and needs re-deriving.
   private routeOrderStatus: string | null = null;
+  private statusFilterInitialized = false;
 
   constructor(
     private dialog: MatDialog,
@@ -136,6 +137,15 @@ export class OrdersComponent {
         // reasoning as payment_status/payment_method below).
         this.filterOption.customer_id = this.customerId || this.filterValues['customer']?.value || null;
         this.routeOrderStatus = params.get('order_status') || queryParams.get('order_status');
+        if (!this.statusFilterInitialized) {
+          // Seed the main work queue once so clearing filters remains effective.
+          // Customer history and dashboard links keep their original scope.
+          if (!this.routeOrderStatus && !this.customerId &&
+              !queryParams.get('from_date') && !queryParams.get('to_date')) {
+            this.filterValues['order_status'] = ['pending', 'confirmed', 'processing', 'packed'];
+          }
+          this.statusFilterInitialized = true;
+        }
         this.filterOption.order_status = this.routeOrderStatus ||
           (this.filterValues['order_status']?.length ? this.filterValues['order_status'].join(',') : null);
         this.filterOption.search_key = searchKey;
@@ -199,6 +209,8 @@ export class OrdersComponent {
         key: 'order_status',
         label: 'Status',
         type: 'multiselect',
+        placeholder: 'All statuses',
+        showCheckboxes: true,
         options: [
           { value: 'pending', label: 'Pending' },
           { value: 'confirmed', label: 'Confirmed' },

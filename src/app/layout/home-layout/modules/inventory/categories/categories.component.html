@@ -3,6 +3,9 @@
   <table class="table-base tree-table">
     <thead>
       <tr class="sticky">
+        <th scope="col" class="selection-column">
+          <mat-checkbox aria-label="Select all visible categories" [checked]="allSelected" [indeterminate]="someSelected" [disabled]="!selectableRows.length" (change)="toggleSelectAll()"></mat-checkbox>
+        </th>
         <th scope="col">Name</th>
         <th scope="col">Products</th>
         <th scope="col" class="text-center">Status</th>
@@ -11,7 +14,8 @@
     </thead>
     <tbody>
       <ng-container *ngFor="let root of treeNodes">
-        <tr>
+        <tr [class.row-selected]="selectedIds.has(root._id)">
+          <td class="selection-column"><mat-checkbox [aria-label]="'Select ' + root.name" [checked]="selectedIds.has(root._id)" (change)="toggleSelect(root._id)"></mat-checkbox></td>
           <td>
             <div class="tree-row">
               <button
@@ -31,7 +35,7 @@
                 alt="Image"
                 height="24"
               />
-              <input type="checkbox" [attr.aria-label]="'Select ' + root.name" [checked]="selectedIds.has(root._id)" (change)="toggleSelect(root._id)" /><a [routerLink]="'/inventory/categories/' + root?.slug">{{ root?.name }}</a>
+              <a [routerLink]="'/inventory/categories/' + root?.slug">{{ root?.name }}</a>
               <span class="sub-count-badge" *ngIf="root?.children?.length">
                 {{ root.children.length }} sub-{{ root.children.length > 1 ? 'categories' : 'category' }}
               </span>
@@ -59,7 +63,8 @@
           </td>
         </tr>
         <ng-container *ngIf="root?.children?.length && isExpanded(root._id)">
-          <tr *ngFor="let child of root.children">
+          <tr *ngFor="let child of root.children" [class.row-selected]="selectedIds.has(child._id)">
+            <td class="selection-column"><mat-checkbox [aria-label]="'Select ' + child.name" [checked]="selectedIds.has(child._id)" (change)="toggleSelect(child._id)"></mat-checkbox></td>
             <td>
               <div class="tree-row tree-row-child">
                 <span class="tree-spacer"></span>
@@ -69,7 +74,7 @@
                   alt="Image"
                   height="24"
                 />
-                <input type="checkbox" [attr.aria-label]="'Select ' + child.name" [checked]="selectedIds.has(child._id)" (change)="toggleSelect(child._id)" /><a [routerLink]="'/inventory/categories/' + child?.slug">{{ child?.name }}</a>
+                <a [routerLink]="'/inventory/categories/' + child?.slug">{{ child?.name }}</a>
               </div>
             </td>
             <td>
@@ -97,7 +102,7 @@
       </ng-container>
       <ng-container *ngIf="!treeNodes?.length">
         <tr>
-          <td class="text-center" colspan="4"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="5"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>
@@ -109,6 +114,9 @@
   <table class="table-base">
     <thead>
       <tr class="sticky">
+        <th scope="col" class="selection-column">
+          <mat-checkbox aria-label="Select all visible categories" [checked]="allSelected" [indeterminate]="someSelected" [disabled]="!selectableRows.length" (change)="toggleSelectAll()"></mat-checkbox>
+        </th>
         <th scope="col" class="text-center"></th>
         <th scope="col">Name</th>
         <th scope="col" (click)="sort('parent_category')" class="sortable">
@@ -121,7 +129,8 @@
     </thead>
     <tbody cdkDropList (cdkDropListDropped)="drop($event)">
       <ng-container *ngFor="let item of item_list">
-        <tr>
+        <tr [class.row-selected]="selectedIds.has(item._id)">
+          <td class="selection-column"><mat-checkbox [aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)"></mat-checkbox></td>
           <td class="text-center">
             <img
               *ngIf="item?.image?.url"
@@ -131,7 +140,7 @@
             />
           </td>
           <td cdkDrag class="cursor-move">
-            <input type="checkbox" [attr.aria-label]="'Select ' + item.name" [checked]="selectedIds.has(item._id)" (change)="toggleSelect(item._id)" /><a [routerLink]="'/inventory/categories/' + item?.slug">{{
+            <a [routerLink]="'/inventory/categories/' + item?.slug">{{
               item?.name
             }}</a>
           </td>
@@ -163,7 +172,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" colspan="5"><app-empty-state message="No Items Found"></app-empty-state></td>
+          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

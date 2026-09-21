@@ -45,6 +45,15 @@
   margin-right: 0.4rem;
 }
 
+// ng-select owns mouse/keyboard selection and exposes aria-selected on the row.
+.option-checkbox {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
 .filter-drawer-actions {
   display: flex;
   gap: 0.5rem;

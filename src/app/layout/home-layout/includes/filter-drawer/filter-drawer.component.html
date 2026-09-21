@@ -22,11 +22,20 @@
                     bindValue="value"
                     [multiple]="true"
                     [closeOnSelect]="false"
+                    [hideSelected]="false"
                     [placeholder]="field.placeholder || 'All ' + field.label"
                     [ariaLabel]="field.label"
                     [(ngModel)]="values[field.key]"
                   >
-                    <ng-template ng-option-tmp let-item="item">
+                    <ng-template ng-option-tmp let-item="item" let-item$="item$">
+                      <input
+                        *ngIf="field.showCheckboxes"
+                        class="option-checkbox"
+                        type="checkbox"
+                        [checked]="item$.selected"
+                        tabindex="-1"
+                        aria-hidden="true"
+                      />
                       <span
                         class="option-dot"
                         *ngIf="item.color"
