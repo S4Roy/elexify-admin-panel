@@ -1,5 +1,45 @@
 <form [formGroup]="formGroup">
   <div class="space-y-5">
+    <div class="rounded-lg p-4 sm:p-5" style="background-color: var(--bg-surface); border: 1px solid var(--border-color)">
+      <h2 class="text-sm font-semibold mb-2" style="color: var(--text-primary)">Estimated Delivery</h2>
+      <p class="text-sm mb-4" style="color: var(--text-secondary)">Delivery windows include processing time, courier transit and your buffer. These are estimates, not guaranteed dates. Shipping charges are still managed under Shipping Rates.</p>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label for="delivery-source">Estimate source</label>
+          <ng-select labelForId="delivery-source" formControlName="delivery_estimate_source" [clearable]="false">
+            <ng-option value="shiprocket">Shiprocket live estimates</ng-option>
+            <ng-option value="manual">Manual shipping-zone estimates</ng-option>
+          </ng-select>
+        </div>
+        <mat-form-field>
+          <mat-label>Delivery buffer (calendar days)</mat-label>
+          <input matInput type="number" min="0" max="30" step="1" formControlName="delivery_buffer_days" />
+          <mat-hint>Extra days added to the latest delivery date.</mat-hint>
+          <mat-error>Enter a whole number from 0 to 30.</mat-error>
+        </mat-form-field>
+        <ng-container *ngIf="formGroup.value.delivery_estimate_source === 'shiprocket'">
+          <mat-form-field>
+            <mat-label>Shiprocket pickup pincode</mat-label>
+            <input matInput inputmode="numeric" maxlength="6" formControlName="delivery_pickup_postcode" placeholder="700001" />
+            <mat-hint>Use the pincode of your configured Shiprocket pickup location.</mat-hint>
+            <mat-error>Enter a valid six-digit Indian pincode.</mat-error>
+          </mat-form-field>
+          <div>
+            <label for="delivery-courier">Courier estimate selection</label>
+            <ng-select labelForId="delivery-courier" formControlName="delivery_courier_policy" [clearable]="false">
+              <ng-option value="recommended">Shiprocket recommended (or conservative)</ng-option>
+              <ng-option value="conservative">Conservative — slowest available</ng-option>
+              <ng-option value="fastest">Fastest available</ng-option>
+            </ng-select>
+            <p class="text-xs mt-2" style="color: var(--text-secondary)">Choose a policy that matches how you book couriers. This does not book a shipment.</p>
+          </div>
+          <div class="md:col-span-2">
+            <mat-checkbox formControlName="delivery_fallback_enabled">Use shipping-zone estimates when Shiprocket is unavailable</mat-checkbox>
+            <p class="text-xs mt-2" style="color: var(--text-secondary)">Disable to hide the date during outages. No date is shown when Shiprocket reports no available couriers. Enable Shiprocket under Integration Credentials before using live estimates.</p>
+          </div>
+        </ng-container>
+      </div>
+    </div>
     <div
       class="rounded-lg p-4 sm:p-5"
       style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
@@ -51,7 +91,7 @@
           />
         </mat-form-field>
         <mat-form-field>
-          <mat-label>Order Cutoff Time (HH:mm)</mat-label>
+          <mat-label>Order Cutoff Time (IST, HH:mm)</mat-label>
           <input
             matInput
             formControlName="order_cutoff_time"
@@ -91,8 +131,9 @@
       style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
     >
       <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary)">
-        Weekends & Holidays
+        Processing Calendar & Holidays
       </h2>
+      <p class="text-sm mb-3" style="color: var(--text-secondary)">Applied to warehouse processing. Manual zone transit also follows this calendar; Shiprocket transit uses calendar days.</p>
       <mat-checkbox formControlName="exclude_weekends"
         >Exclude weekend days from processing time</mat-checkbox
       >

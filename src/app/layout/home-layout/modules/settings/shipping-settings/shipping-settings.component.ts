@@ -74,8 +74,13 @@ export class ShippingSettingsComponent {
     this.zoneFilter = Global.resetTableFilterOptions();
 
     this.formGroup = this.fb.group({
-      processing_days_min: [1, [Validators.required, Validators.min(0)]],
-      processing_days_max: [2, [Validators.required, Validators.min(0)]],
+      delivery_estimate_source: ['shiprocket', Validators.required],
+      delivery_pickup_postcode: ['', Validators.pattern(/^[1-9]\d{5}$/)],
+      delivery_courier_policy: ['recommended', Validators.required],
+      delivery_buffer_days: [1, [Validators.required, Validators.min(0), Validators.max(30), Validators.pattern(/^\d+$/)]],
+      delivery_fallback_enabled: [true],
+      processing_days_min: [1, [Validators.required, Validators.min(0), Validators.max(90), Validators.pattern(/^\d+$/)]],
+      processing_days_max: [2, [Validators.required, Validators.min(0), Validators.max(90), Validators.pattern(/^\d+$/)]],
       exclude_weekends: [true],
       weekend_days: [[0]],
       holidays: this.fb.array([]),
@@ -190,6 +195,11 @@ export class ShippingSettingsComponent {
         const data = res?.data;
         if (!data) return;
         this.formGroup.patchValue({
+          delivery_estimate_source: data.delivery_estimate_source ?? 'shiprocket',
+          delivery_pickup_postcode: data.delivery_pickup_postcode ?? '',
+          delivery_courier_policy: data.delivery_courier_policy ?? 'recommended',
+          delivery_buffer_days: data.delivery_buffer_days ?? 1,
+          delivery_fallback_enabled: data.delivery_fallback_enabled ?? true,
           processing_days_min: data.processing_days_min ?? 1,
           processing_days_max: data.processing_days_max ?? 2,
           exclude_weekends: data.exclude_weekends ?? true,
@@ -240,6 +250,19 @@ export class ShippingSettingsComponent {
 
   onSubmit() {
     this.formGroup.markAllAsTouched();
+    const values = this.formGroup.getRawValue();
+    if (Number(values.processing_days_max) < Number(values.processing_days_min)) {
+      this.toastr.error('Maximum processing days must be at least the minimum.');
+      return;
+    }
+    if (values.exclude_weekends && values.weekend_days.length === 7) {
+      this.toastr.error('Keep at least one working day per week.');
+      return;
+    }
+    if (values.delivery_estimate_source === 'shiprocket' && !values.delivery_pickup_postcode) {
+      this.toastr.error('Enter your Shiprocket pickup pincode for live estimates.');
+      return;
+    }
     if (this.formGroup.valid) {
       this.formGroup.disable();
       const payload = this.formGroup.getRawValue();
