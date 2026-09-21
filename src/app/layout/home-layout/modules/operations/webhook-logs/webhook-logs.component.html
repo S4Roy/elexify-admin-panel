@@ -6,9 +6,11 @@
       <tr class="sticky">
         <th scope="col">Provider</th>
         <th scope="col">Order ID</th>
-        <th scope="col">AWB</th>
+        <th scope="col">Payment / AWB</th>
+        <th scope="col">Event</th>
         <th scope="col">Status</th>
         <th scope="col" class="text-center">Outcome</th>
+        <th scope="col" class="text-center">HTTP / Duration</th>
         <th scope="col" class="text-center">Received</th>
         <th scope="col" class="text-center">Details</th>
       </tr>
@@ -17,8 +19,9 @@
       <ng-container *ngFor="let item of itemList">
         <tr>
           <td class="capitalize">{{ item?.provider }}</td>
-          <td class="font-medium text-gray-900 whitespace-nowrap">{{ item?.order_id || '—' }}</td>
-          <td>{{ item?.awb || '—' }}</td>
+          <td class="font-medium text-gray-900 whitespace-nowrap">{{ item?.order_id || item?.provider_order_id || '—' }}</td>
+          <td>{{ item?.payment_id || item?.awb || '—' }}</td>
+          <td>{{ item?.event_type }}<span class="block text-xs text-gray-500" *ngIf="item?.duplicate">Duplicate delivery</span></td>
           <td>
             {{ item?.incoming_status || '—' }}
             <span class="text-gray-400" *ngIf="item?.mapped_status"> → {{ item?.mapped_status }}</span>
@@ -26,6 +29,7 @@
           <td class="text-center">
             <span class="table-status" [ngClass]="outcomeClass(item?.outcome)">{{ item?.outcome }}</span>
           </td>
+          <td class="text-center">{{ item?.status_code }}<span class="block text-xs text-gray-500">{{ item?.processing_ms != null ? item.processing_ms + ' ms' : '—' }}</span></td>
           <td class="text-center">{{ item?.received_at | date : 'short' }}</td>
           <td class="text-center">
             <button
@@ -40,7 +44,7 @@
       </ng-container>
       <ng-container *ngIf="!itemList?.length">
         <tr>
-          <td class="text-center" colspan="7">
+          <td class="text-center" colspan="9">
             <app-empty-state message="No webhook calls found"></app-empty-state>
           </td>
         </tr>

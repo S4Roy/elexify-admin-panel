@@ -13,7 +13,7 @@ import { PaginationComponent } from '../../../includes/pagination/pagination.com
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 import { WebhookLogDetailDialogComponent } from './webhook-log-detail-dialog/webhook-log-detail-dialog.component';
 
-const PROVIDER_OPTIONS = ['shiprocket'].map((value) => ({ value, label: value }));
+const PROVIDER_OPTIONS = ['shiprocket', 'razorpay'].map((value) => ({ value, label: value }));
 const OUTCOME_OPTIONS = ['processed', 'ignored', 'error'].map((value) => ({ value, label: value }));
 
 const OUTCOME_STYLES: Record<string, string> = {
@@ -70,7 +70,7 @@ export class WebhookLogsComponent implements OnInit, OnDestroy {
     return [
       { key: 'provider', label: 'Provider', type: 'select', options: PROVIDER_OPTIONS },
       { key: 'outcome', label: 'Outcome', type: 'select', options: OUTCOME_OPTIONS },
-      { key: 'search_key', label: 'Order ID / AWB', type: 'text', placeholder: 'Search order id, AWB…' },
+      { key: 'search_key', label: 'Order / payment / refund / event ID / AWB', type: 'text', placeholder: 'Enter an exact reference ID…' },
       {
         key: 'received_at',
         label: 'Date',

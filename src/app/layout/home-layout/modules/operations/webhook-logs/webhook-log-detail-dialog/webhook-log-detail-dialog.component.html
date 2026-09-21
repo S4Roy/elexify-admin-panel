@@ -5,9 +5,23 @@
     <div><span class="detail-label">Provider</span><strong class="capitalize">{{ entry?.provider }}</strong></div>
     <div><span class="detail-label">Event Type</span><strong>{{ entry?.event_type }}</strong></div>
     <div><span class="detail-label">Order ID</span><strong>{{ entry?.order_id || '—' }}</strong></div>
+    <ng-container *ngIf="entry?.provider !== 'razorpay'">
     <div><span class="detail-label">Shiprocket Order ID</span><strong>{{ entry?.shiprocket_order_id || '—' }}</strong></div>
     <div><span class="detail-label">AWB</span><strong>{{ entry?.awb || '—' }}</strong></div>
     <div><span class="detail-label">Package ID</span><strong>{{ entry?.package_id || '—' }}</strong></div>
+    </ng-container>
+    <ng-container *ngIf="entry?.provider === 'razorpay'">
+      <div><span class="detail-label">Event ID</span><strong>{{ entry?.event_id || '—' }}</strong></div>
+      <div><span class="detail-label">Razorpay Order ID</span><strong>{{ entry?.provider_order_id || '—' }}</strong></div>
+      <div><span class="detail-label">Payment ID</span><strong>{{ entry?.payment_id || '—' }}</strong></div>
+      <div><span class="detail-label">Refund ID</span><strong>{{ entry?.refund_id || '—' }}</strong></div>
+      <div><span class="detail-label">Signature</span><strong>{{ entry?.signature_verified === true ? 'Verified' : entry?.signature_verified === false ? 'Rejected' : 'Not checked' }}</strong></div>
+      <div><span class="detail-label">Duplicate Delivery</span><strong>{{ entry?.duplicate ? 'Yes' : 'No' }}</strong></div>
+      <div><span class="detail-label">Processing State at Delivery</span><strong>{{ entry?.processing_state || '—' }}</strong></div>
+      <div><span class="detail-label">Processing Attempts</span><strong>{{ entry?.attempts ?? '—' }}</strong></div>
+      <div><span class="detail-label">Next Retry at Delivery</span><strong>{{ (entry?.next_retry_at | date:'medium') || '—' }}</strong></div>
+      <div><span class="detail-label">Payload SHA-256</span><strong>{{ entry?.payload_hash || '—' }}</strong></div>
+    </ng-container>
     <div><span class="detail-label">Incoming Status</span><strong>{{ entry?.incoming_status || '—' }}</strong></div>
     <div><span class="detail-label">Mapped Status</span><strong>{{ entry?.mapped_status || '—' }}</strong></div>
     <div><span class="detail-label">Outcome</span><strong class="capitalize">{{ entry?.outcome }}</strong></div>
@@ -18,7 +32,8 @@
 
   <p class="detail-message" *ngIf="entry?.outcome_detail">{{ entry.outcome_detail }}</p>
 
-  <span class="detail-label">Raw Payload</span>
+  <span class="detail-label">{{ entry?.provider === 'razorpay' ? 'Sanitized Payload Summary' : 'Raw Payload' }}</span>
+  <p *ngIf="entry?.provider === 'razorpay'" class="detail-message">Customer contact details, payment credentials, notes, and signatures are excluded. References in rejected deliveries are unverified.</p>
   <pre class="payload-block">{{ entry?.payload | json }}</pre>
 </mat-dialog-content>
 
