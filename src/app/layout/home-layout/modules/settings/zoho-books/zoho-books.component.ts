@@ -5,21 +5,17 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { ZohoBooksService } from 'app/core/services/zoho-books.service';
+import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
 import { HelpersService } from 'app/core/services/helpers.service';
 
 @Component({
   selector: 'app-zoho-books',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent],
   templateUrl: './zoho-books.component.html',
-  styles: [`:host { display:block; max-width:1100px; margin:auto; padding:24px; }
-    section { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin:18px 0; }
-    h1 { font-size:24px; font-weight:600; } h2 { font-size:18px; font-weight:600; margin-bottom:12px; }
-    label { display:block; margin:12px 0; } input, select, textarea { border:1px solid #94a3b8; border-radius:6px; padding:8px; margin:4px; max-width:100%; }
-    textarea { display:block; width:100%; } button { background:#0f172a; color:white; padding:8px 14px; border-radius:6px; margin:4px; }
-    button:disabled { opacity:.45; } table { width:100%; text-align:left; } td,th { padding:8px; border-bottom:1px solid #e2e8f0; overflow-wrap:anywhere; }
-    .error { color:#b91c1c; } .muted { color:#475569; } .scroll { overflow:auto; }`],
+  styleUrl: './zoho-books.component.scss',
 })
 export class ZohoBooksComponent implements OnInit {
+  activityTab: 'jobs' | 'logs' = 'jobs';
   connection: any = null;
   counts: any[] = [];
   organizations: any[] = [];
@@ -37,6 +33,8 @@ export class ZohoBooksComponent implements OnInit {
   total = 0;
   filter = '';
   logPage = 1;
+  jobsPagination = { page: 1, limit: 50, totalDocs: 0, totalPages: 1 };
+  logsPagination = { page: 1, limit: 50, totalDocs: 0, totalPages: 1 };
   reason = '';
   accountingId = '';
   accountingKind = 'item';
@@ -48,6 +46,11 @@ export class ZohoBooksComponent implements OnInit {
 
   constructor(private api: ZohoBooksService, private route: ActivatedRoute, private router: Router,
     private toastr: ToastrService, private helpers: HelpersService) {}
+
+  displayLabel(value: string): string {
+    const labels: Record<string, string> = { dead_letter: 'Needs attention', salesorder: 'Sales order', item: 'Product', order_contact: 'Order contact', manual_sync_requested: 'Manual sync requested' };
+    return labels[value] || (value || '').replace(/_/g, ' ');
+  }
 
   get canConfigure() { return this.helpers.role() === 'superadmin'; }
 
@@ -101,9 +104,9 @@ export class ZohoBooksComponent implements OnInit {
   }
   retry(id: string): void { this.run(this.api.retry(id), () => this.loadJobs()); }
   loadJobs(): void {
-    this.api.jobs(this.page, this.filter).subscribe({ next: response => { this.jobs = response.data.jobs; this.total = response.data.total; }, error: () => this.error = 'Unable to load sync jobs.' });
+    this.api.jobs(this.page, this.filter).subscribe({ next: response => { this.jobs = response.data.jobs; this.total = response.data.total; this.jobsPagination = { page: this.page, limit: 50, totalDocs: this.total, totalPages: Math.max(1, Math.ceil(this.total / 50)) }; }, error: () => this.error = 'Unable to load sync jobs.' });
   }
-  loadLogs(): void { this.api.logs(this.logPage).subscribe({ next: response => this.logs = response.data, error: () => this.error = 'Unable to load integration logs.' }); }
+  loadLogs(): void { this.api.logs(this.logPage).subscribe({ next: response => { this.logs = response.data.logs; this.logsPagination = { page: this.logPage, limit: 50, totalDocs: response.data.total, totalPages: Math.max(1, Math.ceil(response.data.total / 50)) }; }, error: () => this.error = 'Unable to load integration logs.' }); }
   saveAccounting(): void {
     const metadata = this.accountingKind === 'contact' ? { ...(this.gstin ? { gstin: this.gstin } : {}), gst_treatment: this.gstTreatment } :
       { ...(this.hsn ? { hsn_sac: this.hsn } : {}), ...(this.unit ? { accounting_unit: this.unit } : {}), ...(this.taxId ? { zoho_tax_id: this.taxId } : {}) };
