@@ -359,31 +359,28 @@ export class OrderDetailsComponent {
     );
   }
 
-  // Always available (permission aside), for an order in any status. An
-  // order already linked to Shiprocket is only ever looked up and shown —
-  // never written to. An order with nothing linked yet is searched live
-  // by its own order id, and on a single unambiguous match, that link
-  // gets written now (verified, same as any other manual-link action);
-  // an ambiguous or missing match writes nothing. See
-  // services/orderService/fetchShiprocketDetails.js on the backend.
+  // Fetch synchronizes linked shipments and reports each package separately.
   get canSyncShiprocket(): boolean {
     return this.canManageOrderStatus;
   }
 
-  syncShiprocketStatus(): void {
+  syncShiprocketStatus(packageIds?: string[]): void {
     if (!this.canSyncShiprocket || this.syncingShiprocket || !this.data?._id) return;
     this.syncingShiprocket = true;
     this.inventoryService.syncShiprocketStatus({
       order_id: this.data._id,
       channel_id: this.selectedChannelId || undefined,
+      package_ids: packageIds,
     }).subscribe({
       next: (res: any) => {
         this.syncingShiprocket = false;
         this.dialog.open(ShiprocketDetailsDialogComponent, {
-          width: '480px', maxWidth: '96vw',
+          width: res?.data?.packages?.length ? '760px' : '480px', maxWidth: '96vw',
           data: res?.data || { found: false, message: 'No response from server.' },
+        }).afterClosed().subscribe(result => {
+          if (result?.retry) this.syncShiprocketStatus(result.packageIds);
         });
-        if (res?.data?.linked_now) this.fetchOrderList();
+        this.fetchOrderList();
       },
       error: () => { this.syncingShiprocket = false; },
     });
