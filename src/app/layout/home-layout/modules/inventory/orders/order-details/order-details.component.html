@@ -32,6 +32,7 @@
       >
         {{ updatingStatus ? 'Updating…' : 'Change Status' }}
       </button>
+      <span *ngIf="!packages.length && data?.shiprocket_status" class="text-sm font-medium text-gray-700">Shiprocket: {{ data.shiprocket_status }}</span>
       <ng-container *ngIf="canSyncShiprocket">
         <ng-select
           *ngIf="shiprocketChannels.length"
@@ -288,6 +289,8 @@
         <ng-template #itemCountFallback>
           <p class="mb-2 text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
         </ng-template>
+        <p class="text-sm font-medium text-gray-800" *ngIf="pkg.shiprocket_status">Shiprocket: {{ pkg.shiprocket_status }}</p>
+        <p class="text-xs text-gray-500" *ngIf="pkg.shiprocket_status_updated_at">Updated {{ pkg.shiprocket_status_updated_at | date:'medium' }}</p>
         <p class="text-sm text-gray-600" *ngIf="pkg.courier_name">Courier: {{ pkg.courier_name }}</p>
         <p class="text-sm text-gray-600" *ngIf="pkg.awb">AWB: {{ pkg.awb }}</p>
         <p class="text-sm text-gray-600" *ngIf="pkg.etd">Est. Delivery: {{ pkg.etd }}</p>
