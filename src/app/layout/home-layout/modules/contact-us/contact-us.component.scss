@@ -1,0 +1,150 @@
+:host {
+  display: block;
+  padding: 5px;
+  color: #243247;
+}
+.inbox-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.heading-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  background: #e9f5f1;
+  color: #187d67;
+  border-radius: 14px;
+}
+.eyebrow {
+  color: #7a8797;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  font-weight: 700;
+  margin: 0 0 5px;
+}
+h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.subtitle {
+  color: #748196;
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible {
+  outline: 3px solid #92cec0;
+  outline-offset: 3px;
+}
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #dfe5ec;
+  border-radius: 8px;
+  background: white;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.filter-button mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+.filter-button span {
+  color: #187d67;
+}
+.inbox-panel {
+  border: 1px solid #e3e8ef;
+  background: #fff;
+  border-radius: 12px;
+}
+.inbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e9edf2;
+}
+.status-tabs {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+}
+.status-tabs button {
+  padding: 18px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #7d899a;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.status-tabs button.active {
+  color: #167d69;
+  border-bottom-color: #167d69;
+}
+.result-count {
+  color: #8792a2;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #7c8b9e;
+}
+.feedback > mat-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 40px;
+  color: #a5b7c7;
+}
+.feedback h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #52647a;
+}
+.feedback p {
+  font-size: 13px;
+  margin: 0;
+}
+.error h2 {
+  color: #b55560;
+}
+@media (max-width: 768px) {
+  :host {
+    padding: 16px 8px;
+  }
+  .inbox-header {
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-size: 23px;
+  }
+  .result-count {
+    display: none;
+  }
+  .status-tabs {
+    gap: 18px;
+  }
+}

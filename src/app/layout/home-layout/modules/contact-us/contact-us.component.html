@@ -1,50 +1,56 @@
-<div class="action-btns"></div>
-<div class="table-wrapper">
-  <table class="table-base">
-    <thead class="">
-      <tr class="">
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col">Email</th>
-        <th scope="col">Interest In</th>
-        <th scope="col">Phone</th>
-        <th scope="col">Message</th>
-        <th scope="col" class="text-center">Status</th>
-        <th class="text-center">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let item of item_list">
-        <tr>
-          <td></td>
-          <td>{{ item?.name }}</td>
-          <td>{{ item?.email }}</td>
-          <td>{{ item?.subject }}</td>
-          <td>{{ item?.phone }}</td>
-          <td>
-            <div [innerHTML]="item.message" [appReadMoreClamp]="110" readMoreLabel="Read More"
-              readLessLabel="Read Less"></div>
-          </td>
-          <td class="text-center">
-            <button type="button" class="table-status cursor-pointer" [class]="item?.status"
-              (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
-              {{ item?.status }}
-            </button>
-          </td>
-          <td class="text-center">
-            <app-menu (deleteItem)="deleteItem($event)"
-              [delete]="permissions.includes('delete') ? item : null"></app-menu>
-          </td>
-        </tr>
-      </ng-container>
-      <ng-container *ngIf="!item_list?.length">
-        <tr>
-          <td class="text-center" colspan="8"><app-empty-state message="No Items Found"></app-empty-state></td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
-</div>
-<ng-container>
-  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
-</ng-container>
+<header class="inbox-header">
+  <div class="heading-icon"><mat-icon>forum</mat-icon></div>
+  <div><p class="eyebrow">CUSTOMER SUPPORT</p><h1>Contact enquiries</h1><p class="subtitle">Stay close to your customers. Review questions and keep every enquiry organized.</p></div>
+</header>
+<section class="inbox-panel" aria-label="Customer enquiries" [attr.aria-busy]="loading">
+  <div class="inbox-toolbar">
+    <nav class="status-tabs" aria-label="Filter enquiries by status">
+      <button (click)="setStatus('')" [class.active]="!filterValues['status']?.length" [attr.aria-pressed]="!filterValues['status']?.length">All enquiries</button>
+      <button *ngFor="let status of statuses" (click)="setStatus(status)" [class.active]="activeStatus === status" [attr.aria-pressed]="activeStatus === status">{{ status }}</button>
+    </nav>
+    <span class="result-count" *ngIf="!loading && !error">{{ paginationOption.totalDocs || 0 }} results</span>
+  </div>
+  <div class="feedback" role="status" *ngIf="loading"><mat-icon>hourglass_empty</mat-icon><h2>Loading enquiries…</h2></div>
+  <div class="feedback error" role="alert" *ngIf="error && !loading"><mat-icon>error_outline</mat-icon><h2>{{ error }}</h2><button class="filter-button" (click)="fetchEnquiries()">Try again</button></div>
+  <ng-container *ngIf="!loading && !error">
+    <div class="table-wrapper">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th scope="col">Customer</th>
+            <th scope="col">Enquiry</th>
+            <th scope="col">Submitted</th>
+            <th scope="col" class="text-center">Status</th>
+            <th scope="col" class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let item of item_list">
+            <tr>
+              <td>
+                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
+                <div class="text-xs text-gray-500">{{ item.email || item.phone || 'No contact details' }}</div>
+              </td>
+              <td>
+                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.subject || 'General enquiry' }}</button>
+                <p class="line-clamp-2 max-w-md text-xs text-gray-500 mt-1">{{ messagePreview(item.message) }}</p>
+              </td>
+              <td class="whitespace-nowrap">{{ item.created_at | date:'dd MMM yyyy' }}<div class="text-xs text-gray-500">{{ item.created_at | date:'shortTime' }}</div></td>
+              <td class="text-center">
+                <button type="button" class="table-status cursor-pointer" [class]="item.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item.status">{{ item.status }}</button>
+              </td>
+              <td class="text-center">
+                <button type="button" class="text-xs font-medium text-primary hover:underline" (click)="updateStatus(item)" [attr.aria-label]="'View enquiry from ' + item.name">View</button>
+                <app-menu (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="!item_list.length">
+            <td colspan="5" class="text-center"><app-empty-state message="No enquiries found"></app-empty-state></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <pagination *ngIf="item_list.length" [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
+  </ng-container>
+</section>

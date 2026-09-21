@@ -1,20 +1,10 @@
-<h2 class="bg-white" mat-dialog-title>Update Status</h2>
-<mat-dialog-content class="bg-white" [formGroup]="formGroup">
-  <div class="px-5">
-    <mat-form-field>
-      <mat-select placeholder="Select Status" formControlName="status">
-        <ng-container
-          *ngFor="let status of ['pending', 'answered', 'archived', 'spam']"
-        >
-          <mat-option [value]="status">
-            {{ status | uppercase }}
-          </mat-option>
-        </ng-container>
-      </mat-select>
-    </mat-form-field>
-  </div>
+<h2 mat-dialog-title>Enquiry details</h2>
+<mat-dialog-content class="enquiry-content" [formGroup]="formGroup">
+  <div class="enquiry-heading"><span class="eyebrow">CUSTOMER MESSAGE</span><h3>{{ data.subject || 'General enquiry' }}</h3><p>Received {{ data.created_at | date:'medium' }}</p></div>
+  <div class="contact-card"><div><span class="field-label">Customer</span><strong>{{ data.name || 'Customer' }}</strong></div><div><span class="field-label">Email</span><a *ngIf="data.email" [href]="emailLink">{{ data.email }}</a><span *ngIf="!data.email">Not provided</span></div><div><span class="field-label">Phone</span><a *ngIf="data.phone" [href]="phoneLink">{{ data.phone }}</a><span *ngIf="!data.phone">Not provided</span></div></div>
+  <div class="message-body" [innerHTML]="data.message"></div>
+  <div class="reply-actions"><a *ngIf="data.email" class="reply-link" [href]="emailLink">Reply by email ↗</a><p>Opens your email app. Mark as answered after you have replied.</p></div>
+  <div class="status-section"><div><h3>Enquiry status</h3><p>Pending needs a response. Archive enquiries that no longer need action.</p></div><mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="status"><mat-option *ngFor="let status of ['pending', 'answered', 'archived', 'spam']" [value]="status">{{ status | uppercase }}</mat-option></mat-select></mat-form-field></div>
+  <p class="save-error" role="alert" *ngIf="error">{{ error }}</p>
 </mat-dialog-content>
-<mat-dialog-actions class="bg-white" align="end">
-  <button mat-stroked-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" (click)="onSubmit()">Update</button>
-</mat-dialog-actions>
+<mat-dialog-actions align="end"><button mat-stroked-button [disabled]="saving" mat-dialog-close>Close</button><button mat-flat-button color="primary" [disabled]="saving || formGroup.pristine || formGroup.invalid" (click)="onSubmit()">{{ saving ? 'Saving…' : 'Save status' }}</button></mat-dialog-actions>

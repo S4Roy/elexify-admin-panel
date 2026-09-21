@@ -1,11 +1,10 @@
-import { NgFor, UpperCasePipe } from '@angular/common';
+import { NgFor, NgIf, DatePipe, UpperCasePipe } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
-  ɵInternalFormsSharedModule,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import {
@@ -26,9 +25,9 @@ import { ToastrService } from 'ngx-toastr';
     MatFormFieldModule,
     MatInputModule,
     NgSelectModule,
-    NgFor,
+    NgFor, NgIf, DatePipe,
     UpperCasePipe,
-    ɵInternalFormsSharedModule,
+
     ReactiveFormsModule,
     MatSelectModule,
     MatButtonModule,
@@ -38,6 +37,10 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class UpdateContactUsComponent {
   formGroup!: FormGroup;
+  saving = false;
+  error = '';
+  get emailLink(): string { return 'mailto:' + encodeURIComponent(this.data?.email || '') + '?subject=' + encodeURIComponent('Re: ' + (this.data?.subject || 'Your enquiry')); }
+  get phoneLink(): string { return 'tel:' + String(this.data?.phone || '').replace(/[^+0-9]/g, ''); }
   constructor(
     private fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -52,14 +55,22 @@ export class UpdateContactUsComponent {
     });
   }
   onSubmit() {
+    if (this.saving) return;
     this.formGroup.markAllAsTouched();
     if (this.formGroup.valid) {
+      this.saving = true;
+      this.error = '';
+      this.dialogRef.disableClose = true;
       this.apiService
         .updateContactUsStatus(this.formGroup.getRawValue())
-        .subscribe((res: any) => {
+        .subscribe({ next: (res: any) => {
           this.toastr.success(res?.message);
           this.dialogRef.close(res);
-        });
+        }, error: () => {
+          this.saving = false;
+          this.dialogRef.disableClose = false;
+          this.error = 'Unable to save status. Please try again.';
+        } });
     }
   }
 }

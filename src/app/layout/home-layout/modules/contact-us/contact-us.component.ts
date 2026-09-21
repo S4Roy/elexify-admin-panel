@@ -1,22 +1,20 @@
+import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
 import { Component } from '@angular/core';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { Subject, combineLatest, takeUntil } from 'rxjs';
+import { Subject, Subscription, combineLatest, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
 import { MenuComponent } from '../../includes/menu/menu.component';
 import PaginationOptions from 'app/core/models/PaginationOptions';
-import { InventoryService } from 'app/core/services/inventory.service';
 import { MatIconModule } from '@angular/material/icon';
-import { ReadMoreClampDirective } from 'app/core/directives/read-more-clamp.directive';
 import { UpdateContactUsComponent } from './update-contact-us/update-contact-us.component';
-import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawer.component';
 
 @Component({
@@ -28,13 +26,28 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
     NgIf,
     PaginationComponent,
     MatIconModule,
-    ReadMoreClampDirective,
+    DatePipe,
   ],
   templateUrl: './contact-us.component.html',
   styleUrl: './contact-us.component.scss',
 })
 export class ContactUsComponent {
   Global = Global;
+  loading = false;
+  error = '';
+  readonly statuses = ['pending', 'answered', 'archived', 'spam'];
+  private listRequest?: Subscription;
+
+  get activeStatus(): string { return this.filterValues['status']?.length === 1 ? this.filterValues['status'][0] : ''; }
+  setStatus(status: string): void {
+    this.filterValues['status'] = status ? [status] : [];
+    this.filterOption.status = status || null;
+    this.paginationOption.page = 1;
+    this.updateFilterButton();
+    this.fetchEnquiries();
+  }
+  messagePreview(message: string): string { return (message || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }
+
   item_list: any = [];
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
@@ -58,12 +71,11 @@ export class ContactUsComponent {
     combineLatest([
       this.route.paramMap,
       this.helperService.searchKey$,
-    ]).subscribe(([params, searchKey]) => {
-      this.filterOption = Global.resetTableFilterOptions();
+    ]).pipe(takeUntil(this.destroy$)).subscribe(([params, searchKey]) => {
       this.filterOption.slug = params.get('slug');
       this.filterOption.search_key = searchKey;
       this.paginationOption.page = 1;
-      this.fetchRating();
+      this.fetchEnquiries();
     });
   }
   ngOnInit(): void {
@@ -119,13 +131,17 @@ export class ContactUsComponent {
         this.filterOption.from_date = this.filterValues['from_date'] || null;
         this.filterOption.to_date = this.filterValues['to_date'] || null;
         this.paginationOption.page = 1;
-        this.fetchRating();
+        this.fetchEnquiries();
         this.updateFilterButton();
       });
   }
 
-  fetchRating() {
+  fetchEnquiries() {
+    this.listRequest?.unsubscribe();
+    this.loading = true;
+    this.error = '';
     let params = new URLSearchParams();
+    if (this.paginationOption.limit) params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
     }
@@ -144,26 +160,29 @@ export class ContactUsComponent {
     if (this.filterOption.to_date) {
       params.set('to_date', this.filterOption.to_date);
     }
-    this.apiService.contactUsList(params).subscribe({
+    this.listRequest = this.apiService.contactUsList(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
+        this.loading = false;
         this.item_list = res?.data?.docs ?? [];
         this.paginationOption = {
           ...res?.data,
         };
       },
-      error: (err) => {},
+      error: () => { this.loading = false; this.error = 'Unable to load enquiries. Please try again.'; },
     });
   }
   updateStatus(item: any) {
     this.dialog
       .open(UpdateContactUsComponent, {
         data: item,
-        width: '400px',
+        width: '680px',
+        maxWidth: '95vw',
+        maxHeight: '90vh',
       })
       .afterClosed()
       .subscribe((res: any) => {
         if (res) {
-          this.fetchRating();
+          this.fetchEnquiries();
         }
       });
   }
@@ -171,14 +190,14 @@ export class ContactUsComponent {
     this.apiService.deleteContactUs({ _id: item._id }).subscribe({
       next: (res: any) => {
         this.toastr.success(res?.body?.message);
-        this.fetchRating();
+        this.fetchEnquiries();
       },
-      error: (err: any) => {},
+      error: () => this.toastr.error('Unable to delete enquiry. Please try again.'),
     });
   }
   onPageChange(data: any) {
     this.paginationOption.page = data;
-    this.fetchRating();
+    this.fetchEnquiries();
   }
   permissions: any = ['add', 'edit', 'delete'];
   checkPermission() {
@@ -190,6 +209,7 @@ export class ContactUsComponent {
     // });
   }
   ngOnDestroy(): void {
+    this.listRequest?.unsubscribe();
     this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();
