@@ -46,6 +46,11 @@ export class IntegrationCredentialsComponent implements OnInit {
         this.integrations = res?.data ?? [];
         for (const item of this.integrations) {
           this.drafts[item.provider] ??= {};
+          if (item.provider === 'recaptcha') {
+            for (const [key, field] of Object.entries(item.fields)) {
+              if (!field.secret) this.drafts[item.provider][key] = field.value || '';
+            }
+          }
           if (item.provider === 'shiprocket') {
             this.drafts['shiprocket']['pickup_location'] = item.fields?.['pickup_location']?.value || '';
             if (item.enabled && item.configured) this.fetchPickupLocations();
@@ -87,7 +92,7 @@ export class IntegrationCredentialsComponent implements OnInit {
       disableClose: true,
       data: {
         title: `Remove ${item.label} managed credentials?`,
-        message: 'The application will return to environment-based configuration. Any cached access token will be invalidated.',
+        message: item.provider === 'recaptcha' ? 'Removing these settings disables reCAPTCHA protection on the protected forms.' : 'The application will return to environment-based configuration. Any cached access token will be invalidated.',
         reasonLabel: 'Reason for removal', minLength: 10, confirmText: 'Remove credentials',
       },
     }).afterClosed().subscribe((result) => {
