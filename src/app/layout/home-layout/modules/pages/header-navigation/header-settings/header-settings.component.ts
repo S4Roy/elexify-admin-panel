@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ import { MediaComponent } from 'app/layout/home-layout/modules/settings/media/me
 @Component({
   selector: 'app-header-settings',
   standalone: true,
-  imports: [
+  imports: [PermissionDirective,
     NgIf,
     ReactiveFormsModule,
     MatButtonModule,

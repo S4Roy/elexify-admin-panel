@@ -25,7 +25,7 @@
       >
         <mat-icon>visibility</mat-icon> Preview
       </button>
-      <button
+      <button appPermission="header.update"
         type="button"
         mat-stroked-button
         color="warn"
@@ -34,7 +34,7 @@
       >
         <mat-icon>unpublished</mat-icon> Unpublish
       </button>
-      <button type="button" mat-flat-button color="primary" (click)="publish()">
+      <button appPermission="header.update" type="button" mat-flat-button color="primary" (click)="publish()">
         <mat-icon>publish</mat-icon> Publish
       </button>
     </div>
@@ -207,7 +207,7 @@
     </div>
 
     <div class="flex justify-end">
-      <button type="submit" mat-flat-button color="primary" [disabled]="form.disabled">
+      <button appPermission="header.update" type="submit" mat-flat-button color="primary" [disabled]="form.disabled">
         {{ form.disabled ? "Saving..." : "Save Settings" }}
       </button>
     </div>

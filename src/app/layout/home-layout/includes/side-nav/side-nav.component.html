@@ -41,6 +41,7 @@
 
       <div
         *ngFor="let menu of item?.menuItems"
+        [hidden]="!canAccess(menu)"
         class="group relative"
         [class]="isNavOpen ? 'w-full' : ''"
         (mouseenter)="onMenuEnter(menu, $event)"

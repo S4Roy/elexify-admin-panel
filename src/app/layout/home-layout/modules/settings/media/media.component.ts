@@ -1,3 +1,5 @@
+import { inject as injectPermissions } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
 import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import {
   AfterViewInit,
@@ -77,7 +79,8 @@ export class MediaComponent implements AfterViewInit, OnDestroy {
   filterOption: FilterOptions;
   formGroup!: FormGroup;
 
-  permissions: string[] = ['add', 'edit', 'delete'];
+  private readonly access = injectPermissions(PermissionService);
+  get permissions(): string[] { return this.access.actions('media'); }
   video_allow: boolean = false;
   // Stricter than video_allow: restricts the picker to videos only (upload
   // allow-list, library filter locked to "video", image items disabled) —

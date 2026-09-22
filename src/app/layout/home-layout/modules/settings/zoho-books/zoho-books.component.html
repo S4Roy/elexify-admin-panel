@@ -29,7 +29,7 @@
     </div>
   </div>
 </section>
-<section *ngIf="connection?.connected">
+<section *ngIf="canManage && connection?.connected">
   <div class="section-heading"><span class="section-icon" aria-hidden="true">02</span><div><h2>Sync records</h2><p class="muted">Queue new records or re-sync existing ones.</p></div></div>
   <div class="counts"><span class="badge" *ngFor="let count of counts" [attr.data-status]="count._id">{{ displayLabel(count._id) }} <b>{{ count.count }}</b></span></div>
   <label>Record type <select [(ngModel)]="kind"><option value="item">Simple product</option><option value="variation">Product variation</option><option value="contact">Customer</option><option value="salesorder">Packed order</option></select></label>
@@ -54,7 +54,7 @@
   <label>Status <select [(ngModel)]="filter" (change)="page = 1; loadJobs()"><option value="">All</option><option *ngFor="let status of ['queued','running','retrying','synced','dead_letter','review']" [value]="status">{{ displayLabel(status) }}</option></select></label>
   <p class="muted">Review jobs may already exist in Zoho. Retry checks existing records before creating a new one.</p></div>
   <div class="scroll" tabindex="0" aria-label="Scrollable activity table"><table><thead><tr><th>Type / local ID</th><th>Status</th><th>Attempts</th><th>Error</th><th>Action</th></tr></thead><tbody>
-    <tr *ngFor="let job of jobs"><td><span class="record-kind">{{ displayLabel(job.kind) }}</span><code>{{ job.entity_id }}</code></td><td><span class="badge" [attr.data-status]="job.status">{{ displayLabel(job.status) }}</span></td><td>{{ job.attempts }}</td><td class="error-code">{{ job.last_error || '—' }}</td><td><button *ngIf="['dead_letter','review','retrying'].includes(job.status)" [disabled]="busy || !connection?.enabled" (click)="retry(job._id)">Retry</button></td></tr>
+    <tr *ngFor="let job of jobs"><td><span class="record-kind">{{ displayLabel(job.kind) }}</span><code>{{ job.entity_id }}</code></td><td><span class="badge" [attr.data-status]="job.status">{{ displayLabel(job.status) }}</span></td><td>{{ job.attempts }}</td><td class="error-code">{{ job.last_error || '—' }}</td><td><button *ngIf="canManage && ['dead_letter','review','retrying'].includes(job.status)" [disabled]="busy || !connection?.enabled" (click)="retry(job._id)">Retry</button></td></tr>
     <tr *ngIf="!jobs.length"><td colspan="5" class="empty-state">No synchronization jobs found.<small>Queued records will appear here. Try another status filter.</small></td></tr>
   </tbody></table></div>
   <pagination *ngIf="jobsPagination.totalDocs" [pagination]="jobsPagination" (pageChange)="page = $event; loadJobs()"></pagination>

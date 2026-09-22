@@ -47,8 +47,9 @@ export class OperationsListComponent implements OnInit {
     public helperService: HelpersService,
   ) {}
 
-  get isSuperadmin(): boolean {
-    return this.helperService.role() === 'superadmin';
+  canExecute(operation: DataOperation): boolean {
+    const type = operation.type === 'BACKFILL' ? 'migration' : operation.type.toLowerCase();
+    return this.helperService.can(`system.${type}.execute`);
   }
 
   ngOnInit(): void {

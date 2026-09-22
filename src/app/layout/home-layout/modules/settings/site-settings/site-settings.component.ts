@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import {
@@ -92,7 +93,7 @@ const OPTIONAL_SETTING_SLUGS = new Set([
 
 @Component({
   selector: 'app-site-settings',
-  imports: [
+  imports: [PermissionDirective,
     ReactiveFormsModule,
     NgFor,
     NgIf,

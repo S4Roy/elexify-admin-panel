@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { PermissionService } from './permission.service';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from './auth.service';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -8,6 +9,9 @@ import PaginationOptions from '../models/PaginationOptions';
   providedIn: 'root',
 })
 export class HelpersService {
+  readonly permissions = inject(PermissionService);
+  can(key: string): boolean { return this.permissions.can(key); }
+
   private viewport = new BehaviorSubject<any>({});
   viewport$ = this.viewport.asObservable();
   private formGroup = new BehaviorSubject<any>({});

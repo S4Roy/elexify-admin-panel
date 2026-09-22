@@ -52,7 +52,7 @@
             }}</a>
           </td>
           <td class="text-center">
-            <button type="button" class="table-status cursor-pointer" [class]="root?.status" (click)="updateStatus(root)" [attr.aria-label]="'Change status: ' + root?.status">
+            <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="root?.status" (click)="updateStatus(root)" [attr.aria-label]="'Change status: ' + root?.status">
               {{ root?.status }}
             </button>
           </td>
@@ -91,7 +91,7 @@
               }}</a>
             </td>
             <td class="text-center">
-              <button type="button" class="table-status cursor-pointer" [class]="child?.status" (click)="updateStatus(child)" [attr.aria-label]="'Change status: ' + child?.status">
+              <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="child?.status" (click)="updateStatus(child)" [attr.aria-label]="'Change status: ' + child?.status">
                 {{ child?.status }}
               </button>
             </td>
@@ -156,7 +156,7 @@
             }}</a>
           </td>
           <td class="text-center">
-            <button type="button" class="table-status cursor-pointer" [class]="item?.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
+            <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item?.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
               {{ item?.status }}
             </button>
           </td>

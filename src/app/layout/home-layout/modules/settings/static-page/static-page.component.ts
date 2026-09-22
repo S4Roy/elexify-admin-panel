@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { Component } from '@angular/core';
 import {
   FormBuilder,
@@ -19,7 +20,7 @@ import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-static-page',
-  imports: [
+  imports: [PermissionDirective,
     MatFormFieldModule,
     NgxEditorModule,
     ReactiveFormsModule,

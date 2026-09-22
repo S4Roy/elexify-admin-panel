@@ -19,13 +19,13 @@
     </div>
   </div>
 
-  <button type="button" mat-icon-button (click)="addChildNode.emit(node)" matTooltip="Add child item">
+  <button appPermission="navigation.create" type="button" mat-icon-button (click)="addChildNode.emit(node)" matTooltip="Add child item">
     <mat-icon>add</mat-icon>
   </button>
-  <button type="button" mat-icon-button (click)="editNode.emit(node)" matTooltip="Edit">
+  <button appPermission="navigation.update" type="button" mat-icon-button (click)="editNode.emit(node)" matTooltip="Edit">
     <mat-icon>edit</mat-icon>
   </button>
-  <button type="button" mat-icon-button color="warn" (click)="deleteNode.emit(node)" matTooltip="Delete">
+  <button appPermission="navigation.delete" type="button" mat-icon-button color="warn" (click)="deleteNode.emit(node)" matTooltip="Delete">
     <mat-icon>delete</mat-icon>
   </button>
 </div>

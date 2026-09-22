@@ -31,7 +31,7 @@
     <div *ngIf="request.evidence?.length" class="evidence-links"><a *ngFor="let media of request.evidence; let i = index" [href]="media.url" target="_blank" rel="noopener">Evidence {{ i + 1 }} ↗</a></div>
     <div *ngIf="request.status === 'requested'" class="mt-4 border-t pt-4">
       <textarea [(ngModel)]="notes[request._id]" rows="2" maxlength="1000" class="w-full rounded-lg border p-2 text-sm" placeholder="Review note (required when rejecting)"></textarea>
-      <div class="mt-2 flex justify-end gap-2"><button class="rounded-lg border border-red-300 px-3 py-2 text-xs text-red-600" [disabled]="!!busyId" (click)="review(request, 'reject')">Reject</button><button class="btn-primary" [disabled]="!!busyId" (click)="review(request, 'approve')">Approve</button></div>
+      <div class="mt-2 flex justify-end gap-2"><button appPermission="return.review" class="rounded-lg border border-red-300 px-3 py-2 text-xs text-red-600" [disabled]="!!busyId" (click)="review(request, 'reject')">Reject</button><button appPermission="return.review" class="btn-primary" [disabled]="!!busyId" (click)="review(request, 'approve')">Approve</button></div>
     </div>
     <div *ngIf="request.status === 'approved'" class="mt-4 flex justify-end border-t pt-4">
       <div class="w-full space-y-2">
@@ -44,8 +44,8 @@
         <p *ngIf="request.pickup?.last_error" class="text-xs text-amber-700">{{ request.pickup.last_error }}</p>
         <label *ngIf="request.pickup?.integration_status === 'unknown'" class="block text-xs">Existing Shiprocket return order ID (for reconciliation)<input class="ml-2 rounded border p-2" [(ngModel)]="bookingFor(request).external_order_id" /></label>
         <div class="flex flex-wrap gap-2">
-          <button class="btn-primary" [disabled]="!!busyId" (click)="operate(request, 'book')">Generate / resume reverse pickup</button>
-          <button *ngIf="request.pickup?.shiprocket_shipment_id" class="rounded border px-3 py-2 text-xs" [disabled]="!!busyId" (click)="operate(request, 'track')">Refresh tracking</button>
+          <button appPermission="return.review" class="btn-primary" [disabled]="!!busyId" (click)="operate(request, 'book')">Generate / resume reverse pickup</button>
+          <button appPermission="return.review" *ngIf="request.pickup?.shiprocket_shipment_id" class="rounded border px-3 py-2 text-xs" [disabled]="!!busyId" (click)="operate(request, 'track')">Refresh tracking</button>
         </div>
         <p class="text-xs" *ngIf="request.pickup?.shiprocket_shipment_id">Shipment {{ request.pickup.shiprocket_shipment_id }} · AWB {{ request.pickup.shiprocket_awb }} · {{ request.pickup.provider }} · {{ request.pickup.raw_status }}</p>
         <a *ngIf="request.pickup?.tracking_url" [href]="request.pickup.tracking_url" target="_blank" rel="noopener" class="text-xs text-primary underline">Open tracking</a>
@@ -58,7 +58,7 @@
           <input *ngIf="pickupFor(request).status === 'failed'" class="rounded border p-2 text-sm" [(ngModel)]="pickupFor(request).failure_reason" placeholder="Failure reason" />
         </div>
         <p *ngIf="request.pickup?.reschedule_count" class="text-xs text-amber-700">Rescheduled {{ request.pickup.reschedule_count }} time(s). Latest pickup: {{ request.pickup.expected_at | date:'medium' }}</p>
-        <div class="flex justify-end gap-2"><button class="rounded-lg border px-3 py-2 text-xs" [disabled]="!!busyId" (click)="receive(request)">Received manually</button><button class="btn-primary" [disabled]="!!busyId" (click)="updatePickup(request)">Update pickup</button></div>
+        <div class="flex justify-end gap-2"><button appPermission="return.review" class="rounded-lg border px-3 py-2 text-xs" [disabled]="!!busyId" (click)="receive(request)">Received manually</button><button appPermission="return.review" class="btn-primary" [disabled]="!!busyId" (click)="updatePickup(request)">Update pickup</button></div>
         </details>
       </div>
     </div>
@@ -75,19 +75,19 @@
         <label class="text-xs">Item note<input class="mt-1 w-full rounded border p-2" maxlength="500" [(ngModel)]="inspectionFor(request, item).note" /></label>
       </div>
       <textarea [(ngModel)]="notes[request._id]" rows="2" maxlength="1000" class="w-full rounded-lg border p-2 text-sm" placeholder="Overall inspection note"></textarea>
-      <div class="flex justify-end"><button class="btn-primary" [disabled]="!!busyId" (click)="submitInspection(request)">Complete inspection</button></div>
+      <div class="flex justify-end"><button [appPermission]="['return.review', 'orders.refund']" class="btn-primary" [disabled]="!!busyId" (click)="submitInspection(request)">Complete inspection</button></div>
     </div>
     <div *ngIf="request.status === 'replacement_pending'" class="mt-3 rounded-lg border p-3">
       <a *ngIf="request.replacement_order_id" [routerLink]="['/inventory/orders/details', request.replacement_order_id]" class="text-sm text-primary">Fulfill replacement order</a>
-      <button *ngIf="!request.replacement_order_id" class="btn-primary" [disabled]="!!busyId" (click)="operate(request, 'replacement')">Create replacement / retry stock allocation</button>
+      <button appPermission="return.review" *ngIf="!request.replacement_order_id" class="btn-primary" [disabled]="!!busyId" (click)="operate(request, 'replacement')">Create replacement / retry stock allocation</button>
     </div>
-    <button *ngIf="request.status === 'refund_pending'" class="mt-3 rounded border px-3 py-2 text-xs" [disabled]="!!busyId" (click)="operate(request, 'refund')">Reconcile refund</button>
+    <button [appPermission]="['return.review', 'orders.refund']" *ngIf="request.status === 'refund_pending'" class="mt-3 rounded border px-3 py-2 text-xs" [disabled]="!!busyId" (click)="operate(request, 'refund')">Reconcile refund</button>
     <div *ngIf="request.refund?.amount" class="mt-3 rounded-lg bg-blue-50 p-3 text-xs"><strong>Refund:</strong> {{ request.refund.amount | currency:'INR' }} · {{ request.refund.status }}<span *ngIf="request.refund.provider_ref"> · {{ request.refund.provider_ref }}</span></div>
     <div *ngIf="request.status === 'manual_action_required'" class="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
       <p class="text-xs text-amber-800">Complete the refund outside the platform, then record its immutable settlement reference here.</p>
       <input [(ngModel)]="settlementReferences[request._id]" maxlength="200" class="w-full rounded border p-2 text-sm" placeholder="Bank / PayPal / cash settlement reference" />
       <textarea [(ngModel)]="notes[request._id]" maxlength="1000" rows="2" class="w-full rounded border p-2 text-sm" placeholder="Optional settlement note"></textarea>
-      <div class="flex justify-end"><button class="btn-primary" [disabled]="!!busyId" (click)="completeManualRefund(request)">Mark refund completed</button></div>
+      <div class="flex justify-end"><button [appPermission]="['return.review', 'orders.refund']" class="btn-primary" [disabled]="!!busyId" (click)="completeManualRefund(request)">Mark refund completed</button></div>
     </div>
     <p *ngIf="request.review_note" class="mt-3 rounded-lg bg-gray-50 p-3 text-xs"><strong>Review note:</strong> {{ request.review_note }}</p>
     </div>

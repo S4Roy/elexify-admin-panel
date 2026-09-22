@@ -1,0 +1,250 @@
+<section class="roles-page" [attr.aria-busy]="busy">
+  <header class="page-heading">
+    <div>
+      <h1>Roles &amp; Permissions</h1>
+      <p>Manage team access and choose what each role can view or change.</p>
+    </div>
+    <span class="badge">{{ roles.length }} roles · {{ permissions.length }} permissions</span>
+  </header>
+  <p role="alert" *ngIf="error" class="text-red-600">{{ error }}</p>
+  <p role="status" *ngIf="message">{{ message }}</p>
+  <mat-form-field class="w-full"><mat-label>Search roles</mat-label><input matInput [(ngModel)]="roleSearch"
+      (ngModelChange)="rolePage = 1" placeholder="Search by name or description" /></mat-form-field>
+  <button *ngIf="access.can('roles.create')" (click)="edit()" class="btn-primary create-role" [disabled]="busy">
+    Create role
+  </button>
+  <div class="table-card overflow-x-auto">
+    <table class="table-base">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Users</th>
+          <th>Permissions</th>
+          <th>Protected</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let role of visibleRoles" class="border-t">
+          <td class="p-3">
+            {{ role.name }}<small class="block">{{ role.description }}</small>
+          </td>
+          <td>
+            <span class="badge" [class.active]="role.status === 'active'">{{
+              role.status | titlecase
+              }}</span>
+          </td>
+          <td>{{ role.user_count }}</td>
+          <td>{{ role.permissions.length }}</td>
+          <td>
+            <span class="badge" *ngIf="role.protected">Protected</span>
+          </td>
+          <td class="text-center">
+            <button type="button" mat-icon-button class="action-menu-trigger" [matMenuTriggerFor]="roleActions"
+              aria-label="Role actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #roleActions="matMenu">
+              <button mat-menu-item (click)="inspect(role)">
+                <mat-icon>visibility</mat-icon><span>View permissions</span>
+              </button>
+              <button mat-menu-item *ngIf="access.can('roles.update') && manageable(role)" (click)="edit(role)">
+                <mat-icon>edit</mat-icon><span>Edit</span>
+              </button>
+              <button mat-menu-item *ngIf="
+                  access.can('roles.create') && access.canAll(role.permissions)
+                " (click)="duplicate(role)">
+                <mat-icon>content_copy</mat-icon><span>Duplicate</span>
+              </button>
+              <button mat-menu-item *ngIf="
+                  access.can('roles.delete') &&
+                  manageable(role) &&
+                  !role.system_role &&
+                  !role.user_count
+                " (click)="remove(role)">
+                <mat-icon color="warn">delete</mat-icon><span>Delete</span>
+              </button>
+            </mat-menu>
+          </td>
+        </tr>
+        <tr *ngIf="!visibleRoles.length">
+          <td colspan="6" class="empty-state">
+            {{ busy ? "Loading roles…" : "No roles match your search." }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <pagination *ngIf="rolePagination.totalDocs" [pagination]="rolePagination" (pageChange)="rolePage = $event">
+  </pagination>
+  <section *ngIf="access.can('staff.view')" class="card space-y-4">
+    <div class="page-heading">
+      <h2 class="text-xl">Staff</h2>
+
+      <div class="flex gap-4 items-center">
+        <form class="flex gap-4" (ngSubmit)="staffPage = 1; loadStaff()">
+          <mat-form-field class="w-[350px]"><input matInput aria-label="Search staff name"
+              placeholder="Search staff name" name="staffSearch" [(ngModel)]="staffSearch" /></mat-form-field><button
+            class="btn-primary">Search</button>
+        </form>
+        <button class="btn-primary" *ngIf="access.canAll(['staff.create', 'roles.assign'])" (click)="addStaff()">
+          Add staff
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card overflow-x-auto">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Staff member</th>
+            <th>Status</th>
+            <th>Role</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of staff" class="border-t">
+            <td class="p-3">
+              {{ user.name }}<small class="block">{{ user.email }}</small>
+            </td>
+            <td>
+              <span class="badge" [class.active]="user.status === 'active'">{{
+                user.status | titlecase
+                }}</span>
+            </td>
+            <td>
+              <span *ngIf="!access.can('roles.assign') || !canManageStaff(user)" class="badge">{{ staffRole(user)?.name
+                || "No admin access" }}</span><small *ngIf="staffRole(user)?.protected">Protected account</small>
+              <ng-select [clearable]="false" appendTo="body" *ngIf="access.can('roles.assign') && canManageStaff(user)"
+                class="staff-role-select" [ngModel]="user.admin_role_id"
+                (ngModelChange)="assign(user, $event)"><ng-option [value]="null">No admin access</ng-option><ng-option
+                  *ngFor="let role of roles" [value]="role._id"
+                  [disabled]="role.status !== 'active' || !manageable(role)">{{ role.name }}</ng-option></ng-select>
+            </td>
+            <td class="text-center">
+              <button *ngIf="
+                  canManageStaff(user) &&
+                  access.canAny(['staff.update', 'staff.delete'])
+                " type="button" mat-icon-button class="action-menu-trigger" [matMenuTriggerFor]="staffActions"
+                aria-label="Staff actions">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #staffActions="matMenu">
+                <button mat-menu-item *ngIf="access.can('staff.update') && canManageStaff(user)"
+                  (click)="setStatus(user)">
+                  <mat-icon>{{
+                    user.status === "active" ? "block" : "check_circle"
+                    }}</mat-icon><span>{{
+                    user.status === "active" ? "Deactivate" : "Activate"
+                    }}</span>
+                </button>
+                <button mat-menu-item *ngIf="access.can('staff.delete') && canManageStaff(user)"
+                  (click)="deleteStaff(user)">
+                  <mat-icon color="warn">delete</mat-icon><span>Delete</span>
+                </button>
+              </mat-menu>
+            </td>
+          </tr>
+          <tr *ngIf="!staff.length">
+            <td colspan="4" class="empty-state">No staff found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <pagination *ngIf="staffPagination.totalDocs" [pagination]="staffPagination"
+      (pageChange)="staffPage = $event; loadStaff()"></pagination>
+  </section>
+</section>
+
+<ng-template #roleDialog>
+  <form *ngIf="editing" #roleForm="ngForm" (ngSubmit)="!readOnly && roleForm.valid && save()" class="dialog-form">
+    <h2 mat-dialog-title>
+      {{
+      readOnly
+      ? "Role permissions"
+      : editing._id
+      ? "Edit role"
+      : "Create role"
+      }}
+    </h2>
+    <mat-dialog-content class="space-y-4">
+      <p *ngIf="error" role="alert">{{ error }}</p>
+      <div class="form-grid">
+        <mat-form-field class="w-full"><mat-label>Name</mat-label><input matInput [disabled]="readOnly || busy"
+            name="name" [(ngModel)]="editing.name" required maxlength="100" /></mat-form-field>
+        <mat-form-field class="w-full"><mat-label>Description</mat-label><input matInput [disabled]="readOnly || busy"
+            name="description" [(ngModel)]="editing.description" maxlength="1000" /></mat-form-field>
+        <label>Status
+          <ng-select [clearable]="false" appendTo="body" [disabled]="readOnly || busy" name="status"
+            [(ngModel)]="editing.status"><ng-option value="active">Active</ng-option><ng-option
+              value="inactive">Inactive</ng-option></ng-select></label>
+      </div>
+      <div *ngIf="!readOnly" class="selection-tools flex flex-wrap gap-4">
+        <button mat-button type="button" (click)="selectAll()">
+          Select all available</button><button mat-button type="button" (click)="viewOnly()">
+          View-only preset</button><button mat-button type="button" (click)="selected.clear()">
+          Clear all
+        </button>
+      </div>
+      <mat-form-field class="w-full"><mat-label>Search modules or permissions</mat-label><input matInput
+          placeholder="Try Zoho Books, invoices or orders" name="search" [(ngModel)]="search" /></mat-form-field>
+      <p class="muted">
+        {{ selected.size }} permissions selected · {{ groups.length }} modules
+        shown
+      </p>
+      <div class="permission-grid">
+        <fieldset *ngFor="let group of groups" class="permission-group">
+          <legend class="font-semibold">
+            {{ group.module }}
+            <span class="badge">{{ selectedCount(group.items) }} / {{ group.items.length }}</span>
+          </legend>
+          <button *ngIf="!readOnly" mat-button type="button" (click)="selectModule(group.items, true)">
+            Select module</button><button *ngIf="!readOnly" mat-button type="button"
+            (click)="selectModule(group.items, false)">
+            Clear module
+          </button>
+          <label *ngFor="let p of group.items" class="permission-option"><input type="checkbox"
+              [checked]="selected.has(p._id)" [disabled]="readOnly || busy || !access.can(p._id)"
+              (change)="toggle(p._id)" />
+            <span>{{ permissionLabel(p)
+              }}<small>{{ permissionDescription(p) }}</small><small *ngIf="!readOnly && !access.can(p._id)">You cannot
+                assign this permission.</small></span></label>
+        </fieldset>
+        <p *ngIf="!groups.length" class="empty-state">
+          No permissions match your search.
+        </p>
+      </div>
+    </mat-dialog-content><mat-dialog-actions align="end"><button mat-button type="button" [disabled]="busy"
+        (click)="closeEditor()">
+        {{ readOnly ? "Close" : "Cancel" }}</button><button *ngIf="!readOnly" class="btn-primary"
+        [disabled]="busy || roleForm.invalid">
+        {{ busy ? "Saving…" : "Save role" }}
+      </button></mat-dialog-actions>
+  </form>
+</ng-template>
+<ng-template #staffDialog>
+  <form *ngIf="access.canAll(['staff.create', 'roles.assign'])" #staffForm="ngForm"
+    (ngSubmit)="staffForm.valid && createStaff()" class="dialog-form">
+    <h2 mat-dialog-title>Add staff account</h2>
+    <mat-dialog-content class="space-y-4">
+      <p *ngIf="error" role="alert">{{ error }}</p>
+      <mat-form-field class="w-full"><mat-label>Name</mat-label><input matInput name="staffName"
+          [(ngModel)]="newStaff.name" required maxlength="100" /></mat-form-field>
+      <mat-form-field class="w-full"><mat-label>Email</mat-label><input matInput name="staffEmail" type="email" email
+          [(ngModel)]="newStaff.email" required /></mat-form-field>
+      <mat-form-field class="w-full"><mat-label>Initial password</mat-label><input matInput name="staffPassword"
+          type="password" autocomplete="new-password" [(ngModel)]="newStaff.password" required minlength="12"
+          maxlength="72" /></mat-form-field>
+      <label class="block">Role
+        <ng-select [clearable]="false" appendTo="body" name="staffRole" [(ngModel)]="newStaff.role_id"
+          required><ng-option value="">Select role</ng-option><ng-option *ngFor="let role of roles" [value]="role._id"
+            [disabled]="role.status !== 'active' || !manageable(role)">{{ role.name }}</ng-option></ng-select></label>
+    </mat-dialog-content><mat-dialog-actions align="end"><button mat-button type="button" [disabled]="busy"
+        (click)="closeEditor()">
+        Cancel</button><button class="btn-primary" [disabled]="busy || staffForm.invalid">
+        {{ busy ? "Creating…" : "Create staff" }}
+      </button></mat-dialog-actions>
+  </form>
+</ng-template>

@@ -8,7 +8,7 @@
       Navigation Menus
     </h2>
     <div class="flex items-center gap-2">
-      <button
+      <button appPermission="navigation.update"
         type="button"
         mat-stroked-button
         [disabled]="generatingDefaults"
@@ -18,7 +18,7 @@
         <mat-icon>auto_awesome</mat-icon>
         {{ generatingDefaults ? "Generating..." : "Generate Default Menus" }}
       </button>
-      <button type="button" mat-flat-button color="primary" (click)="openCreateForm()">
+      <button appPermission="navigation.create" type="button" mat-flat-button color="primary" (click)="openCreateForm()">
         <mat-icon>add</mat-icon> New Menu
       </button>
     </div>
@@ -105,10 +105,10 @@
               <button type="button" mat-icon-button (click)="openBuilder(item)" matTooltip="Open builder">
                 <mat-icon>account_tree</mat-icon>
               </button>
-              <button type="button" mat-icon-button (click)="openEditForm(item)" matTooltip="Rename">
+              <button appPermission="navigation.update" type="button" mat-icon-button (click)="openEditForm(item)" matTooltip="Rename">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button
+              <button appPermission="navigation.update"
                 type="button"
                 mat-icon-button
                 *ngIf="item.status !== 'published'"
@@ -117,7 +117,7 @@
               >
                 <mat-icon>publish</mat-icon>
               </button>
-              <button
+              <button appPermission="navigation.update"
                 type="button"
                 mat-icon-button
                 *ngIf="item.status === 'published'"
@@ -126,7 +126,7 @@
               >
                 <mat-icon>unpublished</mat-icon>
               </button>
-              <button type="button" mat-icon-button color="warn" (click)="deleteMenu(item)" matTooltip="Delete">
+              <button appPermission="navigation.delete" type="button" mat-icon-button color="warn" (click)="deleteMenu(item)" matTooltip="Delete">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>

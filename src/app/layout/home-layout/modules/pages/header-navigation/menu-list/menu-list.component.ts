@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -34,7 +35,7 @@ function slugify(value: string): string {
 @Component({
   selector: 'app-menu-list',
   standalone: true,
-  imports: [
+  imports: [PermissionDirective,
     NgFor,
     NgIf,
     ReactiveFormsModule,

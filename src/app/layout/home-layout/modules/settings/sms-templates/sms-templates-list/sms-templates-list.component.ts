@@ -45,8 +45,7 @@ export class SmsTemplatesListComponent implements OnInit, OnDestroy {
   }
 
   get isPrivileged(): boolean {
-    const role = this.helperService.role();
-    return role === 'superadmin' || role === 'manager';
+    return this.helperService.can('sms_template.manage');
   }
 
   ngOnInit(): void {

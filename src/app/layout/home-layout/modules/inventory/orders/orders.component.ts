@@ -1,3 +1,5 @@
+import { inject as injectPermissions } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_STYLES } from './order-status-display';
 import { inject } from '@angular/core';
 import { ExportDialogComponent } from '../../../includes/export-dialog/export-dialog.component';
@@ -112,7 +114,7 @@ export class OrdersComponent {
   ngOnInit(): void {
     if (this.canCreateOrder) this.helperService.setActionButton({ label: 'Create order', icon: 'add' });
     if (this.canManageOrderStatus) this.helperService.secondaryLink.next({ label: 'Reconcile from Shiprocket', icon: 'sync', url: '/inventory/orders/reconciliation' });
-    this.helperService.setExportAction({ label: 'Export', icon: 'download' });
+    if (this.helperService.can('orders.export')) this.helperService.setExportAction({ label: 'Export', icon: 'download' });
     this.helperService.actionButtonClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.addItem());
     this.helperService.exportActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openExportDialog());
     this.helperService.selectionActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openBulkStatusDialog());
@@ -310,8 +312,8 @@ export class OrdersComponent {
     if (this.sortKey !== field) return 'sort-icon';
     return this.sortDirection === 'asc' ? 'sort-icon-up' : 'sort-icon-down';
   }
-  get canCreateOrder(): boolean { return ['superadmin', 'manager'].includes(this.helperService.role()); }
-  get canManageOrderStatus(): boolean { return ['superadmin', 'manager'].includes(this.helperService.role()); }
+  get canCreateOrder(): boolean { return this.helperService.can('order.create'); }
+  get canManageOrderStatus(): boolean { return this.helperService.can('order.status.manage'); }
 
   // Bulk order-status selection — a page of checked rows feeds the
   // comma-separated order_ids the bulk dialog (and backend) expects.
@@ -492,7 +494,8 @@ export class OrdersComponent {
     this.paginationOption.page = data;
     this.fetchOrderList();
   }
-  permissions: any = ['add', 'edit', 'delete'];
+  private readonly access = injectPermissions(PermissionService);
+  get permissions(): string[] { return this.access.actions('orders'); }
   checkPermission() {
     // this.settingService.checkPermission({ sec: 'award' }).subscribe({
     //   next: (res: any) => {

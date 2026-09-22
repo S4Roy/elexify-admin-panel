@@ -73,7 +73,7 @@
               />
             </ng-container>
 
-            <button
+            <button appPermission="settings.update"
               matSuffix
               [disabled]="!item.valid"
               (click)="submitSiteSettings($event, item.get('slug')?.value)"

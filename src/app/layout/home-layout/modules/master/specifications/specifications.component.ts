@@ -1,3 +1,5 @@
+import { inject as injectPermissions } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
 import { NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -175,7 +177,8 @@ export class SpecificationsComponent {
     this.paginationOption.page = data;
     this.fetchClassification();
   }
-  permissions: any = ['add', 'edit', 'delete'];
+  private readonly access = injectPermissions(PermissionService);
+  get permissions(): string[] { return this.access.actions('specifications'); }
   checkPermission() {
     // this.settingService.checkPermission({ sec: 'award' }).subscribe({
     //   next: (res: any) => {

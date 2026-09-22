@@ -52,7 +52,9 @@ export class ZohoBooksComponent implements OnInit {
     return labels[value] || (value || '').replace(/_/g, ' ');
   }
 
-  get canConfigure() { return this.helpers.role() === 'superadmin'; }
+  get canManage() { return this.helpers.can('zoho_sync.manage'); }
+
+  get canConfigure() { return this.helpers.can('integration_credential.manage'); }
 
   ngOnInit(): void {
     const query = this.route.snapshot.queryParamMap;

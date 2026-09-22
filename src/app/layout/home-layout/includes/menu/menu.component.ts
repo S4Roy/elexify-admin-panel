@@ -15,6 +15,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
   styleUrl: './menu.component.scss',
 })
 export class MenuComponent {
+  @Input() actions: { label: string; icon: string; action: string }[] = [];
+  @Output() actionSelected = new EventEmitter<string>();
   @Input() modalItem: any = null;
   @Input() edit: any = null;
   @Input() modalButtonText: any = null;

@@ -1,3 +1,6 @@
+import { inject as injectAccess } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,7 +31,7 @@ const MAX_DEPTH_INDEX = 2;
 @Component({
   selector: 'app-menu-builder',
   standalone: true,
-  imports: [
+  imports: [PermissionDirective,
     NgFor,
     NgIf,
     DragDropModule,
@@ -43,6 +46,7 @@ const MAX_DEPTH_INDEX = 2;
   styleUrl: './menu-builder.component.scss',
 })
 export class MenuBuilderComponent implements OnInit, OnDestroy {
+  readonly accessControl = injectAccess(PermissionService);
   storefrontUrl = environment.STOREFRONT_URL ?? '';
   menuId!: string;
   menu: any = null;

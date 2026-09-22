@@ -44,8 +44,7 @@ export class EmailTemplatesListComponent implements OnInit, OnDestroy {
   }
 
   get isPrivileged(): boolean {
-    const role = this.helperService.role();
-    return role === 'superadmin' || role === 'manager';
+    return this.helperService.can('email_template.manage');
   }
 
   ngOnInit(): void {

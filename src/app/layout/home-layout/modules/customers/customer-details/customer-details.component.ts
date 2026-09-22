@@ -146,8 +146,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   }
 
   get isPrivileged(): boolean {
-    const role = this.helperService.role();
-    return role === 'superadmin' || role === 'manager';
+    return this.helperService.can('customer.address.manage');
   }
 
   fetchAddresses(): void {
@@ -268,7 +267,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   }
 
   toggleEditMode() {
-    if (!this.isPrivileged) return;
+    if (!this.helperService.can('customer.preference.manage')) return;
     if (this.editingPreferences) {
       this.resetEditableValues();
     }

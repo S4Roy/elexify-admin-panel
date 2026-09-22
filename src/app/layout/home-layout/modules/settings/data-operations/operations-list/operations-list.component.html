@@ -51,7 +51,7 @@
           <td class="text-center whitespace-nowrap">
             <button type="button" class="do-action-btn" (click)="viewOperation(op)">View</button>
             <button
-              *ngIf="op.supportsDryRun"
+              *ngIf="op.supportsDryRun && canExecute(op)"
               type="button"
               class="do-action-btn"
               [disabled]="runningKey === op.key"
@@ -60,7 +60,7 @@
               Dry Run
             </button>
             <button
-              *ngIf="isSuperadmin"
+              *ngIf="canExecute(op)"
               type="button"
               class="do-action-btn do-action-run"
               [disabled]="runningKey === op.key"

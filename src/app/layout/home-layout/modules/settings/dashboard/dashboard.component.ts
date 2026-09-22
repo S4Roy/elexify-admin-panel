@@ -12,7 +12,8 @@ import { HelpersService } from 'app/core/services/helpers.service';
 export class DashboardComponent {
   // Keep this overview in the same order as the Settings sidebar.
   readonly nav_list = [
-    { label: 'Zoho Books', description: 'Accounting integration and synchronization', router_path: '/settings/integrations/zoho-books', roles: ['superadmin', 'manager'] },
+    { label: 'Roles & Permissions', description: 'Manage roles, permissions and staff access', router_path: '/settings/roles' },
+    { label: 'Zoho Books', description: 'Accounting integration and synchronization', router_path: '/settings/integrations/zoho-books' },
     { label: 'Site Settings', description: 'Store and company details', router_path: '/settings/site' },
     { label: 'Media', description: 'Manage uploaded assets', router_path: '/settings/media' },
     { label: 'Countries', description: 'Manage countries', router_path: '/settings/countries' },
@@ -24,13 +25,13 @@ export class DashboardComponent {
     { label: 'SEO Settings', description: 'Search visibility defaults', router_path: '/settings/seo' },
     { label: 'Email Templates', description: 'Customer email messages', router_path: '/settings/email-templates' },
     { label: 'SMS Templates', description: 'Customer text messages', router_path: '/settings/sms-templates' },
-    { label: 'Integration Credentials', description: 'Connected service credentials', router_path: '/settings/integration-credentials', roles: ['superadmin'] },
+    { label: 'Integration Credentials', description: 'Connected service credentials', router_path: '/settings/integration-credentials' },
     { label: 'Data Operations', description: 'Maintenance and migrations', router_path: '/settings/data-operations' },
   ];
 
   constructor(private helpersService: HelpersService) {}
 
-  canAccess(item: { roles?: string[] }): boolean {
-    return !item.roles?.length || item.roles.includes(this.helpersService.role());
+  canAccess(item: { router_path: string }): boolean {
+    return this.helpersService.permissions.canRoute(item.router_path);
   }
 }

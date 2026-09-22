@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import {
@@ -40,7 +41,7 @@ const CANCELLATION_STATUSES = [
 
 @Component({
   selector: 'app-shipping-settings',
-  imports: [
+  imports: [PermissionDirective,
     ReactiveFormsModule,
     NgFor,
     NgIf,

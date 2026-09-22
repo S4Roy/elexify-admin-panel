@@ -28,7 +28,7 @@
       >
         <mat-icon>visibility</mat-icon> Preview
       </button>
-      <button
+      <button appPermission="home.update"
         type="button"
         mat-stroked-button
         color="warn"
@@ -37,7 +37,7 @@
       >
         <mat-icon>unpublished</mat-icon> Unpublish
       </button>
-      <button type="button" mat-flat-button color="primary" (click)="publish()">
+      <button appPermission="home.update" type="button" mat-flat-button color="primary" (click)="publish()">
         <mat-icon>publish</mat-icon> Publish
       </button>
       <button
@@ -49,7 +49,7 @@
         <mat-icon>add</mat-icon> Add Section
       </button>
       <mat-menu #addMenu="matMenu">
-        <button
+        <button appPermission="home.create"
           type="button"
           mat-menu-item
           *ngFor="let t of sectionTypes"
@@ -84,7 +84,7 @@
         <button type="button" mat-stroked-button (click)="toggleSeoPanel()">
           Cancel
         </button>
-        <button
+        <button appPermission="home.update"
           type="button"
           mat-flat-button
           color="primary"
@@ -106,7 +106,7 @@
       No sections yet. Use "Add Section" to build the homepage.
     </div>
 
-    <div cdkDropList class="space-y-2" (cdkDropListDropped)="drop($event)">
+    <div cdkDropList [cdkDropListDisabled]="!accessControl.can('home.update')" class="space-y-2" (cdkDropListDropped)="drop($event)">
       <div
         *ngFor="let section of sections"
         cdkDrag
@@ -136,10 +136,10 @@
           matTooltip="Enable / disable this section"
         ></mat-slide-toggle>
 
-        <button type="button" mat-icon-button (click)="editSection(section)" matTooltip="Edit">
+        <button appPermission="home.update" type="button" mat-icon-button (click)="editSection(section)" matTooltip="Edit">
           <mat-icon>edit</mat-icon>
         </button>
-        <button
+        <button appPermission="home.delete"
           type="button"
           mat-icon-button
           color="warn"

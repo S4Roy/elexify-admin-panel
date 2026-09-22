@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject, Subscription, takeUntil } from 'rxjs';
@@ -13,7 +14,7 @@ import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-returns',
-  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, PaginationComponent],
+  imports: [PermissionDirective,CommonModule, FormsModule, RouterLink, MatIconModule, PaginationComponent],
   templateUrl: './returns.component.html',
   styleUrl: './returns.component.scss',
 })

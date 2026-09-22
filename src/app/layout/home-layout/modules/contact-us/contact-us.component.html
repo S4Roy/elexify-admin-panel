@@ -28,19 +28,19 @@
           <ng-container *ngFor="let item of item_list">
             <tr>
               <td>
-                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
+                <button [disabled]="!permissions.includes('edit')" type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
                 <div class="text-xs text-gray-500">{{ item.email || item.phone || 'No contact details' }}</div>
               </td>
               <td>
-                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.subject || 'General enquiry' }}</button>
+                <button [disabled]="!permissions.includes('edit')" type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.subject || 'General enquiry' }}</button>
                 <p class="line-clamp-2 max-w-md text-xs text-gray-500 mt-1">{{ messagePreview(item.message) }}</p>
               </td>
               <td class="whitespace-nowrap">{{ item.created_at | date:'dd MMM yyyy' }}<div class="text-xs text-gray-500">{{ item.created_at | date:'shortTime' }}</div></td>
               <td class="text-center">
-                <button type="button" class="table-status cursor-pointer" [class]="item.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item.status">{{ item.status }}</button>
+                <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item.status">{{ item.status }}</button>
               </td>
               <td class="text-center">
-                <button type="button" class="text-xs font-medium text-primary hover:underline" (click)="updateStatus(item)" [attr.aria-label]="'View enquiry from ' + item.name">View</button>
+                <button [disabled]="!permissions.includes('edit')" type="button" class="text-xs font-medium text-primary hover:underline" (click)="updateStatus(item)" [attr.aria-label]="'View enquiry from ' + item.name">View</button>
                 <app-menu (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
               </td>
             </tr>

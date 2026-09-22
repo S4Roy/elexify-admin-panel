@@ -1,3 +1,5 @@
+import { inject as injectPermissions } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
 import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
 import { Component } from '@angular/core';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
@@ -199,7 +201,8 @@ export class ContactUsComponent {
     this.paginationOption.page = data;
     this.fetchEnquiries();
   }
-  permissions: any = ['add', 'edit', 'delete'];
+  private readonly access = injectPermissions(PermissionService);
+  get permissions(): string[] { return this.access.actions('contacts'); }
   checkPermission() {
     // this.settingService.checkPermission({ sec: 'award' }).subscribe({
     //   next: (res: any) => {

@@ -1,3 +1,6 @@
+import { inject as injectAccess } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,7 +24,7 @@ import { NewAnnouncementComponent } from './new-announcement/new-announcement.co
 @Component({
   selector: 'app-topbar-settings',
   standalone: true,
-  imports: [
+  imports: [PermissionDirective,
     NgFor,
     NgIf,
     DragDropModule,
@@ -35,6 +38,7 @@ import { NewAnnouncementComponent } from './new-announcement/new-announcement.co
   styleUrl: './topbar.component.scss',
 })
 export class TopbarSettingsComponent implements OnInit {
+  readonly accessControl = injectAccess(PermissionService);
   storefrontUrl = environment.STOREFRONT_URL ?? '';
   doc: any = null;
   announcements: any[] = [];

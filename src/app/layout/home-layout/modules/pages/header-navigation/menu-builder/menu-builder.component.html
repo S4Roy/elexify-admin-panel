@@ -32,7 +32,7 @@
       >
         <mat-icon>visibility</mat-icon> Preview
       </button>
-      <button
+      <button appPermission="navigation.update"
         type="button"
         mat-stroked-button
         color="warn"
@@ -41,10 +41,10 @@
       >
         <mat-icon>unpublished</mat-icon> Unpublish
       </button>
-      <button type="button" mat-flat-button color="primary" (click)="publish()">
+      <button appPermission="navigation.update" type="button" mat-flat-button color="primary" (click)="publish()">
         <mat-icon>publish</mat-icon> Publish
       </button>
-      <button type="button" mat-flat-button color="primary" (click)="addTopLevelItem()">
+      <button appPermission="navigation.create" type="button" mat-flat-button color="primary" (click)="addTopLevelItem()">
         <mat-icon>add</mat-icon> Add Top-level Item
       </button>
     </div>
@@ -57,7 +57,7 @@
     cdkDropListGroup
   >
     <div
-      cdkDropList
+      cdkDropList [cdkDropListDisabled]="!accessControl.can('navigation.update')"
       id="list-root"
       [cdkDropListData]="tree"
       [cdkDropListConnectedTo]="connectedListIds"

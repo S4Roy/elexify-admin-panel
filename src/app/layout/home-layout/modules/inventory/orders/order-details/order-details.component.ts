@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_STYLES } from '../order-status-display';
 import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
 import { ZohoSalesorderComponent } from './zoho-salesorder.component';
@@ -97,7 +98,7 @@ const PACKAGE_STATUS_STYLES: Record<string, string> = {
 
 @Component({
   selector: 'app-order-details',
-  imports: [
+  imports: [PermissionDirective,
     ZohoSalesorderComponent,
     MatDialogModule,
     FormsModule,
@@ -220,7 +221,7 @@ export class OrderDetailsComponent {
 
   get isCancellable(): boolean {
     return (
-      !!this.data?.order_status &&
+      this.helpersService.can('orders.refund') && this.helpersService.can('order.cancel.manage') && !!this.data?.order_status &&
       CANCELLABLE_STATUSES.includes(this.data.order_status)
     );
   }
@@ -229,21 +230,21 @@ export class OrderDetailsComponent {
   // controls whether the button is shown.
   get canReopen(): boolean {
     return (
-      ['superadmin', 'manager'].includes(this.helpersService.role()) &&
+      this.helpersService.can('order.reopen.manage') &&
       this.data?.order_status === 'cancelled'
     );
   }
 
   get canForceCancel(): boolean {
     return (
-      this.helpersService.role() === 'superadmin' &&
+      this.helpersService.can('orders.refund') && this.helpersService.can('order.force_cancel.manage') &&
       !!this.data?.order_status &&
       FORCE_CANCEL_STATUSES.includes(this.data.order_status)
     );
   }
 
   get canRetryRefund(): boolean {
-    return this.data?.payment_status === 'refund_failed' && this.data?.payment_meta?.payment_provider !== 'manual';
+    return this.helpersService.can('orders.refund') && this.data?.payment_status === 'refund_failed' && this.data?.payment_meta?.payment_provider !== 'manual';
   }
 
   get canDownloadInvoice(): boolean {
@@ -254,11 +255,11 @@ export class OrderDetailsComponent {
   }
 
   get canManageZohoInvoice(): boolean {
-    return ['superadmin', 'manager'].includes(this.helpersService.role());
+    return this.helpersService.can('zoho_invoice.manage');
   }
 
   get canEditOrderAddress(): boolean {
-    return ['superadmin', 'manager'].includes(this.helpersService.role()) &&
+    return this.helpersService.can('order.address.manage') &&
       ['pending', 'confirmed', 'processing'].includes(this.data?.order_status) &&
       !this.data?.invoice?.generated &&
       !this.data?.awb && !this.data?.shiprocket_order_id &&
@@ -287,11 +288,11 @@ export class OrderDetailsComponent {
   }
 
   get canManageOrderStatus(): boolean {
-    return ['superadmin', 'manager'].includes(this.helpersService.role());
+    return this.helpersService.can('order.status.manage');
   }
 
   get canRecordPayment(): boolean {
-    return this.canManageOrderStatus &&
+    return this.helpersService.can('order.payment.manage') &&
       ['pending', 'failed'].includes(this.data?.payment_status) &&
       ['pending', 'confirmed', 'failed'].includes(this.data?.order_status) &&
       (this.data?.payment_method === 'razorpay' || this.data?.is_partial_cod) &&

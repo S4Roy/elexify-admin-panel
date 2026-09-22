@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import {
@@ -20,7 +21,7 @@ const TEMPLATE_VARIABLES =
 
 @Component({
   selector: 'app-seo-settings',
-  imports: [
+  imports: [PermissionDirective,
     ReactiveFormsModule,
     NgIf,
     MatFormFieldModule,

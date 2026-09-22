@@ -28,7 +28,7 @@
               readLessLabel="Read Less"></div>
           </td>
           <td class="text-center">
-            <button type="button" class="table-status cursor-pointer" [class]="item?.status"
+            <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item?.status"
               (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
               {{ item?.status }}
             </button>

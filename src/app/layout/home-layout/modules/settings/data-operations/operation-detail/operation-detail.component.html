@@ -8,7 +8,7 @@
     </div>
     <div class="flex gap-2">
       <button
-        *ngIf="operation.supportsDryRun"
+        *ngIf="operation.supportsDryRun && canExecute"
         type="button"
         class="do-action-btn"
         [disabled]="runningAction"
@@ -17,7 +17,7 @@
         {{ isLegacyImport ? 'Audit Missing Data' : 'Dry Run' }}
       </button>
       <button
-        *ngIf="isSuperadmin"
+        *ngIf="canExecute"
         type="button"
         class="do-action-btn do-action-run"
         [disabled]="runningAction || !canImport"
@@ -30,8 +30,8 @@
 
   <div *ngIf="operation.lastExecution?.status === 'FAILED'" class="do-failure-banner">
     <strong>Last run failed</strong> — {{ operation.name }} (v{{ operation.version }}).
-    <span *ngIf="isSuperadmin && operation.idempotent"> This operation is idempotent and safe to retry.</span>
-    <button *ngIf="isSuperadmin && operation.idempotent" type="button" class="do-action-btn" (click)="retry()">Retry</button>
+    <span *ngIf="canExecute && operation.idempotent"> This operation is idempotent and safe to retry.</span>
+    <button *ngIf="canExecute && operation.idempotent" type="button" class="do-action-btn" (click)="retry()">Retry</button>
   </div>
 
   <div class="do-meta-grid">

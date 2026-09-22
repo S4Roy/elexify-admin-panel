@@ -101,8 +101,8 @@ describe('OperationsListComponent', () => {
 
   it('shows the Run action only for superadmins', () => {
     const helpers = TestBed.inject(HelpersService);
-    spyOn(helpers, 'role').and.returnValue('manager');
+    spyOn(helpers, 'can').and.returnValue(false);
     flushList();
-    expect(component.isSuperadmin).toBeFalse();
+    expect(component.canExecute({ type: 'SEEDER' } as any)).toBeFalse();
   });
 });

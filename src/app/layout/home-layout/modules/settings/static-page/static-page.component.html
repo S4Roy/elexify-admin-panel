@@ -46,7 +46,7 @@
 
   <!-- Save Button -->
   <div class="flex justify-end">
-    <button
+    <button appPermission="pages.update"
       mat-stroked-button
       [disabled]="formGroup.disabled"
       (click)="onSubmit()"

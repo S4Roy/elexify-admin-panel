@@ -54,8 +54,9 @@ export class OperationDetailComponent implements OnInit {
     return !this.isLegacyImport || (this.dryRunResult?.status === 'SUCCESS' && (this.dryRunResult?.result?.wouldInsert ?? 0) > 0);
   }
 
-  get isSuperadmin(): boolean {
-    return this.helperService.role() === 'superadmin';
+  get canExecute(): boolean {
+    const type = this.operation?.type === 'BACKFILL' ? 'migration' : this.operation?.type?.toLowerCase();
+    return !!type && this.helperService.can(`system.${type}.execute`);
   }
 
   get safeDescription(): string {

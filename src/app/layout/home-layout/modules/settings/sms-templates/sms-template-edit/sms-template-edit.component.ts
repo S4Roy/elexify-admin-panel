@@ -56,8 +56,7 @@ export class SmsTemplateEditComponent implements OnInit {
   }
 
   get isPrivileged(): boolean {
-    const role = this.helperService.role();
-    return role === 'superadmin' || role === 'manager';
+    return this.helperService.can('sms_template.manage');
   }
 
   // The `{#VAR#}` placeholder count in `message` must match `variables`'s

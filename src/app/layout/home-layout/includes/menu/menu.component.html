@@ -1,4 +1,4 @@
-@if (modalItem || edit || details|| delete || stockItem ) {
+@if (modalItem || edit || details|| delete || stockItem || actions.length ) {
 
 <button
   type="button"
@@ -12,6 +12,9 @@
 
 <mat-menu #menu="matMenu">
   <ul class="actionlink">
+    @for (action of actions; track action.action) {
+    <li><button mat-menu-item (click)="actionSelected.emit(action.action)"><mat-icon>{{action.icon}}</mat-icon><span>{{action.label}}</span></button></li>
+    }
     @if (stockItem) {
     <li>
       <button mat-menu-item (click)="initStockModal.next(stockItem)">

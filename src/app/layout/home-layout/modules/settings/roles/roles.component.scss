@@ -1,0 +1,279 @@
+:host {
+  display: block;
+  padding: 5px;
+  color: var(--text-primary);
+}
+.roles-page {
+  display: grid;
+  gap: 20px;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+p,
+small,
+.muted {
+  color: var(--text-secondary);
+}
+.page-heading p {
+  margin-top: 6px;
+}
+.card,
+.table-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+.card {
+  padding: 20px;
+}
+table {
+  width: 100%;
+}
+th,
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+th {
+  white-space: nowrap;
+}
+td small {
+  display: block;
+  margin-top: 4px;
+  max-width: 360px;
+}
+.badge {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--bg-surface-alt);
+  white-space: nowrap;
+}
+.badge.active {
+  color: #15803d;
+  background: #22c55e18;
+}
+button {
+  padding: 7px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+// button:hover:not(:disabled) {
+//   background: var(--bg-surface-alt);
+// }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+// button:focus-visible,
+// input:focus-visible,
+// select:focus-visible {
+//   outline: 2px solid #22c55e;
+//   outline-offset: 2px;
+// }
+.btn-primary {
+  width: fit-content;
+  min-width: 130px;
+}
+.create-role {
+  justify-self: end;
+}
+
+// label {
+//   font-size: 13px;
+//   font-weight: 500;
+// }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 160px;
+  gap: 16px;
+}
+.selection-tools {
+  padding: 10px;
+  background: var(--bg-surface-alt);
+  border-radius: 6px;
+}
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  max-height: 60vh;
+  overflow: auto;
+  padding: 4px;
+}
+.permission-group {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+legend {
+  padding: 0 6px;
+  font-size: 14px;
+}
+.permission-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+}
+.permission-option:last-child {
+  border: 0;
+}
+.permission-option input {
+  margin-top: 3px;
+  accent-color: #16a34a;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.permission-option small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.empty-state {
+  text-align: center;
+  padding: 28px;
+  color: var(--text-secondary);
+}
+.staff-form {
+  max-width: 760px;
+}
+[role="alert"] {
+  color: #dc2626;
+  padding: 12px;
+  background: #ef444410;
+  border-radius: 6px;
+}
+[role="status"] {
+  color: #15803d;
+  padding: 12px;
+  background: #22c55e10;
+  border-radius: 6px;
+}
+@media (max-width: 800px) {
+  .form-grid,
+  .permission-grid {
+    grid-template-columns: 1fr;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .card {
+    padding: 14px;
+  }
+}
+.dialog-form {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+.dialog-form h2 {
+  margin: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.dialog-form mat-dialog-content {
+  padding: 20px 24px;
+}
+.dialog-form mat-dialog-actions {
+  padding: 16px 24px;
+  gap: 10px;
+  border-top: 1px solid var(--border-color);
+}
+.dialog-form .permission-grid {
+  max-height: none;
+}
+ng-select {
+  min-width: 160px;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+// The application's Material defaults remove dialog padding with !important.
+.dialog-form .mat-mdc-dialog-content {
+  padding: 20px 24px !important;
+  box-sizing: border-box;
+  max-height: min(62vh, 680px);
+  color: var(--text-primary);
+}
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+.dialog-form .mat-mdc-dialog-title,
+.dialog-form .mat-mdc-dialog-actions {
+  flex-shrink: 0;
+}
+.dialog-form .form-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) 160px;
+  align-items: start;
+}
+.dialog-form .permission-grid {
+  gap: 12px;
+}
+.dialog-form .permission-option {
+  padding: 7px 4px;
+}
+.dialog-form .permission-option small {
+  line-height: 1.4;
+}
+.search-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.search-toolbar mat-form-field {
+  flex: 1;
+  max-width: 420px;
+}
+.search-toolbar .btn-primary {
+  min-width: auto;
+}
+.staff-role-select {
+  max-width: 280px;
+  margin: 0 0 6px;
+}
+td:last-child {
+  min-width: 250px;
+}
+@media (max-width: 800px) {
+  .dialog-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .dialog-form .mat-mdc-dialog-content {
+    padding: 16px !important;
+  }
+  .search-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+.action-menu-trigger {
+  padding: 0;
+}
+.form-grid mat-form-field {
+  min-width: 0;
+}

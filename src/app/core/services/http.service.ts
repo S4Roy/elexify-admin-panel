@@ -37,7 +37,7 @@ export class HttpService {
     return this.http.put<any>(`${this.BASE_URL}${uri}`, formData);
   }
 
-  get(uri: string, payload: any = {}) {
+  get(uri: string, payload: any = {}): Observable<any> {
     return this.http.get<any>(`${this.BASE_URL}${uri}`, payload);
   }
   delete(uri: string, payload: any = {}) {

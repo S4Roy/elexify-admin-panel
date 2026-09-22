@@ -16,6 +16,7 @@ import { SmsTemplateEditComponent } from './sms-templates/sms-template-edit/sms-
 import { IntegrationCredentialsComponent } from './integration-credentials/integration-credentials.component';
 
 export const routes: Routes = [
+  { path: 'roles', data: { pageTitle: 'Roles & Permissions', breadcrumb: 'Roles & Permissions' }, loadComponent: () => import('./roles/roles.component').then(m => m.RolesComponent) },
   {
     path: 'integrations/zoho-books',
     data: { pageTitle: 'Zoho Books', breadcrumb: 'Zoho Books' },

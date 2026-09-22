@@ -1,3 +1,4 @@
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import {
@@ -38,7 +39,7 @@ const TYPE_ICONS: Record<string, string> = {
 @Component({
   selector: 'app-menu-tree-node',
   standalone: true,
-  imports: [
+  imports: [PermissionDirective,
     NgFor,
     NgIf,
     DragDropModule,

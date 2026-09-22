@@ -157,7 +157,7 @@
               "Backup import" : "Other" }}</span>
           </td>
           <td>
-            <button type="button" class="status-badge" [class.active-status]="item.status === 'active'"
+            <button [disabled]="!permissions.includes('edit')" type="button" class="status-badge" [class.active-status]="item.status === 'active'"
               (click)="updateStatus(item)" [attr.aria-label]="
                 'Change account status for ' + item.name + ': ' + item.status
               ">

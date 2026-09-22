@@ -1,3 +1,6 @@
+import { inject as injectAccess } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
+import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -43,7 +46,7 @@ const SECTION_TYPES: SectionTypeDef[] = [
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [
+  imports: [PermissionDirective,
     NgFor,
     NgIf,
     ReactiveFormsModule,
@@ -61,6 +64,7 @@ const SECTION_TYPES: SectionTypeDef[] = [
   styleUrl: './homepage.component.scss',
 })
 export class HomepageComponent implements OnInit {
+  readonly accessControl = injectAccess(PermissionService);
   sectionTypes = SECTION_TYPES;
   storefrontUrl = environment.STOREFRONT_URL ?? '';
 

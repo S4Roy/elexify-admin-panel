@@ -87,7 +87,7 @@
         {{ reopening ? 'Reopening…' : 'Reopen Order' }}
       </button>
       <button
-        *ngIf="canRetryRefund"
+ appPermission="orders.refund"        *ngIf="canRetryRefund"
         type="button"
         (click)="retryRefund()"
         [disabled]="retryingRefund"
@@ -104,7 +104,7 @@
       >
         {{ downloadingInvoice ? 'Preparing receipt…' : 'Download Receipt' }}
       </button>
-      <button
+      <button appPermission="orders.fulfill"
         *ngIf="canManagePackages"
         type="button"
         (click)="openManagePackages()"

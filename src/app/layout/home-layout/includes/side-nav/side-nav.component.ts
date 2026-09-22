@@ -331,13 +331,16 @@ export class SideNavComponent {
               label: 'Integration Credentials',
               url: '/settings/integration-credentials',
               exact: true,
-              roles: ['superadmin'],
             },
             {
               label: 'Zoho Books',
               url: '/settings/integrations/zoho-books',
               exact: true,
-              roles: ['superadmin', 'manager'],
+            },
+            {
+              label: 'Roles & Permissions',
+              url: '/settings/roles',
+              exact: true,
             },
             {
               label: 'Data Operations',
@@ -358,7 +361,7 @@ export class SideNavComponent {
     // this.fetchMenuList();
   }
   canAccess(item: any): boolean {
-    return !item?.roles?.length || item.roles.includes(this.helpersService.role());
+    return item?.childMenuItems?.length ? item.childMenuItems.some((child: any) => this.canAccess(child)) : this.helpersService.permissions.canRoute(item?.url || '/');
   }
   fetchMenuList() {
     this.settingService.menuList().subscribe({

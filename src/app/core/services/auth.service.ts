@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { PermissionService } from './permission.service';
+import { Injectable, inject } from '@angular/core';
 import { HttpService } from './http.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -6,6 +7,7 @@ import { ToastrService } from 'ngx-toastr';
   providedIn: 'root',
 })
 export class AuthService {
+  private permissions = inject(PermissionService);
   USER_TOKEN_KEY: string = 'ELEXIFY-TOKEN';
   USER_TOKEN_ADMIN: string = 'ELEXIFY-USER';
   constructor(
@@ -35,6 +37,7 @@ export class AuthService {
   userSuccessLogin(data: any, rememberme: boolean = true, encodedUrl: string) {
     // userSuccessLogin(data: any, encodedUrl: string) {
 
+    this.permissions.clear();
     let user = { ...data?.user };
 
     if (rememberme == true) {
@@ -44,7 +47,8 @@ export class AuthService {
       sessionStorage.setItem(this.USER_TOKEN_KEY, data?.token?.access_token);
       sessionStorage.setItem(this.USER_TOKEN_ADMIN, JSON.stringify(user));
     }
-    this.router.navigate(['/']);
+    void this.permissions.refresh().then(() => this.router.navigateByUrl(this.permissions.landingUrl()))
+      .catch(() => this.router.navigateByUrl('/access-denied'));
   }
   getUserToken() {
     let token = localStorage.getItem(this.USER_TOKEN_KEY);
@@ -61,6 +65,7 @@ export class AuthService {
     return data;
   }
   userLogout() {
+    this.permissions.clear();
     localStorage.removeItem(this.USER_TOKEN_KEY);
     localStorage.removeItem(this.USER_TOKEN_ADMIN);
     sessionStorage.removeItem(this.USER_TOKEN_KEY);

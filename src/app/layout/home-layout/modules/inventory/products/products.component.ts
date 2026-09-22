@@ -1,3 +1,5 @@
+import { inject as injectPermissions } from '@angular/core';
+import { PermissionService } from 'app/core/services/permission.service';
 import { inject } from '@angular/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -92,7 +94,7 @@ export class ProductsComponent {
     // this.checkPermission();
   }
   ngOnInit(): void {
-    this.helperService.setExportAction({ label: 'Export', icon: 'download' });
+    if (this.helperService.can('products.export')) this.helperService.setExportAction({ label: 'Export', icon: 'download' });
     this.helperService.exportActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openExportDialog());
     if (this.permissions.includes('add')) {
       this.helperService.setActionButton({
@@ -435,7 +437,8 @@ export class ProductsComponent {
     this.paginationOption.page = data;
     this.fetchProductList();
   }
-  permissions: any = ['add', 'edit', 'delete'];
+  private readonly access = injectPermissions(PermissionService);
+  get permissions(): string[] { return this.access.actions('products'); }
   checkPermission() {
     // this.settingService.checkPermission({ sec: 'award' }).subscribe({
     //   next: (res: any) => {

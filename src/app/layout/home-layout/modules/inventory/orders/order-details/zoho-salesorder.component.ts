@@ -57,7 +57,7 @@ export class ZohoSalesorderComponent implements OnChanges {
       if (this.canManage && this.customerPending && !this.state?.customer?.contact_id) this.load();
     });
   }
-  get canManage() { return ['superadmin', 'manager'].includes(this.helpers.role()); }
+  get canManage() { return this.helpers.can('zoho_sync.manage'); }
   ngOnChanges(): void { if (this.orderId && this.canManage) { this.state = null; this.error = ''; this.customerError = ''; this.load(); } }
   load(): void { this.api.order(this.orderId).subscribe({ next: response => { this.state = response.data; this.error = ''; }, error: () => this.error = 'Could not load Zoho status.' }); }
   syncCustomer(): void {
