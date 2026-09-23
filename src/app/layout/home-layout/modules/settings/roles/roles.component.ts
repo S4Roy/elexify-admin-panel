@@ -1,7 +1,7 @@
 import { MenuComponent } from 'app/layout/home-layout/includes/menu/menu.component';
 import { EmptyStateComponent } from 'app/layout/home-layout/includes/empty-state/empty-state.component';
 import { HelpersService } from 'app/core/services/helpers.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,6 +18,7 @@ import { DialogService } from 'app/core/services/dialog.service';
 import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
 import {
   Component,
+  OnDestroy,
   OnInit,
   TemplateRef,
   ViewChild,
@@ -57,15 +58,17 @@ interface Permission {
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
+    EmptyStateComponent,
   ],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss',
 })
-export class RolesComponent implements OnInit {
+export class RolesComponent implements OnInit, OnDestroy {
   readonly access = inject(PermissionService);
   private http = inject(HttpService);
   private helpers = inject(HelpersService);
   private destroy$ = new Subject<void>();
+  private staffSearchSubject = new Subject<string>();
   private auth = inject(AuthService);
   private dialog = inject(MatDialog);
   private dialogs = inject(DialogService);
@@ -141,13 +144,35 @@ export class RolesComponent implements OnInit {
   staffSearch = '';
   newStaff = { name: '', email: '', password: '', role_id: '' };
   async ngOnInit() {
+    this.staffSearchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.staffPage = 1;
+        this.loadStaff();
+      });
     await this.run(async () => {
       await this.load();
     });
   }
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  onStaffSearchChange(value: string) {
+    this.staffSearch = value;
+    this.staffSearchSubject.next(value);
+  }
   readOnly = false;
   label(value: string) {
     return value.replace(/[_.]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  initials(name: string) {
+    return (name || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase())
+      .join('');
   }
   moduleLabel(p: Permission) {
     return p._id.startsWith('zoho_') ||
@@ -179,7 +204,16 @@ export class RolesComponent implements OnInit {
     this.edit(role);
     this.readOnly = true;
   }
-  get groups() {
+  // A plain field, not a getter — a getter re-evaluates on every
+  // change-detection run (e.g. every checkbox toggle, since toggle()
+  // mutates `selected` which every permission-option row reads), handing
+  // *ngFor a brand-new array of brand-new group objects each time. Even
+  // with trackBy that's extra diffing for nothing; toggling a checkbox
+  // never actually changes which modules/permissions match the search, so
+  // this only needs to be recomputed when `permissions` loads or `search`
+  // changes — see computeGroups().
+  groups: { module: string; items: Permission[] }[] = [];
+  computeGroups() {
     const groups = new Map<string, Permission[]>();
     for (const permission of this.permissions.filter((p) =>
       [
@@ -195,9 +229,19 @@ export class RolesComponent implements OnInit {
       const module = this.moduleLabel(permission);
       groups.set(module, [...(groups.get(module) || []), permission]);
     }
-    return [...groups]
+    this.groups = [...groups]
       .map(([module, items]) => ({ module, items }))
       .sort((a, b) => a.module.localeCompare(b.module));
+  }
+  onSearchChange(value: string) {
+    this.search = value;
+    this.computeGroups();
+  }
+  trackByModule(_: number, group: { module: string; items: Permission[] }) {
+    return group.module;
+  }
+  trackByPermissionId(_: number, p: Permission) {
+    return p._id;
   }
   staffRole(user: any) {
     return this.roles.find((role) => role._id === user.admin_role_id);
@@ -225,7 +269,8 @@ export class RolesComponent implements OnInit {
       ? { ...role }
       : { name: '', description: '', status: 'active' };
     this.selected = new Set(role?.permissions || []);
-    this.openDialog(this.roleDialog, '1000px');
+    this.computeGroups();
+    this.openDialog(this.roleDialog, '1280px');
   }
   toggle(key: string) {
     this.selected.has(key) ? this.selected.delete(key) : this.selected.add(key);

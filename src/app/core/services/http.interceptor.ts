@@ -7,6 +7,35 @@ import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { NgxSpinnerService } from 'ngx-spinner';
 
+// Every shape this backend's error responses can take carries the real,
+// human-readable message as a string somewhere — either the top-level
+// `message` (StatusError-thrown errors, see handleErrors.js), a celebrate
+// validation message, or a `title`/`error` string on older endpoints. None
+// of them is ever the raw `error` object itself (e.g. { statusCode,
+// errorData }), so this never hands toastr anything but a string —
+// avoiding a literal "[object Object]" toast.
+function extractErrorMessage(error: any, fallback: string): string {
+  const body = error?.error;
+
+  if (typeof body === 'string' && body.trim()) {
+    return body;
+  }
+  if (typeof body?.validation?.body?.message === 'string') {
+    return body.validation.body.message;
+  }
+  if (typeof body?.message === 'string' && body.message.trim()) {
+    return body.message;
+  }
+  if (typeof body?.error === 'string' && body.error.trim()) {
+    return body.error;
+  }
+  if (typeof body?.title === 'string' && body.title.trim()) {
+    return body.title;
+  }
+
+  return fallback;
+}
+
 export const httpInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const toastr = inject(ToastrService);
@@ -29,46 +58,21 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
       if (error?.status === 401) {
-        let message = 'Unauthorized';
-        if (error.error) {
-          message = error?.error?.message;
-        }
-        toastr.error(message);
+        toastr.error(extractErrorMessage(error, 'Unauthorized'));
         authService.userLogout();
       } else if (error?.status === 403) {
-        let message = 'Forbidden';
-        if (error?.title) {
-          message = error?.title;
-        }
-        toastr.error(message);
+        toastr.error(extractErrorMessage(error, 'Forbidden'));
         authService.userLogout();
       } else if (error?.status === 409) {
-        toastr.error(error.error.message ?? 'Conflict Error');
+        toastr.error(extractErrorMessage(error, 'Conflict Error'));
       } else if (error?.status === 415) {
-        toastr.error(error?.error?.title ?? 'Validation Error');
+        toastr.error(extractErrorMessage(error, 'Validation Error'));
       } else if (error?.status === 404) {
-        toastr.error(error.error.message ?? '404 Not Found');
+        toastr.error(extractErrorMessage(error, '404 Not Found'));
       } else if (error?.status === 400) {
-        // Handle 400 Bad Request specifically
-        let errorMessage = '';
-        if (error.error?.validation) {
-          errorMessage =
-            error.error?.validation?.body?.message || 'Validation failed';
-        } else if (error?.error.error) {
-          errorMessage = error?.error.error;
-        } else {
-          let result = error.error;
-          for (const key in result) {
-            const element = result[key];
-            for (const errKey in element) {
-              errorMessage = element[errKey];
-            }
-          }
-        }
-
-        toastr.error(errorMessage); // Show the specific validation message
+        toastr.error(extractErrorMessage(error, 'Validation failed'));
       } else {
-        toastr.error(error.error?.message ?? 'Something went wrong.');
+        toastr.error(extractErrorMessage(error, 'Something went wrong.'));
       }
       return throwError(() => error);
     }),

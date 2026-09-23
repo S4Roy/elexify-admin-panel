@@ -20,6 +20,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { SettingsService } from '../../../../../core/services/settings.service';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-change-password',
@@ -45,6 +46,7 @@ export class ChangePasswordComponent {
     private toastr: ToastrService,
     private route: ActivatedRoute,
     private settingService: SettingsService,
+    private authService: AuthService,
     private dialogRef: MatDialogRef<ChangePasswordComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -69,8 +71,15 @@ export class ChangePasswordComponent {
         .userChangePassword({ old_password, new_password })
         .subscribe({
           next: (res: any) => {
-            this.toastr.success(`Password Changed Successfully`);
+            this.toastr.success(
+              `Password changed successfully. Please login again.`
+            );
             this.dialogRef.close(true);
+            // Backend rejects tokens issued before this change (see
+            // resolveAuthorization()), so the current token is now dead too —
+            // log out here instead of leaving the user on a session that'll
+            // 401 on their next click.
+            this.authService.userLogout();
           },
           error: (err: any) => {
             this.formGroup.enable();

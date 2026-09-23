@@ -1,95 +1,121 @@
 <section class="roles-page" [attr.aria-busy]="busy">
   <header class="page-heading">
-    <div>
-      <h1>Roles &amp; Permissions</h1>
-      <p>Manage team access and choose what each role can view or change.</p>
+    <div class="heading-title">
+      <div class="heading-icon"><mat-icon>admin_panel_settings</mat-icon></div>
+      <div>
+        <h1>Roles &amp; Permissions</h1>
+        <p>Manage team access and choose what each role can view or change.</p>
+      </div>
     </div>
-    <span class="badge">{{ roles.length }} roles · {{ permissions.length }} permissions</span>
+    <div class="stat-chips">
+      <span class="stat-chip"><strong>{{ roles.length }}</strong> roles</span>
+      <span class="stat-chip"><strong>{{ permissions.length }}</strong> permissions</span>
+      <span class="stat-chip" *ngIf="access.can('staff.view')"><strong>{{ staffPagination.totalDocs }}</strong>
+        staff</span>
+    </div>
   </header>
   <p role="alert" *ngIf="error" class="text-red-600">{{ error }}</p>
   <p role="status" *ngIf="message">{{ message }}</p>
-  <mat-form-field class="w-full"><mat-label>Search roles</mat-label><input matInput [(ngModel)]="roleSearch"
-      (ngModelChange)="rolePage = 1" placeholder="Search by name or description" /></mat-form-field>
-  <button *ngIf="access.can('roles.create')" (click)="edit()" class="btn-primary create-role" [disabled]="busy">
-    Create role
-  </button>
-  <div class="table-card overflow-x-auto">
-    <table class="table-base">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Users</th>
-          <th>Permissions</th>
-          <th>Protected</th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let role of visibleRoles" class="border-t">
-          <td class="p-3">
-            {{ role.name }}<small class="block">{{ role.description }}</small>
-          </td>
-          <td>
-            <span class="badge" [class.active]="role.status === 'active'">{{
-              role.status | titlecase
-              }}</span>
-          </td>
-          <td>{{ role.user_count }}</td>
-          <td>{{ role.permissions.length }}</td>
-          <td>
-            <span class="badge" *ngIf="role.protected">Protected</span>
-          </td>
-          <td class="text-center">
-            <button type="button" mat-icon-button class="action-menu-trigger" [matMenuTriggerFor]="roleActions"
-              aria-label="Role actions">
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #roleActions="matMenu">
-              <button mat-menu-item (click)="inspect(role)">
-                <mat-icon>visibility</mat-icon><span>View permissions</span>
+  <section class="card space-y-4">
+    <div class="page-heading">
+      <h2 class="text-xl"><mat-icon class="section-icon">badge</mat-icon>Roles</h2>
+      <div class="flex gap-4 items-center">
+        <div class="search-toolbar">
+          <mat-form-field><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="roleSearch"
+              (ngModelChange)="rolePage = 1" placeholder="Search by name or description" /></mat-form-field>
+        </div>
+        <button *ngIf="access.can('roles.create')" (click)="edit()" class="btn-primary create-role" [disabled]="busy">
+          <mat-icon>add</mat-icon> Create role
+        </button>
+      </div>
+    </div>
+    <div class="table-card overflow-x-auto">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Users</th>
+            <th>Permissions</th>
+            <th>Protected</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let role of visibleRoles" class="border-t" [class.protected-row]="role.protected">
+            <td class="p-3">
+              <div class="role-name-cell">
+                <span class="role-avatar" [class.protected]="role.protected">{{ initials(role.name) }}</span>
+                <div>
+                  {{ role.name }}<small class="block">{{ role.description }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [class.active]="role.status === 'active'">{{
+                role.status | titlecase
+                }}</span>
+            </td>
+            <td>
+              <span class="badge count-badge"><mat-icon>people</mat-icon>{{ role.user_count }}</span>
+            </td>
+            <td>
+              <span class="badge count-badge"><mat-icon>vpn_key</mat-icon>{{ role.permissions.length }}</span>
+            </td>
+            <td>
+              <span class="badge protected" *ngIf="role.protected"><mat-icon>lock</mat-icon>Protected</span>
+            </td>
+            <td class="text-center">
+              <button type="button" mat-icon-button class="action-menu-trigger" [matMenuTriggerFor]="roleActions"
+                aria-label="Role actions">
+                <mat-icon>more_vert</mat-icon>
               </button>
-              <button mat-menu-item *ngIf="access.can('roles.update') && manageable(role)" (click)="edit(role)">
-                <mat-icon>edit</mat-icon><span>Edit</span>
-              </button>
-              <button mat-menu-item *ngIf="
-                  access.can('roles.create') && access.canAll(role.permissions)
-                " (click)="duplicate(role)">
-                <mat-icon>content_copy</mat-icon><span>Duplicate</span>
-              </button>
-              <button mat-menu-item *ngIf="
-                  access.can('roles.delete') &&
-                  manageable(role) &&
-                  !role.system_role &&
-                  !role.user_count
-                " (click)="remove(role)">
-                <mat-icon color="warn">delete</mat-icon><span>Delete</span>
-              </button>
-            </mat-menu>
-          </td>
-        </tr>
-        <tr *ngIf="!visibleRoles.length">
-          <td colspan="6" class="empty-state">
-            {{ busy ? "Loading roles…" : "No roles match your search." }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <pagination *ngIf="rolePagination.totalDocs" [pagination]="rolePagination" (pageChange)="rolePage = $event">
-  </pagination>
+              <mat-menu #roleActions="matMenu">
+                <button mat-menu-item (click)="inspect(role)">
+                  <mat-icon>visibility</mat-icon><span>View permissions</span>
+                </button>
+                <button mat-menu-item *ngIf="access.can('roles.update') && manageable(role)" (click)="edit(role)">
+                  <mat-icon>edit</mat-icon><span>Edit</span>
+                </button>
+                <button mat-menu-item *ngIf="
+                    access.can('roles.create') && access.canAll(role.permissions)
+                  " (click)="duplicate(role)">
+                  <mat-icon>content_copy</mat-icon><span>Duplicate</span>
+                </button>
+                <button mat-menu-item *ngIf="
+                    access.can('roles.delete') &&
+                    manageable(role) &&
+                    !role.system_role &&
+                    !role.user_count
+                  " (click)="remove(role)">
+                  <mat-icon color="warn">delete</mat-icon><span>Delete</span>
+                </button>
+              </mat-menu>
+            </td>
+          </tr>
+          <tr *ngIf="!visibleRoles.length">
+            <td colspan="6" class="text-center">
+              <app-empty-state [message]="busy ? 'Loading roles…' : 'No roles match your search.'"></app-empty-state>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <pagination *ngIf="rolePagination.totalDocs" [pagination]="rolePagination" (pageChange)="rolePage = $event">
+    </pagination>
+  </section>
   <section *ngIf="access.can('staff.view')" class="card space-y-4">
     <div class="page-heading">
-      <h2 class="text-xl">Staff</h2>
+      <h2 class="text-xl"><mat-icon class="section-icon">groups</mat-icon>Staff</h2>
 
       <div class="flex gap-4 items-center">
-        <form class="flex gap-4" (ngSubmit)="staffPage = 1; loadStaff()">
-          <mat-form-field class="w-[350px]"><input matInput aria-label="Search staff name"
-              placeholder="Search staff name" name="staffSearch" [(ngModel)]="staffSearch" /></mat-form-field><button
-            class="btn-primary">Search</button>
-        </form>
+        <div class="search-toolbar">
+          <mat-form-field><mat-icon matPrefix>search</mat-icon><input matInput
+              aria-label="Search staff name" placeholder="Search staff name" name="staffSearch"
+              [ngModel]="staffSearch" (ngModelChange)="onStaffSearchChange($event)" /></mat-form-field>
+        </div>
         <button class="btn-primary" *ngIf="access.canAll(['staff.create', 'roles.assign'])" (click)="addStaff()">
-          Add staff
+          <mat-icon>person_add</mat-icon> Add staff
         </button>
       </div>
     </div>
@@ -105,9 +131,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of staff" class="border-t">
+          <tr *ngFor="let user of staff" class="border-t" [class.protected-row]="staffRole(user)?.protected">
             <td class="p-3">
-              {{ user.name }}<small class="block">{{ user.email }}</small>
+              <div class="role-name-cell">
+                <span class="role-avatar" [class.protected]="staffRole(user)?.protected">{{ initials(user.name)
+                  }}</span>
+                <div>
+                  {{ user.name }}<small class="block">{{ user.email }}</small>
+                </div>
+              </div>
             </td>
             <td>
               <span class="badge" [class.active]="user.status === 'active'">{{
@@ -116,7 +148,8 @@
             </td>
             <td>
               <span *ngIf="!access.can('roles.assign') || !canManageStaff(user)" class="badge">{{ staffRole(user)?.name
-                || "No admin access" }}</span><small *ngIf="staffRole(user)?.protected">Protected account</small>
+                || "No admin access" }}</span>
+              <span class="badge protected" *ngIf="staffRole(user)?.protected"><mat-icon>lock</mat-icon>Protected</span>
               <ng-select [clearable]="false" appendTo="body" *ngIf="access.can('roles.assign') && canManageStaff(user)"
                 class="staff-role-select" [ngModel]="user.admin_role_id"
                 (ngModelChange)="assign(user, $event)"><ng-option [value]="null">No admin access</ng-option><ng-option
@@ -148,7 +181,9 @@
             </td>
           </tr>
           <tr *ngIf="!staff.length">
-            <td colspan="4" class="empty-state">No staff found.</td>
+            <td colspan="4" class="text-center">
+              <app-empty-state message="No staff found."></app-empty-state>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -159,7 +194,8 @@
 </section>
 
 <ng-template #roleDialog>
-  <form *ngIf="editing" #roleForm="ngForm" (ngSubmit)="!readOnly && roleForm.valid && save()" class="dialog-form">
+  <form *ngIf="editing" #roleForm="ngForm" (ngSubmit)="!readOnly && roleForm.valid && save()"
+    class="dialog-form role-dialog-form">
     <h2 mat-dialog-title>
       {{
       readOnly
@@ -171,50 +207,59 @@
     </h2>
     <mat-dialog-content class="space-y-4">
       <p *ngIf="error" role="alert">{{ error }}</p>
-      <div class="form-grid">
-        <mat-form-field class="w-full"><mat-label>Name</mat-label><input matInput [disabled]="readOnly || busy"
-            name="name" [(ngModel)]="editing.name" required maxlength="100" /></mat-form-field>
-        <mat-form-field class="w-full"><mat-label>Description</mat-label><input matInput [disabled]="readOnly || busy"
-            name="description" [(ngModel)]="editing.description" maxlength="1000" /></mat-form-field>
-        <label>Status
-          <ng-select [clearable]="false" appendTo="body" [disabled]="readOnly || busy" name="status"
-            [(ngModel)]="editing.status"><ng-option value="active">Active</ng-option><ng-option
-              value="inactive">Inactive</ng-option></ng-select></label>
+      <div class="permission-toolbar">
+        <div class="permission-toolbar-row">
+          <mat-form-field class="field-name"><mat-label>Name</mat-label><input matInput
+              [disabled]="readOnly || busy" name="name" [(ngModel)]="editing.name" required
+              maxlength="100" /></mat-form-field>
+          <mat-form-field class="field-description"><mat-label>Description</mat-label><input matInput
+              [disabled]="readOnly || busy" name="description" [(ngModel)]="editing.description"
+              maxlength="1000" /></mat-form-field>
+          <label class="field-status">Status
+            <ng-select [clearable]="false" appendTo="body" [disabled]="readOnly || busy" name="status"
+              [(ngModel)]="editing.status"><ng-option value="active">Active</ng-option><ng-option
+                value="inactive">Inactive</ng-option></ng-select></label>
+          <div class="header-divider" *ngIf="!readOnly"></div>
+          <div *ngIf="!readOnly" class="quick-actions">
+            <button mat-stroked-button type="button" (click)="selectAll()">
+              <mat-icon>done_all</mat-icon>All</button><button mat-stroked-button type="button" (click)="viewOnly()">
+              <mat-icon>visibility</mat-icon>View-only</button><button mat-stroked-button type="button"
+              (click)="selected.clear()">
+              <mat-icon>clear</mat-icon>Clear
+            </button>
+          </div>
+          <mat-form-field class="permission-search"><mat-icon matPrefix>search</mat-icon><input matInput
+              placeholder="Search modules or permissions" name="search" [ngModel]="search"
+              (ngModelChange)="onSearchChange($event)" /></mat-form-field>
+          <span class="permission-count">{{ selected.size }} selected · {{ groups.length }} modules</span>
+        </div>
       </div>
-      <div *ngIf="!readOnly" class="selection-tools flex flex-wrap gap-4">
-        <button mat-button type="button" (click)="selectAll()">
-          Select all available</button><button mat-button type="button" (click)="viewOnly()">
-          View-only preset</button><button mat-button type="button" (click)="selected.clear()">
-          Clear all
-        </button>
-      </div>
-      <mat-form-field class="w-full"><mat-label>Search modules or permissions</mat-label><input matInput
-          placeholder="Try Zoho Books, invoices or orders" name="search" [(ngModel)]="search" /></mat-form-field>
-      <p class="muted">
-        {{ selected.size }} permissions selected · {{ groups.length }} modules
-        shown
-      </p>
       <div class="permission-grid">
-        <fieldset *ngFor="let group of groups" class="permission-group">
+        <fieldset *ngFor="let group of groups; trackBy: trackByModule" class="permission-group">
           <legend class="font-semibold">
-            {{ group.module }}
+            <mat-icon class="module-icon">folder</mat-icon>{{ group.module }}
             <span class="badge">{{ selectedCount(group.items) }} / {{ group.items.length }}</span>
           </legend>
+          <div class="module-progress">
+            <span [style.width.%]="
+                group.items.length
+                  ? (selectedCount(group.items) / group.items.length) * 100
+                  : 0
+              "></span>
+          </div>
           <button *ngIf="!readOnly" mat-button type="button" (click)="selectModule(group.items, true)">
             Select module</button><button *ngIf="!readOnly" mat-button type="button"
             (click)="selectModule(group.items, false)">
             Clear module
           </button>
-          <label *ngFor="let p of group.items" class="permission-option"><input type="checkbox"
-              [checked]="selected.has(p._id)" [disabled]="readOnly || busy || !access.can(p._id)"
-              (change)="toggle(p._id)" />
+          <label *ngFor="let p of group.items; trackBy: trackByPermissionId" class="permission-option"
+            [class.is-checked]="selected.has(p._id)"><input type="checkbox" [checked]="selected.has(p._id)"
+              [disabled]="readOnly || busy || !access.can(p._id)" (change)="toggle(p._id)" />
             <span>{{ permissionLabel(p)
               }}<small>{{ permissionDescription(p) }}</small><small *ngIf="!readOnly && !access.can(p._id)">You cannot
                 assign this permission.</small></span></label>
         </fieldset>
-        <p *ngIf="!groups.length" class="empty-state">
-          No permissions match your search.
-        </p>
+        <app-empty-state *ngIf="!groups.length" message="No permissions match your search."></app-empty-state>
       </div>
     </mat-dialog-content><mat-dialog-actions align="end"><button mat-button type="button" [disabled]="busy"
         (click)="closeEditor()">

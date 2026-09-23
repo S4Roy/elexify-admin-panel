@@ -13,13 +13,53 @@
   align-items: center;
   gap: 16px;
 }
+.heading-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.heading-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #16a34a18;
+  color: #16a34a;
+}
+.stat-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-color);
+}
+.stat-chip strong {
+  color: var(--text-primary);
+}
 h1 {
   font-size: 24px;
   font-weight: 600;
 }
 h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 600;
+}
+.section-icon {
+  color: #16a34a;
 }
 p,
 small,
@@ -34,6 +74,7 @@ small,
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
 }
 .card {
   padding: 20px;
@@ -47,30 +88,102 @@ td {
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
 }
+thead {
+  background: var(--bg-surface-alt);
+}
 th {
   white-space: nowrap;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+tbody tr:hover {
+  background: var(--bg-surface-alt);
+}
+tbody tr.protected-row {
+  box-shadow: inset 3px 0 0 #f59e0b;
 }
 td small {
   display: block;
   margin-top: 4px;
   max-width: 360px;
 }
+.role-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.role-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #16a34a18;
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 600;
+}
+.role-avatar.protected {
+  background: #f59e0b18;
+  color: #b45309;
+}
+.count-badge {
+  font-variant-numeric: tabular-nums;
+}
+.count-badge mat-icon {
+  color: var(--text-secondary);
+}
+.action-menu-trigger {
+  border-radius: 999px;
+  transition: background-color 0.15s ease;
+}
+.action-menu-trigger:hover:not(:disabled) {
+  background: var(--bg-surface-alt);
+}
 .badge {
   display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 4px 9px;
   border-radius: 6px;
   font-size: 12px;
   background: var(--bg-surface-alt);
   white-space: nowrap;
 }
+.badge mat-icon {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
 .badge.active {
   color: #15803d;
   background: #22c55e18;
+}
+.badge.protected {
+  color: #b45309;
+  background: #f59e0b18;
 }
 button {
   padding: 7px 10px;
   border-radius: 4px;
   font-size: 13px;
+}
+button mat-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.btn-primary mat-icon {
+  margin-right: 2px;
 }
 // button:hover:not(:disabled) {
 //   background: var(--bg-surface-alt);
@@ -97,19 +210,89 @@ button:disabled {
 //   font-size: 13px;
 //   font-weight: 500;
 // }
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr 160px;
-  gap: 16px;
+// Not position: sticky — with a 2-column module grid, a scrolled-past
+// module's legend disappears under a sticky bar while its (still visible)
+// checkboxes remain, leaving them looking unlabeled. Instead the dialog
+// content below is split into a fixed header (this toolbar + the name/
+// description/status fields) and a separately scrolling list — see
+// .dialog-form .mat-mdc-dialog-content / .permission-grid — so the toolbar
+// never overlaps list content at all.
+.permission-toolbar {
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  padding: 0 2px 8px;
+  margin-top: 6px !important;
+  border-bottom: 1px solid var(--border-color);
 }
-.selection-tools {
-  padding: 10px;
-  background: var(--bg-surface-alt);
-  border-radius: 6px;
+.permission-toolbar-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+.field-name {
+  flex: 0 1 170px;
+  min-width: 130px;
+}
+.field-description {
+  flex: 1 1 200px;
+  min-width: 150px;
+}
+.field-status {
+  flex: 0 0 130px;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.header-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 0;
+  background: var(--border-color);
+  flex-shrink: 0;
+}
+.quick-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.quick-actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.quick-actions mat-icon {
+  margin-right: 2px;
+}
+.permission-search {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+.permission-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+// Outline mat-form-field reserves space below the field for hint/error
+// text even with none present — the compact toolbar has no use for it.
+.permission-search ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+.permission-search ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.permission-search ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 36px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 .permission-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  // auto-fit instead of a hardcoded column count so the wider role dialog
+  // (1280px) fits 3 module cards per row instead of 2, shortening the
+  // list — narrower viewports naturally fall back to 2 or 1.
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
   max-height: 60vh;
   overflow: auto;
@@ -117,13 +300,45 @@ button:disabled {
 }
 .permission-group {
   min-width: 0;
-  padding: 14px;
+  padding: 10px 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
+  transition: border-color 0.15s ease;
+}
+.permission-group:hover {
+  border-color: #16a34a80;
+}
+.permission-group > button {
+  padding: 2px 6px;
+  font-size: 12px;
+  min-width: 0;
 }
 legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 0 6px;
   font-size: 14px;
+}
+.module-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+.module-progress {
+  height: 3px;
+  margin: 4px 2px 6px;
+  border-radius: 999px;
+  background: var(--bg-surface-alt);
+  overflow: hidden;
+}
+.module-progress span {
+  display: block;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.2s ease;
 }
 .permission-option {
   display: flex;
@@ -131,10 +346,18 @@ legend {
   align-items: flex-start;
   padding: 10px 4px;
   border-bottom: 1px solid var(--border-color);
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.permission-option:hover {
+  background: var(--bg-surface-alt);
+}
+.permission-option.is-checked {
+  background: #22c55e0f;
 }
 .permission-option:last-child {
-  border: 0;
+  border-bottom: 0;
 }
 .permission-option input {
   margin-top: 3px;
@@ -149,11 +372,6 @@ legend {
   font-weight: 400;
   margin-top: 3px;
   overflow-wrap: anywhere;
-}
-.empty-state {
-  text-align: center;
-  padding: 28px;
-  color: var(--text-secondary);
 }
 .staff-form {
   max-width: 760px;
@@ -171,7 +389,6 @@ legend {
   border-radius: 6px;
 }
 @media (max-width: 800px) {
-  .form-grid,
   .permission-grid {
     grid-template-columns: 1fr;
   }
@@ -212,8 +429,35 @@ ng-select {
 .dialog-form .mat-mdc-dialog-content {
   padding: 20px 24px !important;
   box-sizing: border-box;
-  max-height: min(62vh, 680px);
+  max-height: min(72vh, 760px);
   color: var(--text-primary);
+}
+// Role dialog only (not the shorter staff dialog, which shares
+// .dialog-form and is fine scrolling as a whole): display: flex +
+// overflow: hidden here (instead of overflow: auto) is what stops the
+// whole dialog body from scrolling as one unit — the name/description/
+// status fields and the permission-toolbar stay fixed, and only
+// .permission-grid (flex: 1; overflow-y: auto below) scrolls within the
+// remaining space. See the .permission-toolbar comment for why.
+.role-dialog-form .mat-mdc-dialog-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: 14px !important;
+  padding-bottom: 8px !important;
+}
+// Name/Description have no validation messages in this dialog (Save is
+// just disabled via roleForm.invalid instead), so the space Material
+// reserves below every field for hint/error text is pure dead space here.
+.role-dialog-form .field-name ::ng-deep .mat-mdc-form-field-subscript-wrapper,
+.role-dialog-form .field-description ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+.role-dialog-form .field-name ::ng-deep .mat-mdc-form-field-infix,
+.role-dialog-form .field-description ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 40px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 .dialog-form {
   display: flex;
@@ -224,12 +468,19 @@ ng-select {
 .dialog-form .mat-mdc-dialog-actions {
   flex-shrink: 0;
 }
-.dialog-form .form-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) 160px;
-  align-items: start;
+.dialog-form .mat-mdc-dialog-content > p[role='alert'] {
+  flex-shrink: 0;
 }
 .dialog-form .permission-grid {
   gap: 12px;
+  flex: 1;
+  margin-top: 8px !important;
+  padding-top: 4px;
+  // min-height: 0 overrides the flex item default of min-height: auto,
+  // which would otherwise let this grow to fit all its content and push
+  // past the dialog's own max-height instead of scrolling internally.
+  min-height: 0;
+  overflow-y: auto;
 }
 .dialog-form .permission-option {
   padding: 7px 4px;
@@ -244,7 +495,8 @@ ng-select {
 }
 .search-toolbar mat-form-field {
   flex: 1;
-  max-width: 420px;
+  min-width: 260px;
+  max-width: 480px;
 }
 .search-toolbar .btn-primary {
   min-width: auto;
@@ -257,14 +509,27 @@ td:last-child {
   min-width: 250px;
 }
 @media (max-width: 800px) {
-  .dialog-form .form-grid {
-    grid-template-columns: 1fr;
-  }
   .dialog-form .mat-mdc-dialog-content {
     padding: 16px !important;
   }
   .search-toolbar {
     flex-wrap: wrap;
+  }
+  .permission-toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  // In a column flex container flex-basis sets height, not width — reset
+  // it so these don't end up forced to their (row-layout) pixel widths.
+  .field-name,
+  .field-description,
+  .field-status,
+  .permission-search {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .header-divider {
+    display: none;
   }
 }
 
@@ -273,7 +538,4 @@ mat-form-field {
 }
 .action-menu-trigger {
   padding: 0;
-}
-.form-grid mat-form-field {
-  min-width: 0;
 }

@@ -25,13 +25,10 @@ export class AuthService {
     return this.httpService.post('admin/auth/verify/login-otp', payload);
   }
   forgotPassword(payload: any) {
-    return this.httpService.post('admin/auth/send-verification-code', payload);
-  }
-  verifyResetCode(payload: any) {
-    return this.httpService.post('admin/auth/verify-reset-code', payload);
+    return this.httpService.post('auth/admin/request-password-reset', payload);
   }
   resetPassword(payload: any) {
-    return this.httpService.post('admin/auth/reset-password', payload);
+    return this.httpService.post('auth/admin/reset-password', payload);
   }
 
   userSuccessLogin(data: any, rememberme: boolean = true, encodedUrl: string) {
