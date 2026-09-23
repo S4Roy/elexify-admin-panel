@@ -45,31 +45,37 @@ export class ChangePasswordComponent {
     private toastr: ToastrService,
     private route: ActivatedRoute,
     private settingService: SettingsService,
+    private dialogRef: MatDialogRef<ChangePasswordComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.formGroup = this.fb.group({
-      user_id: [
-        this.data?.userDetails?.user_id ?? null,
-        Validators.compose([Validators.required]),
-      ],
-      old_password: [null, Validators.compose([Validators.required])],
-      new_password: [null, Validators.compose([Validators.required])],
-      confirm_password: [null, Validators.compose([Validators.required])],
-    });
+    this.formGroup = this.fb.group(
+      {
+        old_password: [null, Validators.compose([Validators.required])],
+        new_password: [
+          null,
+          Validators.compose([Validators.required, Validators.minLength(6)]),
+        ],
+        confirm_password: [null, Validators.compose([Validators.required])],
+      },
+      { validators: Global.MustMatch('new_password', 'confirm_password') }
+    );
   }
   onSubmit() {
     this.formGroup.markAllAsTouched();
     if (this.formGroup.valid) {
       this.formGroup.disable();
-      let formData = this.formGroup.getRawValue();
-      this.settingService.userChangePassword(formData).subscribe({
-        next: (res: any) => {
-          this.toastr.success(`Password Changed Successfully`);
-        },
-        error: (err: any) => {
-          this.formGroup.enable();
-        },
-      });
+      const { old_password, new_password } = this.formGroup.getRawValue();
+      this.settingService
+        .userChangePassword({ old_password, new_password })
+        .subscribe({
+          next: (res: any) => {
+            this.toastr.success(`Password Changed Successfully`);
+            this.dialogRef.close(true);
+          },
+          error: (err: any) => {
+            this.formGroup.enable();
+          },
+        });
     }
   }
 }

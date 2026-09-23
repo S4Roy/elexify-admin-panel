@@ -92,7 +92,7 @@ export class DashboardComponent {
     { value: 'all_time', label: 'All Time' },
     { value: 'custom', label: 'Custom Range' },
   ];
-  trendPreset: TrendPreset = 'last_30_days';
+  trendPreset: TrendPreset = 'last_7_days';
   customFrom: string | null = null;
   customTo: string | null = null;
   today = this.formatDate(new Date());
@@ -117,7 +117,7 @@ export class DashboardComponent {
 
   constructor(
     private inventoryService: InventoryService,
-    private http: HttpClient
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
@@ -264,7 +264,7 @@ export class DashboardComponent {
       this.data.status = res?.data ?? [];
       this.data.total = this.data.status.reduce(
         (sum: number, item: any) => sum + (item?.count ?? 0),
-        0
+        0,
       );
       this.buildStatusChart();
     });
@@ -347,7 +347,7 @@ export class DashboardComponent {
         : new Date(row.date).toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
-          })
+          }),
     );
     const revenue = rows.map((row) => row.revenue ?? 0);
     const orders = rows.map((row) => row.orders ?? 0);
@@ -380,7 +380,9 @@ export class DashboardComponent {
         },
         {
           title: { text: undefined },
-          labels: { style: { color: 'var(--text-secondary)', fontSize: '11px' } },
+          labels: {
+            style: { color: 'var(--text-secondary)', fontSize: '11px' },
+          },
           opposite: true,
           gridLineWidth: 0,
         },
@@ -421,13 +423,13 @@ export class DashboardComponent {
           yAxis: 0,
           tooltip: { valuePrefix: '₹' },
         },
-        {
-          type: 'column',
-          name: 'Orders',
-          data: orders,
-          color: '#a7c4fb',
-          yAxis: 1,
-        },
+        // {
+        //   type: 'column',
+        //   name: 'Orders',
+        //   data: orders,
+        //   color: '#a7c4fb',
+        //   yAxis: 1,
+        // },
       ],
     };
   }
@@ -512,8 +514,7 @@ export class DashboardComponent {
 
   geoMetricLabel(): string {
     return (
-      this.geoMetricOptions.find((o) => o.value === this.geoMetric)?.label ??
-      ''
+      this.geoMetricOptions.find((o) => o.value === this.geoMetric)?.label ?? ''
     );
   }
 
@@ -608,6 +609,8 @@ export class DashboardComponent {
   }
 
   toTitleCase(value: string): string {
-    return (value || '').replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return (value || '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   }
 }
