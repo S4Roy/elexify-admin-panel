@@ -11,7 +11,8 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 interface PackLine { order_item_id: string; quantity: number }
-interface DraftPackage { key: number; items: PackLine[]; length: number; width: number; height: number }
+// weight is prefilled with the product-weight total and follows item moves until the admin edits it.
+interface DraftPackage { key: number; items: PackLine[]; weight: number | null; weightEdited?: boolean; length: number; width: number; height: number }
 
 @Component({
   selector: 'app-order-shipping',
@@ -60,7 +61,7 @@ export class OrderShippingComponent {
     return !this.busy && !this.confirmingShipment && !this.loading && !this.loadingPackages && !this.error &&
       this.drafts.length > 0 && this.remainingQuantity === 0 &&
       this.drafts.every(draft => this.quantity(draft.items) > 0 &&
-        [this.packageWeight(draft.items), draft.length, draft.width, draft.height].every(v => Number.isFinite(Number(v)) && Number(v) > 0)) &&
+        [this.draftWeight(draft), draft.length, draft.width, draft.height].every(v => Number.isFinite(Number(v)) && Number(v) > 0)) &&
       this.orderItems.every(item => this.available(item) === 0);
   }
   get dropIds(): string[] { return ['unpacked', ...this.drafts.map(d => `draft-${d.key}`)]; }
@@ -83,6 +84,7 @@ export class OrderShippingComponent {
     }
     return Number(total.toFixed(6));
   }
+  draftWeight(draft: DraftPackage): number { return Number(draft.weight) || this.packageWeight(draft.items); }
   draftName(index: number): string { return `Package ${Math.max(0, ...this.packages.map(p => Number(p.package_number) || 0)) + index + 1}`; }
 
   loadOrder() {
@@ -113,7 +115,7 @@ export class OrderShippingComponent {
       this.pickupLocation = this.pickupLocations.find(loc => loc.pickup_location === preferred)?.pickup_location || this.pickupLocations[0]?.pickup_location || '';
     });
   }
-  addPackage() { this.drafts.push({ key: ++this.nextKey, items: [], length: 10, width: 10, height: 10 }); }
+  addPackage() { this.drafts.push({ key: ++this.nextKey, items: [], weight: null, length: 10, width: 10, height: 10 }); }
   removePackage(draft: DraftPackage) {
     const count = this.quantity(draft.items);
     this.dialogService.confirmDialog({
@@ -156,6 +158,15 @@ export class OrderShippingComponent {
       if (existing) existing.quantity += amount;
       else draft.items.push({ order_item_id: line.order_item_id, quantity: amount });
     }
+    this.prefillWeights();
+  }
+  prefillWeights() {
+    for (const draft of this.drafts) if (!draft.weightEdited) draft.weight = this.packageWeight(draft.items) || null;
+  }
+  editWeight(draft: DraftPackage, value: number | null) {
+    draft.weight = value;
+    // Clearing the field hands it back to the calculated total.
+    draft.weightEdited = value !== null;
   }
   moveByButton(line: PackLine, source: string, target: string) {
     this.move({ previousContainer: { id: source }, container: { id: target }, item: { data: line } } as CdkDragDrop<PackLine[]>);
@@ -182,7 +193,7 @@ export class OrderShippingComponent {
     if (!draft) { this.busy = false; this.toastr.success('Shipments created.'); this.loadOrder(); this.loadPackages(); return; }
     this.inventoryService.sendToShipRocket({
       _id: this.orderId, items: draft.items.map(line => ({ ...line })), pickup_location: this.pickupLocation || undefined,
-      weight: this.packageWeight(draft.items), length: Number(draft.length), width: Number(draft.width), height: Number(draft.height),
+      weight: this.draftWeight(draft), length: Number(draft.length), width: Number(draft.width), height: Number(draft.height),
     }).subscribe({
       next: () => { this.anyChangeMade = true; this.drafts.shift(); this.submitNext(); },
       error: (err: any) => {
