@@ -47,6 +47,10 @@ export class InventoryService {
     return this.httpService.delete(`admin/inventory/brand/delete`, payload);
   }
 
+  // Dashboard "store at a glance": action items, payment mix, recent orders.
+  orderOverview(params: URLSearchParams) {
+    return this.httpService.get(`admin/inventory/order/overview?${params.toString()}`);
+  }
   productList(params: any) {
     return this.httpService.get(
       `admin/inventory/product/list?${params.toString()}`

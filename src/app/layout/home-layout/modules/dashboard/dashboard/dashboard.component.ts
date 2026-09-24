@@ -1,8 +1,14 @@
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import {
+  CurrencyPipe,
+  DatePipe,
+  DecimalPipe,
+  NgFor,
+  NgIf,
+} from '@angular/common';
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { MatIconModule } from '@angular/material/icon';
 import * as Highcharts from 'highcharts';
@@ -11,8 +17,26 @@ import {
   ChartConstructorType,
 } from 'highcharts-angular';
 import { statusColor } from 'app/global';
+import { HelpersService } from 'app/core/services/helpers.service';
 
 const CHART_FONT = 'Rethink Sans, sans-serif';
+
+// Last-used dashboard filters, per browser. A shared/bookmarked URL wins
+// over this; this only restores the admin's own last view.
+const FILTER_STORAGE_KEY = 'elexify.dashboard.filters.v1';
+
+const PAYMENT_TYPE_LABELS: Record<string, string> = {
+  prepaid: 'Prepaid',
+  cod: 'Cash on delivery',
+  partial_cod: 'Partial COD',
+  other: 'Other',
+};
+const PAYMENT_TYPE_COLORS: Record<string, string> = {
+  prepaid: '#2563eb',
+  cod: '#f59e0b',
+  partial_cod: '#8b5cf6',
+  other: '#94a3b8',
+};
 
 // Highcharts.numberFormat isn't reliably present on the statically-imported
 // CJS namespace under this project's module resolution (the actual chart
@@ -44,6 +68,9 @@ type TrendPreset =
   | 'custom';
 
 type GeoMetric = 'revenue' | 'orders' | 'new_customers';
+type CompareMode = 'previous_period' | 'previous_year';
+type ChannelFilter = '' | 'storefront' | 'admin';
+type PaymentFilter = '' | 'prepaid' | 'cod' | 'partial_cod';
 
 @Component({
   selector: 'app-dashboard',
@@ -53,6 +80,8 @@ type GeoMetric = 'revenue' | 'orders' | 'new_customers';
     RouterLink,
     NgIf,
     CurrencyPipe,
+    DatePipe,
+    DecimalPipe,
     MatIconModule,
     HighchartsChartComponent,
     FormsModule,
@@ -69,6 +98,10 @@ export class DashboardComponent {
   leaderboardCategories: any[] = [];
   leaderboardCategoriesMeta: any = {};
   isLoading: boolean = false;
+
+  // "Store at a glance" (backend order/overview) + inventory watchlist.
+  overview: any = null;
+  lowStockProducts: any[] = [];
 
   // The from/to actually applied by the last fetchAll() — used to carry the
   // selected range into the Orders/Customers nav links, so it stays in sync
@@ -93,6 +126,28 @@ export class DashboardComponent {
     { value: 'custom', label: 'Custom Range' },
   ];
   trendPreset: TrendPreset = 'last_7_days';
+
+  // Segment filters shared by every widget (see backend
+  // helpers/dashboard/orderFilters.js). Kept in the URL so a filtered view
+  // can be bookmarked or shared.
+  compare: CompareMode = 'previous_period';
+  channel: ChannelFilter = '';
+  payment: PaymentFilter = '';
+  compareOptions: { value: CompareMode; label: string }[] = [
+    { value: 'previous_period', label: 'Previous period' },
+    { value: 'previous_year', label: 'Previous year' },
+  ];
+  channelOptions: { value: ChannelFilter; label: string }[] = [
+    { value: '', label: 'All channels' },
+    { value: 'storefront', label: 'Online store' },
+    { value: 'admin', label: 'Admin orders' },
+  ];
+  paymentOptions: { value: PaymentFilter; label: string }[] = [
+    { value: '', label: 'All payments' },
+    { value: 'prepaid', label: 'Prepaid' },
+    { value: 'cod', label: 'Cash on delivery' },
+    { value: 'partial_cod', label: 'Partial COD' },
+  ];
   customFrom: string | null = null;
   customTo: string | null = null;
   today = this.formatDate(new Date());
@@ -118,10 +173,113 @@ export class DashboardComponent {
   constructor(
     private inventoryService: InventoryService,
     private http: HttpClient,
+    private route: ActivatedRoute,
+    private router: Router,
+    private helpers: HelpersService,
   ) {}
 
+  // ── Permissions: each section renders (and fetches) only for staff who
+  // can see the underlying data, so nobody gets 403 toasts on load.
+  get canOrders(): boolean {
+    return this.helpers.can('orders.view');
+  }
+  get canCustomers(): boolean {
+    return this.helpers.can('customers.view');
+  }
+  get canProducts(): boolean {
+    return this.helpers.can('products.view');
+  }
+  get canCategories(): boolean {
+    return this.helpers.can('categories.view');
+  }
+  get canReturns(): boolean {
+    return this.helpers.can('return.view');
+  }
+  get hasAnyInsight(): boolean {
+    return (
+      this.canOrders ||
+      this.canCustomers ||
+      this.canProducts ||
+      this.canCategories
+    );
+  }
+
   ngOnInit() {
+    this.readFiltersFromUrl();
     this.fetchAll();
+  }
+
+  private readFiltersFromUrl() {
+    const url = this.route.snapshot.queryParamMap;
+    const fromUrl = [
+      'range',
+      'from',
+      'to',
+      'compare',
+      'channel',
+      'payment',
+    ].some((k) => url.has(k));
+    let stored: Record<string, string | null> = {};
+    if (!fromUrl) {
+      try {
+        stored =
+          JSON.parse(localStorage.getItem(FILTER_STORAGE_KEY) || '{}') || {};
+      } catch {
+        stored = {};
+      }
+    }
+    const q = {
+      get: (k: string): string | null =>
+        fromUrl ? url.get(k) : (stored[k] ?? null),
+    };
+    const range = q.get('range') as TrendPreset | null;
+    if (range && this.trendPresets.some((p) => p.value === range))
+      this.trendPreset = range;
+    if (this.trendPreset === 'custom') {
+      this.customFrom = q.get('from');
+      this.customTo = q.get('to');
+      if (!this.customFrom || !this.customTo) this.trendPreset = 'last_7_days';
+    }
+    const compare = q.get('compare') as CompareMode | null;
+    if (compare && this.compareOptions.some((o) => o.value === compare))
+      this.compare = compare;
+    const channel = (q.get('channel') || '') as ChannelFilter;
+    if (this.channelOptions.some((o) => o.value === channel))
+      this.channel = channel;
+    const payment = (q.get('payment') || '') as PaymentFilter;
+    if (this.paymentOptions.some((o) => o.value === payment))
+      this.payment = payment;
+  }
+
+  private writeFiltersToUrl() {
+    const custom = this.trendPreset === 'custom';
+    try {
+      localStorage.setItem(
+        FILTER_STORAGE_KEY,
+        JSON.stringify({
+          range: this.trendPreset,
+          from: custom ? this.customFrom : null,
+          to: custom ? this.customTo : null,
+          compare: this.compare,
+          channel: this.channel,
+          payment: this.payment,
+        }),
+      );
+    } catch {
+      // Storage unavailable (private mode / blocked) — URL still carries it.
+    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams: {
+        range: this.trendPreset === 'last_7_days' ? null : this.trendPreset,
+        from: custom ? this.customFrom : null,
+        to: custom ? this.customTo : null,
+        compare: this.compare === 'previous_period' ? null : this.compare,
+        channel: this.channel || null,
+        payment: this.payment || null,
+      },
+    });
   }
 
   selectTrendPreset(value: TrendPreset) {
@@ -133,6 +291,77 @@ export class DashboardComponent {
     } else {
       this.fetchAll();
     }
+  }
+
+  setCompare(value: CompareMode) {
+    this.compare = value;
+    this.fetchPerformance(this.appliedRange.from, this.appliedRange.to);
+    this.writeFiltersToUrl();
+  }
+
+  setChannel(value: ChannelFilter) {
+    this.channel = value;
+    this.fetchAll();
+  }
+
+  setPayment(value: PaymentFilter) {
+    this.payment = value;
+    this.fetchAll();
+  }
+
+  get activeSegmentCount(): number {
+    return (this.channel ? 1 : 0) + (this.payment ? 1 : 0);
+  }
+
+  get isDefaultView(): boolean {
+    return (
+      this.trendPreset === 'last_7_days' &&
+      this.compare === 'previous_period' &&
+      !this.activeSegmentCount
+    );
+  }
+
+  resetFilters() {
+    this.trendPreset = 'last_7_days';
+    this.customFrom = this.customTo = null;
+    this.compare = 'previous_period';
+    this.channel = '';
+    this.payment = '';
+    this.fetchAll();
+  }
+
+  get segmentSummary(): string {
+    return [
+      this.channel
+        ? this.channelOptions.find((o) => o.value === this.channel)?.label
+        : null,
+      this.payment
+        ? this.paymentOptions.find((o) => o.value === this.payment)?.label
+        : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+
+  formatRangeDate(value: string): string {
+    if (!value) return '';
+    return new Date(value + 'T00:00:00').toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  /** Date range + segment filters as query params for a dashboard endpoint. */
+  private filterParams(
+    from: string,
+    to: string,
+    extra: Record<string, string> = {},
+  ): URLSearchParams {
+    const params = new URLSearchParams({ from, to, ...extra });
+    if (this.channel) params.set('channel', this.channel);
+    if (this.payment) params.set('payment', this.payment);
+    return params;
   }
 
   applyCustomRange() {
@@ -217,7 +446,7 @@ export class DashboardComponent {
         // A fixed, far-past sentinel rather than a literal epoch date — this
         // still reads sensibly if ever shown in the "from X to Y" range hint,
         // and predates any realistic order history.
-        return { from: '2000-01-01', to: this.formatDate(today) };
+        return { from: '2024-01-01', to: this.formatDate(today) };
       case 'last_30_days':
       default: {
         const from = new Date(today);
@@ -249,17 +478,146 @@ export class DashboardComponent {
   fetchAll() {
     const { from, to } = this.currentRange();
     this.appliedRange = { from, to };
-    this.fetchOrderStats(from, to);
-    this.fetchOrderTrend(from, to);
-    this.fetchPerformance(from, to);
-    this.fetchProductStats(from, to);
-    this.fetchLeaderboard('product', from, to);
-    this.fetchLeaderboard('category', from, to);
-    this.fetchGeoStats(from, to);
+    this.writeFiltersToUrl();
+    if (this.canOrders) {
+      this.fetchOrderStats(from, to);
+      this.fetchOrderTrend(from, to);
+      this.fetchPerformance(from, to);
+      this.fetchOverview(from, to);
+      this.fetchLeaderboard('product', from, to);
+      this.fetchLeaderboard('category', from, to);
+      this.fetchGeoStats(from, to);
+    }
+    // product/stats carries stock counts, category count and new sign-ups.
+    if (this.canProducts) this.fetchProductStats(from, to);
+    if (this.canProducts) this.fetchLowStock();
+  }
+
+  fetchOverview(from: string, to: string) {
+    this.inventoryService.orderOverview(this.filterParams(from, to)).subscribe({
+      next: (res: any) => (this.overview = res?.data ?? null),
+      error: () => (this.overview = null),
+    });
+  }
+
+  fetchLowStock() {
+    const params = new URLSearchParams({
+      stock_status: 'low_stock',
+      limit: '6',
+      page: '1',
+    });
+    this.inventoryService.productList(params).subscribe({
+      next: (res: any) => (this.lowStockProducts = res?.data?.docs ?? []),
+      error: () => (this.lowStockProducts = []),
+    });
+  }
+
+  stockLeft(product: any): number {
+    if (product?.type === 'variable' && product?.variations?.length) {
+      return Math.min(
+        ...product.variations.map((v: any) => Number(v?.stock_quantity) || 0),
+      );
+    }
+    return Number(product?.stock_quantity) || 0;
+  }
+
+  /** Backlog entries worth showing, with where each one should take the admin. */
+  get actionItems(): {
+    key: string;
+    label: string;
+    count: number;
+    icon: string;
+    tone: string;
+    link: string[];
+  }[] {
+    const a = this.overview?.action_items;
+    if (!a) return [];
+    const items = [
+      {
+        key: 'to_confirm',
+        label: 'To confirm',
+        count: a.to_confirm,
+        icon: 'pending_actions',
+        tone: 'amber',
+        link: ['/inventory/orders/pending'],
+      },
+      {
+        key: 'to_pack',
+        label: 'To pack',
+        count: a.to_pack,
+        icon: 'inventory',
+        tone: 'blue',
+        link: ['/inventory/orders/processing'],
+      },
+      {
+        key: 'to_ship',
+        label: 'Ready to ship',
+        count: a.to_ship,
+        icon: 'local_shipping',
+        tone: 'indigo',
+        link: ['/inventory/orders/packed'],
+      },
+      {
+        key: 'cancel_requests',
+        label: 'Cancel requests',
+        count: a.cancel_requests,
+        icon: 'block',
+        tone: 'red',
+        link: ['/inventory/orders/cancel_requested'],
+      },
+      {
+        key: 'failed_bookings',
+        label: 'Booking failed',
+        count: a.failed_bookings,
+        icon: 'report',
+        tone: 'red',
+        link: ['/inventory/orders'],
+      },
+    ];
+    if (this.canReturns) {
+      items.push({
+        key: 'return_requests',
+        label: 'Returns to review',
+        count: a.return_requests,
+        icon: 'assignment_return',
+        tone: 'purple',
+        link: ['/inventory/orders/returns'],
+      });
+    }
+    return items;
+  }
+
+  get pendingActionCount(): number {
+    return this.actionItems.reduce((n, i) => n + (i.count || 0), 0);
+  }
+
+  get paymentMix(): {
+    type: string;
+    label: string;
+    orders: number;
+    revenue: number;
+    share: number;
+    color: string;
+  }[] {
+    const rows = this.overview?.payment_mix ?? [];
+    const total =
+      rows.reduce((n: number, r: any) => n + (r.orders || 0), 0) || 1;
+    return rows.map((r: any) => ({
+      type: r.type,
+      label: PAYMENT_TYPE_LABELS[r.type] ?? r.type,
+      orders: r.orders,
+      revenue: r.revenue,
+      share: Math.round((r.orders / total) * 1000) / 10,
+      color: PAYMENT_TYPE_COLORS[r.type] ?? '#94a3b8',
+    }));
+  }
+
+  paymentTypeLabel(type: string): string {
+    return PAYMENT_TYPE_LABELS[type] ?? type;
   }
 
   fetchOrderStats(from: string, to: string) {
-    const params = new URLSearchParams({ from, to });
+    const params = this.filterParams(from, to);
     this.inventoryService.orderStats(params).subscribe((res: any) => {
       this.data.status = res?.data ?? [];
       this.data.total = this.data.status.reduce(
@@ -281,7 +639,7 @@ export class DashboardComponent {
   }
 
   fetchPerformance(from: string, to: string) {
-    const params = new URLSearchParams({ from, to });
+    const params = this.filterParams(from, to, { compare: this.compare });
     this.inventoryService.orderPerformance(params).subscribe({
       next: (res: any) => {
         this.performance = res?.data ?? {};
@@ -291,7 +649,7 @@ export class DashboardComponent {
   }
 
   fetchLeaderboard(type: 'product' | 'category', from: string, to: string) {
-    const params = new URLSearchParams({ from, to, type, limit: '5' });
+    const params = this.filterParams(from, to, { type, limit: '5' });
     this.inventoryService.orderLeaderboard(params).subscribe({
       next: (res: any) => {
         if (type === 'product') {
@@ -314,7 +672,7 @@ export class DashboardComponent {
 
   fetchOrderTrend(from: string, to: string) {
     this.trendLoading = true;
-    const params = new URLSearchParams({ from, to });
+    const params = this.filterParams(from, to);
     this.inventoryService.orderTrend(params).subscribe({
       next: (res: any) => {
         this.buildTrendChart(res?.data ?? [], res?.meta?.group_by ?? 'day');
@@ -423,13 +781,13 @@ export class DashboardComponent {
           yAxis: 0,
           tooltip: { valuePrefix: '₹' },
         },
-        // {
-        //   type: 'column',
-        //   name: 'Orders',
-        //   data: orders,
-        //   color: '#a7c4fb',
-        //   yAxis: 1,
-        // },
+        {
+          type: 'column',
+          name: 'Orders',
+          data: orders,
+          color: '#a7c4fb',
+          yAxis: 1,
+        },
       ],
     };
   }
@@ -489,7 +847,7 @@ export class DashboardComponent {
 
   // ── Geographic breakdown (state map + demographics) ───────────────────
   fetchGeoStats(from: string, to: string) {
-    const params = new URLSearchParams({ from, to });
+    const params = this.filterParams(from, to);
     this.inventoryService.orderGeoStats(params).subscribe({
       next: (res: any) => {
         this.geoStats = res?.data ?? [];

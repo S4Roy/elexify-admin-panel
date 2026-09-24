@@ -40,6 +40,9 @@ export class PermissionService {
   canRoute(url: string): boolean {
     const path = url.split('?')[0];
     if (path === '/' || path === '/settings' || path === '/settings/dashboard') return this.keys().size > 0;
+    // The dashboard gates each section by its own permission, so it opens for
+    // anyone who can see at least one kind of store data.
+    if (path === '/dashboard') return this.canAny(['orders.view', 'customers.view', 'products.view', 'categories.view']);
     const special: [string, string][] = [
       ['/settings/email-templates', 'email_template.manage'], ['/settings/sms-templates', 'sms_template.manage'],
       ['/settings/integration-credentials', 'integration_credential.manage'], ['/settings/integrations/zoho-books', 'zoho_sync.view'],
