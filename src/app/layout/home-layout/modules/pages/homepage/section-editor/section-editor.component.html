@@ -5,7 +5,7 @@
   </button>
 </h2>
 
-<div mat-dialog-content class="!max-h-[75vh]">
+<div mat-dialog-content class="!max-h-[calc(94vh-140px)]">
   <form [formGroup]="formGroup" class="space-y-5 py-3">
     <!-- Common fields -->
     <div
@@ -51,10 +51,18 @@
         class="rounded-lg p-4 sm:p-5"
         style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
       >
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 pb-4" style="border-bottom: 1px solid var(--border-color)">
+        <mat-form-field class="w-full">
+          <mat-label>Layout</mat-label>
+          <mat-select formControlName="layout">
+            <mat-option *ngFor="let l of heroLayouts" [value]="l.value">{{ l.label }}</mat-option>
+          </mat-select>
+          <mat-hint>{{ (heroLayouts[0].value === formGroup.value.layout ? heroLayouts[0] : heroLayouts[1]).hint }}</mat-hint>
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 mb-4 pb-4" style="border-bottom: 1px solid var(--border-color)">
           <div>
             <h3 class="text-sm font-semibold mb-2" style="color: var(--text-primary)">
-              Right Pane Auto Play (active slide)
+              Main Slide Auto Play
             </h3>
             <mat-checkbox formControlName="autoplay">Auto Play Enabled</mat-checkbox>
             <mat-form-field class="block mt-2">
@@ -84,7 +92,7 @@
           </div>
           <div>
             <h3 class="text-sm font-semibold mb-2" style="color: var(--text-primary)">
-              Left Pane Auto Play (preview slide)
+              Preview Card Auto Play (split layout only)
             </h3>
             <mat-checkbox formControlName="left_autoplay">Auto Play Enabled</mat-checkbox>
             <mat-form-field class="block mt-2">
@@ -119,67 +127,37 @@
             <span class="text-xs font-semibold" style="color: var(--text-secondary)"
               >Slide {{ i + 1 }}</span
             >
-            <button type="button" mat-icon-button color="warn" (click)="removeSlide(i)">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <div class="flex items-center">
+              <button type="button" mat-icon-button [disabled]="i === 0" (click)="move(slides, i, -1)" matTooltip="Move up" aria-label="Move slide up">
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button type="button" mat-icon-button [disabled]="i === slides.length - 1" (click)="move(slides, i, 1)" matTooltip="Move down" aria-label="Move slide down">
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+              <button type="button" mat-icon-button color="warn" (click)="removeSlide(i)" matTooltip="Delete slide" aria-label="Delete slide">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <div>
-              <label class="block text-xs mb-1" style="color: var(--text-secondary)"
-                >Desktop Image</label
-              >
-              <div class="flex items-center gap-2">
-                <img
-                  *ngIf="slide.get('desktop_image_preview')?.value"
-                  [src]="slide.get('desktop_image_preview')?.value"
-                  class="h-12 w-20 object-cover rounded"
-                  alt="Desktop preview"
-                />
-                <span
-                  *ngIf="!slide.get('desktop_image_preview')?.value && slide.get('desktop_image')?.value"
-                  class="text-xs"
-                  style="color: var(--text-secondary)"
-                  >Image selected</span
-                >
-                <button
-                  type="button"
-                  mat-stroked-button
-                  (click)="chooseSlideImage(i, 'desktop')"
-                >
-                  Choose
-                </button>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs mb-1" style="color: var(--text-secondary)"
-                >Mobile Image</label
-              >
-              <div class="flex items-center gap-2">
-                <img
-                  *ngIf="slide.get('mobile_image_preview')?.value"
-                  [src]="slide.get('mobile_image_preview')?.value"
-                  class="h-12 w-20 object-cover rounded"
-                  alt="Mobile preview"
-                />
-                <span
-                  *ngIf="!slide.get('mobile_image_preview')?.value && slide.get('mobile_image')?.value"
-                  class="text-xs"
-                  style="color: var(--text-secondary)"
-                  >Image selected</span
-                >
-                <button
-                  type="button"
-                  mat-stroked-button
-                  (click)="chooseSlideImage(i, 'mobile')"
-                >
-                  Choose
-                </button>
-              </div>
-            </div>
+          <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 mb-2">
+            <ng-container
+              *ngTemplateOutlet="imagePicker; context: { group: slide, field: 'desktop', label: 'Desktop image', ratio: '3 / 1', hint: '1920×640 (3:1)' }"
+            ></ng-container>
+            <ng-container
+              *ngTemplateOutlet="imagePicker; context: { group: slide, field: 'mobile', label: 'Mobile image (optional)', ratio: '3 / 2', hint: '1080×720 (3:2)' }"
+            ></ng-container>
           </div>
+          <p class="text-xs mb-4" style="color: var(--text-secondary)">
+            For designed banners that already contain text, leave Heading and Description empty — the image is shown
+            without any dark overlay. Without a mobile image, phones show the desktop image cropped to 3:2.
+          </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <mat-form-field>
+              <mat-label>Label above heading</mat-label>
+              <input matInput formControlName="eyebrow" maxlength="40" placeholder="e.g. NEW LAUNCH" />
+            </mat-form-field>
             <mat-form-field>
               <mat-label>Heading</mat-label>
               <input matInput formControlName="heading" />
@@ -207,6 +185,28 @@
             <mat-form-field>
               <mat-label>Secondary CTA Link</mat-label>
               <input matInput formControlName="secondary_cta_link" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Banner link (whole banner)</mat-label>
+              <input matInput formControlName="link" placeholder="/category/audio-boards" />
+              <mat-hint>Optional. Defaults to the Primary CTA link.</mat-hint>
+              <mat-error>Use a site path (/…) or an https:// URL</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Image alt text</mat-label>
+              <input matInput formControlName="alt_text" maxlength="150" placeholder="Describe the banner for screen readers & SEO" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Text position</mat-label>
+              <mat-select formControlName="text_position">
+                <mat-option *ngFor="let p of textPositions" [value]="p.value">{{ p.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Text colour</mat-label>
+              <mat-select formControlName="text_theme">
+                <mat-option *ngFor="let t of textThemes" [value]="t.value">{{ t.label }}</mat-option>
+              </mat-select>
             </mat-form-field>
           </div>
 
@@ -238,6 +238,148 @@
         <div *ngIf="!slides.controls.length" class="text-sm" style="color: var(--text-secondary)">
           No slides added yet — a hero section needs at least one slide to show
           anything on the storefront.
+        </div>
+      </div>
+
+      <!-- PROMO BANNERS -->
+      <div
+        *ngSwitchCase="'promo_banners'"
+        class="rounded-lg p-4 sm:p-5"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <mat-form-field class="w-full">
+          <mat-label>Layout</mat-label>
+          <mat-select formControlName="promo_layout">
+            <mat-option *ngFor="let l of promoLayouts" [value]="l.value">{{ l.label }}</mat-option>
+          </mat-select>
+          <mat-hint>Image size: {{ promoLayout.sizes }}</mat-hint>
+        </mat-form-field>
+
+        <div class="flex items-center justify-between mt-5 mb-2">
+          <h3 class="text-sm font-semibold" style="color: var(--text-primary)">
+            Banners ({{ banners.length }})
+          </h3>
+          <button
+            type="button"
+            mat-stroked-button
+            color="primary"
+            [disabled]="banners.length >= 8"
+            (click)="addPromoBanner()"
+          >
+            <mat-icon>add</mat-icon> Add Banner
+          </button>
+        </div>
+
+        <p
+          *ngIf="banners.length > promoLayout.max && (promoLayout.value === 'strip' || promoLayout.value === 'feature_left')"
+          class="text-xs mb-3 rounded p-2"
+          style="background: #fff7ed; color: #9a3412"
+        >
+          This layout shows the first {{ promoLayout.max }} enabled banner(s); the rest are hidden.
+        </p>
+        <p
+          *ngIf="banners.length > promoLayout.max && promoLayout.value !== 'strip' && promoLayout.value !== 'feature_left'"
+          class="text-xs mb-3" style="color: var(--text-secondary)"
+        >
+          Extra banners wrap onto another row (or keep scrolling on phones).
+        </p>
+
+        <div
+          *ngFor="let banner of banners.controls; let i = index"
+          [formGroup]="$any(banner)"
+          class="rounded-md p-3 mb-3"
+          style="border: 1px solid var(--border-color)"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold" style="color: var(--text-secondary)">Banner {{ i + 1 }}</span>
+            <div class="flex items-center">
+              <button type="button" mat-icon-button [disabled]="i === 0" (click)="move(banners, i, -1)" matTooltip="Move up" aria-label="Move banner up">
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button type="button" mat-icon-button [disabled]="i === banners.length - 1" (click)="move(banners, i, 1)" matTooltip="Move down" aria-label="Move banner down">
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+              <button type="button" mat-icon-button color="warn" (click)="removePromoBanner(i)" matTooltip="Delete banner" aria-label="Delete banner">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 mb-4">
+            <ng-container
+              *ngTemplateOutlet="imagePicker; context: { group: banner, field: 'desktop', label: 'Desktop image *', ratio: promoAspect(i), hint: promoLayout.sizes }"
+            ></ng-container>
+            <ng-container
+              *ngTemplateOutlet="imagePicker; context: { group: banner, field: 'mobile', label: 'Mobile image (optional)', ratio: promoLayout.value === 'strip' ? '2 / 1' : promoAspect(i), hint: promoLayout.value === 'strip' ? '1080×540 (2:1)' : 'Same shape as desktop' }"
+            ></ng-container>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <mat-form-field>
+              <mat-label>Banner link</mat-label>
+              <input matInput formControlName="link" placeholder="/category/resistor" />
+              <mat-hint>Where the whole banner goes when clicked.</mat-hint>
+              <mat-error>Use a site path (/…) or an https:// URL</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Image alt text</mat-label>
+              <input matInput formControlName="alt_text" maxlength="150" placeholder="e.g. Up to 30% off amplifier boards" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Label above heading</mat-label>
+              <input matInput formControlName="eyebrow" maxlength="40" placeholder="Optional — e.g. LIMITED OFFER" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Heading</mat-label>
+              <input matInput formControlName="heading" maxlength="80" placeholder="Optional" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Subheading</mat-label>
+              <input matInput formControlName="subheading" maxlength="150" placeholder="Optional" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Button label</mat-label>
+              <input matInput formControlName="cta_label" maxlength="40" placeholder="Optional — e.g. Shop now" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Text position</mat-label>
+              <mat-select formControlName="text_position">
+                <mat-option *ngFor="let p of textPositions" [value]="p.value">{{ p.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Text colour</mat-label>
+              <mat-select formControlName="text_theme">
+                <mat-option *ngFor="let t of textThemes" [value]="t.value">{{ t.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="mt-1">
+            <label class="block text-xs mb-1" style="color: var(--text-secondary)"
+              >Text overlay strength ({{ banner.get('overlay_opacity')?.value }}) — only applied when there is text</label
+            >
+            <mat-slider min="0" max="1" step="0.05" discrete>
+              <input formControlName="overlay_opacity" matSliderThumb />
+            </mat-slider>
+          </div>
+
+          <mat-checkbox formControlName="enabled" class="block mt-2">Banner enabled</mat-checkbox>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            <mat-form-field>
+              <mat-label>Show from</mat-label>
+              <input matInput type="datetime-local" formControlName="schedule_start" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Show until</mat-label>
+              <input matInput type="datetime-local" formControlName="schedule_end" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div *ngIf="!banners.controls.length" class="text-sm" style="color: var(--text-secondary)">
+          No banners yet — add at least one banner with an image.
         </div>
       </div>
 
@@ -477,3 +619,49 @@
     {{ formGroup.disabled ? "Saving..." : isEdit ? "Save Changes" : "Add Section" }}
   </button>
 </div>
+
+<!-- Large image picker shared by hero slides and promo banners. The preview box
+     uses the same aspect ratio the storefront renders, so what you see here is
+     how the image will be cropped. -->
+<ng-template #imagePicker let-group="group" let-field="field" let-label="label" let-ratio="ratio" let-hint="hint">
+  <div class="min-w-0">
+    <div class="flex items-baseline justify-between gap-2 mb-1">
+      <span class="text-xs font-medium" style="color: var(--text-primary)">{{ label }}</span>
+      <span class="text-[11px] truncate" style="color: var(--text-secondary)">{{ hint }}</span>
+    </div>
+    <div
+      class="relative w-full overflow-hidden rounded-md"
+      [style.aspect-ratio]="ratio"
+      style="border: 1px dashed var(--border-color); background-color: var(--bg-page)"
+    >
+      <img
+        *ngIf="group.get(field + '_image_preview')?.value"
+        [src]="group.get(field + '_image_preview')?.value"
+        class="absolute inset-0 h-full w-full object-cover"
+        [alt]="label + ' preview'"
+      />
+      <div
+        *ngIf="!group.get(field + '_image_preview')?.value"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-1 text-xs text-center px-2"
+        style="color: var(--text-secondary)"
+      >
+        <mat-icon>{{ group.get(field + '_image')?.value ? 'image' : 'add_photo_alternate' }}</mat-icon>
+        {{ group.get(field + '_image')?.value ? 'Image selected (preview unavailable)' : 'No image selected' }}
+      </div>
+      <div class="absolute bottom-2 right-2 flex gap-2">
+        <button
+          *ngIf="group.get(field + '_image')?.value"
+          type="button"
+          mat-stroked-button
+          class="!bg-white"
+          (click)="clearBannerImage(group, field)"
+        >
+          Remove
+        </button>
+        <button type="button" mat-flat-button color="primary" (click)="chooseBannerImage(group, field)">
+          {{ group.get(field + '_image')?.value ? 'Change' : 'Choose image' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>

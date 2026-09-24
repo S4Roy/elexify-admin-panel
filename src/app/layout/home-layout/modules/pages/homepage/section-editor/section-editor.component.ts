@@ -1,4 +1,4 @@
-import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgFor, NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit, Optional } from '@angular/core';
 import {
   FormArray,
@@ -79,6 +79,39 @@ const CATEGORY_SOURCE_MODES: { value: string; label: string; hint: string }[] = 
   { value: 'all', label: 'All', hint: 'Show every active category' },
 ];
 
+const HERO_LAYOUTS: { value: string; label: string; hint: string }[] = [
+  {
+    value: 'split',
+    label: 'Split (preview card + main slide)',
+    hint: 'Wide screens show a preview card beside the main slide. Needs 2+ slides.',
+  },
+  { value: 'full', label: 'Full width', hint: 'One full-width slider at every screen size.' },
+];
+
+// Recommended creative sizes — must match the aspect ratios the storefront
+// renders (HeroSection / PromoBannersSection), or images get cropped.
+const PROMO_LAYOUTS: { value: string; label: string; max: number; sizes: string }[] = [
+  { value: 'strip', label: 'Full-width strip (1 banner)', max: 1, sizes: 'Desktop 1920×480 (4:1) · Mobile 1080×540 (2:1)' },
+  { value: 'grid_2', label: '2 across', max: 2, sizes: '1200×675 (16:9) for both desktop and mobile' },
+  { value: 'grid_3', label: '3 across (swipe row on phones)', max: 3, sizes: '1200×900 (4:3)' },
+  { value: 'grid_4', label: '4 across (swipe row on phones)', max: 4, sizes: '1000×1000 (1:1)' },
+  { value: 'feature_left', label: '1 large + 2 small', max: 3, sizes: 'Banner 1: 1200×1200 (1:1) · Banners 2–3: 1200×600 (2:1)' },
+];
+
+const TEXT_POSITIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' },
+];
+
+const TEXT_THEMES = [
+  { value: 'light', label: 'Light text (for dark images)' },
+  { value: 'dark', label: 'Dark text (for light images)' },
+];
+
+// Same rule as the backend's safeLink: a site path or an https:// URL.
+const LINK_PATTERN = /^(\/[^\s]*|https:\/\/[^\s]+)$/;
+
 const TRANSITION_DIRECTIONS: { value: string; label: string }[] = [
   { value: 'auto', label: 'Auto (follows Next/Back/dot clicked)' },
   { value: 'ltr', label: 'Left to Right' },
@@ -94,6 +127,7 @@ const TRANSITION_DIRECTIONS: { value: string; label: string }[] = [
     NgIf,
     NgSwitch,
     NgSwitchCase,
+    NgTemplateOutlet,
     MatButtonModule,
     MatDialogModule,
     MatCheckboxModule,
@@ -120,6 +154,10 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
   productSourceModes = PRODUCT_SOURCE_MODES;
   categorySourceModes = CATEGORY_SOURCE_MODES;
   transitionDirections = TRANSITION_DIRECTIONS;
+  heroLayouts = HERO_LAYOUTS;
+  promoLayouts = PROMO_LAYOUTS;
+  textPositions = TEXT_POSITIONS;
+  textThemes = TEXT_THEMES;
 
   products: any[] = [];
   categories: any[] = [];
@@ -146,6 +184,61 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
     }
     if (this.type === 'product_section') {
       this.fetchProducts();
+    }
+    if (this.type === 'hero' || this.type === 'promo_banners') {
+      this.loadImagePreviews();
+    }
+  }
+
+  /** Saved slides/banners store media ids only — fetch their URLs in one call for previews. */
+  loadImagePreviews() {
+    const groups = (this.type === 'hero' ? this.slides : this.banners).controls as FormGroup[];
+    const ids = new Set<string>();
+    groups.forEach((g) =>
+      ['desktop', 'mobile'].forEach((f) => {
+        const id = g.get(`${f}_image`)?.value;
+        if (id && !g.get(`${f}_image_preview`)?.value) ids.add(id);
+      })
+    );
+    if (!ids.size) return;
+    const params = new URLSearchParams({
+      id_includes: [...ids].join(','),
+      limit: String(ids.size),
+    });
+    this.inventoryService.mediaList(params).subscribe({
+      next: (res: any) => {
+        const urls = new Map<string, string>(
+          (res?.data?.docs ?? []).map((m: any) => [String(m._id), m.url])
+        );
+        groups.forEach((g) =>
+          ['desktop', 'mobile'].forEach((f) => {
+            const url = urls.get(String(g.get(`${f}_image`)?.value));
+            if (url) g.get(`${f}_image_preview`)?.setValue(url, { emitEvent: false });
+          })
+        );
+      },
+      error: () => {},
+    });
+  }
+
+  clearBannerImage(group: FormGroup, field: 'desktop' | 'mobile') {
+    group.patchValue({ [`${field}_image`]: null, [`${field}_image_preview`]: null });
+    group.markAsDirty();
+  }
+
+  /** Preview box aspect for a promo banner, matching the storefront tile. */
+  promoAspect(index: number): string {
+    switch (this.promoLayout.value) {
+      case 'strip':
+        return '4 / 1';
+      case 'grid_3':
+        return '4 / 3';
+      case 'grid_4':
+        return '1 / 1';
+      case 'feature_left':
+        return index === 0 ? '1 / 1' : '2 / 1';
+      default:
+        return '16 / 9';
     }
   }
 
@@ -182,6 +275,7 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
 
     switch (this.type) {
       case 'hero':
+        this.formGroup.addControl('layout', this.fb.control(config.layout ?? 'split'));
         this.formGroup.addControl(
           'slides',
           this.fb.array((config.slides ?? []).map((s: any) => this.newSlide(s)))
@@ -275,6 +369,13 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
           this.fb.array((config.items ?? []).map((i: any) => this.newTrustBadge(i)))
         );
         break;
+      case 'promo_banners':
+        this.formGroup.addControl('promo_layout', this.fb.control(config.layout ?? 'grid_2'));
+        this.formGroup.addControl(
+          'banners',
+          this.fb.array((config.items ?? []).map((b: any) => this.newPromoBanner(b)))
+        );
+        break;
       case 'cta_banner':
         this.formGroup.addControl(
           'cta_heading',
@@ -324,6 +425,7 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
       primary_cta_link: [value?.primary_cta?.link ?? ''],
       secondary_cta_label: [value?.secondary_cta?.label ?? ''],
       secondary_cta_link: [value?.secondary_cta?.link ?? ''],
+      ...this.presentationControls({ text_position: 'center', ...value }),
       overlay_opacity: [
         value?.overlay_opacity ?? 0.4,
         [Validators.min(0), Validators.max(1)],
@@ -342,8 +444,78 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
     this.slides.removeAt(index);
   }
 
+  /** Swap an entry with its neighbour — order is saved as the array index. */
+  move(array: FormArray, index: number, delta: -1 | 1) {
+    const target = index + delta;
+    if (target < 0 || target >= array.length) return;
+    const control = array.at(index);
+    array.removeAt(index);
+    array.insert(target, control);
+    array.markAsDirty();
+  }
+
+  /** Fields shared by hero slides and promo banners. */
+  presentationControls(value: any = null) {
+    return {
+      link: [value?.link ?? '', Validators.pattern(LINK_PATTERN)],
+      alt_text: [value?.alt_text ?? '', Validators.maxLength(150)],
+      eyebrow: [value?.eyebrow ?? '', Validators.maxLength(40)],
+      text_position: [value?.text_position ?? null],
+      text_theme: [value?.text_theme ?? 'light'],
+    };
+  }
+
+  presentationPayload(v: any) {
+    return {
+      link: v.link?.trim() || '',
+      alt_text: v.alt_text?.trim() || '',
+      eyebrow: v.eyebrow?.trim() || '',
+      ...(v.text_position ? { text_position: v.text_position } : {}),
+      text_theme: v.text_theme || 'light',
+    };
+  }
+
+  // ── Promo banners ─────────────────────────────────────────────────────
+  get banners(): FormArray {
+    return this.formGroup.get('banners') as FormArray;
+  }
+
+  get promoLayout() {
+    const value = this.formGroup?.get('promo_layout')?.value;
+    return this.promoLayouts.find((l) => l.value === value) ?? this.promoLayouts[1];
+  }
+
+  newPromoBanner(value: any = null): FormGroup {
+    return this.fb.group({
+      desktop_image: [value?.desktop_image ?? null],
+      desktop_image_preview: [null as string | null],
+      mobile_image: [value?.mobile_image ?? null],
+      mobile_image_preview: [null as string | null],
+      heading: [value?.heading ?? '', Validators.maxLength(80)],
+      subheading: [value?.subheading ?? '', Validators.maxLength(150)],
+      cta_label: [value?.cta_label ?? '', Validators.maxLength(40)],
+      ...this.presentationControls({ text_position: 'left', ...value }),
+      overlay_opacity: [value?.overlay_opacity ?? 0.35, [Validators.min(0), Validators.max(1)]],
+      enabled: [value?.enabled ?? true],
+      schedule_start: [this.toDatetimeLocal(value?.schedule?.startAt)],
+      schedule_end: [this.toDatetimeLocal(value?.schedule?.endAt)],
+    });
+  }
+
+  addPromoBanner() {
+    if (this.banners.length >= 8) return;
+    this.banners.push(this.newPromoBanner());
+  }
+
+  removePromoBanner(index: number) {
+    this.banners.removeAt(index);
+  }
+
   chooseSlideImage(index: number, field: 'desktop' | 'mobile') {
-    const slideGroup = this.slides.at(index) as FormGroup;
+    this.chooseBannerImage(this.slides.at(index) as FormGroup, field);
+  }
+
+  chooseBannerImage(slideGroup: FormGroup, field: 'desktop' | 'mobile') {
     const currentId = slideGroup.get(
       field === 'desktop' ? 'desktop_image' : 'mobile_image'
     )?.value;
@@ -440,6 +612,7 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
     switch (this.type) {
       case 'hero':
         return {
+          layout: raw.layout ?? 'split',
           autoplay: raw.autoplay ?? true,
           autoplay_interval_ms: raw.autoplay_interval_ms ?? 4000,
           autoplay_pause_on_hover: raw.autoplay_pause_on_hover ?? true,
@@ -459,6 +632,7 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
               label: s.secondary_cta_label || '',
               link: s.secondary_cta_link || '',
             },
+            ...this.presentationPayload(s),
             overlay_opacity: s.overlay_opacity ?? 0.4,
             order: i,
             enabled: s.enabled ?? true,
@@ -495,6 +669,25 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
             sub: i.sub || '',
           })),
         };
+      case 'promo_banners':
+        return {
+          layout: raw.promo_layout ?? 'grid_2',
+          items: (raw.banners ?? []).map((b: any, i: number) => ({
+            desktop_image: b.desktop_image || null,
+            mobile_image: b.mobile_image || null,
+            heading: b.heading?.trim() || '',
+            subheading: b.subheading?.trim() || '',
+            cta_label: b.cta_label?.trim() || '',
+            ...this.presentationPayload(b),
+            overlay_opacity: b.overlay_opacity ?? 0.35,
+            order: i,
+            enabled: b.enabled ?? true,
+            schedule: {
+              startAt: this.fromDatetimeLocal(b.schedule_start),
+              endAt: this.fromDatetimeLocal(b.schedule_end),
+            },
+          })),
+        };
       case 'cta_banner':
         return {
           heading: raw.cta_heading || '',
@@ -520,6 +713,15 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
       return;
     }
     const raw = this.formGroup.getRawValue();
+    if (this.type === 'promo_banners') {
+      const missing = (raw.banners ?? []).findIndex(
+        (b: any) => !b.desktop_image && !b.mobile_image
+      );
+      if (missing > -1) {
+        this.toastr.error(`Banner ${missing + 1} needs an image`);
+        return;
+      }
+    }
     const payload: any = {
       title: raw.title || null,
       subtitle: raw.subtitle || null,

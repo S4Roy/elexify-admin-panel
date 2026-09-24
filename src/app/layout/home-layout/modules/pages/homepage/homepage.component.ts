@@ -39,6 +39,7 @@ const SECTION_TYPES: SectionTypeDef[] = [
   { type: 'product_section', label: 'Product Section', icon: 'view_module' },
   { type: 'category_section', label: 'Category Section', icon: 'category' },
   { type: 'trust_badges', label: 'Trust Badges', icon: 'verified_user' },
+  { type: 'promo_banners', label: 'Promo Banners', icon: 'dashboard' },
   { type: 'cta_banner', label: 'CTA Banner', icon: 'campaign' },
   { type: 'content_section', label: 'Content Section', icon: 'article' },
 ];
@@ -144,8 +145,10 @@ export class HomepageComponent implements OnInit {
     this.dialog
       .open(SectionEditorComponent, {
         data,
-        width: '700px',
-        maxWidth: '95vw',
+        // Banner editors carry large image previews side by side.
+        width: data?.type === 'hero' || data?.type === 'promo_banners' ? '1200px' : '800px',
+        maxWidth: '96vw',
+        maxHeight: '94vh',
         disableClose: true,
       })
       .afterClosed()
