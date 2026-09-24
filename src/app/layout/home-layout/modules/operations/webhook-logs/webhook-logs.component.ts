@@ -1,6 +1,8 @@
 import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
 import { HelpersService } from 'app/core/services/helpers.service';
@@ -24,7 +26,7 @@ const OUTCOME_STYLES: Record<string, string> = {
 
 @Component({
   selector: 'app-webhook-logs',
-  imports: [NgIf, NgFor, NgClass, DatePipe, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, NgClass, DatePipe, RouterLink, MatIconModule, PaginationComponent, EmptyStateComponent],
   templateUrl: './webhook-logs.component.html',
   styleUrl: './webhook-logs.component.scss',
 })

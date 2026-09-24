@@ -19,7 +19,20 @@
       <ng-container *ngFor="let item of itemList">
         <tr>
           <td class="capitalize">{{ item?.provider }}</td>
-          <td class="font-medium text-gray-900 whitespace-nowrap">{{ item?.order_id || item?.provider_order_id || '—' }}</td>
+          <td class="font-medium text-gray-900 whitespace-nowrap">
+            <a
+              *ngIf="item?.order?._id; else plainOrderId"
+              [routerLink]="['/inventory/orders/details', item.order._id]"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center gap-1 text-primary hover:underline"
+              [title]="'Open order ' + item.order.id + ' in a new tab'"
+            >
+              {{ item.order.id }}
+              <mat-icon aria-hidden="true" class="!h-3.5 !w-3.5 !text-sm !leading-[14px]">open_in_new</mat-icon>
+            </a>
+            <ng-template #plainOrderId>{{ item?.order_id || item?.provider_order_id || '—' }}</ng-template>
+          </td>
           <td>{{ item?.payment_id || item?.awb || '—' }}</td>
           <td>{{ item?.event_type }}<span class="block text-xs text-gray-500" *ngIf="item?.duplicate">Duplicate delivery</span></td>
           <td>
