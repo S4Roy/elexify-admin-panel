@@ -1,59 +1,86 @@
-<h2 mat-dialog-title>{{ isEdit ? "Edit Announcement" : "Add Announcement" }}</h2>
-<form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
-  <div mat-dialog-content class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <mat-form-field class="w-full sm:col-span-2">
-      <mat-label>Message</mat-label>
-      <input matInput formControlName="message" />
-    </mat-form-field>
+<div class="fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div class="pointer-events-auto relative w-screen max-w-md">
+        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+          <h2 class="header" id="slide-over-title">
+            {{ isEdit ? "Update" : "New" }} Announcement
+            <button aria-label="Close announcement editor" color="warn" mat-icon-button (click)="closeDialog()">
+              <mat-icon class="text-red-700">close</mat-icon>
+            </button>
+          </h2>
 
-    <mat-form-field class="w-full">
-      <mat-label>Icon</mat-label>
-      <input matInput formControlName="icon" placeholder="e.g. truck" />
-    </mat-form-field>
+          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
+            <form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="space-y-3" id="announcement-form">
+              <h3 class="section-title first">Content</h3>
 
-    <mat-form-field class="w-full">
-      <mat-label>Link</mat-label>
-      <input matInput formControlName="link" placeholder="https://..." />
-    </mat-form-field>
+              <mat-form-field>
+                <mat-label>Message <span class="text-red-500">*</span></mat-label>
+                <input matInput formControlName="message" maxlength="160" placeholder="e.g. Free shipping on orders above ₹499" />
+                <mat-hint align="end">{{ formGroup.value.message?.length || 0 }}/160</mat-hint>
+                <mat-error>Message is required</mat-error>
+              </mat-form-field>
 
-    <mat-form-field class="w-full">
-      <mat-label>Target</mat-label>
-      <mat-select formControlName="target">
-        <mat-option value="_self">Same tab</mat-option>
-        <mat-option value="_blank">New tab</mat-option>
-      </mat-select>
-    </mat-form-field>
+              <mat-form-field>
+                <mat-label>Shorter text for mobile</mat-label>
+                <input matInput formControlName="mobile_content" maxlength="80" placeholder="Optional — e.g. Free shipping over ₹499" />
+                <mat-hint>Shown on phones instead of the message. Leave blank to use the message.</mat-hint>
+              </mat-form-field>
 
-    <div class="flex items-center gap-4">
-      <mat-checkbox formControlName="dismissible">Dismissible</mat-checkbox>
-      <mat-checkbox formControlName="enabled">Enabled</mat-checkbox>
+              <mat-form-field>
+                <mat-label>Icon</mat-label>
+                <input matInput formControlName="icon" maxlength="8" placeholder="Optional emoji, e.g. 🚚" />
+                <mat-hint>Shown before the message.</mat-hint>
+              </mat-form-field>
+
+              <h3 class="section-title">Link</h3>
+
+              <mat-form-field>
+                <mat-label>Link URL</mat-label>
+                <input matInput formControlName="link" placeholder="Optional — /category/resistor or https://…" />
+                <mat-hint>Makes the announcement clickable.</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Open link in</mat-label>
+                <mat-select formControlName="target">
+                  <mat-option value="_self">Same tab</mat-option>
+                  <mat-option value="_blank">New tab</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <h3 class="section-title">Visibility</h3>
+              <mat-checkbox formControlName="enabled">Show this announcement</mat-checkbox>
+              <mat-checkbox formControlName="dismissible">Visitors can dismiss it individually</mat-checkbox>
+              <p class="field-help">
+                Individual dismiss applies to the Rotate and Static styles. Closing the whole bar is set in Display settings.
+              </p>
+
+              <h3 class="section-title">Schedule</h3>
+              <mat-form-field>
+                <mat-label>Start showing</mat-label>
+                <input matInput type="datetime-local" formControlName="schedule_start" />
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Stop showing</mat-label>
+                <input matInput type="datetime-local" formControlName="schedule_end" />
+                <mat-error *ngIf="formGroup.hasError('scheduleOrder')">Must be after the start time</mat-error>
+              </mat-form-field>
+              <p class="field-help">Optional. Leave both blank to show it until you turn it off. Times use your local timezone.</p>
+              <p class="validation-message" role="alert" *ngIf="formGroup.touched && formGroup.hasError('scheduleOrder')">
+                The stop time must be after the start time.
+              </p>
+            </form>
+          </div>
+
+          <div class="p-1">
+            <button type="submit" form="announcement-form" class="btn-primary">
+              {{ isEdit ? "Save Changes" : "Add Announcement" }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <mat-form-field class="w-full sm:col-span-2">
-      <mat-label>Desktop content (optional rich text)</mat-label>
-      <textarea matInput rows="2" formControlName="desktop_content"></textarea>
-    </mat-form-field>
-
-    <mat-form-field class="w-full sm:col-span-2">
-      <mat-label>Mobile content (optional rich text)</mat-label>
-      <textarea matInput rows="2" formControlName="mobile_content"></textarea>
-    </mat-form-field>
-
-    <mat-form-field class="w-full">
-      <mat-label>Schedule start</mat-label>
-      <input matInput type="datetime-local" formControlName="schedule_start" />
-    </mat-form-field>
-
-    <mat-form-field class="w-full">
-      <mat-label>Schedule end</mat-label>
-      <input matInput type="datetime-local" formControlName="schedule_end" />
-    </mat-form-field>
   </div>
-
-  <div mat-dialog-actions class="flex justify-end gap-2">
-    <button type="button" mat-stroked-button (click)="closeDialog()">Cancel</button>
-    <button type="submit" mat-flat-button color="primary">
-      {{ isEdit ? "Save Changes" : "Add Announcement" }}
-    </button>
-  </div>
-</form>
+</div>

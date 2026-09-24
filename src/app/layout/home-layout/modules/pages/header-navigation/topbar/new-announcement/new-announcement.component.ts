@@ -1,5 +1,14 @@
 import { Component, Inject, Optional } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
@@ -10,7 +19,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { ToastrService } from 'ngx-toastr';
 
 export interface NewAnnouncementData {
   announcement?: any | null;
@@ -20,6 +28,8 @@ export interface NewAnnouncementData {
   selector: 'app-new-announcement',
   standalone: true,
   imports: [
+    NgIf,
+    MatIconModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatDialogModule,
@@ -37,24 +47,35 @@ export class NewAnnouncementComponent {
 
   constructor(
     private fb: FormBuilder,
-    private toastr: ToastrService,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: NewAnnouncementData,
     @Optional() private dialogRef: MatDialogRef<NewAnnouncementComponent>
   ) {
     const a = this.data?.announcement;
     this.isEdit = !!a?._id;
-    this.formGroup = this.fb.group({
-      message: [a?.message ?? ''],
+    this.formGroup = this.fb.group(
+      {
+      message: [a?.message ?? '', [Validators.required, Validators.pattern(/\S/)]],
       icon: [a?.icon ?? ''],
       link: [a?.link ?? ''],
       target: [a?.target ?? '_self'],
-      desktop_content: [a?.desktop_content ?? ''],
       mobile_content: [a?.mobile_content ?? ''],
       dismissible: [a?.dismissible ?? true],
       enabled: [a?.enabled ?? true],
       schedule_start: [this.toDatetimeLocal(a?.schedule?.startAt)],
       schedule_end: [this.toDatetimeLocal(a?.schedule?.endAt)],
-    });
+      },
+      { validators: NewAnnouncementComponent.scheduleOrder }
+    );
+  }
+
+  /** Stop time, when both are set, must come after the start time. */
+  static scheduleOrder(group: AbstractControl): ValidationErrors | null {
+    const start = group.get('schedule_start')?.value;
+    const end = group.get('schedule_end')?.value;
+    if (start && end && new Date(end) <= new Date(start)) {
+      return { scheduleOrder: true };
+    }
+    return null;
   }
 
   toDatetimeLocal(iso?: string | null): string | null {
@@ -75,19 +96,18 @@ export class NewAnnouncementComponent {
   }
 
   onSubmit() {
-    const raw = this.formGroup.getRawValue();
-    if (!raw.message?.trim()) {
-      this.toastr.error('Message is required');
+    if (this.formGroup.invalid) {
+      this.formGroup.markAllAsTouched();
       return;
     }
+    const raw = this.formGroup.getRawValue();
     const payload: any = {
       ...(this.data?.announcement ?? {}),
-      message: raw.message,
+      message: raw.message.trim(),
       icon: raw.icon || '',
       link: raw.link || '',
       target: raw.target || '_self',
-      desktop_content: raw.desktop_content || '',
-      mobile_content: raw.mobile_content || '',
+      mobile_content: raw.mobile_content?.trim() || '',
       dismissible: raw.dismissible ?? true,
       enabled: raw.enabled ?? true,
       schedule: {

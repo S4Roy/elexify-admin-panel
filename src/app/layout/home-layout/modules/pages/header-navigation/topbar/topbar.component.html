@@ -43,6 +43,123 @@
     </div>
   </div>
 
+  <!-- Display settings -->
+  <form
+    [formGroup]="settingsForm"
+    (ngSubmit)="saveSettings()"
+    class="rounded-lg p-4 sm:p-5 space-y-4"
+    style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+  >
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h3 class="text-sm font-semibold" style="color: var(--text-primary)">Display settings</h3>
+        <p class="text-xs mt-0.5" style="color: var(--text-secondary)">
+          How the bar looks and behaves on the storefront. Saved to the draft — publish to go live.
+        </p>
+      </div>
+      <button
+        appPermission="topbar.update"
+        type="submit"
+        mat-flat-button
+        color="primary"
+        [disabled]="savingSettings || settingsForm.pristine"
+      >
+        <mat-icon>save</mat-icon> {{ savingSettings ? "Saving…" : "Save settings" }}
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4">
+      <mat-form-field class="w-full">
+        <mat-label>Display style</mat-label>
+        <mat-select formControlName="display_mode">
+          <mat-option value="marquee">Scrolling marquee</mat-option>
+          <mat-option value="rotate">Rotate one at a time</mat-option>
+          <mat-option value="static">Static (first only)</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Scroll speed</mat-label>
+        <mat-select formControlName="speed">
+          <mat-option value="slow">Slow</mat-option>
+          <mat-option value="normal">Normal</mat-option>
+          <mat-option value="fast">Fast</mat-option>
+        </mat-select>
+        <mat-hint *ngIf="settingsForm.value.display_mode === 'rotate'">Also sets rotate interval</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Separator</mat-label>
+        <input matInput formControlName="separator" maxlength="8" placeholder="•" />
+        <mat-hint>Between marquee items</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Hide after close (days)</mat-label>
+        <input matInput type="number" min="0" max="365" formControlName="dismiss_days" />
+        <mat-hint>0 = until the browser tab closes</mat-hint>
+        <mat-error>Enter 0–365</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Background color</mat-label>
+        <input matInput formControlName="background_color" placeholder="Theme default" />
+        <input
+          matSuffix
+          type="color"
+          class="w-7 h-7 cursor-pointer border-0 bg-transparent p-0"
+          [value]="swatch('background_color', '#00796a')"
+          (input)="pickColor('background_color', $event)"
+          [disabled]="settingsForm.disabled"
+          aria-label="Pick background color"
+        />
+        <mat-hint>
+          <button type="button" class="underline" (click)="clearColor('background_color')">Use theme default</button>
+        </mat-hint>
+        <mat-error>Use a hex value like #00796A</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Text color</mat-label>
+        <input matInput formControlName="text_color" placeholder="Theme default" />
+        <input
+          matSuffix
+          type="color"
+          class="w-7 h-7 cursor-pointer border-0 bg-transparent p-0"
+          [value]="swatch('text_color', '#ffffff')"
+          (input)="pickColor('text_color', $event)"
+          [disabled]="settingsForm.disabled"
+          aria-label="Pick text color"
+        />
+        <mat-hint>
+          <button type="button" class="underline" (click)="clearColor('text_color')">Use theme default</button>
+        </mat-hint>
+        <mat-error>Use a hex value like #FFFFFF</mat-error>
+      </mat-form-field>
+
+      <div class="flex flex-col justify-center gap-2 sm:col-span-2 py-2">
+        <mat-checkbox formControlName="closeable">Visitors can close the bar (× button)</mat-checkbox>
+        <mat-checkbox formControlName="pause_on_hover">Pause scrolling on hover</mat-checkbox>
+      </div>
+    </div>
+
+    <!-- Live look -->
+    <div
+      class="rounded-md overflow-hidden text-xs flex items-center gap-3 px-3 h-9"
+      [style.background-color]="swatch('background_color', '#00796a')"
+      [style.color]="swatch('text_color', '#ffffff')"
+    >
+      <span class="flex-1 truncate">
+        <ng-container *ngFor="let a of announcements; let last = last">
+          <span *ngIf="a.enabled !== false">{{ a.message }}</span>
+          <span *ngIf="!last && a.enabled !== false && settingsForm.value.display_mode === 'marquee'" class="mx-3 opacity-60">{{ settingsForm.value.separator }}</span>
+        </ng-container>
+        <span *ngIf="!announcements.length" class="opacity-70">Your announcements appear here</span>
+      </span>
+      <span *ngIf="settingsForm.value.closeable" class="opacity-70">✕</span>
+    </div>
+  </form>
+
   <!-- Announcement list -->
   <div
     class="rounded-lg p-2 sm:p-3"

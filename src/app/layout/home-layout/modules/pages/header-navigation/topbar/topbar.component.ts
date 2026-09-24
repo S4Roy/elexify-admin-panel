@@ -3,6 +3,11 @@ import { PermissionService } from 'app/core/services/permission.service';
 import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,6 +38,11 @@ import { NewAnnouncementComponent } from './new-announcement/new-announcement.co
     MatIconModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    ReactiveFormsModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
   ],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss',
@@ -43,14 +53,44 @@ export class TopbarSettingsComponent implements OnInit {
   doc: any = null;
   announcements: any[] = [];
   loading = false;
+  savingSettings = false;
+
+  // Must mirror the backend TopBar SettingsSchema defaults.
+  private readonly defaultSettings = {
+    display_mode: 'marquee',
+    speed: 'normal',
+    pause_on_hover: true,
+    closeable: true,
+    dismiss_days: 1,
+    separator: '•',
+    background_color: '',
+    text_color: '',
+  };
+  private readonly hex = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+  settingsForm: FormGroup;
 
   constructor(
     private toastr: ToastrService,
     private navigationService: NavigationService,
     private dialogService: DialogService,
     private authService: AuthService,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private fb: FormBuilder
+  ) {
+    this.settingsForm = this.fb.group({
+      display_mode: [this.defaultSettings.display_mode],
+      speed: [this.defaultSettings.speed],
+      pause_on_hover: [this.defaultSettings.pause_on_hover],
+      closeable: [this.defaultSettings.closeable],
+      dismiss_days: [
+        this.defaultSettings.dismiss_days,
+        [Validators.required, Validators.min(0), Validators.max(365)],
+      ],
+      separator: [this.defaultSettings.separator, Validators.maxLength(8)],
+      background_color: ['', Validators.pattern(this.hex)],
+      text_color: ['', Validators.pattern(this.hex)],
+    });
+  }
 
   ngOnInit() {
     this.fetch();
@@ -62,12 +102,70 @@ export class TopbarSettingsComponent implements OnInit {
       next: (res: any) => {
         this.doc = res?.data ?? res;
         this.syncAnnouncements();
+        this.syncSettings();
         this.loading = false;
       },
       error: () => {
         this.loading = false;
       },
     });
+  }
+
+  syncSettings() {
+    const s = { ...this.defaultSettings, ...(this.doc?.settings ?? {}) };
+    this.settingsForm.reset({
+      ...s,
+      background_color: s.background_color ?? '',
+      text_color: s.text_color ?? '',
+    });
+    if (!this.accessControl.can('topbar.update')) this.settingsForm.disable();
+  }
+
+  saveSettings() {
+    if (this.settingsForm.invalid) {
+      this.settingsForm.markAllAsTouched();
+      return;
+    }
+    const v = this.settingsForm.getRawValue();
+    this.savingSettings = true;
+    this.navigationService
+      .topBarUpdate({
+        settings: {
+          ...v,
+          dismiss_days: Number(v.dismiss_days),
+          background_color: v.background_color || null,
+          text_color: v.text_color || null,
+        },
+      })
+      .subscribe({
+        next: (res: any) => {
+          this.savingSettings = false;
+          this.doc = res?.data ?? res;
+          this.syncSettings();
+          this.toastr.success('Display settings saved. Publish to make them live.');
+        },
+        error: () => {
+          this.savingSettings = false;
+          this.toastr.error('Failed to save display settings');
+        },
+      });
+  }
+
+  /** Native color picker → hex text field (the text field allows "blank = theme default"). */
+  pickColor(control: 'background_color' | 'text_color', event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.settingsForm.get(control)?.setValue(value);
+    this.settingsForm.get(control)?.markAsDirty();
+  }
+
+  clearColor(control: 'background_color' | 'text_color') {
+    this.settingsForm.get(control)?.setValue('');
+    this.settingsForm.get(control)?.markAsDirty();
+  }
+
+  swatch(control: 'background_color' | 'text_color', fallback: string) {
+    const v = this.settingsForm.get(control)?.value;
+    return this.hex.test(v || '') ? v : fallback;
   }
 
   syncAnnouncements() {
@@ -108,8 +206,6 @@ export class TopbarSettingsComponent implements OnInit {
     this.dialog
       .open(NewAnnouncementComponent, {
         data: { announcement },
-        width: '600px',
-        maxWidth: '95vw',
         disableClose: true,
       })
       .afterClosed()
@@ -175,6 +271,7 @@ export class TopbarSettingsComponent implements OnInit {
             this.toastr.success('Top bar published successfully');
             this.doc = res?.data ?? res;
             this.syncAnnouncements();
+            this.syncSettings();
           },
           error: () => {},
         });
