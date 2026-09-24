@@ -207,6 +207,13 @@ export class InventoryService {
   // Resyncs an order that's already linked to Shiprocket from a live
   // lookup (for when the webhook missed or was delayed) — does not
   // establish a new link, see registerExternalPackage for that.
+  // Customer-style tracking (milestones, per-shipment courier log) plus the
+  // staff audit trail. refresh=true re-pulls courier scans now.
+  orderTracking(orderId: string, refresh = false) {
+    return this.httpService.get(
+      `admin/inventory/order/tracking?order_id=${encodeURIComponent(orderId)}${refresh ? '&refresh=true' : ''}`
+    );
+  }
   syncShiprocketStatus(payload: { order_id: string; channel_id?: string; package_ids?: string[] }) {
     return this.httpService.post(`admin/inventory/order/sync-shiprocket-status`, payload);
   }

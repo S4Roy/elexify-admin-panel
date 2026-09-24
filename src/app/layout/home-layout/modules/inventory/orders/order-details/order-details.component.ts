@@ -33,6 +33,7 @@ import { HelpersService } from 'app/core/services/helpers.service';
 import { OrderShippingComponent } from '../order-shipping/order-shipping.component';
 import { OrderStatusDialogComponent } from './order-status-dialog/order-status-dialog.component';
 import { ShiprocketDetailsDialogComponent } from './shiprocket-details-dialog/shiprocket-details-dialog.component';
+import { OrderTrackingComponent } from './order-tracking/order-tracking.component';
 
 // Mirrors the backend's default admin_cancellation_statuses policy
 // (elexify-backend/src/services/settings/shipping/model.js) — the backend is
@@ -69,37 +70,11 @@ const INVOICE_ELIGIBLE_STATUSES = [
 
 
 
-// package.status -> display label/style for the Packages & Tracking card.
-const PACKAGE_STATUS_LABELS: Record<string, string> = {
-  packed: 'Packed',
-  shipped: 'Shipped',
-  out_for_delivery: 'Out for Delivery',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
-  return_requested: 'Return Requested',
-  returned: 'Returned',
-  failed: 'Failed — needs retry',
-};
-
-const PACKAGE_STATUS_STYLES: Record<string, string> = {
-  packed: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-indigo-100 text-indigo-800',
-  out_for_delivery: 'bg-indigo-100 text-indigo-800',
-  delivered: 'bg-green-100 text-green-800',
-  cancelled: 'bg-gray-100 text-gray-700',
-  return_requested: 'bg-gray-100 text-gray-700',
-  returned: 'bg-gray-100 text-gray-700',
-  failed: 'bg-red-100 text-red-800',
-};
-
-
-
-
-
 @Component({
   selector: 'app-order-details',
   imports: [PermissionDirective,
     ZohoSalesorderComponent,
+    OrderTrackingComponent,
     MatDialogModule,
     FormsModule,
     NgSelectModule,
@@ -389,24 +364,6 @@ export class OrderDetailsComponent {
 
   get packages(): any[] {
     return this.data?.packages ?? [];
-  }
-
-  packageQuantity(pkg: any): number {
-    return (pkg.items ?? []).reduce(
-      (total: number, line: any) => total + Number(line.quantity || 0), 0,
-    );
-  }
-
-  orderItemFor(id: string): any {
-    return (this.data?.order_items ?? []).find((item: any) => String(item._id) === String(id));
-  }
-
-  packageStatusLabel(status: string): string {
-    return PACKAGE_STATUS_LABELS[status] ?? status;
-  }
-
-  packageStatusClass(status: string): string {
-    return PACKAGE_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
   }
 
   openManagePackages(): void {

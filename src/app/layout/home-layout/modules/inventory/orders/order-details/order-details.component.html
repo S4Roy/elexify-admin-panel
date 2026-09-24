@@ -204,65 +204,14 @@
     </div>
   </div>
 
-  <!-- Multi-package fulfillment: one card per shipment, each with its own
-       courier/AWB/tracking/status. Absent entirely for orders that predate
-       this feature or haven't been shipped yet — legacy single-shipment
-       orders keep no equivalent block here (there never was one). -->
-  <section class="mb-6" *ngIf="packages.length">
-    <h3 class="text-lg font-semibold mb-2">Packages &amp; Tracking</h3>
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <div
-        *ngFor="let pkg of packages"
-        class="rounded-xl border border-gray-200 p-4"
-      >
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <span class="font-semibold text-gray-800">Package #{{ pkg.package_number }}</span>
-          <span
-            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-            [ngClass]="packageStatusClass(pkg.status)"
-          >
-            {{ packageStatusLabel(pkg.status) }}
-          </span>
-        </div>
-        <ng-container *ngIf="pkg.items?.length; else itemCountFallback">
-          <p class="text-sm text-gray-600">{{ pkg.items.length }} product line(s) · {{ packageQuantity(pkg) }} unit(s)</p>
-          <div class="mb-2 mt-3 divide-y divide-gray-100 border-y border-gray-100">
-          <div *ngFor="let line of pkg.items" class="flex items-center gap-2 py-2 text-sm">
-            <img *ngIf="orderItemFor(line.order_item_id)?.images?.[0]?.url"
-              [src]="orderItemFor(line.order_item_id).images[0].url" alt=""
-              class="h-9 w-9 flex-none rounded-md object-cover" />
-            <div class="min-w-0 flex-1">
-              <p class="truncate font-medium text-gray-800">{{ orderItemFor(line.order_item_id)?.display_name || orderItemFor(line.order_item_id)?.name || 'Item unavailable' }}</p>
-              <p class="text-xs text-gray-500" *ngIf="orderItemFor(line.order_item_id)?.sku">SKU {{ orderItemFor(line.order_item_id)?.sku }}</p>
-            </div>
-            <span class="flex-none rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">×{{ line.quantity }}</span>
-          </div>
-          </div>
-        </ng-container>
-        <ng-template #itemCountFallback>
-          <p class="mb-2 text-sm text-gray-600">{{ pkg.item_count }} item(s)</p>
-        </ng-template>
-        <p class="text-sm font-medium text-gray-800" *ngIf="pkg.shiprocket_status">Shiprocket: {{ pkg.shiprocket_status }}</p>
-        <p class="text-xs text-gray-500" *ngIf="pkg.shiprocket_status_updated_at">Updated {{ pkg.shiprocket_status_updated_at | date:'medium' }}</p>
-        <p class="text-sm text-gray-600" *ngIf="pkg.courier_name">Courier: {{ pkg.courier_name }}</p>
-        <p class="text-sm text-gray-600" *ngIf="pkg.awb">AWB: {{ pkg.awb }}</p>
-        <p class="text-sm text-gray-600" *ngIf="pkg.etd">Est. Delivery: {{ pkg.etd }}</p>
-        <a
-          *ngIf="pkg.tracking_url"
-          [href]="pkg.tracking_url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sm text-primary hover:underline"
-        >Track shipment</a>
-        <p class="text-xs text-gray-400 mt-1" *ngIf="pkg.delivered_at">
-          Delivered {{ pkg.delivered_at | date : 'medium' }}
-        </p>
-        <p class="text-xs text-gray-400 mt-1" *ngIf="!pkg.delivered_at && pkg.shipped_at">
-          Shipped {{ pkg.shipped_at | date : 'medium' }}
-        </p>
-      </div>
-    </div>
-  </section>
+  <!-- Shipment tracking: milestones, one card per package with its full
+       courier scan log, booking failures and the order audit trail. -->
+  <app-order-tracking
+    [order]="data"
+    [canSync]="canSyncShiprocket"
+    [syncing]="syncingShiprocket"
+    (syncPackages)="syncShiprocketStatus($event)"
+  ></app-order-tracking>
 
   <!-- Customer Info -->
   <div class="detail-grid customer-grid">
