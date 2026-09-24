@@ -28,7 +28,12 @@ const CATEGORY_STYLES: Record<string, string> = {
   SMS: 'bg-indigo-100 text-indigo-800',
   INTEGRATION: 'bg-rose-100 text-rose-700',
   AUDIT: 'bg-gray-100 text-gray-700',
+  ADMIN: 'bg-slate-100 text-slate-700',
 };
+// Failed/locked security events get a red badge regardless of their
+// domain prefix, so they stand out from routine change events at a glance.
+const WARNING_EVENT_PATTERN = /_(FAILED|LOCKED)$/;
+const WARNING_STYLE = 'bg-red-100 text-red-800';
 
 @Component({
   selector: 'app-audit-logs',
@@ -185,6 +190,7 @@ export class AuditLogsComponent implements OnInit, OnDestroy {
   }
 
   categoryClass(event: string): string {
+    if (WARNING_EVENT_PATTERN.test(event || '')) return WARNING_STYLE;
     const prefix = (event || '').split('_')[0];
     return CATEGORY_STYLES[prefix] ?? 'bg-gray-100 text-gray-600';
   }
