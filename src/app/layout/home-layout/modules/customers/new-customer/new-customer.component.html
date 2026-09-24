@@ -61,6 +61,26 @@
                                 </mat-form-field>
                             </div>
 
+                            <!-- Profile (edit only) -->
+                            <div class="flex gap-3" *ngIf="data?._id">
+                                <mat-form-field class="flex-1">
+                                    <mat-label>Date of birth</mat-label>
+                                    <input formControlName="dob" matInput type="date" [max]="today" />
+                                </mat-form-field>
+                                <mat-form-field class="w-36 flex-shrink-0">
+                                    <mat-label>Gender</mat-label>
+                                    <mat-select formControlName="gender">
+                                        <mat-option value="">Not specified</mat-option>
+                                        <mat-option value="male">Male</mat-option>
+                                        <mat-option value="female">Female</mat-option>
+                                        <mat-option value="other">Other</mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <p *ngIf="data?._id" class="-mt-2 text-xs text-gray-500">
+                                Changing the email or mobile marks it unverified until the customer confirms it.
+                            </p>
+
                             <!-- Password (optional on edit) -->
                             <mat-form-field class="w-full">
                                 <mat-label>

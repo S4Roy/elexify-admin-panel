@@ -3,36 +3,68 @@
   <strong>Orders couldn’t be loaded.</strong> Please try again.
   <button type="button" class="context-link" (click)="fetchOrderList()">Retry</button>
 </div>
-<section *ngIf="customerId" class="customer-context mb-4">
-  <div class="min-w-0">
-    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Orders for customer</div>
-    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-      <strong class="text-gray-900">{{ customerContext?.name || 'Loading customer…' }}</strong>
-      <span *ngIf="customerContext?.email" class="text-sm text-gray-600">{{ customerContext.email }}</span>
-      <span *ngIf="customerContext?.mobile" class="text-sm text-gray-600">{{ customerContext.phone_code ? '+' + customerContext.phone_code + ' ' : '' }}{{ customerContext.mobile }}</span>
-      <span *ngIf="customerContext?.status" class="table-status" [class]="customerContext.status">{{ customerContext.status }}</span>
+<section *ngIf="customerId" class="customer-context mb-4" aria-label="Customer summary">
+  <div class="context-top">
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="context-avatar" aria-hidden="true">{{ customerInitials }}</span>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Orders for customer</div>
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <strong class="truncate text-lg text-gray-900">{{ customerContext?.name || 'Loading customer…' }}</strong>
+          <span *ngIf="customerContext?.status" class="context-status" [class.is-active]="customerContext.status === 'active'">{{ customerContext.status }}</span>
+        </div>
+        <div class="mt-0.5 flex flex-wrap gap-x-3 text-xs text-gray-500">
+          <span *ngIf="customerContext?.mobile">{{ customerContext.phone_code ? '+' + customerContext.phone_code + ' ' : '' }}{{ customerContext.mobile }}</span>
+          <span *ngIf="customerContext?.email" class="break-all">{{ customerContext.email }}</span>
+        </div>
+      </div>
     </div>
-    <div *ngIf="customerSummary" class="mt-3 flex flex-wrap gap-2 text-xs text-gray-600">
-      <span class="summary-chip"><strong>{{ customerSummary.total_orders }}</strong> total orders</span>
-      <span class="summary-chip"><strong>{{ customerSummary.paid_orders }}</strong> paid</span>
-      <span *ngFor="let total of customerSummary.totals_by_currency" class="summary-chip">
-        <strong>{{ total.value | currency: total.currency }}</strong> paid value
-      </span>
-      <span *ngIf="customerSummary.last_order_at" class="summary-chip">Last order {{ customerSummary.last_order_at | date: 'mediumDate' }}</span>
+    <div class="flex shrink-0 flex-wrap gap-2">
+      <a *ngIf="customerContext?._id" [routerLink]="['/customers/details', customerContext._id]" class="context-link">View profile</a>
+      <a routerLink="/inventory/orders" class="context-link">All orders</a>
     </div>
   </div>
-  <div class="flex shrink-0 flex-wrap gap-2">
-    <a *ngIf="customerContext?._id" [routerLink]="['/customers/details', customerContext._id]" class="context-link">View profile</a>
-    <a routerLink="/inventory/orders" class="context-link">All orders</a>
-  </div>
+
+  <dl *ngIf="customerSummary as sm" class="context-stats">
+    <div>
+      <dt>Orders</dt>
+      <dd>{{ sm.total_orders }}</dd>
+      <p class="context-sub">
+        <span *ngIf="sm.in_progress_orders">{{ sm.in_progress_orders }} in progress</span>
+        <span *ngIf="sm.delivered_orders">{{ sm.delivered_orders }} delivered</span>
+        <span *ngIf="sm.unsuccessful_orders" class="text-red-600">{{ sm.unsuccessful_orders }} cancelled/failed</span>
+      </p>
+    </div>
+    <div>
+      <dt>Order value</dt>
+      <dd>{{ (sm.order_value || 0) | currency: 'INR' }}</dd>
+      <p class="context-sub">Excludes cancelled &amp; failed</p>
+    </div>
+    <div>
+      <dt>Collected</dt>
+      <dd>{{ (sm.collected || 0) | currency: 'INR' }}</dd>
+      <p class="context-sub">
+        <span *ngIf="sm.cod_due; else noDue">{{ sm.cod_due | currency: 'INR' }} due on delivery</span>
+        <ng-template #noDue>Online payments &amp; advances</ng-template>
+      </p>
+    </div>
+    <div>
+      <dt>Average order</dt>
+      <dd>{{ (sm.average_order_value || 0) | currency: 'INR' }}</dd>
+    </div>
+    <div>
+      <dt>Last order</dt>
+      <dd>{{ sm.last_order_at ? (sm.last_order_at | date: 'd MMM y') : '—' }}</dd>
+    </div>
+  </dl>
 </section>
 
 <div class="table-wrapper" [attr.aria-busy]="loading" [hidden]="loading || loadError">
-  <table class="table-base" aria-label="Orders">
+  <table class="table-base" [class.is-customer-view]="!!customerId" aria-label="Orders">
     <colgroup>
       <col *ngIf="canManageOrderStatus" class="col-select" />
       <col class="col-id" />
-      <col class="col-customer" />
+      <col *ngIf="!customerId" class="col-customer" />
       <col class="col-date" />
       <col class="col-status" />
       <col class="col-payment" />
@@ -48,7 +80,7 @@
         <th scope="col" [attr.aria-sort]="sortKey === 'id' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
           <button type="button" class="sort-button" (click)="sort('id')">ID <span [class]="getSortIcon('id')"></span></button>
         </th>
-        <th scope="col" [attr.aria-sort]="sortKey === 'user.name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+        <th *ngIf="!customerId" scope="col" [attr.aria-sort]="sortKey === 'user.name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
           <button type="button" class="sort-button" (click)="sort('user.name')">Customer <span [class]="getSortIcon('user.name')"></span></button>
         </th>
         <th scope="col" [attr.aria-sort]="sortKey === 'created_at' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
@@ -83,7 +115,7 @@
               </small>
             </a>
           </td>
-          <td class="customer-cell">
+          <td *ngIf="!customerId" class="customer-cell">
             <a
               *ngIf="item?.user?._id; else unavailableCustomer"
               [routerLink]="customerOrdersUrl(item)"
@@ -153,7 +185,7 @@
       </ng-container>
       <ng-container *ngIf="!item_list?.length">
         <tr>
-          <td class="text-center" [attr.colspan]="canManageOrderStatus ? 9 : 8"><app-empty-state message="No orders match your current search or filters"></app-empty-state></td>
+          <td class="text-center" [attr.colspan]="(canManageOrderStatus ? 9 : 8) - (customerId ? 1 : 0)"><app-empty-state message="No orders match your current search or filters"></app-empty-state></td>
         </tr>
       </ng-container>
     </tbody>

@@ -1,13 +1,22 @@
 .customer-context {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: .75rem;
   background: var(--bg-surface, #fff);
-  padding: 1rem 1.25rem;
+  overflow: hidden;
 }
+.context-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; }
+.context-avatar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px; background: rgb(37 99 235 / 10%); color: var(--primary-color, #2563eb); font-weight: 700; }
+.context-status { border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; text-transform: capitalize; background: #fee2e2; color: #991b1b; }
+.context-status.is-active { background: #dcfce7; color: #166534; }
+.context-stats {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  > div { min-width: 0; padding: .75rem 1.25rem; }
+  > div + div { border-left: 1px solid var(--border-color, #e5e7eb); }
+  dt { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary, #64748b); }
+  dd { margin: 2px 0 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+.context-sub { margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 0 8px; font-size: 11px; color: var(--text-secondary, #64748b); }
 
 .customer-link { color: var(--primary-color, #2563eb); font-weight: 600; }
 .customer-link:hover { text-decoration: underline; }
@@ -17,8 +26,20 @@
 .context-link:hover { background: var(--bg-surface-alt, #f9fafb); }
 .summary-chip { border-radius: 999px; background: var(--bg-surface-alt, #f3f4f6); padding: .3rem .6rem; }
 
+@media (max-width: 1024px) {
+  .context-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .context-stats > div + div:nth-child(4) { border-left: 0; }
+  .context-stats > div + div:nth-child(n + 4) { border-top: 1px solid var(--border-color, #e5e7eb); }
+}
 @media (max-width: 640px) {
-  .customer-context { align-items: flex-start; flex-direction: column; }
+  .context-top { padding: .875rem 1rem; }
+  .context-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .context-stats > div { padding: .625rem 1rem; }
+  .context-stats > div + div { border-left: 0; border-top: 1px solid var(--border-color, #e5e7eb); }
+  .context-stats > div + div:nth-child(even) { border-left: 1px solid var(--border-color, #e5e7eb); }
+  .context-stats > div + div:nth-child(2) { border-top: 0; }
+  .context-stats > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .context-stats dd { font-size: 16px; }
 }
 
 :host { display: block; min-width: 0; }
@@ -57,6 +78,13 @@ a.order-status-link:hover { text-decoration: none; filter: brightness(.96); }
 .col-items { width: 6%; }
 .col-total { width: 10%; }
 .col-action { width: 42px; }
+// Customer-scoped view hides the Customer column; give its share to the rest.
+.is-customer-view .col-id { width: 13%; }
+.is-customer-view .col-date { width: 14%; }
+.is-customer-view .col-status { width: 15%; }
+.is-customer-view .col-payment { width: 26%; }
+.is-customer-view .col-items { width: 8%; }
+.is-customer-view .col-total { width: 14%; }
 .table-base .selection-column { padding: 0; line-height: 0; }
 .selection-column mat-checkbox { display: flex; align-items: center; justify-content: center; height: 36px; --mdc-checkbox-state-layer-size: 32px; --mat-checkbox-touch-target-display: none; }
 .table-base .order-id-link { white-space: normal; }
@@ -69,4 +97,9 @@ a.order-status-link:hover { text-decoration: none; filter: brightness(.96); }
   .sort-button { gap: 2px; white-space: normal; }
   .order-time { white-space: normal; }
   .customer-cell .customer-text { max-width: 140px; }
+  // Keep IDs, badges and amounts on one line and let the wrapper scroll
+  // sideways, rather than breaking "ORD-000091" and "Failed" mid-word.
+  .table-base { min-width: 640px; }
+  .table-base.is-customer-view { min-width: 560px; }
+  .table-base .order-id-link, .table-base .order-badge, .table-base td:nth-last-child(2) { white-space: nowrap; overflow-wrap: normal; }
 }

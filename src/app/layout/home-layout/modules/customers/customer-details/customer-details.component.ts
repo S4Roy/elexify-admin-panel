@@ -1,5 +1,7 @@
 import { CustomerAddressDialogComponent } from './customer-address-dialog.component';
-import { DatePipe, LowerCasePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { NewCustomerComponent } from '../new-customer/new-customer.component';
+import { CurrencyPipe, DatePipe, LowerCasePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '../../inventory/orders/order-status-display';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -76,6 +78,7 @@ const PREFERENCE_GROUPS: {
     NgFor,
     NgClass,
     DatePipe,
+    CurrencyPipe,
     LowerCasePipe,
     MatIconModule,
     RouterModule,
@@ -170,6 +173,73 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  // --- Header / summary ---
+
+  get initials(): string {
+    const parts = String(this.customer?.name || '?').trim().split(/\s+/);
+    return ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?';
+  }
+
+  get shortId(): string {
+    return String(this.customer?._id || '').slice(-8);
+  }
+
+  get stats(): any {
+    return this.customer?.stats ?? { order_count: 0, total_spent: 0, average_order_value: 0, last_order_at: null, first_order_at: null };
+  }
+
+  get recentOrders(): any[] {
+    return this.customer?.recent_orders ?? [];
+  }
+
+  orderStatusLabel(status: string): string {
+    return ORDER_STATUS_LABELS[status] ?? status;
+  }
+
+  orderStatusClass(status: string): string {
+    return ORDER_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  copy(value: string, what: string): void {
+    navigator.clipboard?.writeText(value).then(
+      () => this.toastr.success(`${what} copied`),
+      () => this.toastr.error(`Couldn't copy ${what}`),
+    );
+  }
+
+  // ORDER_PLACED → "Order placed"
+  eventLabel(event: string): string {
+    const text = String(event || '').replace(/[._-]+/g, ' ').trim().toLowerCase();
+    return text ? text[0].toUpperCase() + text.slice(1) : '—';
+  }
+
+  channelLabel(channel: string): string {
+    return ({ sms: 'SMS', whatsapp: 'WhatsApp', email: 'Email', push: 'Push' } as Record<string, string>)[channel] ?? channel;
+  }
+
+  channelIcon(channel: string): string {
+    return ({ sms: 'sms', whatsapp: 'chat', email: 'mail', push: 'notifications' } as Record<string, string>)[channel] ?? 'send';
+  }
+
+  statusLabel(status: string): string {
+    return ({ DEAD_LETTER: 'Failed', RETRYING: 'Retrying', QUEUED: 'Queued', SENDING: 'Sending', SENT: 'Sent', DELIVERED: 'Delivered', FAILED: 'Failed' } as Record<string, string>)[status] ?? status;
+  }
+
+  // Same slide-over the customer list uses. Email/mobile changes reset
+  // verification server-side, so preferences are reloaded too.
+  editCustomer(): void {
+    if (!this.customer || !this.helperService.can('customers.update')) return;
+    const { _id, name, email, phone_code, mobile, status, dob, gender } = this.customer;
+    this.dialog
+      .open(NewCustomerComponent, { data: { _id, name, email, phone_code, mobile, status, dob, gender }, disableClose: true })
+      .afterClosed()
+      .subscribe((saved: any) => {
+        if (!saved) return;
+        this.fetchCustomerDetails();
+        this.fetchNotificationPreferences();
+      });
+  }
+
   // --- Profile / verification ---
 
   fetchCustomerDetails() {
@@ -256,6 +326,11 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
       return 'Unavailable — email not verified';
     }
     return null;
+  }
+
+  unavailableShort(groupKey: string, rowKey: string): string {
+    const reason = this.unavailableReason(groupKey, rowKey) || '';
+    return reason.includes('mobile') ? 'Mobile unverified' : reason.includes('email') ? 'Email unverified' : reason;
   }
 
   isRowDisabled(groupKey: string, rowKey: string): boolean {

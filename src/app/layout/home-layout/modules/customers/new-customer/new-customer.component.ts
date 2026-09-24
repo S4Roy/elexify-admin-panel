@@ -70,8 +70,14 @@ export class NewCustomerComponent implements OnInit {
         this.data?.status ?? 'active',
         Validators.compose([Validators.required]),
       ],
+      // Profile fields — editable once the customer exists.
+      dob: [this.data?.dob ? String(this.data.dob).slice(0, 10) : ''],
+      gender: [this.data?.gender ?? ''],
     });
   }
+
+  // yyyy-MM-dd for the date input's max (no future birth dates).
+  readonly today = new Date().toISOString().slice(0, 10);
 
   ngOnInit(): void {
     this.loadCountries();
@@ -97,6 +103,14 @@ export class NewCustomerComponent implements OnInit {
       if (!formData.email) delete formData.email;
       if (!formData.mobile) delete formData.mobile;
       if (!formData.password) delete formData.password;
+      // dob/gender are only on the edit endpoint; "" clears them there.
+      if (!this.data?._id) {
+        delete formData.dob;
+        delete formData.gender;
+      } else {
+        formData.dob = formData.dob || null;
+        formData.gender = formData.gender || null;
+      }
 
       // Attach _id for edit
       if (this.data?._id) {

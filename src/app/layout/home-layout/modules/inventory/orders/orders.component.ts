@@ -88,6 +88,11 @@ export class OrdersComponent {
   private destroy$ = new Subject<void>();
   customerId: string | null = null;
   customerContext: any = null;
+
+  get customerInitials(): string {
+    const parts = String(this.customerContext?.name || '?').trim().split(/\s+/);
+    return ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?';
+  }
   customerSummary: any = null;
   // The /inventory/orders/:order_status route (status tiles/sidebar links)
   // always wins over the drawer's Status filter when present — same
