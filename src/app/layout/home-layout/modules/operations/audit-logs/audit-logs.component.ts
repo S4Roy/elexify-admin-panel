@@ -200,6 +200,10 @@ export class AuditLogsComponent implements OnInit, OnDestroy {
   }
 
   viewDetails(item: any): void {
+    // A double-click (or clicking a second row before the first dialog is
+    // dismissed) would otherwise stack multiple dialog instances visually
+    // on top of each other.
+    this.dialog.closeAll();
     this.dialog.open(AuditLogDetailDialogComponent, {
       width: '640px',
       maxWidth: '96vw',
