@@ -17,7 +17,7 @@ import { HelpersService } from 'app/core/services/helpers.service';
       <button class="rounded bg-slate-900 text-white px-4 py-2 mt-3" [disabled]="customerBusy || customerPending || !state?.enabled" (click)="syncCustomer()">
         {{ customerBusy ? 'Queueing…' : customerPending ? 'Sync queued' : 'Sync customer to Zoho' }}
       </button>
-      <p class="text-red-700 mt-2" role="alert" *ngIf="customerError || state?.customer?.job?.last_error">{{ customerError || state?.customer?.job?.last_error }}</p>
+      <p class="text-red-700 mt-2" role="alert" *ngIf="customerError || state?.customer?.job?.last_error">{{ customerError || state?.customer?.job?.last_error }}<br *ngIf="!customerError && state?.customer?.job?.last_error_detail?.message"><span *ngIf="!customerError">{{ state?.customer?.job?.last_error_detail?.message }}</span></p>
     </ng-template>
     <button class="px-4 py-2" [disabled]="customerBusy" (click)="load()">Refresh</button>
     <p class="text-red-700" role="alert" *ngIf="error">{{ error }}</p>
@@ -27,7 +27,7 @@ import { HelpersService } from 'app/core/services/helpers.service';
     <p>Status: {{ state.job?.status || state.zoho?.sync_status || 'Not synced' }}</p>
     <p>Sales Order: {{ state.zoho?.salesorder_number || '—' }} · ID: {{ state.zoho?.salesorder_id || '—' }}</p>
     <p>Last sync: {{ (state.zoho?.synced_at | date:'medium') || 'Never' }}</p>
-    <p class="text-red-700" role="alert" *ngIf="error || state.job?.last_error">{{ error || state.job?.last_error }}</p>
+    <p class="text-red-700" role="alert" *ngIf="error || state.job?.last_error">{{ error || state.job?.last_error }}<br *ngIf="!error && state.job?.last_error_detail?.message"><span *ngIf="!error">{{ state.job?.last_error_detail?.message }}</span></p>
     <p *ngIf="!state.zoho?.packed_at">Available after packing.</p>
     <button class="rounded bg-slate-900 text-white px-4 py-2 mt-3" [disabled]="busy || !state.enabled || !state.zoho?.packed_at" (click)="sync()">{{ busy ? 'Queueing…' : 'Sync / Re-sync to Zoho' }}</button>
     <button class="px-4 py-2" [disabled]="busy" (click)="load()">Refresh</button>
