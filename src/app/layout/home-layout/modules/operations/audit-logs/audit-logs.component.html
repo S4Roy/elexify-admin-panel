@@ -1,0 +1,61 @@
+<div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
+
+<div *ngIf="!loading" class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col">Event</th>
+        <th scope="col">Actor</th>
+        <th scope="col">Target</th>
+        <th scope="col">Reason</th>
+        <th scope="col">IP</th>
+        <th scope="col" class="text-center">Time</th>
+        <th scope="col" class="text-center">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of itemList">
+        <tr>
+          <td>
+            <span class="table-status" [ngClass]="categoryClass(item?.event)">{{ eventLabel(item?.event) }}</span>
+          </td>
+          <td>
+            <ng-container *ngIf="item?.actor; else noActor">
+              <span class="block font-medium text-gray-900">{{ item.actor.name }}</span>
+              <span class="block text-xs text-gray-500">{{ item.actor.email }}</span>
+            </ng-container>
+            <ng-template #noActor><span class="text-gray-400">System</span></ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="item?.subject; else noSubject">
+              <span class="block font-medium text-gray-900">{{ item.subject.name }}</span>
+              <span class="block text-xs text-gray-500">{{ item.subject.email }}</span>
+            </ng-container>
+            <ng-template #noSubject><span class="text-gray-400">—</span></ng-template>
+          </td>
+          <td class="max-w-[220px] truncate" [title]="item?.reason">{{ item?.reason || '—' }}</td>
+          <td>{{ item?.ip || '—' }}</td>
+          <td class="text-center whitespace-nowrap">{{ item?.created_at | date : 'short' }}</td>
+          <td class="text-center">
+            <button
+              type="button"
+              (click)="viewDetails(item)"
+              class="text-xs font-medium text-primary hover:underline"
+            >
+              View
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="!itemList?.length">
+        <tr>
+          <td class="text-center" colspan="7">
+            <app-empty-state message="No audit log entries found"></app-empty-state>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>

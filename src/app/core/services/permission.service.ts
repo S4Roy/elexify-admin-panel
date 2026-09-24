@@ -44,7 +44,7 @@ export class PermissionService {
       ['/settings/email-templates', 'email_template.manage'], ['/settings/sms-templates', 'sms_template.manage'],
       ['/settings/integration-credentials', 'integration_credential.manage'], ['/settings/integrations/zoho-books', 'zoho_sync.view'],
       ['/settings/data-operations', 'system.data.view'], ['/notifications', 'customer.notification.view'],
-      ['/webhook-logs', 'operations.view'], ['/inventory/orders/returns', 'return.view'],
+      ['/webhook-logs', 'operations.view'], ['/audit-logs', 'audit_log.view'], ['/inventory/orders/returns', 'return.view'],
       ['/inventory/orders/reconciliation', 'order.status.manage'],
     ];
     for (const [prefix, permission] of special) if (path === prefix || path.startsWith(prefix + '/')) return this.can(permission);

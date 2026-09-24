@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>Audit Log Entry</h2>
+
+<mat-dialog-content class="detail-content">
+  <div class="detail-grid">
+    <div><span class="detail-label">Event</span><strong>{{ eventLabel }}</strong></div>
+    <div><span class="detail-label">Time</span><strong>{{ entry?.created_at | date : 'medium' }}</strong></div>
+    <div><span class="detail-label">Actor</span><strong>{{ entry?.actor?.name || 'System' }}</strong></div>
+    <div><span class="detail-label">Actor Email</span><strong>{{ entry?.actor?.email || '—' }}</strong></div>
+    <div><span class="detail-label">Target User</span><strong>{{ entry?.subject?.name || '—' }}</strong></div>
+    <div><span class="detail-label">Target Email</span><strong>{{ entry?.subject?.email || '—' }}</strong></div>
+    <div><span class="detail-label">IP</span><strong>{{ entry?.ip || '—' }}</strong></div>
+    <div class="col-span-2"><span class="detail-label">User Agent</span><strong>{{ entry?.user_agent || '—' }}</strong></div>
+  </div>
+
+  <p class="detail-message" *ngIf="entry?.reason"><strong>Reason:</strong> {{ entry.reason }}</p>
+
+  <span class="detail-label">Metadata</span>
+  <pre class="payload-block" *ngIf="entry?.metadata; else noMetadata">{{ entry?.metadata | json }}</pre>
+  <ng-template #noMetadata><p class="detail-message">No additional metadata for this entry.</p></ng-template>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button
+    mat-dialog-close
+    type="button"
+    class="inline-flex justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+  >
+    Close
+  </button>
+</mat-dialog-actions>

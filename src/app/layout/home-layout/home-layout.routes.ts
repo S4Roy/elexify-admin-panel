@@ -16,6 +16,7 @@ import { NotificationDashboardComponent } from './modules/notifications/notifica
 import { DeadLetterComponent } from './modules/notifications/dead-letter/dead-letter.component';
 import { NotificationHistoryComponent } from './modules/notifications/notification-history/notification-history.component';
 import { WebhookLogsComponent } from './modules/operations/webhook-logs/webhook-logs.component';
+import { AuditLogsComponent } from './modules/operations/audit-logs/audit-logs.component';
 
 export const routes: Routes = [
   {
@@ -78,6 +79,11 @@ export const routes: Routes = [
         path: 'webhook-logs',
         component: WebhookLogsComponent,
         data: { pageTitle: 'Webhook Logs', breadcrumb: 'Webhook Logs' },
+      },
+      {
+        path: 'audit-logs',
+        component: AuditLogsComponent,
+        data: { pageTitle: 'Audit Logs', breadcrumb: 'Audit Logs' },
       },
       {
         path: 'testimonials',

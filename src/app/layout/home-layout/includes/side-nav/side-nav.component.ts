@@ -255,6 +255,12 @@ export class SideNavComponent {
           url: '/webhook-logs',
           exact: true,
         },
+        {
+          label: 'Audit Logs',
+          icon: 'fact_check',
+          url: '/audit-logs',
+          exact: true,
+        },
       ],
     },
     {

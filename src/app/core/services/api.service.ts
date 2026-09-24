@@ -247,6 +247,19 @@ export class ApiService {
     return this.httpService.get(`admin/operations/webhook-logs/${id}`);
   }
 
+  // --- Audit log (RBAC changes, customer/order edits, verification
+  // overrides, data operations, etc. — the append-only trail written by the
+  // backend's recordAudit() helper) ---
+  auditLogs(params: URLSearchParams) {
+    return this.httpService.get(`admin/audit-logs?${params.toString()}`);
+  }
+  auditLogEvents() {
+    return this.httpService.get(`admin/audit-logs/events`);
+  }
+  exportAuditLogs(params: URLSearchParams) {
+    return this.httpService.downloadFile(`admin/audit-logs/export?${params.toString()}`);
+  }
+
   // --- Email Templates ---
   emailTemplateList(params?: URLSearchParams) {
     const query = params?.toString();
