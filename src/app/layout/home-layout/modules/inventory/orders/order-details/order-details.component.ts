@@ -11,7 +11,7 @@ import {
   NgIf,
   TitleCasePipe,
 } from '@angular/common';
-import { Component, Inject, Optional } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, Optional, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import {
@@ -20,7 +20,7 @@ import {
   MAT_DIALOG_DATA,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
@@ -75,6 +75,7 @@ const INVOICE_ELIGIBLE_STATUSES = [
   imports: [PermissionDirective,
     ZohoSalesorderComponent,
     OrderTrackingComponent,
+    RouterLink,
     MatDialogModule,
     FormsModule,
     NgSelectModule,
@@ -88,7 +89,9 @@ const INVOICE_ELIGIBLE_STATUSES = [
   templateUrl: './order-details.component.html',
   styleUrl: './order-details.component.scss',
 })
-export class OrderDetailsComponent {
+export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('orderHeader') orderHeader?: ElementRef<HTMLElement>;
+  private headerObserver?: ResizeObserver;
   Global = Global;
   filterOption: FilterOptions;
   cancelling = false;
@@ -124,6 +127,22 @@ export class OrderDetailsComponent {
       }
     });
     this.loadShiprocketChannels();
+  }
+
+  // Package panels in the tracking section pin just below the sticky order
+  // header, whose height changes as its action buttons wrap — track it.
+  ngAfterViewInit(): void {
+    const header = this.orderHeader?.nativeElement;
+    if (!header || typeof ResizeObserver === 'undefined') return;
+    const root = header.parentElement!;
+    this.headerObserver = new ResizeObserver(() =>
+      root.style.setProperty('--od-sticky-offset', `${Math.ceil(header.getBoundingClientRect().height) + 4}px`),
+    );
+    this.headerObserver.observe(header);
+  }
+
+  ngOnDestroy(): void {
+    this.headerObserver?.disconnect();
   }
 
   // Populates the channel dropdown next to "Fetch Shiprocket details" —

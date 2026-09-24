@@ -19,31 +19,68 @@
 :host { display: block; }
 .order-details {
   --card-border: var(--border-color, #e2e8f0);
+  // Height of the pinned order header, measured in the component — package
+  // panels in the tracking section stick just below it.
+  --od-sticky-offset: 96px;
   color: var(--text-primary, #1e293b);
-  padding: clamp(16px, 2.4vw, 32px);
+  padding: 0 clamp(12px, 2vw, 28px) clamp(16px, 2.4vw, 32px);
   background: var(--bg-surface, #fff);
   border: 1px solid var(--card-border);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgb(15 23 42 / 4%);
 }
-.order-header { display: flex; flex-wrap: wrap; gap: 24px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); }
-.section-eyebrow { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary, #64748b); }
-.order-header h2 { margin: 0; letter-spacing: -.025em; }
-.order-header p { margin-bottom: 0; }
-.order-actions {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 10px; width: 100%;
-  padding: 16px; border-radius: 12px; background: var(--bg-surface-alt, #f8fafc);
-  > button { min-height: 40px; border-radius: 8px; font-size: 12px; white-space: nowrap; justify-content: center; box-shadow: none; }
-  > span { flex-basis: 100%; font-size: 12px; }
-  > ng-select { flex: 0 1 200px; }
-  > button:last-child { margin-left: auto; }
+
+// Header: title + badges on the left, actions on the right. Pinned to the
+// top of the scrolling outlet on desktop so status and actions stay in
+// reach while reading a long tracking log.
+.order-header {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px;
+  margin: 0 calc(-1 * clamp(12px, 2vw, 28px)) 20px;
+  padding: 18px clamp(12px, 2vw, 28px) 16px;
+  border-bottom: 1px solid var(--card-border);
+  border-radius: 16px 16px 0 0;
+  background: var(--bg-surface, #fff);
 }
+.order-title { min-width: 0; flex: 1 1 320px; }
+.section-eyebrow { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary, #64748b); }
+.order-header h2 { margin: 0; letter-spacing: -.025em; line-height: 1.2; }
+.order-meta { margin: 6px 0 0; font-size: 13px; color: var(--text-secondary, #64748b); }
+.order-actions {
+  display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px;
+  flex: 1 1 420px;
+  > button { min-height: 36px; border-radius: 8px; font-size: 12px; white-space: nowrap; justify-content: center; box-shadow: none; padding: 6px 12px; }
+  > span { flex-basis: 100%; text-align: right; font-size: 12px; }
+  > ng-select { flex: 0 1 180px; }
+}
+
+// Main column + sidebar. Below 1280px the sidebar cards flow as a grid
+// under the main column instead.
+.order-layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+.order-main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.order-main > app-order-tracking { display: block; }
+.order-aside { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); align-content: start; }
+.side-card { min-width: 0; padding: 16px 18px; border: 1px solid var(--card-border); border-radius: 12px; background: var(--bg-surface, #fff); overflow-wrap: anywhere; }
+.side-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.side-card-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary, #1e293b); }
+.side-card-head + * { margin-top: 0; }
+.side-card-link { border: 0; background: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--nav-primary, #2563eb); cursor: pointer; }
+.side-card-link:hover { text-decoration: underline; }
+.side-card p { line-height: 1.6; margin: 4px 0; font-size: 13px; }
+.side-card p.text-xs { font-size: 11px; }
+.side-card-note { margin-top: 10px !important; padding-top: 10px; border-top: 1px dashed var(--card-border); font-size: 11px !important; color: var(--text-secondary, #64748b); }
+
+@media (min-width: 1024px) {
+  .order-header { position: sticky; top: -10px; z-index: 5; box-shadow: 0 6px 12px -12px rgb(15 23 42 / 35%); }
+}
+@media (min-width: 1280px) {
+  .order-layout { grid-template-columns: minmax(0, 1fr) 320px; align-items: start; }
+  .order-aside { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 1536px) {
+  .order-layout { grid-template-columns: minmax(0, 1fr) 360px; }
+}
+
 .order-details button:focus-visible, .order-details a:focus-visible { outline: 2px solid var(--nav-primary, #2563eb); outline-offset: 3px; }
-.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; margin-bottom: 24px; }
-.detail-grid > div { min-width: 0; padding: 20px; border: 1px solid var(--card-border); border-radius: 12px; overflow-wrap: anywhere; }
-.detail-grid h3 { font-size: 13px; margin: 0 0 14px; color: var(--text-primary, #1e293b); }
-.detail-grid p { line-height: 1.65; margin: 6px 0; font-size: 13px; }
-.detail-grid p.text-xs { font-size: 11px; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--card-border); }
 .section-heading h3, .summary-title { margin: 0; font-size: 14px; font-weight: 700; }
 .section-heading > span { border-radius: 6px; padding: 4px 8px; background: var(--bg-surface-alt, #f1f5f9); color: var(--text-secondary, #64748b); font-size: 12px; }
@@ -58,19 +95,21 @@
 .products-card td p + p { margin-top: 5px; }
 .products-card img { object-fit: contain; flex-shrink: 0; padding: 4px; border: 1px solid var(--card-border); border-radius: 8px; background: white; }
 .products-card > p { padding: 12px 20px; margin: 0; line-height: 1.5; }
-.summary-layout { display: flex; justify-content: flex-end; margin: 20px 0 28px; }
+.summary-layout { display: flex; justify-content: flex-end; }
 .summary-card { width: min(100%, 460px); padding: 22px; background: var(--bg-surface-alt, #f8fafc); border: 1px solid var(--card-border); border-radius: 12px; }
 .summary-title { margin-bottom: 18px; }
 .summary-card > div { gap: 24px; line-height: 1.6; }
 .summary-card > div > span:last-child { flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.accounting-section { border-top: 1px solid var(--card-border); padding-top: 8px; }
+.accounting-section { border-top: 1px solid var(--card-border); padding-top: 4px; display: flex; flex-direction: column; gap: 12px; }
 .accounting-section > .section-heading { border: 0; padding-left: 0; padding-right: 0; }
 .zoho-card { background: var(--bg-surface-alt, #f8fafc); border-color: var(--card-border); margin-bottom: 0; }
 .zoho-card h3 { font-size: 14px; }
 @media (max-width: 640px) {
-  .order-actions { padding: 12px; gap: 8px; }
+  .order-header { padding-top: 14px; }
+  .order-actions { justify-content: stretch; }
   .order-actions > button { flex: 1 1 140px; white-space: normal; }
   .order-actions > ng-select { flex: 1 1 100%; }
-  .order-actions > button:last-child { margin-left: 0; }
+  .order-actions > span { text-align: left; }
   .summary-card { padding: 16px; }
+  .products-card td:first-child { min-width: 200px; }
 }

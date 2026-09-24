@@ -35,6 +35,7 @@ interface DayGroup { key: string; label: string; events: any[] }
   selector: 'app-order-tracking',
   imports: [NgIf, NgFor, NgClass, DatePipe, MatIconModule],
   templateUrl: './order-tracking.component.html',
+  styleUrl: './order-tracking.component.scss',
 })
 export class OrderTrackingComponent implements OnChanges {
   /** The order as loaded by the details page (with `packages` and `order_items`). */

@@ -1,0 +1,35 @@
+:host { display: block; }
+
+// Milestones scroll sideways on narrow screens instead of squashing labels.
+.milestones {
+  display: flex;
+  margin: 20px -4px 0;
+  padding: 0 4px 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+// Each package card sizes itself by its own width (main column, not the
+// viewport): facts + items beside the scan log once there's room, with the
+// facts panel pinned below the order header while the log scrolls.
+.shipment-card { container-type: inline-size; }
+.shipment-body { display: grid; gap: 20px; padding: 16px; }
+.shipment-log { min-width: 0; }
+
+@container (min-width: 680px) {
+  .shipment-body { grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); }
+  .shipment-log { border-left: 1px solid var(--border-color, #f1f5f9); padding-left: 20px; }
+}
+
+@media (min-width: 1024px) {
+  @container (min-width: 680px) {
+    .shipment-facts {
+      position: sticky;
+      top: var(--od-sticky-offset, 96px);
+      align-self: start;
+      max-height: calc(100vh - var(--od-sticky-offset, 96px) - 140px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+  }
+}
