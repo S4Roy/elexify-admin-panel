@@ -55,6 +55,7 @@ const PREFERENCE_GROUPS: {
     key: 'marketing',
     label: 'Marketing',
     rows: [
+      { key: 'push', label: 'Marketing — Push' },
       { key: 'email', label: 'Marketing — Email' },
       { key: 'sms', label: 'Marketing — SMS' },
       { key: 'whatsapp', label: 'Marketing — WhatsApp' },
@@ -113,6 +114,43 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     to_date: null,
   };
 
+  pushState: { devices: { platform: string; app_version?: string; last_seen_at: string }[]; can_test: boolean; reason: string | null } | null = null;
+  pushLoading = false;
+  pushError = '';
+  pushSending = false;
+  private pushRequestId: string | null = null;
+
+  fetchPushDevices(): void {
+    if (!this.customerId || !this.helperService.can('customer.notification.view')) return;
+    const id = this.customerId;
+    this.pushLoading = true;
+    this.pushState = null;
+    this.pushError = '';
+    this.apiService.customerPushDevices(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => { if (id !== this.customerId) return; this.pushState = res.data; this.pushLoading = false; },
+      error: () => { if (id !== this.customerId) return; this.pushError = 'Unable to load registered devices.'; this.pushLoading = false; },
+    });
+  }
+
+  sendTestPush(): void {
+    if (!this.customerId || !this.pushState?.can_test || this.pushSending || !this.helperService.can('customer.notification.send')) return;
+    const id = this.customerId;
+    this.pushRequestId ||= crypto.randomUUID();
+    this.pushSending = true;
+    this.apiService.customerPushTest(id, this.pushRequestId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.pushSending = false;
+        this.pushRequestId = null;
+        this.toastr.success('Test push queued. Delivery will be attempted by the notification worker.');
+        if (id === this.customerId) this.fetchNotificationHistory();
+      },
+      error: (error: any) => {
+        this.pushSending = false;
+        this.toastr.error(error?.error?.message || 'Unable to queue test push. Please retry.');
+      },
+    });
+  }
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -130,6 +168,8 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.customerId = params.get('_id');
       if (this.customerId) {
+        this.pushRequestId = null;
+        this.fetchPushDevices();
         this.fetchAddresses();
         this.fetchCustomerDetails();
         this.fetchNotificationPreferences();
@@ -371,6 +411,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
           this.resetEditableValues();
           this.editingPreferences = false;
           this.toastr.success('Notification preferences updated');
+          this.fetchPushDevices();
         },
         error: () => {
           this.savingPreferences = false;

@@ -46,7 +46,7 @@ export class IntegrationCredentialsComponent implements OnInit {
         this.integrations = res?.data ?? [];
         for (const item of this.integrations) {
           this.drafts[item.provider] ??= {};
-          if (item.provider === 'recaptcha') {
+          if (['recaptcha', 'firebase_push'].includes(item.provider)) {
             for (const [key, field] of Object.entries(item.fields)) {
               if (!field.secret) this.drafts[item.provider][key] = field.value || '';
             }

@@ -106,6 +106,7 @@
                 initials(item.name)
                 }}</span>
               <div>
+                <a *ngIf="item.push_device_count" [routerLink]="['/customers/details', item._id]" [attr.aria-label]="item.push_device_count + ' registered push devices'" [title]="item.push_device_count + ' registered push devices (not live connection status)'" class="inline-flex items-center gap-1 text-primary"><mat-icon aria-hidden="true">phonelink_ring</mat-icon><span>{{ item.push_device_count }}</span></a>
                 <a class="customer-name" [routerLink]="['/customers/details', item._id]">{{
                   item.name ||
                   "Unnamed

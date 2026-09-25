@@ -223,6 +223,8 @@ export class ApiService {
     );
   }
 
+  customerPushDevices(id: string) { return this.httpService.get(`admin/notifications/customers/${id}/devices`); }
+  customerPushTest(id: string, requestId: string) { return this.httpService.post(`admin/notifications/customers/${id}/test`, { request_id: requestId }); }
   pushCampaignList(cursor: string | null = null) {
     return this.httpService.get(`admin/notifications/campaigns${cursor ? '?cursor=' + encodeURIComponent(cursor) : ''}`);
   }

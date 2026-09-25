@@ -65,6 +65,23 @@
 
   <div class="customer-layout">
     <div class="customer-main">
+      <section class="panel" *ngIf="helperService.can('customer.notification.view')">
+        <div class="panel-head">
+          <h3 class="flex items-center gap-2"><mat-icon aria-hidden="true">{{ pushState?.devices?.length ? 'phonelink_ring' : 'phonelink_off' }}</mat-icon>Push devices</h3>
+          <button type="button" class="panel-link" (click)="fetchPushDevices()" [disabled]="pushLoading">Refresh</button>
+        </div>
+        <div class="px-4 pb-4 space-y-3">
+          <p *ngIf="pushLoading">Loading devices…</p>
+          <p *ngIf="pushError" role="alert">{{ pushError }}</p>
+          <ng-container *ngIf="pushState">
+            <p>{{ pushState.devices.length }} registered active device(s). Registration does not confirm the device is online.</p>
+            <ul><li *ngFor="let device of pushState.devices">{{ device.platform }} · App {{ device.app_version || 'unknown' }} · Last registered {{ device.last_seen_at | date:'medium' }}</li></ul>
+            <p *ngIf="pushState.reason">{{ pushState.reason }}</p>
+            <p>Test message: “Elexify test notification” — This is a test notification from Elexify. Open the app to view your notifications.</p>
+            <button *ngIf="helperService.can('customer.notification.send')" type="button" class="rounded-md border border-primary px-3 py-2 text-primary disabled:opacity-50" [disabled]="!pushState.can_test || pushSending" (click)="sendTestPush()">{{ pushSending ? 'Queuing…' : 'Send test push' }}</button>
+          </ng-container>
+        </div>
+      </section>
       <!-- Recent orders -->
       <section class="panel">
         <div class="panel-head">
