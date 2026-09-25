@@ -435,8 +435,8 @@ export function getFileExtension(filePath: string) {
 // never unstyled.
 const SEMANTIC_STATUS_COLORS: Record<string, string> = {
   pending: '#f59e0b',
+  confirmed: '#3b82f6',
   processing: '#0ea5e9',
-  confirmed: '#0ea5e9',
   packed: '#6366f1',
   'picked-up': '#6366f1',
   'out-for-pickup': '#6366f1',

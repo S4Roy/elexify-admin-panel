@@ -280,14 +280,16 @@ export const routes: Routes = [
               pageTitle: (data: any, route: ActivatedRouteSnapshot) => {
                 const status = route.paramMap.get('order_status') ?? '';
                 const formattedStatus = status
-                  .replace(/-/g, ' ')
+                  .replace(/[-_]/g, ' ')
+                  .replace(/,/g, ' & ')
                   .replace(/\b\w/g, (char) => char.toUpperCase());
                 return `Orders - ${formattedStatus}`;
               },
               breadcrumb: (data: any, route: ActivatedRouteSnapshot) => {
                 const status = route.paramMap.get('order_status') ?? '';
                 return status
-                  .replace(/-/g, ' ')
+                  .replace(/[-_]/g, ' ')
+                  .replace(/,/g, ' & ')
                   .replace(/\b\w/g, (char) => char.toUpperCase());
               },
             },
@@ -299,14 +301,16 @@ export const routes: Routes = [
               pageTitle: (data: any, route: ActivatedRouteSnapshot) => {
                 const status = route.paramMap.get('order_status') ?? '';
                 const formattedStatus = status
-                  .replace(/-/g, ' ')
+                  .replace(/[-_]/g, ' ')
+                  .replace(/,/g, ' & ')
                   .replace(/\b\w/g, (char) => char.toUpperCase());
                 return `Orders - ${formattedStatus}`;
               },
               breadcrumb: (data: any, route: ActivatedRouteSnapshot) => {
                 const status = route.paramMap.get('order_status') ?? '';
                 return status
-                  .replace(/-/g, ' ')
+                  .replace(/[-_]/g, ' ')
+                  .replace(/,/g, ' & ')
                   .replace(/\b\w/g, (char) => char.toUpperCase());
               },
             },

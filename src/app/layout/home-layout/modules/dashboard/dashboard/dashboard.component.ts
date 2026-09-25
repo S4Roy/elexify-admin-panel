@@ -552,7 +552,8 @@ export class DashboardComponent {
         count: a.to_pack,
         icon: 'inventory',
         tone: 'blue',
-        link: ['/inventory/orders/processing'],
+        // Matches the backend count: confirmed + processing.
+        link: ['/inventory/orders/confirmed,processing'],
       },
       {
         key: 'to_ship',

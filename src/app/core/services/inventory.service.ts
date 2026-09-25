@@ -184,7 +184,7 @@ export class InventoryService {
   forceCancelOrder(payload: { order_id: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/cancel/force`, payload);
   }
-  // Undoes a cancellation back to "processing" — refused server-side if a
+  // Undoes a cancellation back to "confirmed" — refused server-side if a
   // refund already went through. See routes/admin/inventory/order.js "/reopen".
   reopenOrder(payload: { order_id: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/reopen`, payload);

@@ -1,5 +1,6 @@
 // Shared order and payment badge definitions for the list and details pages.
-// Amber: attention/incomplete; blue: preparation; teal: ready to ship; purple: in transit;
+// Amber: attention/incomplete; blue: confirmed (accepted, awaiting fulfilment);
+// indigo: being prepared; teal: ready to ship; purple: in transit;
 // green: fulfilled/paid; red: failure; gray: closed without fulfillment/payment.
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: 'Pending',
@@ -21,7 +22,7 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 export const ORDER_STATUS_STYLES: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800',
   confirmed: 'bg-blue-100 text-blue-800',
-  processing: 'bg-blue-100 text-blue-800',
+  processing: 'bg-indigo-100 text-indigo-800',
   packed: 'bg-teal-100 text-teal-800',
   shipped: 'bg-purple-100 text-purple-800',
   out_for_delivery: 'bg-purple-100 text-purple-800',

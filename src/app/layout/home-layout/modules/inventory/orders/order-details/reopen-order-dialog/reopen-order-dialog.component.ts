@@ -18,7 +18,7 @@ export interface ReopenOrderDialogData {
   orderNumber: string;
 }
 
-// Undoes a cancellation back to "processing" — see backend
+// Undoes a cancellation back to "confirmed" — see backend
 // services/orderService/reopenOrder.js. Always requires a written
 // justification, same as force-cancel.
 @Component({
