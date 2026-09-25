@@ -531,7 +531,12 @@ export class DashboardComponent {
     link: string[];
   }[] {
     const a = this.overview?.action_items;
-    if (!a) return [];
+    return this.memoize('actionItems', [a, this.canReturns], () =>
+      a ? this.buildActionItems(a) : [],
+    );
+  }
+
+  private buildActionItems(a: any) {
     const items = [
       {
         key: 'to_confirm',
@@ -600,16 +605,34 @@ export class DashboardComponent {
     color: string;
   }[] {
     const rows = this.overview?.payment_mix ?? [];
-    const total =
-      rows.reduce((n: number, r: any) => n + (r.orders || 0), 0) || 1;
-    return rows.map((r: any) => ({
-      type: r.type,
-      label: PAYMENT_TYPE_LABELS[r.type] ?? r.type,
-      orders: r.orders,
-      revenue: r.revenue,
-      share: Math.round((r.orders / total) * 1000) / 10,
-      color: PAYMENT_TYPE_COLORS[r.type] ?? '#94a3b8',
-    }));
+    return this.memoize('paymentMix', [this.overview?.payment_mix], () => {
+      const total =
+        rows.reduce((n: number, r: any) => n + (r.orders || 0), 0) || 1;
+      return rows.map((r: any) => ({
+        type: r.type,
+        label: PAYMENT_TYPE_LABELS[r.type] ?? r.type,
+        orders: r.orders,
+        revenue: r.revenue,
+        share: Math.round((r.orders / total) * 1000) / 10,
+        color: PAYMENT_TYPE_COLORS[r.type] ?? '#94a3b8',
+      }));
+    });
+  }
+
+  // Template getters that build fresh arrays on every change detection make
+  // *ngFor tear down and re-insert their DOM each cycle. On real iOS/Android
+  // devices a tap's touchstart/mouseover already runs change detection, and
+  // WebKit treats the resulting "new visible content" as a hover — the click
+  // is swallowed, so links, the menu button and the filter selects looked
+  // dead on phones. Returning the same array until the inputs change keeps
+  // the DOM stable between cycles.
+  private memoCache = new Map<string, { deps: unknown[]; value: any }>();
+  private memoize<T>(key: string, deps: unknown[], compute: () => T): T {
+    const hit = this.memoCache.get(key);
+    if (hit && hit.deps.every((d, i) => d === deps[i])) return hit.value;
+    const value = compute();
+    this.memoCache.set(key, { deps, value });
+    return value;
   }
 
   paymentTypeLabel(type: string): string {
@@ -865,9 +888,11 @@ export class DashboardComponent {
   }
 
   get topGeoStates(): any[] {
-    return [...this.geoStats]
-      .sort((a, b) => (b[this.geoMetric] ?? 0) - (a[this.geoMetric] ?? 0))
-      .slice(0, 8);
+    return this.memoize('topGeoStates', [this.geoStats, this.geoMetric], () =>
+      [...this.geoStats]
+        .sort((a, b) => (b[this.geoMetric] ?? 0) - (a[this.geoMetric] ?? 0))
+        .slice(0, 8),
+    );
   }
 
   geoMetricLabel(): string {
