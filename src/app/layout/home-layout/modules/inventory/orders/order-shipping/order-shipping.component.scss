@@ -34,3 +34,15 @@
   .packing-content { padding: 10px; }
   .packing-header, .packing-footer { padding: 10px; }
 }
+
+/* Inline quantity-to-move stepper (replaces the old browser prompt). */
+.qty-stepper { display: inline-flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: white; flex-shrink: 0; }
+.qty-stepper button { width: 26px; height: 28px; font-size: 15px; font-weight: 700; color: #1d4ed8; background: #f8fafc; }
+.qty-stepper button:disabled { color: #cbd5e1; cursor: not-allowed; }
+.qty-stepper input { width: 34px; height: 28px; border: 0; border-left: 1px solid #e2e8f0; text-align: center; font-size: 12px; font-weight: 600; -moz-appearance: textfield; }
+.qty-stepper input::-webkit-outer-spin-button, .qty-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.qty-stepper .of { padding: 0 6px; font-size: 11px; color: #64748b; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; height: 28px; line-height: 28px; white-space: nowrap; }
+.pack-all { border: 1px solid #1d4ed8; color: #1d4ed8; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; background: white; }
+.pack-all:hover { background: #eff6ff; }
+.pack-all:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 550px) { .qty-stepper .of { display: none; } }

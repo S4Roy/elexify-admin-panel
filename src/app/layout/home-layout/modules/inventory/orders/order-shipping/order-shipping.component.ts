@@ -132,33 +132,72 @@ export class OrderShippingComponent {
       .map(item => ({ order_item_id: String(item._id), quantity: this.available(item) }));
     return this.drafts.find(draft => `draft-${draft.key}` === source)?.items || [];
   }
-  move(event: CdkDragDrop<PackLine[]>) {
+  // Units to move per line, set with the inline stepper (defaults to all
+  // units). Keyed by source container + order item.
+  moveQuantities: Record<string, number> = {};
+  private moveKey(source: string, id: string) { return `${source}:${id}`; }
+  private maxFor(line: PackLine, source: string): number {
+    return source === 'unpacked' ? this.available(this.itemFor(line.order_item_id)) : line.quantity;
+  }
+  moveQty(line: PackLine, source: string): number {
+    const max = this.maxFor(line, source);
+    const chosen = this.moveQuantities[this.moveKey(source, line.order_item_id)];
+    return Math.min(max, Math.max(1, Number.isInteger(chosen) ? chosen : max));
+  }
+  setMoveQty(line: PackLine, source: string, value: number) {
+    const max = this.maxFor(line, source);
+    const clean = Number.isFinite(value) ? Math.round(value) : max;
+    this.moveQuantities[this.moveKey(source, line.order_item_id)] = Math.min(max, Math.max(1, clean));
+  }
+  stepMoveQty(line: PackLine, source: string, delta: number) {
+    this.setMoveQty(line, source, this.moveQty(line, source) + delta);
+  }
+  /** Drag moves the whole line (standard drag behaviour); use the stepper +
+   * Move to… to split units across packages. */
+  move(event: CdkDragDrop<PackLine[]>, amount?: number) {
     const source = event.previousContainer.id;
     const target = event.container.id;
-    if (source === target) return;
+    if (source === target || this.busy) return;
     const line: PackLine = event.item.data;
-    const maximum = source === 'unpacked' ? this.available(this.itemFor(line.order_item_id)) : line.quantity;
+    const maximum = this.maxFor(line, source);
     if (!maximum) return;
-    let amount = maximum;
-    if (maximum > 1) {
-      const answer = window.prompt(`How many units to move? (1–${maximum})`, String(maximum));
-      if (answer === null) return;
-      amount = Number(answer);
-      if (!Number.isInteger(amount) || amount < 1 || amount > maximum) { this.toastr.error(`Enter a whole quantity from 1 to ${maximum}.`); return; }
-    }
+    const units = Math.min(maximum, Math.max(1, amount ?? maximum));
     if (source !== 'unpacked') {
-      const draft = this.drafts.find(d => `draft-${d.key}` === source)!;
-      const original = draft.items.find(item => item.order_item_id === line.order_item_id)!;
-      original.quantity -= amount;
+      const draft = this.drafts.find(d => `draft-${d.key}` === source);
+      const original = draft?.items.find(item => item.order_item_id === line.order_item_id);
+      if (!draft || !original) return;
+      original.quantity -= units;
       draft.items = draft.items.filter(item => item.quantity > 0);
     }
     if (target !== 'unpacked') {
-      const draft = this.drafts.find(d => `draft-${d.key}` === target)!;
+      const draft = this.drafts.find(d => `draft-${d.key}` === target);
+      if (!draft) return;
       const existing = draft.items.find(item => item.order_item_id === line.order_item_id);
-      if (existing) existing.quantity += amount;
-      else draft.items.push({ order_item_id: line.order_item_id, quantity: amount });
+      if (existing) existing.quantity += units;
+      else draft.items.push({ order_item_id: line.order_item_id, quantity: units });
     }
+    // Quantities left over from a previous split would be stale now.
+    delete this.moveQuantities[this.moveKey(source, line.order_item_id)];
+    delete this.moveQuantities[this.moveKey(target, line.order_item_id)];
     this.prefillWeights();
+  }
+  /** "Move to…" menu: moves the stepper quantity; "new" creates a package. */
+  onMoveSelect(select: HTMLSelectElement, line: PackLine, source: string) {
+    let target = select.value;
+    select.value = '';
+    if (!target) return;
+    if (target === 'new') {
+      this.addPackage();
+      target = `draft-${this.drafts[this.drafts.length - 1].key}`;
+    }
+    this.moveByButton(line, source, target, this.moveQty(line, source));
+  }
+  /** One click for the common case: everything remaining into one package. */
+  packAll() {
+    if (this.busy || this.remainingQuantity === 0) return;
+    if (!this.drafts.length) this.addPackage();
+    const target = `draft-${this.drafts[this.drafts.length - 1].key}`;
+    for (const line of this.sourceLines('unpacked')) this.moveByButton(line, 'unpacked', target);
   }
   prefillWeights() {
     for (const draft of this.drafts) if (!draft.weightEdited) draft.weight = this.packageWeight(draft.items) || null;
@@ -168,8 +207,8 @@ export class OrderShippingComponent {
     // Clearing the field hands it back to the calculated total.
     draft.weightEdited = value !== null;
   }
-  moveByButton(line: PackLine, source: string, target: string) {
-    this.move({ previousContainer: { id: source }, container: { id: target }, item: { data: line } } as CdkDragDrop<PackLine[]>);
+  moveByButton(line: PackLine, source: string, target: string, amount?: number) {
+    this.move({ previousContainer: { id: source }, container: { id: target }, item: { data: line } } as CdkDragDrop<PackLine[]>, amount);
   }
   createShipments() {
     if (!this.canCreate) return;

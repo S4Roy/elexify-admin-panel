@@ -15,7 +15,7 @@
 
     <div class="workspace">
       <section class="unpacked-panel" cdkDropList id="unpacked" [cdkDropListDisabled]="busy" [cdkDropListConnectedTo]="dropIds" (cdkDropListDropped)="move($event)">
-        <div class="section-heading"><div><h3>Unpacked Items</h3><p>{{ remainingQuantity }} units waiting to pack</p></div><span class="count">{{ orderItems.length }} lines</span></div>
+        <div class="section-heading"><div><h3>Unpacked Items</h3><p>{{ remainingQuantity }} units waiting to pack</p></div><button *ngIf="remainingQuantity > 0" type="button" class="pack-all" (click)="packAll()" [disabled]="busy">{{ drafts.length ? 'Pack all into ' + draftName(drafts.length - 1) : 'Pack all into one package' }}</button></div>
         <div *ngIf="!orderItems.length" class="empty">This order has no items.</div>
         <div *ngIf="orderItems.length && remainingQuantity === 0" class="empty">All available items are assigned to packages.</div>
         <ng-container *ngFor="let item of orderItems">
@@ -23,8 +23,8 @@
             <span class="drag-handle" cdkDragHandle aria-label="Drag item">⠿</span>
             <img *ngIf="item.images?.[0]?.url" [src]="item.images[0].url" [alt]="item.display_name || item.name" />
             <div class="item-info"><strong>{{ item.display_name || item.name }}</strong><small>SKU {{ item.sku || '—' }}</small><small>Ordered {{ item.quantity }} · Packed {{ item.packed_quantity || 0 }} · Remaining {{ available(item) }}</small></div>
-            <span class="qty-pill">×{{ available(item) }}</span>
-            <select class="move-select" aria-label="Move item to package" (change)="moveByButton({ order_item_id: item._id, quantity: available(item) }, 'unpacked', $any($event.target).value); $any($event.target).value = ''"><option value="">Move to…</option><option *ngFor="let draft of drafts; let i = index" [value]="'draft-' + draft.key">{{ draftName(i) }}</option></select>
+            <ng-container *ngTemplateOutlet="qtyControl; context: { line: { order_item_id: item._id, quantity: available(item) }, source: 'unpacked' }"></ng-container>
+            <select #unpackedMove class="move-select" aria-label="Move units to package" [disabled]="busy" (change)="onMoveSelect(unpackedMove, { order_item_id: item._id, quantity: available(item) }, 'unpacked')"><option value="">Move to…</option><option *ngFor="let draft of drafts; let i = index" [value]="'draft-' + draft.key">{{ draftName(i) }}</option><option value="new">+ New package</option></select>
           </div>
         </ng-container>
       </section>
@@ -35,7 +35,7 @@
         <div class="package-card" *ngFor="let draft of drafts; let i = index" cdkDropList [id]="'draft-' + draft.key" [cdkDropListDisabled]="busy" [cdkDropListConnectedTo]="dropIds" (cdkDropListDropped)="move($event)">
           <div class="package-head"><div><h4>{{ draftName(i) }}</h4><p>{{ draft.items.length }} items · {{ quantity(draft.items) }} units · {{ value(draft.items) | currency: order.currency || 'INR' }}</p></div><button type="button" class="danger-link" (click)="removePackage(draft)" [disabled]="busy">Remove</button></div>
           <div class="package-lines" *ngIf="draft.items.length; else dropHint">
-            <div class="item-row compact" *ngFor="let line of draft.items" cdkDrag [cdkDragData]="line"><span class="drag-handle" cdkDragHandle aria-label="Drag item">⠿</span><img *ngIf="itemFor(line.order_item_id)?.images?.[0]?.url" [src]="itemFor(line.order_item_id).images[0].url" alt="" /><div class="item-info"><strong>{{ itemFor(line.order_item_id)?.display_name || itemFor(line.order_item_id)?.name }}</strong><small>SKU {{ itemFor(line.order_item_id)?.sku || '—' }}</small></div><span class="qty-pill">×{{ line.quantity }}</span><select class="move-select" aria-label="Move item" (change)="moveByButton(line, 'draft-' + draft.key, $any($event.target).value); $any($event.target).value = ''"><option value="">Move to…</option><option value="unpacked">Unpacked</option><option *ngFor="let other of drafts; let j = index" [value]="'draft-' + other.key" [disabled]="other === draft">{{ draftName(j) }}</option></select></div>
+            <div class="item-row compact" *ngFor="let line of draft.items" cdkDrag [cdkDragData]="line"><span class="drag-handle" cdkDragHandle aria-label="Drag item">⠿</span><img *ngIf="itemFor(line.order_item_id)?.images?.[0]?.url" [src]="itemFor(line.order_item_id).images[0].url" alt="" /><div class="item-info"><strong>{{ itemFor(line.order_item_id)?.display_name || itemFor(line.order_item_id)?.name }}</strong><small>SKU {{ itemFor(line.order_item_id)?.sku || '—' }}</small></div><ng-container *ngTemplateOutlet="qtyControl; context: { line: line, source: 'draft-' + draft.key }"></ng-container><select #packedMove class="move-select" aria-label="Move units" [disabled]="busy" (change)="onMoveSelect(packedMove, line, 'draft-' + draft.key)"><option value="">Move to…</option><option value="unpacked">Unpacked</option><option *ngFor="let other of drafts; let j = index" [value]="'draft-' + other.key" [disabled]="other === draft">{{ draftName(j) }}</option><option value="new">+ New package</option></select></div>
           </div>
           <ng-template #dropHint><div class="drop-hint">Drop items here</div></ng-template>
           <div class="dimensions"><label>Weight (kg)<input type="number" min="0.01" max="1000" step="0.01" [ngModel]="draft.weight" (ngModelChange)="editWeight(draft, $event)" [placeholder]="packageWeight(draft.items) || 'Enter weight'" aria-label="Package weight in kilograms" /></label><label>Length (cm)<input type="number" min="0.1" step="0.1" [(ngModel)]="draft.length" /></label><label>Width (cm)<input type="number" min="0.1" step="0.1" [(ngModel)]="draft.width" /></label><label>Height (cm)<input type="number" min="0.1" step="0.1" [(ngModel)]="draft.height" /></label></div>
@@ -48,3 +48,15 @@
 
   <footer class="packing-footer"><div class="pickup"><label for="pickup-location">Ship from</label><select id="pickup-location" [(ngModel)]="pickupLocation" [disabled]="!pickupLocations.length"><option *ngIf="!pickupLocations.length" value="">Configured default</option><option *ngFor="let location of pickupLocations" [value]="location.pickup_location">{{ location.pickup_location }} — {{ location.city }}</option></select><small *ngIf="pickupError">{{ pickupError }}</small></div><div class="footer-actions"><span>{{ packedQuantity }} / {{ totalQuantity }} packed</span><button type="button" class="secondary" (click)="close()">Done</button><button type="button" class="primary" [disabled]="!canCreate" (click)="createShipments()">{{ busy ? 'Creating shipments…' : 'Create Shipments' }}</button></div></footer>
 </div>
+
+<!-- Units to move for one line: a stepper when there's more than one unit
+     (defaults to all), otherwise a plain ×1 pill. -->
+<ng-template #qtyControl let-line="line" let-source="source">
+  <div *ngIf="line.quantity > 1; else singleUnit" class="qty-stepper" role="group" [attr.aria-label]="'Units to move, up to ' + line.quantity">
+    <button type="button" aria-label="Fewer units" [disabled]="busy || moveQty(line, source) <= 1" (click)="stepMoveQty(line, source, -1)">−</button>
+    <input type="number" inputmode="numeric" min="1" [max]="line.quantity" [value]="moveQty(line, source)" [disabled]="busy" aria-label="Units to move" (change)="setMoveQty(line, source, $any($event.target).valueAsNumber); $any($event.target).value = moveQty(line, source)" />
+    <span class="of">of {{ line.quantity }}</span>
+    <button type="button" aria-label="More units" [disabled]="busy || moveQty(line, source) >= line.quantity" (click)="stepMoveQty(line, source, 1)">+</button>
+  </div>
+  <ng-template #singleUnit><span class="qty-pill">×1</span></ng-template>
+</ng-template>
