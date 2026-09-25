@@ -1,0 +1,39 @@
+<section class="campaigns">
+  <h1>Push campaigns</h1>
+  <p>Promotional pushes go only to active customers who opted in and have an active device.</p>
+  <p *ngIf="error" role="alert" class="error">{{ error }}</p>
+  <form class="card" *ngIf="can('create')" (ngSubmit)="create()">
+    <h2>Create draft</h2>
+    <label>Title<input name="title" [(ngModel)]="form.title" maxlength="100" required /></label>
+    <label>Message<textarea name="body" [(ngModel)]="form.body" maxlength="500" required></textarea></label>
+    <label>Image URL (optional, HTTPS)<input name="image" [(ngModel)]="form.image_url" type="url" /></label>
+    <label>Destination<input name="route" [(ngModel)]="form.route" required /></label>
+    <small>Use /notifications, /orders, /orders/database-id, /products, /products/slug, /(tabs)/categories, or /account/security.</small>
+    <label>Audience<select name="audience" [(ngModel)]="form.audience"><option value="all">All eligible customers</option><option value="specific">Specific customers</option></select></label>
+    <label *ngIf="form.audience === 'specific'">Customer IDs (comma-separated, maximum 100)<textarea name="customers" [(ngModel)]="form.customers" required></textarea></label>
+    <label>Expires at (local time)<input name="expires" type="datetime-local" [(ngModel)]="form.expires_at" required /></label>
+    <button type="submit" [disabled]="busy">Create draft</button>
+  </form>
+  <button (click)="load()" [disabled]="busy">Refresh campaigns</button>
+  <table><thead><tr><th>Title</th><th>Status</th><th>Requested recipients</th><th>Scheduled</th><th></th></tr></thead>
+    <tbody><tr *ngFor="let c of items"><td>{{c.title}}</td><td>{{c.status}}</td><td>{{c.requested_recipients ?? '—'}}</td><td>{{c.scheduled_at | date:'short'}}</td><td><button (click)="select(c)" [disabled]="busy">View</button></td></tr></tbody></table>
+  <p *ngIf="!items.length">No campaigns yet.</p>
+  <button *ngIf="cursor" (click)="load(true)" [disabled]="busy">Load more</button>
+  <article *ngIf="selected" class="card">
+    <h2>{{selected.title}}</h2><p>{{selected.body}}</p><img *ngIf="selected.image_url" [src]="selected.image_url" alt="Campaign preview" />
+    <p>Destination: {{selected.route}} · {{selected.status}}</p>
+    <p *ngIf="stats">Inbox recipients: {{stats.requested}} · Read: {{stats.read}} · FCM submissions: {{stats.submissions.SUBMITTED || 0}} · Failed devices: {{stats.submissions.FAILED || 0}} · Invalid tokens: {{stats.invalid_tokens}} · Pending recipients: {{stats.pending}}</p>
+    <p>FCM submission means provider acceptance. It does not confirm delivery or viewing. Cancellation stops remaining work; submissions already in progress may finish.</p>
+    <ng-container *ngIf="selected.status === 'DRAFT'">
+      <button (click)="prepare()" [disabled]="busy">Preview eligible recipient count</button>
+      <div *ngIf="preview"><p>{{preview.recipient_count}} eligible customers right now. Consent and device eligibility are checked again when processing.</p>
+        <label><input type="checkbox" [(ngModel)]="confirmed" />I confirm this message and audience.</label>
+        <button *ngIf="can('send')" (click)="action('send')" [disabled]="busy || !confirmed || !preview.recipient_count">Send now</button>
+        <label *ngIf="can('schedule')">Schedule (local time)<input type="datetime-local" [(ngModel)]="scheduledAt" /></label>
+        <button *ngIf="can('schedule')" (click)="action('schedule')" [disabled]="busy || !confirmed || !scheduledAt || !preview.recipient_count">Schedule</button>
+      </div>
+    </ng-container>
+    <div *ngIf="can('send')"><label>Test customer ID<input [(ngModel)]="testCustomer" /></label><button (click)="action('test')" [disabled]="busy || !testCustomer">Send test</button></div>
+    <button *ngIf="can('cancel') && ['DRAFT','SCHEDULED','PROCESSING'].includes(selected.status)" (click)="action('cancel')" [disabled]="busy">Cancel remaining sends</button>
+  </article>
+</section>

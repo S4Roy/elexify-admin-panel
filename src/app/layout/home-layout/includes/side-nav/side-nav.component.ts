@@ -243,6 +243,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'Campaigns',
+              url: '/notifications/campaigns',
+              exact: true,
+            },
+            {
               label: 'Dead Letter Queue',
               url: '/notifications/dead-letter',
               exact: true,

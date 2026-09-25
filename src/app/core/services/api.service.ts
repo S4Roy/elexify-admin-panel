@@ -223,6 +223,13 @@ export class ApiService {
     );
   }
 
+  pushCampaignList(cursor: string | null = null) {
+    return this.httpService.get(`admin/notifications/campaigns${cursor ? '?cursor=' + encodeURIComponent(cursor) : ''}`);
+  }
+  pushCampaignCreate(payload: any) { return this.httpService.post('admin/notifications/campaigns', payload); }
+  pushCampaignAction(id: string, action: string, payload: any) { return this.httpService.post(`admin/notifications/campaigns/${id}/${action}`, payload); }
+  pushCampaignAnalytics(id: string) { return this.httpService.get(`admin/notifications/campaigns/${id}/analytics`); }
+
   // --- Phase 2: notifications ---
   notificationHistory(params: any) {
     return this.httpService.get(`admin/notifications/history?${params.toString()}`);

@@ -1,3 +1,4 @@
+import { CampaignsComponent } from './modules/notifications/campaigns/campaigns.component';
 import { Routes } from '@angular/router';
 import { HomeLayoutComponent } from './home-layout.component';
 import { CustomersComponent } from './modules/customers/customers.component';
@@ -58,6 +59,7 @@ export const routes: Routes = [
         path: 'notifications',
         data: { pageTitle: 'Notifications', breadcrumb: 'Notifications' },
         children: [
+          { path: 'campaigns', component: CampaignsComponent, data: { pageTitle: 'Push Campaigns', breadcrumb: 'Campaigns' } },
           {
             path: '',
             component: NotificationDashboardComponent,
