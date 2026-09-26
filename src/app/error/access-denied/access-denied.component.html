@@ -1,0 +1,17 @@
+<main class="error-page" aria-labelledby="access-denied-title">
+  <div class="error-brand"><mat-icon aria-hidden="true">shopping_bag</mat-icon>Elexify Admin</div>
+  <div class="error-content">
+    <section class="error-card">
+      <div class="error-symbol"><mat-icon aria-hidden="true">lock_outline</mat-icon></div>
+      <p class="error-code">Error 403</p>
+      <h1 id="access-denied-title">Access denied</h1>
+      <p class="error-description">You’re signed in, but your account doesn’t have permission to view this page.</p>
+      <div class="error-guidance"><strong>Need access?</strong>Ask your administrator to review your role and permissions. If you’re using the wrong account, sign out and sign in with another account.</div>
+      <div class="error-actions">
+        <a *ngIf="availablePage as destination" [routerLink]="destination" class="error-button primary"><mat-icon aria-hidden="true">arrow_back</mat-icon>Return to admin</a>
+        <button type="button" class="error-button" (click)="auth.userLogout()"><mat-icon aria-hidden="true">logout</mat-icon>Sign out</button>
+      </div>
+    </section>
+  </div>
+  <p class="error-footer">Elexify · Store administration</p>
+</main>
