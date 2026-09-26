@@ -106,6 +106,7 @@
                 initials(item.name)
                 }}</span>
               <div>
+                <span class="text-xs" [class.text-green-600]="item.presence?.online" [attr.title]="item.presence?.lastActivityAt ? 'Last activity: ' + (item.presence.lastActivityAt | date:'medium') : 'No recent session activity'">{{ item.presence?.online ? 'Online' : 'Offline' }} · {{ item.presence?.activeDevices || 0 }} sessions</span>
                 <a *ngIf="item.push_device_count" [routerLink]="['/customers/details', item._id]" [attr.aria-label]="item.push_device_count + ' registered push devices'" [title]="item.push_device_count + ' registered push devices (not live connection status)'" class="inline-flex items-center gap-1 text-primary"><mat-icon aria-hidden="true">phonelink_ring</mat-icon><span>{{ item.push_device_count }}</span></a>
                 <a class="customer-name" [routerLink]="['/customers/details', item._id]">{{
                   item.name ||

@@ -90,6 +90,43 @@ const PREFERENCE_GROUPS: {
   styleUrl: './customer-details.component.scss',
 })
 export class CustomerDetailsComponent implements OnInit, OnDestroy {
+  sessionState: any = null;
+  sessionsLoading = false;
+  sessionsError = '';
+  sessionActionBusy = false;
+  authEvents: any[] = [];
+  fetchSessions(): void {
+    if (!this.customerId || !this.helperService.can('customer.view')) return;
+    const id = this.customerId;
+    this.sessionsLoading = true;
+    this.sessionsError = '';
+    this.sessionState = null;
+    this.apiService.customerSessions(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: res => { if (id === this.customerId) { this.sessionState = res.data; this.sessionsLoading = false; } },
+      error: () => { if (id === this.customerId) { this.sessionsError = 'Unable to load sessions. Please retry.'; this.sessionsLoading = false; } },
+    });
+    this.authEvents = [];
+    if (this.helperService.can('audit_log.view')) this.apiService.customerAuthEvents(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: res => { if (id === this.customerId) this.authEvents = res.data.events; },
+      error: () => { this.toastr.error('Unable to load authentication events'); },
+    });
+  }
+  revokeSession(sessionId: string | null): void {
+    if (!this.customerId || this.sessionActionBusy || !this.helperService.can('customers.update')) return;
+    const id = this.customerId;
+    this.dialog.open(ReasonDialogComponent, { disableClose: true, data: {
+      title: sessionId ? 'Sign out this device?' : 'Sign out all devices?',
+      message: 'The customer will need to sign in again. This action is recorded in the security history.',
+      reasonLabel: 'Reason', minLength: 10, confirmText: 'Sign out',
+    } }).afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (!result?.confirm || id !== this.customerId) return;
+      this.sessionActionBusy = true;
+      this.apiService.revokeCustomerSession(id, sessionId, result.reason).pipe(takeUntil(this.destroy$)).subscribe({
+        next: () => { this.sessionActionBusy = false; this.toastr.success('Customer signed out'); if (id === this.customerId) this.fetchSessions(); },
+        error: () => { this.sessionActionBusy = false; this.toastr.error('Unable to revoke session'); },
+      });
+    });
+  }
   Global = Global;
   customerId: string | null = null;
   customer: any = null;
@@ -169,6 +206,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
       this.customerId = params.get('_id');
       if (this.customerId) {
         this.pushRequestId = null;
+        this.fetchSessions();
         this.fetchPushDevices();
         this.fetchAddresses();
         this.fetchCustomerDetails();
