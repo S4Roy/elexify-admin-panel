@@ -44,7 +44,14 @@ export class AuthService {
       sessionStorage.setItem(this.USER_TOKEN_KEY, data?.token?.access_token);
       sessionStorage.setItem(this.USER_TOKEN_ADMIN, JSON.stringify(user));
     }
-    void this.permissions.refresh().then(() => this.router.navigateByUrl(this.permissions.landingUrl()))
+    void this.permissions.refresh().then(() => {
+      const requestedUrl = typeof encodedUrl === 'string' ? encodedUrl : '';
+      const isLocalUrl = requestedUrl.startsWith('/') && !requestedUrl.startsWith('//') && !requestedUrl.includes('\\');
+      const destination = isLocalUrl && this.permissions.canRoute(requestedUrl)
+        ? requestedUrl
+        : this.permissions.landingUrl();
+      return this.router.navigateByUrl(destination);
+    })
       .catch(() => this.router.navigateByUrl('/access-denied'));
   }
   getUserToken() {
