@@ -255,9 +255,16 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
   get canEditOrderAddress(): boolean {
     return this.helpersService.can('order.address.manage') &&
       ['pending', 'confirmed', 'processing'].includes(this.data?.order_status) &&
-      !this.data?.invoice?.generated &&
+      !this.invoiceSyncedToZoho &&
       !this.data?.awb && !this.data?.shiprocket_order_id &&
       !this.data?.inventory_reverted && (!this.data?.refund?.status || this.data.refund.status === 'not_required');
+  }
+
+  // A local invoice is revised along with the address; one already copied to
+  // Zoho Books locks the addresses (the backend enforces the same rule).
+  get invoiceSyncedToZoho(): boolean {
+    const zoho = this.zohoInvoice?.zoho;
+    return !!zoho?.invoice_id || ['syncing', 'synced'].includes(zoho?.sync_status);
   }
 
   editOrderAddress(kind: 'shipping' | 'billing'): void {
@@ -274,9 +281,10 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
       width: '680px', maxWidth: '96vw', maxHeight: '92vh', disableClose: true,
       data: { orderId: this.data._id, orderNumber: this.data.id, addressKind: kind,
         expectedUpdatedAt: this.data.updated_at, address: normalized,
+        invoiceNumber: this.data.invoice?.generated ? this.data.invoice?.invoice_number || 'the invoice' : null,
         shipping: this.data.shipping || 0, grandTotal: this.data.grand_total, currency: this.data.currency || 'INR' },
     }).afterClosed().subscribe(saved => {
-      if (saved) this.toastr.success(`${kind === 'shipping' ? 'Shipping' : 'Billing'} address updated`);
+      if (saved) this.toastr.success(`${kind === 'shipping' ? 'Shipping' : 'Billing'} address updated${this.data?.invoice?.generated ? ' and invoice revised' : ''}`);
       this.fetchOrderList();
     });
   }

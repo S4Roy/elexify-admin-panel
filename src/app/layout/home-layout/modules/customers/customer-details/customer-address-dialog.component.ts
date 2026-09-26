@@ -16,6 +16,7 @@ import { ApiService } from 'app/core/services/api.service';
       <p *ngIf="!data.orderId && !data.create" class="mt-2 text-sm text-gray-600">Changes apply to future orders. Your name, reason and changes will be recorded in the audit trail.</p>
       <p *ngIf="data.create" class="mt-2 text-sm text-gray-600">Save a delivery address to this customer’s address book and select it for the order.</p>
       <p *ngIf="data.orderId" class="mt-2 text-sm text-gray-600">This updates the selected address on order #{{ data.orderNumber }}. The customer’s saved addresses and other orders stay unchanged. Your changes and reason are recorded.</p>
+      <p *ngIf="data.invoiceNumber" class="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">Invoice {{ data.invoiceNumber }} will be revised with this address. It keeps the same number and date{{ data.addressKind === 'shipping' ? ', and CGST/SGST/IGST is re-split if the state changes' : '' }}.</p>
       <p class="mt-2 text-xs text-gray-500">Address lines must use English letters, numbers, spaces and common punctuation.</p>
       <fieldset [disabled]="saving" class="mt-5 grid sm:grid-cols-2 gap-4">
         <label *ngFor="let field of textFields" class="block text-sm" [class.sm:col-span-2]="field.key === 'address_line_1'">
@@ -115,7 +116,7 @@ export class CustomerAddressDialogComponent implements OnInit, OnDestroy {
   constructor(
     public dialogRef: MatDialogRef<CustomerAddressDialogComponent>,
     private api: ApiService,
-    @Inject(MAT_DIALOG_DATA) public data: { create?: boolean; customerId?: string; address: any; orderId?: string; orderNumber?: string; addressKind?: string; expectedUpdatedAt?: string | null; shipping?: number; grandTotal?: number; currency?: string },
+    @Inject(MAT_DIALOG_DATA) public data: { create?: boolean; customerId?: string; address: any; orderId?: string; orderNumber?: string; addressKind?: string; expectedUpdatedAt?: string | null; invoiceNumber?: string | null; shipping?: number; grandTotal?: number; currency?: string },
   ) {
     this.value = { phone: data.address.phone || '', phone_code: String(data.address.phone_code || '').replace(/[^0-9]/g, ''), country: data.address.country, state: data.address.state,
       address_type: data.address.address_type || 'home', purpose: data.address.purpose || 'both', reason: '',

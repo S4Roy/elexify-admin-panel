@@ -391,7 +391,10 @@
           </span>
         </p>
         <p *ngIf="!canEditOrderAddress" class="side-card-note">
-          Addresses can be edited by managers only until the order is packed or invoiced.
+          {{ invoiceSyncedToZoho ? 'Addresses are locked because the invoice has been synced to Zoho Books.' : 'Addresses can be edited by managers only until the order is packed.' }}
+        </p>
+        <p *ngIf="canEditOrderAddress && data?.invoice?.generated" class="side-card-note">
+          Editing an address revises invoice {{ data?.invoice?.invoice_number }} (same number and date).
         </p>
       </section>
       <section class="side-card">
