@@ -1,39 +1,271 @@
 <section class="campaigns">
-  <h1>Push campaigns</h1>
-  <p>Promotional pushes go only to active customers who opted in and have an active device.</p>
-  <p *ngIf="error" role="alert" class="error">{{ error }}</p>
-  <form class="card" *ngIf="can('create')" (ngSubmit)="create()">
-    <h2>Create draft</h2>
-    <label>Title<input name="title" [(ngModel)]="form.title" maxlength="100" required /></label>
-    <label>Message<textarea name="body" [(ngModel)]="form.body" maxlength="500" required></textarea></label>
-    <label>Image URL (optional, HTTPS)<input name="image" [(ngModel)]="form.image_url" type="url" /></label>
-    <label>Destination<input name="route" [(ngModel)]="form.route" required /></label>
-    <small>Use /notifications, /orders, /orders/database-id, /products, /products/slug, /(tabs)/categories, or /account/security.</small>
-    <label>Audience<select name="audience" [(ngModel)]="form.audience"><option value="all">All eligible customers</option><option value="specific">Specific customers</option></select></label>
-    <label *ngIf="form.audience === 'specific'">Customer IDs (comma-separated, maximum 100)<textarea name="customers" [(ngModel)]="form.customers" required></textarea></label>
-    <label>Expires at (local time)<input name="expires" type="datetime-local" [(ngModel)]="form.expires_at" required /></label>
-    <button type="submit" [disabled]="busy">Create draft</button>
-  </form>
-  <button (click)="load()" [disabled]="busy">Refresh campaigns</button>
-  <table><thead><tr><th>Title</th><th>Status</th><th>Requested recipients</th><th>Scheduled</th><th></th></tr></thead>
-    <tbody><tr *ngFor="let c of items"><td>{{c.title}}</td><td>{{c.status}}</td><td>{{c.requested_recipients ?? '—'}}</td><td>{{c.scheduled_at | date:'short'}}</td><td><button (click)="select(c)" [disabled]="busy">View</button></td></tr></tbody></table>
-  <p *ngIf="!items.length">No campaigns yet.</p>
-  <button *ngIf="cursor" (click)="load(true)" [disabled]="busy">Load more</button>
-  <article *ngIf="selected" class="card">
-    <h2>{{selected.title}}</h2><p>{{selected.body}}</p><img *ngIf="selected.image_url" [src]="selected.image_url" alt="Campaign preview" />
-    <p>Destination: {{selected.route}} · {{selected.status}}</p>
-    <p *ngIf="stats">Inbox recipients: {{stats.requested}} · Read: {{stats.read}} · FCM submissions: {{stats.submissions.SUBMITTED || 0}} · Failed devices: {{stats.submissions.FAILED || 0}} · Invalid tokens: {{stats.invalid_tokens}} · Pending recipients: {{stats.pending}}</p>
-    <p>FCM submission means provider acceptance. It does not confirm delivery or viewing. Cancellation stops remaining work; submissions already in progress may finish.</p>
-    <ng-container *ngIf="selected.status === 'DRAFT'">
-      <button (click)="prepare()" [disabled]="busy">Preview eligible recipient count</button>
-      <div *ngIf="preview"><p>{{preview.recipient_count}} eligible customers right now. Consent and device eligibility are checked again when processing.</p>
-        <label><input type="checkbox" [(ngModel)]="confirmed" />I confirm this message and audience.</label>
-        <button *ngIf="can('send')" (click)="action('send')" [disabled]="busy || !confirmed || !preview.recipient_count">Send now</button>
-        <label *ngIf="can('schedule')">Schedule (local time)<input type="datetime-local" [(ngModel)]="scheduledAt" /></label>
-        <button *ngIf="can('schedule')" (click)="action('schedule')" [disabled]="busy || !confirmed || !scheduledAt || !preview.recipient_count">Schedule</button>
+  <header class="page-head">
+    <div>
+      <h1>Push campaigns</h1>
+      <p>Promotional pushes go only to active customers who opted in and have an active device.</p>
+    </div>
+  </header>
+
+  <div *ngIf="error" role="alert" class="banner banner-error">
+    <mat-icon>error_outline</mat-icon><span>{{ error }}</span>
+    <button type="button" class="banner-close" (click)="error = ''" aria-label="Dismiss"><mat-icon>close</mat-icon></button>
+  </div>
+  <div *ngIf="notice" role="status" class="banner banner-ok">
+    <mat-icon>check_circle</mat-icon><span>{{ notice }}</span>
+    <button type="button" class="banner-close" (click)="notice = ''" aria-label="Dismiss"><mat-icon>close</mat-icon></button>
+  </div>
+
+  <!-- Composer -->
+  <div class="composer" *ngIf="can('create')">
+    <form class="card form-card" (ngSubmit)="create()" novalidate>
+      <h2>New campaign</h2>
+
+      <div class="field">
+        <div class="label-row">
+          <label for="c-title">Title</label>
+          <span class="counter" [class.over]="form.title.length > titleSoftLimit">{{ form.title.length }}/{{ titleSoftLimit }}</span>
+        </div>
+        <input id="c-title" name="title" [(ngModel)]="form.title" maxlength="100" placeholder="e.g. Weekend sale: 20% off sensors" />
+        <small *ngIf="form.title.length > titleSoftLimit" class="hint warn">Phones cut titles off after about {{ titleSoftLimit }} characters.</small>
       </div>
+
+      <div class="field">
+        <div class="label-row">
+          <label for="c-body">Message</label>
+          <span class="counter" [class.over]="form.body.length > bodySoftLimit">{{ form.body.length }}/{{ bodySoftLimit }}</span>
+        </div>
+        <textarea id="c-body" name="body" rows="3" [(ngModel)]="form.body" maxlength="500" placeholder="What should customers know? Keep it short and specific."></textarea>
+        <small *ngIf="form.body.length > bodySoftLimit" class="hint warn">Only the first two lines show until the notification is expanded.</small>
+      </div>
+
+      <div class="field">
+        <label>Image <span class="optional">optional</span></label>
+        <div class="image-row" *ngIf="!form.image_url">
+          <label class="btn btn-outline" [class.disabled]="uploading">
+            <mat-icon>{{ uploading ? 'hourglass_top' : 'upload' }}</mat-icon>{{ uploading ? 'Uploading…' : 'Upload image' }}
+            <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" [disabled]="uploading" hidden />
+          </label>
+          <span class="or">or</span>
+          <input name="image" type="url" [(ngModel)]="form.image_url" placeholder="Paste an https:// image link" />
+        </div>
+        <div class="image-chosen" *ngIf="form.image_url">
+          <img [src]="form.image_url" alt="" />
+          <div class="image-meta">
+            <span class="truncate">{{ form.image_url }}</span>
+            <small class="hint">Best at 2:1 (e.g. 1024×512), under 1 MB.</small>
+          </div>
+          <button type="button" class="icon-btn" (click)="form.image_url = ''" aria-label="Remove image"><mat-icon>delete_outline</mat-icon></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>When tapped, open</label>
+        <div class="choice-grid">
+          <button type="button" *ngFor="let d of destinations" class="choice" [class.active]="form.destination === d.value" (click)="setDestination(d.value)">
+            <mat-icon>{{ d.icon }}</mat-icon><span>{{ d.label }}</span>
+          </button>
+        </div>
+        <div class="picker" *ngIf="form.destination === 'product'">
+          <div class="picked" *ngIf="form.product">
+            <img *ngIf="form.product.image" [src]="form.product.image" alt="" />
+            <mat-icon *ngIf="!form.product.image">inventory_2</mat-icon>
+            <div class="picked-text"><strong>{{ form.product.name }}</strong><small>/products/{{ form.product.slug }}</small></div>
+            <button type="button" class="icon-btn" (click)="form.product = null" aria-label="Change product"><mat-icon>close</mat-icon></button>
+          </div>
+          <div class="search" *ngIf="!form.product">
+            <mat-icon>search</mat-icon>
+            <input name="productQuery" [(ngModel)]="productQuery" (ngModelChange)="onProductQuery($event)" placeholder="Search products by name or SKU" autocomplete="off" />
+            <ul class="results" *ngIf="productResults.length">
+              <li *ngFor="let p of productResults"><button type="button" (click)="pickProduct(p)">
+                <img *ngIf="p.image" [src]="p.image" alt="" /><mat-icon *ngIf="!p.image">inventory_2</mat-icon><span>{{ p.name }}</span>
+              </button></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Audience</label>
+        <div class="segmented">
+          <button type="button" [class.active]="form.audience === 'all'" (click)="form.audience = 'all'"><mat-icon>groups</mat-icon>All opted-in customers</button>
+          <button type="button" [class.active]="form.audience === 'specific'" (click)="form.audience = 'specific'"><mat-icon>person_search</mat-icon>Specific customers</button>
+        </div>
+        <div class="picker" *ngIf="form.audience === 'specific'">
+          <div class="chips" *ngIf="form.customers.length">
+            <span class="chip" *ngFor="let c of form.customers">
+              {{ c.name }}<span class="chip-note" *ngIf="!c.devices">no device</span>
+              <button type="button" (click)="removeCustomer(c._id)" [attr.aria-label]="'Remove ' + c.name"><mat-icon>close</mat-icon></button>
+            </span>
+          </div>
+          <div class="search" *ngIf="form.customers.length < maxCustomers">
+            <mat-icon>search</mat-icon>
+            <input name="customerQuery" [(ngModel)]="customerQuery" (ngModelChange)="onCustomerQuery($event)" placeholder="Search by name, phone or email" autocomplete="off" />
+            <ul class="results" *ngIf="customerResults.length">
+              <li *ngFor="let c of customerResults"><button type="button" (click)="addCustomer(c)">
+                <mat-icon>person</mat-icon>
+                <span class="result-text"><span>{{ c.name }}</span><small>{{ c.contact }}</small></span>
+                <span class="device" [class.none]="!c.devices">{{ c.devices ? c.devices + ' device' + (c.devices > 1 ? 's' : '') : 'No device' }}</span>
+              </button></li>
+            </ul>
+          </div>
+          <small class="hint">{{ form.customers.length }}/{{ maxCustomers }} customers. Only those who opted in to promotions and have the app with notifications on will receive it.</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Expires after</label>
+        <div class="pills">
+          <button type="button" *ngFor="let p of expiryPresets" class="pill" [class.active]="form.expiryHours === p.hours" (click)="setExpiry(p.hours)">{{ p.label }}</button>
+          <button type="button" class="pill" [class.active]="form.expiryHours === null" (click)="setExpiry(null)">Custom</button>
+        </div>
+        <input *ngIf="form.expiryHours === null" name="expires" type="datetime-local" [(ngModel)]="form.expires_at" />
+        <small class="hint" *ngIf="expiryDate as d">Unsent pushes are dropped and the inbox entry disappears on {{ d | date: 'd MMM y, h:mm a' }}.</small>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" (click)="resetForm()" [disabled]="busy">Reset</button>
+        <button type="submit" class="btn btn-solid" [disabled]="busy || uploading || !!formProblem" [title]="formProblem">
+          <mat-icon>save</mat-icon>Create draft
+        </button>
+      </div>
+    </form>
+
+    <!-- Live preview -->
+    <aside class="preview-col" aria-label="Notification preview">
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span class="status-icons"><mat-icon>signal_cellular_alt</mat-icon><mat-icon>wifi</mat-icon><mat-icon>battery_full</mat-icon></span></div>
+        <div class="notif">
+          <div class="notif-head">
+            <span class="app-icon"><mat-icon>bolt</mat-icon></span>
+            <span class="app-name">Elexify</span><span class="dot">·</span><span class="when">now</span>
+          </div>
+          <div class="notif-body">
+            <div class="notif-text">
+              <strong>{{ form.title || 'Your title appears here' }}</strong>
+              <p>{{ form.body || 'Your message appears here. Keep it short so it fits in two lines.' }}</p>
+            </div>
+          </div>
+          <img *ngIf="form.image_url" class="notif-image" [src]="form.image_url" alt="" />
+        </div>
+      </div>
+      <dl class="summary">
+        <div><dt>Opens</dt><dd>{{ destinationLabel }}</dd></div>
+        <div><dt>Audience</dt><dd>{{ form.audience === 'all' ? 'All opted-in customers' : form.customers.length + ' selected' }}</dd></div>
+        <div><dt>Expires</dt><dd>{{ expiryDate ? (expiryDate | date: 'd MMM, h:mm a') : '—' }}</dd></div>
+      </dl>
+    </aside>
+  </div>
+
+  <!-- Campaign list -->
+  <div class="card list-card">
+    <div class="list-head">
+      <h2>Campaigns</h2>
+      <button type="button" class="btn btn-ghost" (click)="load()" [disabled]="busy"><mat-icon>refresh</mat-icon>Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table-base">
+        <thead><tr><th>Campaign</th><th>Status</th><th class="num">Recipients</th><th>Scheduled</th><th>Expires</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of items; trackBy: trackById" [class.current]="selected?._id === c._id" (click)="openCampaign(c)">
+            <td><div class="cell-title">{{ c.title }}</div><div class="cell-sub">{{ c.body }}</div></td>
+            <td><span class="status" [ngClass]="statusClass(c.status)">{{ c.status | titlecase }}</span></td>
+            <td class="num">{{ c.requested_recipients ?? '—' }}</td>
+            <td>{{ c.scheduled_at ? (c.scheduled_at | date: 'd MMM, h:mm a') : '—' }}</td>
+            <td>{{ c.expires_at | date: 'd MMM, h:mm a' }}</td>
+            <td class="num"><mat-icon class="chev">chevron_right</mat-icon></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty" *ngIf="!loadingList && !items.length">
+        <mat-icon>campaign</mat-icon>
+        <strong>No campaigns yet</strong>
+        <span>Create your first campaign above to announce offers, new stock or price drops.</span>
+      </div>
+      <div class="empty" *ngIf="loadingList"><span>Loading campaigns…</span></div>
+    </div>
+    <button *ngIf="cursor" type="button" class="btn btn-ghost load-more" (click)="load(true)" [disabled]="busy">Load more</button>
+  </div>
+
+  <!-- Campaign detail -->
+  <article *ngIf="selected" id="campaign-detail" class="card detail-card">
+    <div class="detail-head">
+      <div>
+        <span class="status" [ngClass]="statusClass(selected.status)">{{ selected.status | titlecase }}</span>
+        <h2>{{ selected.title }}</h2>
+        <p class="muted">{{ selected.body }}</p>
+        <p class="meta"><mat-icon>link</mat-icon>{{ selected.route }}<span class="sep">·</span><mat-icon>schedule</mat-icon>Expires {{ selected.expires_at | date: 'd MMM y, h:mm a' }}</p>
+      </div>
+      <img *ngIf="selected.image_url" [src]="selected.image_url" alt="" class="detail-image" />
+      <button type="button" class="icon-btn" (click)="closeCampaign()" aria-label="Close"><mat-icon>close</mat-icon></button>
+    </div>
+
+    <div class="stats" *ngIf="stats">
+      <div class="stat"><span>Recipients</span><strong>{{ stats.requested }}</strong></div>
+      <div class="stat"><span>Accepted by FCM</span><strong>{{ stats.submissions?.SUBMITTED || 0 }}</strong></div>
+      <div class="stat"><span>Opened</span><strong>{{ stats.read }}</strong><small>{{ readRate(stats) }}%</small></div>
+      <div class="stat"><span>Pending</span><strong>{{ stats.pending }}</strong></div>
+      <div class="stat bad"><span>Failed devices</span><strong>{{ stats.submissions?.FAILED || 0 }}</strong></div>
+      <div class="stat bad"><span>Invalid tokens</span><strong>{{ stats.invalid_tokens }}</strong></div>
+    </div>
+    <p class="hint" *ngIf="stats">"Accepted by FCM" means Google accepted the push; it doesn't confirm the phone showed it. "Opened" counts inbox reads.</p>
+
+    <!-- Send flow for drafts -->
+    <ng-container *ngIf="selected.status === 'DRAFT'">
+      <ol class="steps">
+        <li [class.done]="!!preview">
+          <div class="step-head"><span class="step-no">1</span><strong>Check the audience</strong></div>
+          <p class="muted" *ngIf="!preview">Counts customers who are opted in and have an active device right now.</p>
+          <button type="button" class="btn btn-outline" (click)="prepare()" [disabled]="busy"><mat-icon>group</mat-icon>{{ preview ? 'Recount' : 'Count recipients' }}</button>
+          <p class="count" *ngIf="preview"><strong>{{ preview.recipient_count }}</strong> customers will receive this.</p>
+          <p class="hint warn" *ngIf="preview && !preview.recipient_count">No one can receive it yet. Customers need to opt in to promotions and have notifications on.</p>
+        </li>
+        <li *ngIf="preview?.recipient_count" [class.done]="confirmed">
+          <div class="step-head"><span class="step-no">2</span><strong>Confirm</strong></div>
+          <label class="check"><input type="checkbox" [(ngModel)]="confirmed" name="confirmed" />I've checked the message, image, destination and audience.</label>
+        </li>
+        <li *ngIf="preview?.recipient_count">
+          <div class="step-head"><span class="step-no">3</span><strong>Send or schedule</strong></div>
+          <div class="send-row">
+            <button *ngIf="can('send')" type="button" class="btn btn-solid" (click)="action('send')" [disabled]="busy || !confirmed">
+              <mat-icon>send</mat-icon>Send to {{ preview.recipient_count }} now
+            </button>
+            <ng-container *ngIf="can('schedule')">
+              <span class="or">or</span>
+              <input type="datetime-local" [(ngModel)]="scheduledAt" name="scheduledAt" [min]="minSchedule" />
+              <button type="button" class="btn btn-outline" (click)="action('schedule')" [disabled]="busy || !confirmed || !scheduledAt"><mat-icon>event</mat-icon>Schedule</button>
+            </ng-container>
+          </div>
+        </li>
+      </ol>
     </ng-container>
-    <div *ngIf="can('send')"><label>Test customer ID<input [(ngModel)]="testCustomer" /></label><button (click)="action('test')" [disabled]="busy || !testCustomer">Send test</button></div>
-    <button *ngIf="can('cancel') && ['DRAFT','SCHEDULED','PROCESSING'].includes(selected.status)" (click)="action('cancel')" [disabled]="busy">Cancel remaining sends</button>
+
+    <div class="detail-foot" *ngIf="['DRAFT','SCHEDULED','PROCESSING'].includes(selected.status) && (can('send') || can('cancel'))">
+      <div class="test" *ngIf="can('send') && ['DRAFT','SCHEDULED'].includes(selected.status)">
+        <strong>Send a test</strong>
+        <small class="hint">Sends "[Test] {{ selected.title }}" to one customer, e.g. your own customer account. They need promotions on and an active device.</small>
+        <div class="picker">
+          <div class="picked" *ngIf="testCustomer">
+            <mat-icon>person</mat-icon>
+            <div class="picked-text"><strong>{{ testCustomer.name }}</strong><small>{{ testCustomer.contact }}</small></div>
+            <button type="button" class="icon-btn" (click)="testCustomer = null" aria-label="Change customer"><mat-icon>close</mat-icon></button>
+          </div>
+          <div class="search" *ngIf="!testCustomer">
+            <mat-icon>search</mat-icon>
+            <input [(ngModel)]="testQuery" name="testQuery" (ngModelChange)="onTestQuery($event)" placeholder="Search by name, phone or email" autocomplete="off" />
+            <ul class="results" *ngIf="testResults.length">
+              <li *ngFor="let c of testResults"><button type="button" (click)="pickTestCustomer(c)">
+                <mat-icon>person</mat-icon>
+                <span class="result-text"><span>{{ c.name }}</span><small>{{ c.contact }}</small></span>
+                <span class="device" [class.none]="!c.devices">{{ c.devices ? c.devices + ' device' + (c.devices > 1 ? 's' : '') : 'No device' }}</span>
+              </button></li>
+            </ul>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" (click)="action('test')" [disabled]="busy || !testCustomer"><mat-icon>science</mat-icon>Send test</button>
+      </div>
+      <button *ngIf="can('cancel') && ['DRAFT','SCHEDULED','PROCESSING'].includes(selected.status)" type="button" class="btn btn-danger" (click)="action('cancel')" [disabled]="busy">
+        <mat-icon>block</mat-icon>{{ selected.status === 'DRAFT' ? 'Discard draft' : 'Cancel campaign' }}
+      </button>
+    </div>
   </article>
 </section>
