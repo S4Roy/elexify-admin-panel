@@ -40,9 +40,6 @@ export class CustomersComponent {
   loadError = false;
   private listRequest?: Subscription;
 
-  initials(name: string): string {
-    return (name || '?').trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase();
-  }
   trackCustomer(_index: number, customer: any): string { return customer._id; }
   setSource(source: string | null): void {
     this.filterValues['import_source'] = source;
@@ -62,15 +59,7 @@ export class CustomersComponent {
     this.router.navigate([], { relativeTo: this.route, queryParams: { from_date: null, to_date: null }, queryParamsHandling: 'merge' });
     this.fetchCutomerList();
   }
-  get activeFilterLabels(): string[] {
-    const f = this.filterValues;
-    return [
-      f['status']?.length ? 'Status: ' + f['status'].join(', ') : '',
-      f['email_verified'] ? 'Email verified: ' + f['email_verified'] : '',
-      f['mobile_verified'] ? 'Mobile verified: ' + f['mobile_verified'] : '',
-      f['from_date'] || f['to_date'] ? 'Joined: ' + (f['from_date'] || 'Any date') + ' – ' + (f['to_date'] || 'Today') : '',
-    ].filter(Boolean);
-  }
+  readonly extraFilterKeys = ['presence', 'active_sessions', 'order_activity', 'has_email', 'has_mobile'];
   item_list: any = [];
   paginationOption: PaginationOptions;
 
@@ -138,6 +127,11 @@ export class CustomersComponent {
   }
   get filterFields(): FilterFieldDef[] {
     return [
+      { key: 'presence', label: 'Online status', type: 'select', options: [{ value: '', label: 'Any activity' }, { value: 'online', label: 'Online recently' }, { value: 'offline', label: 'Offline / no activity' }] },
+      { key: 'active_sessions', label: 'Active sessions', type: 'select', options: [{ value: '', label: 'Any sessions' }, { value: 'yes', label: 'Has signed-in devices' }, { value: 'no', label: 'No signed-in devices' }] },
+      { key: 'order_activity', label: 'Linked order history', type: 'select', options: [{ value: '', label: 'Any orders' }, { value: 'none', label: 'No orders' }, { value: 'one', label: 'One order' }, { value: 'repeat', label: 'Repeat orders (2+)' }] },
+      { key: 'has_email', label: 'Email availability', type: 'select', options: [{ value: '', label: 'Any' }, { value: 'yes', label: 'Email provided' }, { value: 'no', label: 'Missing email' }] },
+      { key: 'has_mobile', label: 'Mobile availability', type: 'select', options: [{ value: '', label: 'Any' }, { value: 'yes', label: 'Mobile provided' }, { value: 'no', label: 'Missing mobile' }] },
       {
         key: 'import_source', label: 'Import source', type: 'select',
         options: [
@@ -174,7 +168,7 @@ export class CustomersComponent {
     ];
   }
   filterCount(): number {
-    let count = 0;
+    let count = this.extraFilterKeys.filter(key => !!this.filterValues[key]).length;
     if (this.filterValues['import_source']) count++;
     if (this.filterValues['status']?.length) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
@@ -251,6 +245,7 @@ export class CustomersComponent {
       sort_by: this.sortKey,
       sort_order: this.sortDirection === 'asc' ? '1' : '-1',
     });
+    for (const key of this.extraFilterKeys) { if (this.filterValues[key]) params.set(key, this.filterValues[key]); }
     if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
     if (this.paginationOption.limit) {
       params.set('limit', String(this.paginationOption.limit));
@@ -286,7 +281,7 @@ export class CustomersComponent {
           ...res?.data,
         };
       },
-      error: () => { this.loading = false; this.loadError = true; this.item_list = []; },
+      error: () => { this.loading = false; this.loadError = true; },
     });
   }
   deleteItem(item: any) {

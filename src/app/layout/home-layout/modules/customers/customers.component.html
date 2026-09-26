@@ -1,67 +1,5 @@
 <section class="customer-directory" [attr.aria-busy]="loading">
-  <div class="directory-header">
-    <div class="directory-heading">
-      <div class="heading-icon" aria-hidden="true">
-        <mat-icon>people_outline</mat-icon>
-      </div>
-      <div>
-        <h2>Customer directory</h2>
-        <p aria-live="polite">
-          {{
-          loading
-          ? "Updating customer list…"
-          : loadError
-          ? "Customer list unavailable"
-          : (paginationOption.totalDocs | number) +
-          " customers match your view"
-          }}
-        </p>
-      </div>
-    </div>
-  </div>
-  <div class="directory-toolbar">
-    <div class="source-options" role="group" aria-label="Import source">
-      <button type="button" [class.selected]="!filterValues['import_source']"
-        [attr.aria-pressed]="!filterValues['import_source']" (click)="setSource(null)">
-        All customers
-      </button>
-      <button type="button" [class.selected]="filterValues['import_source'] === 'backup'"
-        [attr.aria-pressed]="filterValues['import_source'] === 'backup'" (click)="setSource('backup')">
-        Backup imported
-      </button>
-      <button type="button" [class.selected]="filterValues['import_source'] === 'other'"
-        [attr.aria-pressed]="filterValues['import_source'] === 'other'" (click)="setSource('other')">
-        Other customers
-      </button>
-    </div>
-    <div class="toolbar-actions">
-      <label for="customer-page-size">Rows per page</label>
-      <select id="customer-page-size" #pageSize [value]="paginationOption.limit" (change)="setPageSize(pageSize.value)">
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
-      <span class="toolbar-divider" aria-hidden="true"></span>
-      <button type="button" class="refresh-button" (click)="fetchCutomerList()" [disabled]="loading"
-        aria-label="Refresh customer list" title="Refresh customer list">
-        <mat-icon [class.refreshing]="loading">refresh</mat-icon>
-      </button>
-    </div>
-  </div>
-  <div class="applied-filters" *ngIf="filterCount()">
-    <span *ngFor="let label of activeFilterLabels" class="filter-chip">{{
-      label
-      }}</span>
-    <button type="button" (click)="clearFilters()">Clear filters</button>
-  </div>
-  <div *ngIf="loading" class="list-message" role="status">
-    Loading customers…
-  </div>
-  <div *ngIf="loadError" class="list-message error" role="alert">
-    Could not load customers.
-    <button type="button" (click)="fetchCutomerList()">Try again</button>
-  </div>
-  <div class="table-wrapper directory-table" *ngIf="!loadError">
+  <div class="table-wrapper">
     <table class="table-base">
       <caption class="sr-only">
         Customers with contact information, order activity, import source and
@@ -81,7 +19,12 @@
             </button>
           </th>
           <th scope="col">Contact &amp; verification</th>
-          <th scope="col">Order activity</th>
+          <th scope="col" [attr.aria-sort]="sortKey === 'order_activity' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+            <button type="button" (click)="sort('order_activity')" title="Sort by linked order count, then latest order">Order activity <span [class]="getSortIcon('order_activity')"></span></button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortKey === 'session_activity' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+            <button type="button" (click)="sort('session_activity')" title="Sort by online status, active devices, then recent activity">Session activity <span [class]="getSortIcon('session_activity')"></span></button>
+          </th>
           <th scope="col" [attr.aria-sort]="
               sortKey === 'created_at'
                 ? sortDirection === 'asc'
@@ -93,39 +36,38 @@
               Joined <span [class]="getSortIcon('created_at')"></span>
             </button>
           </th>
-          <th scope="col">Source</th>
-          <th scope="col">Status</th>
+          <th scope="col" [attr.aria-sort]="sortKey === 'source' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+            <button type="button" (click)="sort('source')" title="Sort by import source">Source <span [class]="getSortIcon('source')"></span></button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortKey === 'status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
+            <button type="button" (click)="sort('status')" title="Sort by account status">Status <span [class]="getSortIcon('status')"></span></button>
+          </th>
           <th scope="col" class="text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
+        <tr *ngIf="loadError">
+          <td colspan="8">
+            <div class="customer-list-error" role="alert">
+              <mat-icon aria-hidden="true">error_outline</mat-icon>
+              <div><strong>Customers couldn't be loaded</strong><p>{{ item_list.length ? 'The displayed results may be out of date. Try refreshing again.' : 'Please try again to load the customer list.' }}</p></div>
+              <button type="button" class="outline-button" (click)="fetchCutomerList()" [disabled]="loading">Retry</button>
+            </div>
+          </td>
+        </tr>
         <tr *ngFor="let item of item_list; trackBy: trackCustomer">
           <td>
-            <div class="customer-identity">
-              <span class="avatar" aria-hidden="true">{{
-                initials(item.name)
-                }}</span>
-              <div>
-                <span class="text-xs" [class.text-green-600]="item.presence?.online" [attr.title]="item.presence?.lastActivityAt ? 'Last activity: ' + (item.presence.lastActivityAt | date:'medium') : 'No recent session activity'">{{ item.presence?.online ? 'Online' : 'Offline' }} · {{ item.presence?.activeDevices || 0 }} sessions</span>
-                <a *ngIf="item.push_device_count" [routerLink]="['/customers/details', item._id]" [attr.aria-label]="item.push_device_count + ' registered push devices'" [title]="item.push_device_count + ' registered push devices (not live connection status)'" class="inline-flex items-center gap-1 text-primary"><mat-icon aria-hidden="true">phonelink_ring</mat-icon><span>{{ item.push_device_count }}</span></a>
-                <a class="customer-name" [routerLink]="['/customers/details', item._id]">{{
-                  item.name ||
-                  "Unnamed
-                  customer"
-                  }}</a>
-                <span class="secondary">Customer account</span>
-              </div>
-            </div>
+            <a class="customer-name" [routerLink]="['/customers/details', item._id]">{{ item.name || 'Unnamed customer' }}</a>
           </td>
           <td class="contact-cell">
             <div class="contact-line">
-              <mat-icon aria-hidden="true">mail_outline</mat-icon><span class="contact-value">{{
+              <mat-icon aria-hidden="true">mail_outline</mat-icon><span class="contact-value" [title]="item.email || ''">{{
                 item.email || "Email not provided"
                 }}</span><span *ngIf="item.email" class="verification" [class.verified]="item.email_verified_at">{{
                 item.email_verified_at ? "Verified" : "Unverified" }}</span>
             </div>
             <div class="contact-line">
-              <mat-icon aria-hidden="true">phone</mat-icon><span class="contact-value">{{
+              <mat-icon aria-hidden="true">phone</mat-icon><span class="contact-value" [title]="item.mobile || ''">{{
                 item.mobile
                 ? (item.phone_code ? "+" + item.phone_code + " " : "") +
                 item.mobile
@@ -142,28 +84,30 @@
                 linked orders</span></ng-template><span *ngIf="item.last_order_at" class="secondary">Latest {{
               item.last_order_at | date: "mediumDate" }}</span>
           </td>
+          <td class="session-cell" [title]="item.presence?.lastActivityAt ? 'Last active: ' + (item.presence.lastActivityAt | date:'medium') : 'No session activity'">
+            <span class="presence-badge" [class.online]="item.presence?.online"><span aria-hidden="true">●</span>{{ item.presence?.online ? 'Online' : 'Offline' }}</span>
+            <span class="secondary">{{ item.presence?.activeDevices || 0 }} signed-in devices</span>
+
+          </td>
           <td>
             <span>{{
               item.created_at
-              ? (item.created_at | date: "mediumDate")
+              ? (item.created_at | date: "d MMM y")
               : "Not available"
               }}
             </span>
-            <span class="block secondary">{{
-              item.created_at ? (item.created_at | date: "shortTime") : ""
-              }}
-            </span>
+            <span *ngIf="item.created_at" class="secondary joined-time">{{ item.created_at | date: 'h:mm a' }}</span>
+
           </td>
           <td>
             <span class="source-badge" [class.imported]="item.imported_from_backup">{{ item.imported_from_backup ?
               "Backup import" : "Other" }}</span>
           </td>
           <td>
-            <button [disabled]="!permissions.includes('edit')" type="button" class="status-badge" [class.active-status]="item.status === 'active'"
+            <button [disabled]="!permissions.includes('edit')" type="button" class="table-status" [class.active]="item.status === 'active'" [class.inactive]="item.status !== 'active'"
               (click)="updateStatus(item)" [attr.aria-label]="
                 'Change account status for ' + item.name + ': ' + item.status
               ">
-              <span aria-hidden="true">●</span>
               {{ item.status === "active" ? "Active" : "Inactive" }}
             </button>
           </td>
@@ -172,8 +116,8 @@
               [details]="['/customers/details', item._id]"></app-menu>
           </td>
         </tr>
-        <tr *ngIf="!loading && !item_list.length">
-          <td colspan="7">
+        <tr *ngIf="!loading && !loadError && !item_list.length">
+          <td colspan="8">
             <div class="no-results">
               <mat-icon aria-hidden="true">person_search</mat-icon>
               <h3>No customers found</h3>
