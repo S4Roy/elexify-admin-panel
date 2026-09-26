@@ -8,6 +8,19 @@
   <div *ngIf="error" class="alert" role="alert">{{ error }} <button type="button" (click)="error = ''; loadOrder(); loadPackages()">Reload</button></div>
 
   <div class="packing-content" *ngIf="!loading && !loadingPackages && order">
+    <section class="ship-to" aria-labelledby="ship-to-title">
+      <div class="ship-to-text">
+        <h3 id="ship-to-title">Deliver to</h3>
+        <ng-container *ngIf="shippingAddress; else noShippingAddress">
+          <p><strong>{{ shippingAddress.full_name }}</strong><span *ngIf="shippingAddress.phone"> · <span *ngIf="shippingAddress.phone_code">+{{ shippingAddress.phone_code }} </span>{{ shippingAddress.phone }}</span></p>
+          <p>{{ shippingAddressText }}</p>
+        </ng-container>
+        <ng-template #noShippingAddress><p>No shipping address on this order.</p></ng-template>
+        <p *ngIf="canEditShippingAddress" class="muted">Shiprocket ships to this address. Check it before creating shipments; it can't be changed once the order is packed.</p>
+      </div>
+      <button *ngIf="canEditShippingAddress" type="button" class="secondary" (click)="editShippingAddress()" [disabled]="busy">Edit address</button>
+    </section>
+
     <div class="progress-panel">
       <div><strong>{{ packedQuantity }} of {{ totalQuantity }} items packed</strong><p class="muted">{{ remainingQuantity }} remaining to assign</p></div>
       <div class="progress-track" role="progressbar" [attr.aria-valuenow]="packedQuantity" [attr.aria-valuemax]="totalQuantity"><span [style.width.%]="totalQuantity ? packedQuantity / totalQuantity * 100 : 0"></span></div>

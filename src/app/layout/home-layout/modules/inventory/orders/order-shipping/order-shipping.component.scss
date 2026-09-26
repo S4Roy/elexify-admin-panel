@@ -46,3 +46,10 @@
 .pack-all:hover { background: #eff6ff; }
 .pack-all:disabled { opacity: .45; cursor: not-allowed; }
 @media (max-width: 550px) { .qty-stepper .of { display: none; } }
+.ship-to { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 9px 12px; margin-bottom: 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ship-to-text { min-width: 0; font-size: 12px; color: #334155; }
+.ship-to-text h3 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #64748b; margin: 0 0 2px; }
+.ship-to-text p { margin: 0; overflow-wrap: anywhere; }
+.ship-to-text .muted { margin-top: 4px; }
+.ship-to .secondary { flex-shrink: 0; font-size: 12px; font-weight: 600; color: #1d4ed8; background: white; }
+.ship-to .secondary:disabled { opacity: .45; cursor: not-allowed; }

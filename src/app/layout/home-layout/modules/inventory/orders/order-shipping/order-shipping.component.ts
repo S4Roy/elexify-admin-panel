@@ -2,13 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, Inject, Optional } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { ApiService } from 'app/core/services/api.service';
 import { DialogService } from 'app/core/services/dialog.service';
+import { HelpersService } from 'app/core/services/helpers.service';
 import { ToastrService } from 'ngx-toastr';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { formatOrderAddress, isOrderAddressEditable, openOrderAddressEditor } from '../order-address';
 
 interface PackLine { order_item_id: string; quantity: number }
 // weight is prefilled with the product-weight total and follows item moves until the admin edits it.
@@ -43,6 +45,8 @@ export class OrderShippingComponent {
     private api: ApiService,
     private dialogService: DialogService,
     private toastr: ToastrService,
+    private dialog: MatDialog,
+    private helpersService: HelpersService,
   ) {}
 
   ngOnInit() {
@@ -65,6 +69,24 @@ export class OrderShippingComponent {
       this.orderItems.every(item => this.available(item) === 0);
   }
   get dropIds(): string[] { return ['unpacked', ...this.drafts.map(d => `draft-${d.key}`)]; }
+
+  // Shiprocket ships to this address, so it can be corrected here until the
+  // order is packed. A Zoho-synced invoice also locks it; the backend refuses
+  // that case and the editor shows its message.
+  get shippingAddress(): any { return this.order?.shipping_address; }
+  get shippingAddressText(): string { return formatOrderAddress(this.shippingAddress); }
+  get canEditShippingAddress(): boolean {
+    return !!this.shippingAddress?._id && this.helpersService.can('order.address.manage') && isOrderAddressEditable(this.order);
+  }
+  editShippingAddress() {
+    if (!this.canEditShippingAddress || this.busy) return;
+    openOrderAddressEditor(this.dialog, this.order, 'shipping').subscribe(saved => {
+      if (!saved) return;
+      this.anyChangeMade = true;
+      this.toastr.success(`Shipping address updated${this.order?.invoice?.generated ? ' and invoice revised' : ''}`);
+      this.loadOrder();
+    });
+  }
 
   quantity(lines: PackLine[]): number { return lines.reduce((n, line) => n + Number(line.quantity || 0), 0); }
   available(item: any): number {

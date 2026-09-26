@@ -1,6 +1,6 @@
 import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_STYLES } from '../order-status-display';
-import { CustomerAddressDialogComponent } from '../../../customers/customer-details/customer-address-dialog.component';
+import { isOrderAddressEditable, openOrderAddressEditor } from '../order-address';
 import { ZohoSalesorderComponent } from './zoho-salesorder.component';
 import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
 import {
@@ -253,11 +253,7 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
   }
 
   get canEditOrderAddress(): boolean {
-    return this.helpersService.can('order.address.manage') &&
-      ['pending', 'confirmed', 'processing'].includes(this.data?.order_status) &&
-      !this.invoiceSyncedToZoho &&
-      !this.data?.awb && !this.data?.shiprocket_order_id &&
-      !this.data?.inventory_reverted && (!this.data?.refund?.status || this.data.refund.status === 'not_required');
+    return this.helpersService.can('order.address.manage') && !this.invoiceSyncedToZoho && isOrderAddressEditable(this.data);
   }
 
   // A local invoice is revised along with the address; one already copied to
@@ -268,22 +264,8 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
   }
 
   editOrderAddress(kind: 'shipping' | 'billing'): void {
-    if (!this.canEditOrderAddress) return;
-    const address = this.data?.[kind + '_address'];
-    if (!address?._id) return;
-    const normalized = { ...address,
-      country: address.country?.id ?? address.country,
-      state: address.state?.id ?? address.state,
-      city_name: address.city_name || address.city?.name || '',
-      address_type: kind, purpose: kind,
-    };
-    this.dialog.open(CustomerAddressDialogComponent, {
-      width: '680px', maxWidth: '96vw', maxHeight: '92vh', disableClose: true,
-      data: { orderId: this.data._id, orderNumber: this.data.id, addressKind: kind,
-        expectedUpdatedAt: this.data.updated_at, address: normalized,
-        invoiceNumber: this.data.invoice?.generated ? this.data.invoice?.invoice_number || 'the invoice' : null,
-        shipping: this.data.shipping || 0, grandTotal: this.data.grand_total, currency: this.data.currency || 'INR' },
-    }).afterClosed().subscribe(saved => {
+    if (!this.canEditOrderAddress || !this.data?.[kind + '_address']?._id) return;
+    openOrderAddressEditor(this.dialog, this.data, kind).subscribe(saved => {
       if (saved) this.toastr.success(`${kind === 'shipping' ? 'Shipping' : 'Billing'} address updated${this.data?.invoice?.generated ? ' and invoice revised' : ''}`);
       this.fetchOrderList();
     });
