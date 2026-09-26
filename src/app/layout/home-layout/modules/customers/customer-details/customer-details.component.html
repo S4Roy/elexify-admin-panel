@@ -65,6 +65,46 @@
 
   <div class="customer-layout">
     <div class="customer-main">
+      <section class="panel session-panel" *ngIf="helperService.can('customer.view')" aria-labelledby="sessions-title">
+        <div class="panel-head">
+          <div><h3 id="sessions-title" class="flex items-center gap-2"><mat-icon aria-hidden="true">devices</mat-icon>Customer sessions</h3>
+            <p class="session-caption">Manage signed-in devices and account access.</p></div>
+          <button class="session-button" type="button" (click)="fetchSessions()" [disabled]="sessionsLoading || eventsLoading || sessionActionBusy"><mat-icon aria-hidden="true">refresh</mat-icon>Refresh</button>
+        </div>
+        <p class="session-feedback" *ngIf="sessionsLoading" role="status">Loading devices…</p>
+        <div class="session-feedback session-error" *ngIf="sessionsError" role="alert">{{ sessionsError }} <button type="button" class="panel-link" (click)="fetchSessions(sessionPage, false)">Retry</button></div>
+        <ng-container *ngIf="sessionState && !sessionsLoading">
+          <div class="session-overview">
+            <div><span class="presence-pill" [class.is-online]="sessionState.online"><span aria-hidden="true"></span>{{ sessionState.online ? 'Online' : 'Offline' }}</span>
+              <p class="session-caption">Last seen {{ (sessionState.lastActivityAt | date:'d MMM y, h:mm a') || '—' }}</p></div>
+            <div class="session-count"><strong>{{ sessionState.totalDocs }}</strong><span>Active sessions</span></div>
+          </div>
+          <div class="session-subhead"><h4>Signed-in devices</h4><button type="button" class="session-button session-danger" *ngIf="helperService.can('customers.update') && sessionState.totalDocs" [disabled]="sessionActionBusy" (click)="revokeSession(null)">Sign out all devices</button></div>
+          <div class="session-empty" *ngIf="!sessionState.docs.length"><mat-icon aria-hidden="true">phonelink_off</mat-icon><strong>No active sessions</strong><p>Devices will appear when the customer signs in.</p></div>
+          <article *ngFor="let session of sessionState.docs" class="device-row">
+            <span class="device-icon"><mat-icon aria-hidden="true">{{ session.deviceType === 'mobile' ? 'smartphone' : 'computer' }}</mat-icon></span>
+            <div class="device-content"><h4>{{ session.deviceName || 'Unknown device' }}</h4><p class="session-caption">{{ session.browser || 'App' }} · {{ session.os || 'Unknown OS' }}</p>
+              <dl class="device-dates"><div><dt>Last active</dt><dd>{{ session.lastActivityAt | date:'d MMM y, h:mm a' }}</dd></div><div><dt>Expires</dt><dd>{{ session.expiresAt | date:'d MMM y, h:mm a' }}</dd></div></dl>
+            </div>
+            <button type="button" class="session-button session-danger" *ngIf="helperService.can('customers.update')" [disabled]="sessionActionBusy" (click)="revokeSession(session.id)" [attr.aria-label]="'Sign out ' + session.deviceName">Sign out</button>
+          </article>
+          <nav class="session-pagination" aria-label="Device pages" *ngIf="sessionState.totalDocs > sessionState.limit">
+            <span>Page {{ sessionPage }} · {{ sessionState.totalDocs }} sessions</span><div><button type="button" class="session-button" [disabled]="!sessionState.hasPrevPage || sessionActionBusy" (click)="fetchSessions(sessionPage - 1, false)">Previous</button><button type="button" class="session-button" [disabled]="!sessionState.hasNextPage || sessionActionBusy" (click)="fetchSessions(sessionPage + 1, false)">Next</button></div>
+          </nav>
+          <p class="session-footnote"><mat-icon aria-hidden="true">info_outline</mat-icon>Online means recently active. Closing the app or browser does not sign out.</p>
+        </ng-container>
+      </section>
+      <section class="panel" *ngIf="helperService.can('audit_log.view')" aria-labelledby="security-history-title">
+        <div class="panel-head"><div><h3 id="security-history-title" class="flex items-center gap-2"><mat-icon aria-hidden="true">verified_user</mat-icon>Authentication history</h3><p class="session-caption">Sign-ins, renewals and account security actions.</p></div></div>
+        <p class="session-feedback" *ngIf="eventsLoading" role="status">Loading authentication events…</p>
+        <div class="session-feedback session-error" *ngIf="eventsError" role="alert">{{ eventsError }} <button type="button" class="panel-link" (click)="fetchAuthEvents(eventPage)">Retry</button></div>
+        <ng-container *ngIf="!eventsLoading && !eventsError">
+          <div class="session-empty" *ngIf="!authEvents.length"><mat-icon aria-hidden="true">history</mat-icon><strong>No authentication events</strong><p>New security activity will appear here.</p></div>
+          <ol class="auth-timeline"><li *ngFor="let event of authEvents"><span class="event-dot" aria-hidden="true"></span><div><strong>{{ eventLabel(event.eventType) }}</strong><p *ngIf="event.reason" class="event-reason">{{ event.reason }}</p></div><time>{{ event.createdAt | date:'d MMM y, h:mm a' }}</time></li></ol>
+          <nav class="session-pagination" aria-label="Authentication history pages" *ngIf="eventTotal > 10"><span>Page {{ eventPage }} · {{ eventTotal }} events</span><div><button type="button" class="session-button" [disabled]="eventPage <= 1" (click)="fetchAuthEvents(eventPage - 1)">Previous</button><button type="button" class="session-button" [disabled]="eventPage * 10 >= eventTotal" (click)="fetchAuthEvents(eventPage + 1)">Next</button></div></nav>
+        </ng-container>
+      </section>
+
       <section class="panel" *ngIf="helperService.can('customer.notification.view')">
         <div class="panel-head">
           <h3 class="flex items-center gap-2"><mat-icon aria-hidden="true">{{ pushState?.devices?.length ? 'phonelink_ring' : 'phonelink_off' }}</mat-icon>Push devices</h3>
@@ -320,27 +360,3 @@
     </aside>
   </div>
 </div>
-
-<section class="m-6 rounded-xl border border-gray-200 bg-white p-6" *ngIf="helperService.can('customer.view')">
-  <div class="flex items-center justify-between gap-4">
-    <h2 class="text-lg font-semibold">Customer sessions</h2>
-    <button type="button" (click)="fetchSessions()" [disabled]="sessionsLoading">Refresh</button>
-  </div>
-  <p class="mt-2 text-gray-500">Online status reflects recent activity. Closing the app or browser does not sign the customer out.</p>
-  <p *ngIf="sessionsLoading" role="status">Loading sessions…</p>
-  <p *ngIf="sessionsError" role="alert">{{ sessionsError }}</p>
-  <ng-container *ngIf="sessionState">
-    <p class="my-4">{{ sessionState.online ? 'Online' : 'Offline' }} · Last seen: {{ (sessionState.lastActivityAt | date:'medium') || 'No activity recorded' }}</p>
-    <button type="button" class="text-red-600" *ngIf="helperService.can('customers.update')" [disabled]="sessionActionBusy" (click)="revokeSession(null)">Sign out all devices</button>
-    <p class="mt-4" *ngIf="!sessionState.sessions.length">No active sessions.</p>
-    <div *ngFor="let session of sessionState.sessions" class="flex flex-wrap items-center justify-between gap-4 border-b py-4">
-      <div><strong>{{ session.deviceName }} · {{ session.browser }} · {{ session.os }}</strong>
-        <p>Last activity: {{ session.lastActivityAt | date:'medium' }} · Expires: {{ session.expiresAt | date:'medium' }}</p></div>
-      <button type="button" *ngIf="helperService.can('customers.update')" [disabled]="sessionActionBusy" (click)="revokeSession(session.id)">Sign out device</button>
-    </div>
-  </ng-container>
-  <ng-container *ngIf="helperService.can('audit_log.view')">
-    <h3 class="mt-6 font-semibold">Recent authentication events</h3>
-    <p *ngFor="let event of authEvents" class="border-b py-2">{{ event.createdAt | date:'medium' }} · {{ eventLabel(event.eventType) }} <span *ngIf="event.reason">· {{ event.reason }}</span></p>
-  </ng-container>
-</section>

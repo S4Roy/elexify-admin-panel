@@ -95,20 +95,34 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   sessionsError = '';
   sessionActionBusy = false;
   authEvents: any[] = [];
-  fetchSessions(): void {
+  sessionPage = 1;
+  eventPage = 1;
+  eventTotal = 0;
+  eventsLoading = false;
+  eventsError = '';
+  fetchSessions(page = 1, refreshEvents = true): void {
     if (!this.customerId || !this.helperService.can('customer.view')) return;
     const id = this.customerId;
     this.sessionsLoading = true;
     this.sessionsError = '';
     this.sessionState = null;
-    this.apiService.customerSessions(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: res => { if (id === this.customerId) { this.sessionState = res.data; this.sessionsLoading = false; } },
-      error: () => { if (id === this.customerId) { this.sessionsError = 'Unable to load sessions. Please retry.'; this.sessionsLoading = false; } },
+    this.sessionPage = page;
+    this.apiService.customerSessions(id, page).pipe(takeUntil(this.destroy$)).subscribe({
+      next: res => { if (id === this.customerId && page === this.sessionPage) { this.sessionState = res.data; this.sessionsLoading = false; } },
+      error: () => { if (id === this.customerId && page === this.sessionPage) { this.sessionsError = 'Unable to load sessions. Please retry.'; this.sessionsLoading = false; } },
     });
+    if (refreshEvents) this.fetchAuthEvents();
+  }
+  fetchAuthEvents(page = 1): void {
+    if (!this.customerId || !this.helperService.can('audit_log.view')) return;
+    const id = this.customerId;
+    this.eventPage = page;
+    this.eventsLoading = true;
+    this.eventsError = '';
     this.authEvents = [];
-    if (this.helperService.can('audit_log.view')) this.apiService.customerAuthEvents(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: res => { if (id === this.customerId) this.authEvents = res.data.events; },
-      error: () => { this.toastr.error('Unable to load authentication events'); },
+    this.apiService.customerAuthEvents(id, page).pipe(takeUntil(this.destroy$)).subscribe({
+      next: res => { if (id === this.customerId && page === this.eventPage) { this.authEvents = res.data.docs; this.eventTotal = res.data.totalDocs; this.eventsLoading = false; } },
+      error: () => { if (id === this.customerId && page === this.eventPage) { this.eventsError = 'Unable to load authentication events.'; this.eventsLoading = false; } },
     });
   }
   revokeSession(sessionId: string | null): void {

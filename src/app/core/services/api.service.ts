@@ -204,8 +204,8 @@ export class ApiService {
   editCustomerAddress(id: string, addressId: string, payload: any) {
     return this.httpService.put(`admin/customers/${id}/addresses/${addressId}`, payload);
   }
-  customerSessions(id: string) { return this.httpService.get(`admin/customers/${id}/sessions`); }
-  customerAuthEvents(id: string) { return this.httpService.get(`admin/customers/${id}/auth-events`); }
+  customerSessions(id: string, page = 1) { return this.httpService.get(`admin/customers/${id}/sessions`, { params: `page=${page}` }); }
+  customerAuthEvents(id: string, page = 1) { return this.httpService.get(`admin/customers/${id}/auth-events`, { params: `page=${page}` }); }
   revokeCustomerSession(id: string, sessionId: string | null, reason: string) {
     return sessionId ? this.httpService.delete(`admin/customers/${id}/sessions/${sessionId}`, { reason })
       : this.httpService.post(`admin/customers/${id}/logout-all`, { reason });
