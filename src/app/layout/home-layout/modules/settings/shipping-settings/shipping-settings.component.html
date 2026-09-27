@@ -209,6 +209,8 @@
         <input matInput type="number" min="0" formControlName="cod_charge" />
       </mat-form-field>
       <mat-checkbox formControlName="cod_advance_enabled" class="block mt-3">Require an online advance for COD orders (Partial COD)</mat-checkbox>
+      <mat-checkbox *ngIf="formGroup.value.cod_advance_enabled" formControlName="cod_consent_required" class="block mt-3">Require customer acceptance for Partial COD</mat-checkbox>
+      <p *ngIf="formGroup.value.cod_advance_enabled" class="text-sm text-gray-500 mt-2">Recommended: customers must accept payment and refund terms and acknowledge the Privacy Policy. Publish Privacy Policy, Terms &amp; Conditions, and Refund &amp; Cancellation Policy before enabling.</p>
       <mat-form-field class="block mt-3" *ngIf="formGroup.value.cod_advance_enabled">
         <mat-label>Advance Percentage</mat-label>
         <input matInput type="number" min="0" max="100" formControlName="cod_advance_percent" />

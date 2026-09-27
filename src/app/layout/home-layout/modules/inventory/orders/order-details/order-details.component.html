@@ -416,6 +416,17 @@
           <p>Recorded by {{ payment.recorded_by }} on {{ payment.recorded_at | date:'medium' }}</p>
           <p>Reason: {{ payment.reason }}</p>
         </div>
+        <div *ngIf="data?.partial_cod_consent as consent" class="rounded border p-3 my-3 text-sm">
+          <p class="font-medium">Partial COD terms accepted</p>
+          <p>{{ consent.accepted_at | date:'medium' }} · Customer: {{ consent.customer_id }}</p>
+          <p>{{ consent.wording }}</p>
+          <p>Advance: {{ consent.advance_amount }} {{ consent.currency }} · Order total: {{ consent.grand_total }} {{ consent.currency }}</p>
+          <p class="break-all">Policy version: {{ consent.version }}</p>
+          <details *ngFor="let policy of consent.policies">
+            <summary>{{ policy.title }} — accepted policy snapshot</summary>
+            <pre class="whitespace-pre-wrap break-words">{{ policy.content }}</pre>
+          </details>
+        </div>
         <p class="text-blue-700 text-sm font-medium" *ngIf="partialCodLabel">
           {{ partialCodLabel }}
         </p>
