@@ -21,11 +21,17 @@
           <td>
             <img *ngIf="item?.image?.url" [src]="item?.image?.url" alt="Image" loading="lazy" />
           </td>
-          <td>{{ item?.user?.name }} <span *ngIf="item?.imported_from_backup" class="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800" title="Created by the WooCommerce backup import">Imported</span></td>
+          <td>{{ item?.user?.name }} <span *ngIf="item?.verified_purchase" class="text-xs text-green-700">Verified Purchase</span> <span *ngIf="item?.imported_from_backup" class="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800" title="Created by the WooCommerce backup import">Imported</span></td>
           <td>{{ item?.product?.name }}</td>
           <td>
-            <div [innerHTML]="item.description" [appReadMoreClamp]="110" readMoreLabel="Read More"
-              readLessLabel="Read Less"></div>
+            <strong *ngIf="item.title">{{ item.title }}</strong>
+            <div [appReadMoreClamp]="110" readMoreLabel="Read More" readLessLabel="Read Less">{{ item.description }}</div>
+            <div class="flex flex-wrap gap-2">
+              <a *ngFor="let media of item.media" [href]="media.url" target="_blank" rel="noopener noreferrer" aria-label="Open review attachment">
+                <img *ngIf="media.type === 'image'" [src]="media.url" alt="Review attachment" loading="lazy" class="h-12 w-12 object-cover" />
+                <span *ngIf="media.type === 'video'">View video</span>
+              </a>
+            </div>
           </td>
           <td>{{ item?.rating }}</td>
           <td class="text-center">

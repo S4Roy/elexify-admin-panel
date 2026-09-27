@@ -45,6 +45,8 @@ export class RatingReveiwsComponent {
   filterOption: FilterOptions;
   filterValues: Record<string, any> = {
     import_source: null,
+    product_id: null,
+    verified_purchase: null,
     status: [],
     rating: [],
   };
@@ -82,6 +84,10 @@ export class RatingReveiwsComponent {
   }
   get filterFields(): FilterFieldDef[] {
     return [
+      { key: 'product_id', label: 'Product ID', type: 'text', placeholder: '24-character product ID' },
+      { key: 'verified_purchase', label: 'Verified Purchase', type: 'select', options: [
+        { value: 'true', label: 'Verified' }, { value: 'false', label: 'Not verified' },
+      ] },
       {
         key: 'import_source', label: 'Import source', type: 'select',
         options: [
@@ -116,6 +122,8 @@ export class RatingReveiwsComponent {
   }
   filterCount(): number {
     let count = 0;
+    if (this.filterValues['product_id']) count++;
+    if (this.filterValues['verified_purchase']) count++;
     if (this.filterValues['import_source']) count++;
     if (this.filterValues['status']?.length) count++;
     if (this.filterValues['rating']?.length) count++;
@@ -152,6 +160,8 @@ export class RatingReveiwsComponent {
     this.loadError = false;
     let params = new URLSearchParams();
     params.set("limit", "20");
+    if (this.filterValues['product_id']) params.set('product_id', this.filterValues['product_id'].trim());
+    if (this.filterValues['verified_purchase']) params.set('verified_purchase', this.filterValues['verified_purchase']);
     if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
