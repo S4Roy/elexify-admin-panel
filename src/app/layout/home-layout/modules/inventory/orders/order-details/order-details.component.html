@@ -400,39 +400,76 @@
       <section class="side-card">
         <div class="side-card-head">
           <h3 class="side-card-title">Payment</h3>
-          <span class="rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold uppercase text-gray-600">{{ data?.payment_method }}</span>
+          <span class="pay-method">{{ paymentMethodLabel }}</span>
         </div>
-        <div *ngIf="canRecordPayment" class="my-3 rounded-lg bg-amber-50 p-3 text-sm">
+
+        <div *ngIf="canRecordPayment" class="pay-callout">
           <p>Record the received payment before advancing fulfillment.</p>
           <button type="button" (click)="openManualPaymentDialog()" [disabled]="recordingPayment"
-            class="mt-2 rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-50">
+            class="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             {{ recordingPayment ? 'Recording…' : 'Record manual payment' }}
           </button>
         </div>
-        <div *ngIf="data?.manual_payment as payment" class="my-3 rounded-lg bg-green-50 p-3 text-sm break-words">
-          <p class="font-semibold">Manual payment received: {{ payment.amount | currency:payment.currency }}</p>
-          <p>Method: {{ payment.method }} · Reference: {{ payment.reference }}</p>
-          <p>Received: {{ payment.received_at | date:'medium' }}</p>
-          <p>Recorded by {{ payment.recorded_by }} on {{ payment.recorded_at | date:'medium' }}</p>
-          <p>Reason: {{ payment.reason }}</p>
+
+        <!-- Split is derived from the order's stored amounts (what was charged). -->
+        <div *ngIf="data?.is_partial_cod; else fullPayment" class="pay-split">
+          <div class="pay-split-head">
+            <span>Partial COD</span>
+            <span>{{ advancePercent }}% advance · {{ 100 - advancePercent }}% on delivery</span>
+          </div>
+          <div class="pay-split-bar" aria-hidden="true"><span [style.width.%]="advancePercent"></span></div>
+          <dl class="pay-rows">
+            <div>
+              <dt><span class="pay-dot advance"></span>{{ advanceReceived ? 'Advance paid' : 'Advance due' }}</dt>
+              <dd>{{ data?.advance_amount | currency : data?.currency ?? 'INR' }}</dd>
+            </div>
+            <div>
+              <dt><span class="pay-dot balance"></span>{{ data?.payment_status === 'paid' ? 'Collected on delivery' : 'Due on delivery' }}</dt>
+              <dd>{{ data?.cod_due_amount | currency : data?.currency ?? 'INR' }}</dd>
+            </div>
+          </dl>
         </div>
-        <div *ngIf="data?.partial_cod_consent as consent" class="rounded border p-3 my-3 text-sm">
-          <p class="font-medium">Partial COD terms accepted</p>
-          <p>{{ consent.accepted_at | date:'medium' }} · Customer: {{ consent.customer_id }}</p>
-          <p>{{ consent.wording }}</p>
-          <p>Advance: {{ consent.advance_amount }} {{ consent.currency }} · Order total: {{ consent.grand_total }} {{ consent.currency }}</p>
-          <p class="break-all">Policy version: {{ consent.version }}</p>
-          <details *ngFor="let policy of consent.policies">
-            <summary>{{ policy.title }} — accepted policy snapshot</summary>
-            <pre class="whitespace-pre-wrap break-words">{{ policy.content }}</pre>
-          </details>
+        <ng-template #fullPayment>
+          <dl class="pay-rows">
+            <div>
+              <dt>{{ data?.payment_status === 'paid' ? 'Amount paid' : 'Amount' }}</dt>
+              <dd>{{ data?.grand_total | currency : data?.currency ?? 'INR' }}</dd>
+            </div>
+          </dl>
+        </ng-template>
+
+        <div *ngIf="data?.payment_meta?.razorpay_payment_id as paymentId" class="pay-id">
+          <span>Payment ID</span>
+          <code [title]="paymentId">{{ paymentId }}</code>
+          <button type="button" class="pay-icon-btn" (click)="copy(paymentId, 'Payment ID')" aria-label="Copy payment ID">
+            <mat-icon aria-hidden="true">content_copy</mat-icon>
+          </button>
         </div>
-        <p class="text-blue-700 text-sm font-medium" *ngIf="partialCodLabel">
-          {{ partialCodLabel }}
-        </p>
-        <p class="text-gray-700 text-sm break-all" *ngIf="data?.payment_meta?.razorpay_payment_id">
-          Payment ID: <span class="font-mono text-xs">{{ data?.payment_meta?.razorpay_payment_id }}</span>
-        </p>
+
+        <div *ngIf="data?.manual_payment as payment" class="pay-manual">
+          <p class="pay-manual-title">
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+            Manual payment recorded
+          </p>
+          <dl class="pay-rows">
+            <div><dt>Amount</dt><dd>{{ payment.amount | currency : payment.currency }}</dd></div>
+            <div><dt>Method</dt><dd>{{ manualPaymentMethodLabel(payment.method) }}</dd></div>
+            <div><dt>Reference</dt><dd class="font-mono text-xs">{{ payment.reference }}</dd></div>
+            <div><dt>Received</dt><dd>{{ payment.received_at | date : 'd MMM y, h:mm a' }}</dd></div>
+          </dl>
+          <p class="pay-manual-note">{{ payment.reason }}</p>
+          <p class="pay-manual-note">Recorded by {{ payment.recorded_by }} · {{ payment.recorded_at | date : 'd MMM y, h:mm a' }}</p>
+        </div>
+
+        <button *ngIf="data?.partial_cod_consent as consent" type="button" class="consent-row"
+          aria-haspopup="dialog" (click)="openConsentDialog()">
+          <span class="consent-icon" aria-hidden="true"><mat-icon>verified_user</mat-icon></span>
+          <span class="consent-text">
+            <span class="consent-title">Partial COD terms accepted</span>
+            <span class="consent-meta">{{ consent.accepted_at | date : 'd MMM y, h:mm a' }} · {{ consent.policies?.length || 0 }} {{ consent.policies?.length === 1 ? 'policy' : 'policies' }}</span>
+          </span>
+          <span class="consent-cta">View</span>
+        </button>
       </section>
       <section class="side-card">
         <h3 class="side-card-title">Invoice</h3>

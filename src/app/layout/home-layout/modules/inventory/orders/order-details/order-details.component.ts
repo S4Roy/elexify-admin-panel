@@ -3,6 +3,7 @@ import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMEN
 import { isOrderAddressEditable, openOrderAddressEditor } from '../order-address';
 import { ZohoSalesorderComponent } from './zoho-salesorder.component';
 import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
+import { PartialCodConsentDialogComponent } from './partial-cod-consent-dialog/partial-cod-consent-dialog.component';
 import {
   CurrencyPipe,
   DatePipe,
@@ -13,6 +14,7 @@ import {
 } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, Optional, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { NgSelectModule } from '@ng-select/ng-select';
 import {
   MatDialog,
@@ -55,6 +57,9 @@ const FORCE_CANCEL_STATUSES = ['packed'];
 // Mirrors INVOICE_ELIGIBLE_STATUSES / canGenerateInvoice in the backend
 // (elexify-backend/src/constants/orderStatus.js) — the backend is the real
 // enforcer; this only controls whether the button is shown.
+const PAYMENT_METHOD_LABELS: Record<string, string> = { cod: 'COD', razorpay: 'Razorpay' };
+const MANUAL_PAYMENT_METHOD_LABELS: Record<string, string> = { bank_transfer: 'Bank transfer', upi: 'Direct UPI', cash: 'Cash' };
+
 const INVOICE_ELIGIBLE_STATUSES = [
   'confirmed',
   'processing',
@@ -77,6 +82,7 @@ const INVOICE_ELIGIBLE_STATUSES = [
     OrderTrackingComponent,
     RouterLink,
     MatDialogModule,
+    MatIconModule,
     FormsModule,
     NgSelectModule,
     DatePipe,
@@ -408,10 +414,38 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
   // Percentage is derived from the order's own stored amounts, not the live
   // admin-configured setting, so it always reflects what was actually
   // charged even if the percentage changes later.
-  get partialCodLabel(): string | null {
-    if (!this.data?.is_partial_cod || !this.data?.grand_total) return null;
-    const advancePercent = Math.round((this.data.advance_amount / this.data.grand_total) * 100);
-    return `Partial COD – ${advancePercent}% Paid, ${100 - advancePercent}% Due on Delivery`;
+  get advancePercent(): number {
+    if (!this.data?.is_partial_cod || !this.data?.grand_total) return 0;
+    return Math.round((this.data.advance_amount / this.data.grand_total) * 100);
+  }
+
+  get advanceReceived(): boolean {
+    const status = this.data?.payment_status;
+    return !!status && !['pending', 'failed'].includes(status);
+  }
+
+  get paymentMethodLabel(): string {
+    const method = this.data?.payment_method ?? '';
+    return PAYMENT_METHOD_LABELS[method] ?? method.toUpperCase();
+  }
+
+  manualPaymentMethodLabel(method: string): string {
+    return MANUAL_PAYMENT_METHOD_LABELS[method] ?? method;
+  }
+
+  openConsentDialog(): void {
+    if (!this.data?.partial_cod_consent) return;
+    this.dialog.open(PartialCodConsentDialogComponent, {
+      width: '820px', maxWidth: '96vw', autoFocus: 'dialog',
+      data: this.data.partial_cod_consent,
+    });
+  }
+
+  copy(value: string, what: string): void {
+    navigator.clipboard?.writeText(value).then(
+      () => this.toastr.success(`${what} copied`),
+      () => this.toastr.error(`Couldn't copy ${what}`),
+    );
   }
 
   // Mirrors the MRP/discount breakdown shown on the customer order-detail
