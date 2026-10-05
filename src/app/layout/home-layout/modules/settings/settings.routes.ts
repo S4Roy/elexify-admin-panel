@@ -98,6 +98,11 @@ export const routes: Routes = [
     component: SmsTemplateEditComponent,
   },
   {
+    path: 'app-updates',
+    data: { pageTitle: 'App Updates', breadcrumb: 'App Updates' },
+    loadComponent: () => import('./app-updates/app-updates.component').then(m => m.AppUpdatesComponent),
+  },
+  {
     path: 'integration-credentials',
     data: { pageTitle: 'Integration Credentials', breadcrumb: 'Integration Credentials' },
     component: IntegrationCredentialsComponent,

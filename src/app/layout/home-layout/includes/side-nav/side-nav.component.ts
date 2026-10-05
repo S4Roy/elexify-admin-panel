@@ -339,6 +339,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'App Updates',
+              url: '/settings/app-updates',
+              exact: true,
+            },
+            {
               label: 'Integration Credentials',
               url: '/settings/integration-credentials',
               exact: true,

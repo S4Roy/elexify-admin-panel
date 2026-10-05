@@ -1,0 +1,72 @@
+<div class="space-y-5">
+  <div class="rounded-lg p-4 sm:p-5" style="background-color: var(--bg-surface); border: 1px solid var(--border-color)">
+    <h2 class="text-sm font-semibold mb-2" style="color: var(--text-primary)">Mobile app updates</h2>
+    <p class="text-sm" style="color: var(--text-secondary)">
+      Set the <strong>latest version</strong> to offer an optional update people can skip with "Later", and the
+      <strong>minimum version</strong> to require an update that cannot be skipped. Changes reach open apps within a few minutes.
+      Publish the new build in the store before raising these versions.
+    </p>
+  </div>
+
+  <p *ngIf="loading" class="text-sm" style="color: var(--text-secondary)">Loading…</p>
+
+  <ng-container *ngIf="!loading">
+    <form *ngFor="let p of platforms" [formGroup]="forms[p.key]" (ngSubmit)="save(p.key)"
+      class="rounded-lg p-4 sm:p-5" style="background-color: var(--bg-surface); border: 1px solid var(--border-color)">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-sm font-semibold" style="color: var(--text-primary)">{{ p.label }}</h2>
+          <p class="text-xs mt-1" style="color: var(--text-secondary)" *ngIf="info[p.key] as i">
+            {{ i.source === 'environment' ? 'Using server environment defaults until saved here.' : 'Managed here.' }}
+            <span *ngIf="i.updated_at"> Last saved {{ i.updated_at | date: 'medium' }}.</span>
+          </p>
+        </div>
+        <mat-slide-toggle formControlName="enabled">Update prompts on</mat-slide-toggle>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <mat-form-field>
+          <mat-label>Latest version (optional update)</mat-label>
+          <input matInput formControlName="latest_version" placeholder="1.4.0" />
+          <mat-hint>Older versions can update or tap "Later".</mat-hint>
+          <mat-error>Use a version like 1.4.0</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Minimum version (forced update)</mat-label>
+          <input matInput formControlName="minimum_version" placeholder="1.2.0" />
+          <mat-hint>Older versions must update. Use 0.0.0 for none.</mat-hint>
+          <mat-error>Use a version like 1.2.0</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Remind again after "Later" (hours)</mat-label>
+          <input matInput type="number" min="0" max="720" step="1" formControlName="remind_after_hours" />
+          <mat-hint>0 shows the optional update once per release.</mat-hint>
+          <mat-error>Enter 0 to 720.</mat-error>
+        </mat-form-field>
+        <mat-form-field *ngIf="p.key === 'ios'; else playStore">
+          <mat-label>App Store link</mat-label>
+          <input matInput formControlName="store_url" placeholder="https://apps.apple.com/in/app/elexify/id123456789" />
+          <mat-hint>Required to turn on iOS prompts.</mat-hint>
+        </mat-form-field>
+        <ng-template #playStore>
+          <div class="text-xs self-center" style="color: var(--text-secondary)">Opens the Elexify Play Store listing.</div>
+        </ng-template>
+        <mat-form-field>
+          <mat-label>Dialog title (optional)</mat-label>
+          <input matInput maxlength="80" formControlName="title" placeholder="Update available" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Dialog message (optional)</mat-label>
+          <textarea matInput rows="2" maxlength="300" formControlName="message"
+            placeholder="Get the latest features and improvements."></textarea>
+        </mat-form-field>
+      </div>
+
+      <p class="text-sm mt-3 mb-4" style="color: var(--text-primary)">{{ summary(p.key) }}</p>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving[p.key]" [appPermission]="'settings.update'">
+        {{ saving[p.key] ? 'Saving…' : 'Save ' + p.label }}
+      </button>
+    </form>
+  </ng-container>
+</div>

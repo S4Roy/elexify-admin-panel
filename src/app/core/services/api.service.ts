@@ -365,6 +365,12 @@ export class ApiService {
 
   // Third-party credentials are write-only: these APIs return configuration
   // metadata and masks, never plaintext secrets.
+  mobileUpdatePolicies() {
+    return this.httpService.get(`admin/mobile-update-policies`);
+  }
+  updateMobileUpdatePolicy(platform: string, payload: any) {
+    return this.httpService.put(`admin/mobile-update-policies/${platform}`, payload);
+  }
   integrationCredentialList() {
     return this.httpService.get(`admin/integration-credentials`);
   }
