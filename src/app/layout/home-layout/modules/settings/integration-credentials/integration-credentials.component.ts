@@ -51,6 +51,11 @@ export class IntegrationCredentialsComponent implements OnInit {
               if (!field.secret) this.drafts[item.provider][key] = field.value || '';
             }
           }
+          if (item.provider === 'google') {
+            for (const key of ['show_android', 'show_ios', 'show_web']) {
+              this.drafts['google'][key] = item.fields?.[key]?.value || 'true';
+            }
+          }
           if (item.provider === 'shiprocket') {
             this.drafts['shiprocket']['pickup_location'] = item.fields?.['pickup_location']?.value || '';
             if (item.enabled && item.configured) this.fetchPickupLocations();
@@ -105,5 +110,13 @@ export class IntegrationCredentialsComponent implements OnInit {
     });
   }
 
-  fieldLabel(key: string): string { return key.replaceAll('_', ' '); }
+  fieldLabel(key: string): string {
+    const labels: Record<string, string> = {
+      show_android: 'Show on Android app',
+      show_ios: 'Show on iOS app',
+      show_web: 'Show on website',
+      client_id: 'Web client ID',
+    };
+    return labels[key] ?? key.replaceAll('_', ' ');
+  }
 }
