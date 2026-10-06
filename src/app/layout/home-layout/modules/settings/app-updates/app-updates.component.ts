@@ -8,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ToastrService } from 'ngx-toastr';
 import { PermissionDirective } from 'app/core/directives/permission.directive';
 import { ApiService } from 'app/core/services/api.service';
+import { DialogService } from 'app/core/services/dialog.service';
 
 type Platform = 'android' | 'ios';
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
@@ -32,7 +33,12 @@ export class AppUpdatesComponent implements OnInit {
   saving: Partial<Record<Platform, boolean>> = {};
   loading = true;
 
-  constructor(private fb: FormBuilder, private api: ApiService, private toastr: ToastrService) {
+  constructor(
+    private fb: FormBuilder,
+    private api: ApiService,
+    private toastr: ToastrService,
+    private dialogService: DialogService,
+  ) {
     const form = () => this.fb.group({
       enabled: [false],
       latest_version: ['0.0.0', [Validators.required, Validators.pattern(VERSION)]],
@@ -92,8 +98,26 @@ export class AppUpdatesComponent implements OnInit {
       this.toastr.error('Minimum version cannot be higher than the latest version.');
       return;
     }
-    if (v.enabled && v.minimum_version !== this.info[platform]?.minimum_version && v.minimum_version !== '0.0.0'
-      && !confirm(`Force every ${platform === 'ios' ? 'iOS' : 'Android'} user below ${v.minimum_version} to update before they can use the app?`)) return;
+    const label = platform === 'ios' ? 'iOS' : 'Android';
+    const forcing = v.enabled && v.minimum_version !== '0.0.0'
+      && (v.minimum_version !== this.info[platform]?.minimum_version || !this.info[platform]?.live?.enabled);
+    if (!forcing) {
+      this.persist(platform, v);
+      return;
+    }
+    this.dialogService
+      .confirmDialog({
+        title: 'Force update?',
+        message: `Every ${label} user below ${v.minimum_version} will have to update before they can use the app. Make sure ${v.minimum_version} is live in the store first.`,
+        cancelText: 'Cancel',
+        saveText: 'Force update',
+      })
+      .subscribe((result: any) => {
+        if (result?.confirm) this.persist(platform, v);
+      });
+  }
+
+  private persist(platform: Platform, v: any) {
     this.saving[platform] = true;
     this.api.updateMobileUpdatePolicy(platform, { ...v, remind_after_hours: Number(v.remind_after_hours) }).subscribe({
       next: (res: any) => {
