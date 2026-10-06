@@ -371,6 +371,12 @@ export class ApiService {
   updateMobileUpdatePolicy(platform: string, payload: any) {
     return this.httpService.put(`admin/mobile-update-policies/${platform}`, payload);
   }
+  webAppSettings() {
+    return this.httpService.get(`admin/mobile-update-policies/website`);
+  }
+  updateWebAppSettings(payload: { install_prompt_enabled: boolean }) {
+    return this.httpService.put(`admin/mobile-update-policies/website`, payload);
+  }
   integrationCredentialList() {
     return this.httpService.get(`admin/integration-credentials`);
   }

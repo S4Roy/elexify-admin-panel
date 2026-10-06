@@ -8,6 +8,23 @@
     </p>
   </div>
 
+  <div class="rounded-lg p-4 sm:p-5" style="background-color: var(--bg-surface); border: 1px solid var(--border-color)">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">Website</h2>
+        <p class="text-xs mt-1" style="color: var(--text-secondary)">
+          elexify.online can be installed as a web app (home-screen icon, full-screen, offline page).
+          This shows an "Install web app" button in the footer on supported browsers and Add-to-Home-Screen steps on iPhone.
+        </p>
+      </div>
+      <mat-slide-toggle
+        [checked]="website.install_prompt_enabled"
+        [disabled]="savingWebsite"
+        (change)="saveWebsite($event.checked)"
+        [appPermission]="'settings.update'">Show "Install web app"</mat-slide-toggle>
+    </div>
+  </div>
+
   <p *ngIf="loading" class="text-sm" style="color: var(--text-secondary)">Loading…</p>
 
   <ng-container *ngIf="!loading">

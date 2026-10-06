@@ -32,6 +32,8 @@ export class AppUpdatesComponent implements OnInit {
   info: Partial<Record<Platform, any>> = {};
   saving: Partial<Record<Platform, boolean>> = {};
   loading = true;
+  website = { install_prompt_enabled: true, updated_at: null as string | null };
+  savingWebsite = false;
 
   constructor(
     private fb: FormBuilder,
@@ -59,6 +61,26 @@ export class AppUpdatesComponent implements OnInit {
         this.loading = false;
       },
       error: () => (this.loading = false),
+    });
+    this.api.webAppSettings().subscribe({
+      next: (res: any) => (this.website = { ...this.website, ...(res?.data ?? {}) }),
+    });
+  }
+
+  saveWebsite(enabled: boolean) {
+    const previous = this.website.install_prompt_enabled;
+    this.website.install_prompt_enabled = enabled;
+    this.savingWebsite = true;
+    this.api.updateWebAppSettings({ install_prompt_enabled: enabled }).subscribe({
+      next: (res: any) => {
+        this.savingWebsite = false;
+        this.website = { ...this.website, ...(res?.data ?? {}) };
+        this.toastr.success(res?.message || 'Saved.');
+      },
+      error: () => {
+        this.savingWebsite = false;
+        this.website.install_prompt_enabled = previous;
+      },
     });
   }
 
