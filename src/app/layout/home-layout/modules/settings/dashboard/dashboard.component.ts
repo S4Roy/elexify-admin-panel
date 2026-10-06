@@ -25,6 +25,7 @@ export class DashboardComponent {
     { label: 'SEO Settings', description: 'Search visibility defaults', router_path: '/settings/seo' },
     { label: 'Email Templates', description: 'Customer email messages', router_path: '/settings/email-templates' },
     { label: 'SMS Templates', description: 'Customer text messages', router_path: '/settings/sms-templates' },
+    { label: 'App Updates', description: 'Update prompts and app links', router_path: '/settings/app-updates' },
     { label: 'Integration Credentials', description: 'Connected service credentials', router_path: '/settings/integration-credentials' },
     { label: 'Data Operations', description: 'Maintenance and migrations', router_path: '/settings/data-operations' },
   ];

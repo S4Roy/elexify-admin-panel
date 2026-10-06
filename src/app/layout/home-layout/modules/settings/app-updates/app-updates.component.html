@@ -21,7 +21,10 @@
             <span *ngIf="i.updated_at"> Last saved {{ i.updated_at | date: 'medium' }}.</span>
           </p>
         </div>
-        <mat-slide-toggle formControlName="enabled">Update prompts on</mat-slide-toggle>
+        <div class="flex flex-col gap-2">
+          <mat-slide-toggle formControlName="enabled">Update prompts on</mat-slide-toggle>
+          <mat-slide-toggle formControlName="show_on_website">Show download link on website footer</mat-slide-toggle>
+        </div>
       </div>
 
       <div class="grid md:grid-cols-2 gap-4">
@@ -49,8 +52,13 @@
           <mat-hint>Required to turn on iOS prompts.</mat-hint>
         </mat-form-field>
         <ng-template #playStore>
-          <div class="text-xs self-center" style="color: var(--text-secondary)">Opens the Elexify Play Store listing.</div>
+          <div class="self-center text-sm" style="color: var(--text-secondary)">Opens the Elexify Play Store listing.</div>
         </ng-template>
+        <div class="md:col-span-2 flex flex-wrap items-center gap-2 text-sm" *ngIf="storeLink(p.key) as link">
+          <span style="color: var(--text-secondary)">Download link:</span>
+          <a [href]="link" target="_blank" rel="noopener noreferrer" class="break-all underline" style="color: var(--text-primary)">{{ link }}</a>
+          <button mat-stroked-button type="button" (click)="copyLink(p.key)">Copy</button>
+        </div>
         <mat-form-field>
           <mat-label>Dialog title (optional)</mat-label>
           <input matInput maxlength="80" formControlName="title" placeholder="Update available" />

@@ -47,6 +47,7 @@ export class AppUpdatesComponent implements OnInit {
       title: ['', Validators.maxLength(80)],
       message: ['', Validators.maxLength(300)],
       remind_after_hours: [24, [Validators.required, Validators.min(0), Validators.max(720)]],
+      show_on_website: [false],
     });
     this.forms = { android: form(), ios: form() };
   }
@@ -72,6 +73,7 @@ export class AppUpdatesComponent implements OnInit {
       title: item.title ?? '',
       message: item.message ?? '',
       remind_after_hours: item.remind_after_hours ?? 24,
+      show_on_website: item.show_on_website ?? false,
     });
   }
 
@@ -87,6 +89,21 @@ export class AppUpdatesComponent implements OnInit {
       ? ` Versions ${v.minimum_version} up to below ${v.latest_version} see an optional update with "Later"${Number(v.remind_after_hours) > 0 ? `, offered again after ${v.remind_after_hours}h` : ', shown once per release'}.`
       : '';
     return forced + optional;
+  }
+
+  /** Store link customers download from, once it is valid. */
+  storeLink(platform: Platform): string | null {
+    const url = platform === 'android' ? this.info.android?.store_url : this.forms.ios.value.store_url;
+    return url && /^https:\/\//.test(url) ? url : null;
+  }
+
+  copyLink(platform: Platform) {
+    const url = this.storeLink(platform);
+    if (!url) return;
+    navigator.clipboard?.writeText(url).then(
+      () => this.toastr.success('Download link copied.'),
+      () => this.toastr.error('Unable to copy. Select the link and copy it instead.'),
+    );
   }
 
   save(platform: Platform) {
