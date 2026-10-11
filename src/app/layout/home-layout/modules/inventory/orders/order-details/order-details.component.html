@@ -464,6 +464,33 @@
           </button>
         </div>
 
+        <div *ngIf="data?.cod_collection as c" class="pay-manual">
+          <p class="pay-manual-title">
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+            COD collected by our staff
+          </p>
+          <dl class="pay-rows">
+            <div><dt>Amount</dt><dd>{{ c.amount | currency : data?.currency ?? 'INR' }}</dd></div>
+            <div><dt>Method</dt><dd>{{ c.method === 'upi' ? 'UPI' : 'Cash' }}</dd></div>
+            <div *ngIf="c.reference"><dt>Reference</dt><dd class="font-mono text-xs">{{ c.reference }}</dd></div>
+            <div *ngIf="c.collected_by"><dt>Collected by</dt><dd>{{ c.collected_by }}</dd></div>
+            <div><dt>Collected at</dt><dd>{{ c.collected_at | date : 'd MMM y, h:mm a' }}</dd></div>
+          </dl>
+        </div>
+
+        <div *ngIf="data?.cod_remittance as r" class="pay-manual">
+          <p class="pay-manual-title">
+            <mat-icon aria-hidden="true">{{ r.status === 'remitted' ? 'check_circle' : 'schedule' }}</mat-icon>
+            {{ r.status === 'remitted' ? 'Remitted by Shiprocket' : r.status === 'partially_remitted' ? 'Partially remitted by Shiprocket' : 'Awaiting Shiprocket remittance' }}
+          </p>
+          <dl class="pay-rows">
+            <div><dt>Expected</dt><dd>{{ r.expected_amount | currency : data?.currency ?? 'INR' }}</dd></div>
+            <div><dt>Received</dt><dd>{{ (r.remitted_amount || 0) | currency : data?.currency ?? 'INR' }}</dd></div>
+            <div *ngIf="r.discrepancy"><dt>Difference</dt><dd class="text-amber-700">{{ r.discrepancy | currency : data?.currency ?? 'INR' }}</dd></div>
+            <div *ngFor="let e of r.entries"><dt>UTR {{ e.utr || '—' }}</dt><dd>{{ e.amount | currency : data?.currency ?? 'INR' }} · {{ e.remitted_at | date : 'd MMM y' }}</dd></div>
+          </dl>
+        </div>
+
         <div *ngIf="data?.manual_payment as payment" class="pay-manual">
           <p class="pay-manual-title">
             <mat-icon aria-hidden="true">check_circle</mat-icon>

@@ -49,6 +49,7 @@ export class PermissionService {
       ['/settings/data-operations', 'system.data.view'], ['/settings/app-updates', 'settings.view'], ['/notifications', 'customer.notification.view'],
       ['/webhook-logs', 'operations.view'], ['/audit-logs', 'audit_log.view'], ['/inventory/orders/returns', 'return.view'],
       ['/inventory/orders/reconciliation', 'order.status.manage'],
+      ['/inventory/orders/cod-remittance', 'order.payment.manage'],
     ];
     for (const [prefix, permission] of special) if (path === prefix || path.startsWith(prefix + '/')) return this.can(permission);
     const resource = this.resource(path);

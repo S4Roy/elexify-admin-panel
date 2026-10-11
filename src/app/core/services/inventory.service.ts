@@ -235,6 +235,14 @@ export class InventoryService {
   syncShiprocketStatus(payload: { order_id: string; channel_id?: string; package_ids?: string[] }) {
     return this.httpService.post(`admin/inventory/order/sync-shiprocket-status`, payload);
   }
+  // Courier COD remittance: what Shiprocket still owes, and the report
+  // import (dry_run previews; see elexify-backend services/orderService/codRemittance.js).
+  codRemittanceSummary(overdueDays = 10) {
+    return this.httpService.get(`admin/inventory/order/cod-remittance/summary`, { params: `overdue_days=${overdueDays}` });
+  }
+  importCodRemittance(file: File, dryRun: boolean) {
+    return this.httpService.postFormData(`admin/inventory/order/cod-remittance/import`, { file, dry_run: String(dryRun) });
+  }
   // Shiprocket export reconciliation: upload -> audit (dry run, zero
   // writes) -> review -> apply. See services/orderService/
   // reconcileShiprocketOrderStatus.js on the backend for the matching

@@ -70,6 +70,11 @@ export class SideNavComponent {
           url: '/inventory/orders/returns',
         },
         {
+          label: 'COD Remittance',
+          icon: 'payments',
+          url: '/inventory/orders/cod-remittance',
+        },
+        {
           label: 'Inventory',
           icon: 'inventory_2',
           url: '/inventory',

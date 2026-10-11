@@ -24,6 +24,7 @@ import { ShippingRatesComponent } from './shipping-rates/shipping-rates.componen
 import { SeoManagerComponent } from './products/seo-manager/seo-manager.component';
 import { ReturnsComponent } from './returns/returns.component';
 import { ReconciliationComponent } from './orders/reconciliation/reconciliation.component';
+import { CodRemittanceComponent } from './orders/cod-remittance/cod-remittance.component';
 
 export const routes: Routes = [
   {
@@ -266,6 +267,14 @@ export const routes: Routes = [
             data: {
               pageTitle: 'Shiprocket Reconciliation',
               breadcrumb: 'Reconciliation',
+            },
+          },
+          {
+            path: 'cod-remittance',
+            component: CodRemittanceComponent,
+            data: {
+              pageTitle: 'COD Remittance',
+              breadcrumb: 'COD Remittance',
             },
           },
           {
