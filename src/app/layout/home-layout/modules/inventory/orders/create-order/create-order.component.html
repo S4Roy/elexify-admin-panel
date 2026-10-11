@@ -50,6 +50,7 @@
           <div class="summary-row" *ngIf="quote.discount"><span>Discount</span><span>−{{ quote.discount | currency:'INR' }}</span></div>
           <div class="summary-row"><span>Shipping</span><span>{{ quote.shipping | currency:'INR' }}</span></div>
           <div class="summary-row"><span>COD fee</span><span>{{ quote.cod_fee | currency:'INR' }}</span></div>
+          <div class="summary-row" *ngIf="quote.round_off"><span>Round off</span><span>{{ quote.round_off > 0 ? '+' : '−' }}{{ (quote.round_off < 0 ? -quote.round_off : quote.round_off) | currency:'INR' }}</span></div>
           <div class="summary-total"><span>Total</span><strong>{{ quote.grand_total | currency:'INR' }}</strong></div>
           <div class="payment-notice" *ngIf="quote.payment_required">Awaiting customer payment<span *ngIf="quote.advance_amount"> · {{ quote.advance_amount | currency:'INR' }} advance</span><p>Customer can pay from their order page within one hour.</p></div>
           <p class="hint" *ngIf="!quote.payment_required">Payment will be collected on delivery.</p>

@@ -278,6 +278,12 @@
               {{ data?.cod_fee | currency : data?.currency ?? "INR" }}
             </span>
           </div>
+          <div class="flex justify-between" *ngIf="data?.round_off">
+            <span class="text-gray-600">Round off</span>
+            <span class="text-gray-800 font-medium">
+              {{ data?.round_off > 0 ? '+' : '−' }}{{ (data?.round_off < 0 ? -data?.round_off : data?.round_off) | currency : data?.currency ?? "INR" }}
+            </span>
+          </div>
           <div class="border-t pt-2 flex justify-between font-bold text-lg">
             <span>Order total</span>
             <span>{{
