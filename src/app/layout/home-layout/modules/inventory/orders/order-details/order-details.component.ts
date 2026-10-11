@@ -408,6 +408,10 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  resendDeliveryCode(pkg: any): void {
+    this.inventoryService.resendDeliveryOtp(pkg._id).subscribe(() => this.toastr.success('Delivery code sent to the customer'));
+  }
+
   // Mirrors codAmountDue in the backend service.
   get codDue(): number {
     const o = this.data;
@@ -422,7 +426,7 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
     this.dialog.open(ManualFulfillmentDialogComponent, {
       width: '560px', maxWidth: '96vw', disableClose: true,
       data: { action, orderNumber: this.data.id, mode: pkg?.fulfillment_mode, agentName: pkg?.delivery_agent_name,
-        codDue: this.codDue, currency: this.data.currency || 'INR' },
+        otpSent: !!pkg?.otp_sent, codDue: this.codDue, currency: this.data.currency || 'INR' },
     }).afterClosed().subscribe(result => {
       if (!result) return;
       const request$ = action === 'dispatch' ? this.inventoryService.manualDispatch({ order_id: this.data._id, ...result })
@@ -434,7 +438,14 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
       };
       this.updatingStatus = true;
       request$.subscribe({
-        next: () => { this.updatingStatus = false; this.toastr.success(done[action]); this.fetchOrderList(); },
+        next: (res: any) => {
+          this.updatingStatus = false;
+          this.toastr.success(done[action]);
+          if (action === 'dispatch' && res?.data?.otp_sent === false) {
+            this.toastr.warning("Couldn't text the delivery code to the customer. Use Resend Code, or deliver without it.");
+          }
+          this.fetchOrderList();
+        },
         error: () => { this.updatingStatus = false; this.fetchOrderList(); },
       });
     });

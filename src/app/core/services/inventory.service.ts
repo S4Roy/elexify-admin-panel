@@ -235,6 +235,9 @@ export class InventoryService {
   riderDelivered(packageId: string, payload: Record<string, any>) {
     return this.httpService.postFormData(`admin/delivery/${packageId}/delivered`, payload);
   }
+  riderResendOtp(packageId: string) {
+    return this.httpService.post(`admin/delivery/${packageId}/resend-otp`, {});
+  }
   riderFailedAttempt(packageId: string, reason: string) {
     return this.httpService.post(`admin/delivery/${packageId}/attempt`, { reason });
   }
@@ -243,6 +246,10 @@ export class InventoryService {
   }
   manualDelivered(packageId: string, payload: any) {
     return this.httpService.post(`admin/inventory/order/package/${packageId}/manual-delivered`, payload);
+  }
+  // Texts the customer a fresh handover code (the old one stops working).
+  resendDeliveryOtp(packageId: string) {
+    return this.httpService.post(`admin/inventory/order/package/${packageId}/resend-otp`, {});
   }
   manualDeliveryAttempt(packageId: string, payload: { reason: string }) {
     return this.httpService.post(`admin/inventory/order/package/${packageId}/delivery-attempt`, payload);

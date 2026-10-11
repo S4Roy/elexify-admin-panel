@@ -85,6 +85,19 @@
           <input *ngIf="f.codMethod === 'upi'" name="codReference" [(ngModel)]="f.codReference" placeholder="UPI transaction ID" maxlength="100"
             class="w-full rounded-lg border p-2.5 text-sm">
         </div>
+        <div class="space-y-1">
+          <label class="block text-sm">Delivery code from the customer
+            <input name="otp" [(ngModel)]="f.otp" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code"
+              [disabled]="!d.otp?.sent || d.otp?.locked" placeholder="4 digits"
+              class="mt-1 w-full rounded-lg border p-2.5 text-center text-lg tracking-[0.5em] disabled:bg-gray-100">
+          </label>
+          <p *ngIf="d.otp?.locked" class="text-xs text-red-700">Too many wrong codes. Deliver without the code.</p>
+          <p *ngIf="!d.otp?.locked" class="text-xs text-gray-500">
+            {{ d.otp?.sent ? 'Ask the customer for the code in their SMS.' : 'No code was sent for this order.' }} Optional if they can't find it.
+            <button *ngIf="d.otp?.can_resend" type="button" (click)="resendCode(d)" [disabled]="resending[d.package_id]"
+              class="ml-1 font-semibold text-primary underline disabled:opacity-50">{{ resending[d.package_id] ? 'Sending…' : 'Resend code' }}</button>
+          </p>
+        </div>
         <label class="block text-sm">Photo (optional)
           <input type="file" accept="image/*" capture="environment" (change)="onPhoto(d, $event)" class="mt-1 block w-full text-sm">
         </label>

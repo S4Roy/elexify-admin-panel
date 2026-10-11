@@ -17,6 +17,7 @@ interface DeliveryForm {
   codMethod: 'cash' | 'upi';
   codReference: string;
   photo: File | null;
+  otp: string;
   failureReason: string;
   failureNote: string;
 }
@@ -72,7 +73,7 @@ export class MyDeliveriesComponent implements OnInit {
   startForm(d: any, kind: 'delivered' | 'failed'): void {
     this.forms[d.package_id] = {
       kind, receiverName: d.address?.name || '', receiverRelation: 'Self', codMethod: 'cash', codReference: '',
-      photo: null, failureReason: FAILURE_REASONS[0], failureNote: '',
+      photo: null, otp: '', failureReason: FAILURE_REASONS[0], failureNote: '',
     };
   }
 
@@ -88,7 +89,17 @@ export class MyDeliveriesComponent implements OnInit {
     const f = this.forms[d.package_id];
     if (!f || this.saving) return false;
     if (f.kind === 'failed') return true;
-    return f.receiverName.trim().length >= 2 && (d.cod_due <= 0 || f.codMethod !== 'upi' || f.codReference.trim().length >= 3);
+    return f.receiverName.trim().length >= 2 && (!f.otp || /^\d{4}$/.test(f.otp)) && (d.cod_due <= 0 || f.codMethod !== 'upi' || f.codReference.trim().length >= 3);
+  }
+
+  resending: Record<string, boolean> = {};
+
+  resendCode(d: any): void {
+    this.resending[d.package_id] = true;
+    this.inventoryService.riderResendOtp(d.package_id).subscribe({
+      next: () => { this.resending[d.package_id] = false; this.toastr.success('New code sent to the customer'); this.load(); },
+      error: () => { this.resending[d.package_id] = false; },
+    });
   }
 
   submit(d: any): void {
@@ -102,6 +113,7 @@ export class MyDeliveriesComponent implements OnInit {
           receiver_relation: f.receiverRelation.trim(),
           ...(d.cod_due > 0 ? { cod_method: f.codMethod, cod_amount: String(d.cod_due), cod_reference: f.codReference.trim() } : {}),
           ...(f.photo ? { photo: f.photo } : {}),
+          ...(f.otp ? { otp: f.otp } : {}),
         });
     request$.subscribe({
       next: () => {

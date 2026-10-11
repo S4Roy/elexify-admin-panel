@@ -29,4 +29,14 @@ describe('InventoryService', () => {
       ['admin/inventory/order/rider-cash/pending?rider_name=Ravi+Kumar'],
     ]);
   });
+
+  it('posts delivery code resends to the admin and rider endpoints', () => {
+    const post = spyOn(TestBed.inject(HttpService), 'post').and.stub();
+    service.resendDeliveryOtp('p1');
+    service.riderResendOtp('p1');
+    expect(post.calls.allArgs()).toEqual([
+      ['admin/inventory/order/package/p1/resend-otp', {}],
+      ['admin/delivery/p1/resend-otp', {}],
+    ]);
+  });
 });

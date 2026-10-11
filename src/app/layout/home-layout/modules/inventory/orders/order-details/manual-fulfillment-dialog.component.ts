@@ -13,6 +13,7 @@ export interface ManualFulfillmentDialogData {
   orderNumber: string;
   mode?: 'self_delivery' | 'store_pickup';
   agentName?: string;
+  otpSent?: boolean;
   codDue: number;
   currency: string;
 }
@@ -68,6 +69,11 @@ const localNow = () => {
           <input name="deliveredAt" type="datetime-local" [(ngModel)]="deliveredAt" [max]="maxDate" required class="mt-1 w-full rounded border p-2">
         </label>
         <p class="-mt-2 text-xs text-gray-500">The actual handover time. The return window starts from here.</p>
+        <label *ngIf="data.otpSent" class="block">Delivery code from the customer's SMS (optional)
+          <input name="otp" [(ngModel)]="otp" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code"
+            class="mt-1 w-32 rounded border p-2 tracking-widest">
+          <span class="mt-1 block text-xs text-gray-500">Entering it marks the handover as OTP-verified. Leave blank if the customer doesn't have it.</span>
+        </label>
         <label class="block">Received by
           <input name="receiverName" [(ngModel)]="receiverName" required minlength="2" maxlength="100" class="mt-1 w-full rounded border p-2">
         </label>
@@ -128,6 +134,7 @@ export class ManualFulfillmentDialogComponent implements OnInit {
   codMethod: 'cash' | 'upi' = 'cash';
   codAmount: number;
   codReference = '';
+  otp = '';
   reason = '';
   readonly maxDate = localNow();
 
@@ -172,7 +179,7 @@ export class ManualFulfillmentDialogComponent implements OnInit {
       case 'dispatch':
         return (this.assignsStaff || this.agentName.trim().length >= 2) && this.reason.trim().length >= 5 && this.isPast(this.dispatchedAt);
       case 'deliver':
-        return this.receiverName.trim().length >= 2 && this.isPast(this.deliveredAt) &&
+        return this.receiverName.trim().length >= 2 && this.isPast(this.deliveredAt) && (!this.otp || /^\d{4}$/.test(this.otp)) &&
           (this.data.codDue <= 0 || (this.codAmountMatches && (this.codMethod !== 'upi' || !!this.codReference.trim())));
       default:
         return this.reason.trim().length >= 5;
@@ -191,7 +198,7 @@ export class ManualFulfillmentDialogComponent implements OnInit {
         this.dialogRef.close({
           delivered_at: new Date(this.deliveredAt).toISOString(), receiver_name: this.receiverName.trim(),
           receiver_relation: this.receiverRelation.trim() || null, photo_url: this.photoUrl.trim() || null,
-          notes: this.notes.trim() || null,
+          notes: this.notes.trim() || null, otp: this.otp || null,
           cod_collection: this.data.codDue > 0
             ? { amount: this.codAmount, method: this.codMethod, reference: this.codReference.trim() || null } : null,
         });
