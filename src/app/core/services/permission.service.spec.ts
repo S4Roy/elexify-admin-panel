@@ -24,6 +24,12 @@ describe('PermissionService', () => {
     await service.refresh();
     expect(service.landingUrl()).toBe('/inventory/orders/returns');
   });
+  it('lands delivery riders on their deliveries page', async () => {
+    http.get.and.returnValue(of({ data: { permissions: ['delivery.run'] } }));
+    await service.refresh();
+    expect(service.landingUrl()).toBe('/deliveries');
+    expect(service.canRoute('/inventory/orders')).toBeFalse();
+  });
   it('refreshes revoked access and clears on logout', async () => {
     http.get.and.returnValue(of({ data: { permissions: ['orders.refund'] } })); await service.refresh(); expect(service.can('orders.refund')).toBeTrue();
     http.get.and.returnValue(of({ data: { permissions: [] } })); await service.refresh(); expect(service.can('orders.refund')).toBeFalse();

@@ -1,7 +1,8 @@
-import { CurrencyPipe, NgIf } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { InventoryService } from 'app/core/services/inventory.service';
 
 // Own-rider delivery / store pickup — see elexify-backend
 // services/orderService/packages/manualFulfillment.js.
@@ -32,7 +33,7 @@ const localNow = () => {
 
 @Component({
   selector: 'app-manual-fulfillment-dialog',
-  imports: [CurrencyPipe, NgIf, FormsModule, MatDialogModule],
+  imports: [CurrencyPipe, NgIf, NgFor, FormsModule, MatDialogModule],
   template: `
     <form #form="ngForm" (ngSubmit)="submit()" class="p-6 space-y-4">
       <h2 class="text-xl font-bold">{{ title }} · {{ data.orderNumber }}</h2>
@@ -43,10 +44,18 @@ const localNow = () => {
           <label class="flex gap-2"><input type="radio" name="mode" value="self_delivery" [(ngModel)]="mode"> Own delivery (rider leaves now — order becomes "Out for delivery")</label>
           <label class="flex gap-2"><input type="radio" name="mode" value="store_pickup" [(ngModel)]="mode"> Store pickup (order becomes "Ready for pickup")</label>
         </fieldset>
-        <label class="block">{{ mode === 'self_delivery' ? 'Rider name' : 'Staff at pickup counter' }}
+        <label *ngIf="mode === 'self_delivery'" class="block">Delivery staff
+          <select name="agentUserId" [(ngModel)]="agentUserId" class="mt-1 w-full rounded border p-2">
+            <option *ngFor="let s of staff" [value]="s._id">{{ s.name }}<ng-container *ngIf="s.mobile"> · {{ s.mobile }}</ng-container></option>
+            <option value="">Someone else (no staff login)</option>
+          </select>
+          <span *ngIf="!staff.length" class="mt-1 block text-xs text-gray-500">No staff have the Delivery Staff role yet. Give a staff account that role so the delivery appears on their phone.</span>
+          <span *ngIf="agentUserId" class="mt-1 block text-xs text-gray-500">They'll see it under My Deliveries and mark it delivered themselves.</span>
+        </label>
+        <label *ngIf="!agentUserId || mode !== 'self_delivery'" class="block">{{ mode === 'self_delivery' ? 'Rider name' : 'Staff at pickup counter' }}
           <input name="agentName" [(ngModel)]="agentName" required minlength="2" maxlength="100" class="mt-1 w-full rounded border p-2">
         </label>
-        <label *ngIf="mode === 'self_delivery'" class="block">Rider phone (optional, shown to the customer while out for delivery)
+        <label *ngIf="mode === 'self_delivery' && !agentUserId" class="block">Rider phone (optional, shown to the customer while out for delivery)
           <input name="agentPhone" [(ngModel)]="agentPhone" pattern="[0-9+\\- ]{7,20}" class="mt-1 w-full rounded border p-2">
         </label>
         <label class="block">{{ mode === 'self_delivery' ? 'Left the store at' : 'Ready since' }}
@@ -104,8 +113,10 @@ const localNow = () => {
     </form>
   `,
 })
-export class ManualFulfillmentDialogComponent {
+export class ManualFulfillmentDialogComponent implements OnInit {
   mode: 'self_delivery' | 'store_pickup' = 'self_delivery';
+  staff: { _id: string; name: string; mobile: string | null }[] = [];
+  agentUserId = '';
   agentName = '';
   agentPhone = '';
   dispatchedAt = localNow();
@@ -123,8 +134,24 @@ export class ManualFulfillmentDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<ManualFulfillmentDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ManualFulfillmentDialogData,
+    private inventoryService: InventoryService,
   ) {
     this.codAmount = data.codDue;
+  }
+
+  ngOnInit(): void {
+    if (this.data.action !== 'dispatch') return;
+    this.inventoryService.deliveryStaff().subscribe({
+      next: (res: any) => {
+        this.staff = res?.data ?? [];
+        if (this.staff.length && !this.agentUserId) this.agentUserId = String(this.staff[0]._id);
+      },
+      error: () => { this.staff = []; },
+    });
+  }
+
+  private get assignsStaff(): boolean {
+    return this.mode === 'self_delivery' && !!this.agentUserId;
   }
 
   get title(): string {
@@ -143,7 +170,7 @@ export class ManualFulfillmentDialogComponent {
   get valid(): boolean {
     switch (this.data.action) {
       case 'dispatch':
-        return this.agentName.trim().length >= 2 && this.reason.trim().length >= 5 && this.isPast(this.dispatchedAt);
+        return (this.assignsStaff || this.agentName.trim().length >= 2) && this.reason.trim().length >= 5 && this.isPast(this.dispatchedAt);
       case 'deliver':
         return this.receiverName.trim().length >= 2 && this.isPast(this.deliveredAt) &&
           (this.data.codDue <= 0 || (this.codAmountMatches && (this.codMethod !== 'upi' || !!this.codReference.trim())));
@@ -156,7 +183,8 @@ export class ManualFulfillmentDialogComponent {
     if (!this.valid) return;
     switch (this.data.action) {
       case 'dispatch':
-        this.dialogRef.close({ mode: this.mode, agent_name: this.agentName.trim(), agent_phone: this.agentPhone.trim() || null,
+        this.dialogRef.close({ mode: this.mode,
+          ...(this.assignsStaff ? { agent_user_id: this.agentUserId } : { agent_name: this.agentName.trim(), agent_phone: this.agentPhone.trim() || null }),
           dispatched_at: new Date(this.dispatchedAt).toISOString(), reason: this.reason.trim() });
         return;
       case 'deliver':

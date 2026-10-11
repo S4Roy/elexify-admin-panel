@@ -1,0 +1,116 @@
+<div class="mx-auto max-w-xl space-y-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-bold text-gray-900">To deliver ({{ open.length }})</h2>
+    <button type="button" (click)="load()" [disabled]="loading"
+      class="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-2 text-sm font-semibold text-primary disabled:opacity-50">
+      <mat-icon class="!h-5 !w-5 !text-[20px]">refresh</mat-icon>{{ loading ? 'Loading…' : 'Refresh' }}
+    </button>
+  </div>
+
+  <p *ngIf="!loading && !open.length" class="rounded-lg bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
+    No deliveries assigned to you right now.
+  </p>
+
+  <div *ngFor="let d of open" class="space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="text-xs uppercase tracking-wide text-gray-500">Order</div>
+        <div class="text-base font-bold text-gray-900">{{ d.order_number }}</div>
+      </div>
+      <div *ngIf="d.cod_due > 0" class="rounded-lg bg-amber-100 px-3 py-1 text-right">
+        <div class="text-[11px] font-semibold uppercase text-amber-800">Collect</div>
+        <div class="text-lg font-bold text-amber-900">{{ d.cod_due | currency:d.currency }}</div>
+      </div>
+      <div *ngIf="d.cod_due <= 0" class="rounded-lg bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">Prepaid</div>
+    </div>
+
+    <div *ngIf="d.address as a" class="space-y-1 text-sm text-gray-800">
+      <div class="font-semibold">{{ a.name }}</div>
+      <div>{{ a.line1 }}<ng-container *ngIf="a.line2">, {{ a.line2 }}</ng-container></div>
+      <div *ngIf="a.landmark" class="text-gray-600">Landmark: {{ a.landmark }}</div>
+      <div>{{ a.city }}<ng-container *ngIf="a.postcode"> – {{ a.postcode }}</ng-container></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <a *ngIf="telLink(d.address?.phone) as tel" [href]="tel"
+        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-800">
+        <mat-icon class="!h-5 !w-5 !text-[20px]">call</mat-icon>Call
+      </a>
+      <a *ngIf="mapsLink(d.address) as maps" [href]="maps" target="_blank" rel="noopener"
+        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-800">
+        <mat-icon class="!h-5 !w-5 !text-[20px]">directions</mat-icon>Directions
+      </a>
+    </div>
+
+    <ul class="text-sm text-gray-700">
+      <li *ngFor="let i of d.items">{{ i.quantity }} × {{ i.name }}</li>
+    </ul>
+    <p *ngIf="d.note" class="rounded bg-gray-50 p-2 text-sm text-gray-700">Note: {{ d.note }}</p>
+    <p *ngIf="d.attempts.length" class="text-xs text-red-700">
+      {{ d.attempts.length }} failed attempt{{ d.attempts.length > 1 ? 's' : '' }} · last: {{ d.attempts[d.attempts.length - 1].reason }}
+    </p>
+
+    <!-- Actions -->
+    <div *ngIf="!forms[d.package_id]" class="grid grid-cols-2 gap-2 pt-1">
+      <button type="button" (click)="startForm(d, 'failed')"
+        class="rounded-lg border border-gray-300 px-3 py-3 text-sm font-semibold text-gray-700">Couldn't deliver</button>
+      <button type="button" (click)="startForm(d, 'delivered')"
+        class="rounded-lg bg-primary px-3 py-3 text-sm font-semibold text-white">Delivered</button>
+    </div>
+
+    <form *ngIf="forms[d.package_id] as f" (ngSubmit)="submit(d)" class="space-y-3 border-t border-gray-100 pt-3">
+      <ng-container *ngIf="f.kind === 'delivered'">
+        <label class="block text-sm">Received by
+          <input name="receiverName" [(ngModel)]="f.receiverName" required maxlength="100" class="mt-1 w-full rounded-lg border p-2.5">
+        </label>
+        <label class="block text-sm">Relation
+          <select name="receiverRelation" [(ngModel)]="f.receiverRelation" class="mt-1 w-full rounded-lg border p-2.5">
+            <option>Self</option><option>Family</option><option>Neighbour</option><option>Security / reception</option><option>Colleague</option>
+          </select>
+        </label>
+        <div *ngIf="d.cod_due > 0" class="space-y-2 rounded-lg bg-amber-50 p-3">
+          <div class="text-sm font-semibold text-amber-900">Collected {{ d.cod_due | currency:d.currency }} by</div>
+          <div class="flex gap-4 text-sm">
+            <label class="flex items-center gap-2"><input type="radio" name="codMethod" value="cash" [(ngModel)]="f.codMethod"> Cash</label>
+            <label class="flex items-center gap-2"><input type="radio" name="codMethod" value="upi" [(ngModel)]="f.codMethod"> UPI</label>
+          </div>
+          <input *ngIf="f.codMethod === 'upi'" name="codReference" [(ngModel)]="f.codReference" placeholder="UPI transaction ID" maxlength="100"
+            class="w-full rounded-lg border p-2.5 text-sm">
+        </div>
+        <label class="block text-sm">Photo (optional)
+          <input type="file" accept="image/*" capture="environment" (change)="onPhoto(d, $event)" class="mt-1 block w-full text-sm">
+        </label>
+      </ng-container>
+
+      <ng-container *ngIf="f.kind === 'failed'">
+        <label class="block text-sm">What happened
+          <select name="failureReason" [(ngModel)]="f.failureReason" class="mt-1 w-full rounded-lg border p-2.5">
+            <option *ngFor="let r of failureReasons" [value]="r">{{ r }}</option>
+          </select>
+        </label>
+        <label class="block text-sm">Details (optional)
+          <input name="failureNote" [(ngModel)]="f.failureNote" maxlength="200" class="mt-1 w-full rounded-lg border p-2.5">
+        </label>
+        <p class="text-xs text-gray-500">The order stays with you. Bring it back to the store if the office asks you to.</p>
+      </ng-container>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" (click)="cancelForm(d)" class="rounded-lg border border-gray-300 px-3 py-3 text-sm font-semibold text-gray-700">Back</button>
+        <button type="submit" [disabled]="!canSubmit(d)" class="rounded-lg bg-primary px-3 py-3 text-sm font-semibold text-white disabled:opacity-50">
+          {{ saving ? 'Saving…' : f.kind === 'failed' ? 'Record attempt' : 'Confirm delivered' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <ng-container *ngIf="done.length">
+    <h2 class="pt-4 text-lg font-bold text-gray-900">Delivered in the last 24 hours ({{ done.length }})</h2>
+    <div *ngFor="let d of done" class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3 text-sm">
+      <div>
+        <div class="font-semibold text-gray-900">{{ d.order_number }}</div>
+        <div class="text-gray-600">To {{ d.received_by || d.address?.name }} · {{ d.delivered_at | date:'h:mm a' }}</div>
+      </div>
+      <mat-icon class="text-green-600">check_circle</mat-icon>
+    </div>
+  </ng-container>
+</div>

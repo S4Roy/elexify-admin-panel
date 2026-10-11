@@ -125,6 +125,13 @@
           Return to Store
         </button>
       </ng-container>
+      <ng-container *ngFor="let p of deliveredManualPackages">
+        <span class="text-sm font-medium text-gray-700">Delivered to {{ p.received_by }}</span>
+        <button *ngIf="p.has_proof_photo" type="button" (click)="viewProofPhoto(p)"
+          class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5">
+          View Proof Photo
+        </button>
+      </ng-container>
       <button appPermission="orders.fulfill"
         *ngIf="canManagePackages"
         type="button"

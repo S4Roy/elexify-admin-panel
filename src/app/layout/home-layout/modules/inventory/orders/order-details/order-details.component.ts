@@ -395,6 +395,19 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
       !((this.data?.payment_method === 'razorpay' || this.data?.is_partial_cod) && !['paid', 'advance_paid'].includes(this.data?.payment_status));
   }
 
+  get deliveredManualPackages(): any[] {
+    return this.packages.filter(p => ['self_delivery', 'store_pickup'].includes(p.fulfillment_mode) && p.status === 'delivered' && p.received_by);
+  }
+
+  // Proof photos are private; fetch with the admin session and open locally.
+  viewProofPhoto(pkg: any): void {
+    this.inventoryService.proofPhoto(pkg._id).subscribe((blob: any) => {
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    });
+  }
+
   // Mirrors codAmountDue in the backend service.
   get codDue(): number {
     const o = this.data;

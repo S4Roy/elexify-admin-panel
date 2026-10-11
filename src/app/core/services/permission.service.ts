@@ -50,6 +50,7 @@ export class PermissionService {
       ['/webhook-logs', 'operations.view'], ['/audit-logs', 'audit_log.view'], ['/inventory/orders/returns', 'return.view'],
       ['/inventory/orders/reconciliation', 'order.status.manage'],
       ['/inventory/orders/cod-remittance', 'order.payment.manage'],
+      ['/deliveries', 'delivery.run'],
     ];
     for (const [prefix, permission] of special) if (path === prefix || path.startsWith(prefix + '/')) return this.can(permission);
     const resource = this.resource(path);
@@ -57,7 +58,7 @@ export class PermissionService {
     return !!resource && this.can(`${resource}.${action}`);
   }
   landingUrl(): string {
-    const candidates = ['/dashboard', '/inventory/products', '/inventory/categories', '/inventory/orders',
+    const candidates = ['/dashboard', '/deliveries', '/inventory/products', '/inventory/categories', '/inventory/orders',
       '/customers', '/inventory/orders/returns', '/settings/roles', '/settings/integrations/zoho-books',
       '/settings/email-templates', '/settings/sms-templates', '/notifications', '/pages/homepage',
       '/blogs', '/settings/dashboard'];

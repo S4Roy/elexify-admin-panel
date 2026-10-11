@@ -210,7 +210,24 @@ export class InventoryService {
   }
   // Own-rider delivery / store pickup (no courier). See elexify-backend
   // services/orderService/packages/manualFulfillment.js.
-  manualDispatch(payload: { order_id: string; mode: string; agent_name: string; agent_phone?: string | null; dispatched_at?: string; reason: string }) {
+  // Staff accounts with the Delivery Staff permission, for the dispatch picker.
+  deliveryStaff() {
+    return this.httpService.get(`admin/inventory/order/delivery-staff`);
+  }
+  proofPhoto(packageId: string) {
+    return this.httpService.downloadFile(`admin/inventory/order/package/${packageId}/proof-photo`);
+  }
+  // Rider (delivery.run) endpoints — scoped server-side to the caller's own assignments.
+  myDeliveries() {
+    return this.httpService.get(`admin/delivery/mine`);
+  }
+  riderDelivered(packageId: string, payload: Record<string, any>) {
+    return this.httpService.postFormData(`admin/delivery/${packageId}/delivered`, payload);
+  }
+  riderFailedAttempt(packageId: string, reason: string) {
+    return this.httpService.post(`admin/delivery/${packageId}/attempt`, { reason });
+  }
+  manualDispatch(payload: { order_id: string; mode: string; agent_user_id?: string | null; agent_name?: string; agent_phone?: string | null; dispatched_at?: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/package/manual-dispatch`, payload);
   }
   manualDelivered(packageId: string, payload: any) {
