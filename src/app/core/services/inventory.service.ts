@@ -217,6 +217,16 @@ export class InventoryService {
   proofPhoto(packageId: string) {
     return this.httpService.downloadFile(`admin/inventory/order/package/${packageId}/proof-photo`);
   }
+  // Own riders' COD cash: holdings and handovers (order.payment.manage).
+  riderCashSummary() {
+    return this.httpService.get(`admin/inventory/order/rider-cash/summary`);
+  }
+  riderCashPending(rider: { rider_user_id?: string; rider_name?: string }) {
+    return this.httpService.get(`admin/inventory/order/rider-cash/pending`, { params: new URLSearchParams(rider as any).toString() });
+  }
+  riderCashReceive(payload: any) {
+    return this.httpService.post(`admin/inventory/order/rider-cash/receive`, payload);
+  }
   // Rider (delivery.run) endpoints — scoped server-side to the caller's own assignments.
   myDeliveries() {
     return this.httpService.get(`admin/delivery/mine`);

@@ -50,6 +50,7 @@ export class PermissionService {
       ['/webhook-logs', 'operations.view'], ['/audit-logs', 'audit_log.view'], ['/inventory/orders/returns', 'return.view'],
       ['/inventory/orders/reconciliation', 'order.status.manage'],
       ['/inventory/orders/cod-remittance', 'order.payment.manage'],
+      ['/inventory/orders/rider-cash', 'order.payment.manage'],
       ['/deliveries', 'delivery.run'],
     ];
     for (const [prefix, permission] of special) if (path === prefix || path.startsWith(prefix + '/')) return this.can(permission);

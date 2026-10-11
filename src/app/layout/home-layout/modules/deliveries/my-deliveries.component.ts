@@ -30,6 +30,7 @@ interface DeliveryForm {
 export class MyDeliveriesComponent implements OnInit {
   open: any[] = [];
   done: any[] = [];
+  cashInHand: { amount: number; order_count: number } | null = null;
   loading = false;
   saving = false;
   // package_id -> form currently expanded on that card
@@ -48,6 +49,7 @@ export class MyDeliveriesComponent implements OnInit {
       next: (res: any) => {
         this.open = res?.data?.open ?? [];
         this.done = res?.data?.done ?? [];
+        this.cashInHand = res?.data?.cash_in_hand ?? null;
         this.loading = false;
       },
       error: () => { this.loading = false; },

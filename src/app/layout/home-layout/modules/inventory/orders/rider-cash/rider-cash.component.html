@@ -1,0 +1,86 @@
+<div class="space-y-6">
+  <p class="text-sm text-gray-600">
+    Cash our own delivery staff collected on COD orders and haven't handed in yet. UPI payments go straight to the business account and don't appear here.
+  </p>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h3 class="text-base font-bold text-gray-900">With riders: {{ (summary?.total_pending || 0) | currency:'INR' }}</h3>
+      <button type="button" (click)="load()" [disabled]="loading" class="rounded border border-primary px-3 py-1.5 text-sm font-semibold text-primary disabled:opacity-50">
+        {{ loading ? 'Loading…' : 'Refresh' }}
+      </button>
+    </div>
+    <p *ngIf="summary && !summary.riders.length" class="mt-3 text-sm text-gray-500">No cash outstanding.</p>
+
+    <div *ngFor="let r of summary?.riders" class="mt-4 rounded-lg border border-gray-100 p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="font-semibold text-gray-900">{{ r.rider_name }}<span *ngIf="!r.rider_user_id" class="ml-2 text-xs font-normal text-gray-500">(no staff login)</span></div>
+          <div class="text-sm text-gray-600">{{ r.order_count }} order(s) · holding since {{ r.oldest_collected_at | date:'d MMM, h:mm a' }}</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-lg font-bold text-gray-900">{{ r.amount | currency:'INR' }}</span>
+          <button *ngIf="active !== r" type="button" (click)="startHandover(r)" class="rounded bg-primary px-4 py-2 text-sm font-semibold text-white">Receive cash</button>
+        </div>
+      </div>
+
+      <div *ngIf="active === r" class="mt-4 space-y-3 border-t border-gray-100 pt-4">
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-xs uppercase text-gray-500">
+            <tr>
+              <th class="py-1 pr-3"><input type="checkbox" [checked]="allSelected" (change)="toggleAll($any($event.target).checked)"></th>
+              <th class="py-1 pr-3">Order</th><th class="py-1 pr-3">Collected</th><th class="py-1 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of pending" class="border-t border-gray-100">
+              <td class="py-1.5 pr-3"><input type="checkbox" [(ngModel)]="o.selected" (ngModelChange)="amountReceived = selectedTotal"></td>
+              <td class="py-1.5 pr-3"><a [routerLink]="['/inventory/orders/details', o._id]" class="text-primary">{{ o.id }}</a></td>
+              <td class="py-1.5 pr-3">{{ o.collected_at | date:'d MMM, h:mm a' }}</td>
+              <td class="py-1.5 text-right">{{ o.amount | currency:o.currency }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="text-sm">Expected <div class="text-lg font-bold">{{ selectedTotal | currency:'INR' }}</div></div>
+          <label class="text-sm">Amount received
+            <input type="number" min="0" step="0.01" [(ngModel)]="amountReceived" class="mt-1 block w-40 rounded border p-2">
+          </label>
+          <div *ngIf="difference !== 0" class="text-sm font-semibold" [class.text-red-700]="difference < 0" [class.text-amber-700]="difference > 0">
+            {{ difference < 0 ? 'Short' : 'Extra' }} {{ (difference < 0 ? -difference : difference) | currency:'INR' }}
+          </div>
+        </div>
+        <label class="block text-sm">Note {{ difference !== 0 ? '(required — explain the difference)' : '(optional)' }}
+          <input [(ngModel)]="note" maxlength="500" class="mt-1 w-full rounded border p-2">
+        </label>
+        <div class="flex justify-end gap-3">
+          <button type="button" (click)="cancel()" class="rounded border px-4 py-2 text-sm">Cancel</button>
+          <button type="button" (click)="save()" [disabled]="!canSave" class="rounded bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            {{ saving ? 'Saving…' : 'Confirm ' + (amountReceived ?? 0 | currency:'INR') + ' received' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="summary?.recent_handovers?.length" class="rounded-lg border border-gray-200 bg-white p-5">
+    <h3 class="text-base font-bold text-gray-900">Recent handovers</h3>
+    <div class="mt-3 overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="text-left text-xs uppercase text-gray-500">
+          <tr><th class="py-2 pr-4">When</th><th class="py-2 pr-4">Rider</th><th class="py-2 pr-4">Orders</th><th class="py-2 pr-4 text-right">Expected</th><th class="py-2 pr-4 text-right">Received</th><th class="py-2">Note</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of summary.recent_handovers" class="border-t border-gray-100">
+            <td class="py-2 pr-4">{{ h.received_at | date:'d MMM, h:mm a' }}</td>
+            <td class="py-2 pr-4">{{ h.rider_name }}</td>
+            <td class="py-2 pr-4">{{ h.order_count }}</td>
+            <td class="py-2 pr-4 text-right">{{ h.amount_expected | currency:'INR' }}</td>
+            <td class="py-2 pr-4 text-right" [class.text-red-700]="h.discrepancy < 0">{{ h.amount_received | currency:'INR' }}<span *ngIf="h.discrepancy"> ({{ h.discrepancy | currency:'INR' }})</span></td>
+            <td class="py-2 text-gray-600">{{ h.note || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

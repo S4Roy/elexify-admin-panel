@@ -25,6 +25,7 @@ import { SeoManagerComponent } from './products/seo-manager/seo-manager.componen
 import { ReturnsComponent } from './returns/returns.component';
 import { ReconciliationComponent } from './orders/reconciliation/reconciliation.component';
 import { CodRemittanceComponent } from './orders/cod-remittance/cod-remittance.component';
+import { RiderCashComponent } from './orders/rider-cash/rider-cash.component';
 
 export const routes: Routes = [
   {
@@ -268,6 +269,11 @@ export const routes: Routes = [
               pageTitle: 'Shiprocket Reconciliation',
               breadcrumb: 'Reconciliation',
             },
+          },
+          {
+            path: 'rider-cash',
+            component: RiderCashComponent,
+            data: { pageTitle: 'Rider Cash', breadcrumb: 'Rider Cash' },
           },
           {
             path: 'cod-remittance',

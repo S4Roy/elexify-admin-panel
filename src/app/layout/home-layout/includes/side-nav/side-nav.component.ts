@@ -80,6 +80,11 @@ export class SideNavComponent {
           url: '/inventory/orders/cod-remittance',
         },
         {
+          label: 'Rider Cash',
+          icon: 'account_balance_wallet',
+          url: '/inventory/orders/rider-cash',
+        },
+        {
           label: 'Inventory',
           icon: 'inventory_2',
           url: '/inventory',
