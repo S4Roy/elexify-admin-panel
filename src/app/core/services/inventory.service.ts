@@ -222,7 +222,8 @@ export class InventoryService {
     return this.httpService.get(`admin/inventory/order/rider-cash/summary`);
   }
   riderCashPending(rider: { rider_user_id?: string; rider_name?: string }) {
-    return this.httpService.get(`admin/inventory/order/rider-cash/pending`, { params: new URLSearchParams(rider as any).toString() });
+    const query: Record<string, string> = rider.rider_user_id ? { rider_user_id: rider.rider_user_id } : { rider_name: rider.rider_name ?? '' };
+    return this.httpService.get(`admin/inventory/order/rider-cash/pending?${new URLSearchParams(query).toString()}`);
   }
   riderCashReceive(payload: any) {
     return this.httpService.post(`admin/inventory/order/rider-cash/receive`, payload);
@@ -265,7 +266,7 @@ export class InventoryService {
   // Courier COD remittance: what Shiprocket still owes, and the report
   // import (dry_run previews; see elexify-backend services/orderService/codRemittance.js).
   codRemittanceSummary(overdueDays = 10) {
-    return this.httpService.get(`admin/inventory/order/cod-remittance/summary`, { params: `overdue_days=${overdueDays}` });
+    return this.httpService.get(`admin/inventory/order/cod-remittance/summary?overdue_days=${encodeURIComponent(overdueDays)}`);
   }
   importCodRemittance(file: File, dryRun: boolean) {
     return this.httpService.postFormData(`admin/inventory/order/cod-remittance/import`, { file, dry_run: String(dryRun) });
