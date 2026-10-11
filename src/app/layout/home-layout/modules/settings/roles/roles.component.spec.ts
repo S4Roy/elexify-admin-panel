@@ -21,10 +21,10 @@ describe('RolesComponent permission editor', () => {
       .map(key => ({ _id: key, module: key.split('.')[0], action: key.split('.').slice(1).join('.') }));
   });
   it('finds all internal Zoho capabilities by their visible module name', () => {
-    component.search = 'Zoho Books';
+    component.onSearchChange('Zoho Books');
     expect(component.groups.length).toBe(1);
     expect(component.groups[0].items.length).toBe(4);
-    component.search = 'accounting';
+    component.onSearchChange('accounting');
     expect(component.groups[0].items[0]._id).toBe('integration_credential.manage');
   });
   it('does not treat a cancelled shared confirmation as approval', async () => {

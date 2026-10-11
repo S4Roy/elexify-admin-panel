@@ -13,10 +13,16 @@ describe('PermissionService', () => {
     expect(service.canRoute('/inventory/products/add')).toBeTrue();
     expect(service.canRoute('/inventory/products/update/123')).toBeFalse();
     expect(service.actions('products')).toEqual(['add']);
-    expect(service.landingUrl()).toBe('/inventory/products');
+    // The dashboard opens for anyone who can see store data (sections gate themselves).
+    expect(service.landingUrl()).toBe('/dashboard');
     expect(service.canAny(['products.delete', 'products.view'])).toBeTrue();
     expect(service.canAll(['products.view', 'products.delete'])).toBeFalse();
     expect(service.canRoute('/unknown')).toBeFalse();
+  });
+  it('lands users without dashboard access on the first page they can open', async () => {
+    http.get.and.returnValue(of({ data: { permissions: ['return.view'] } }));
+    await service.refresh();
+    expect(service.landingUrl()).toBe('/inventory/orders/returns');
   });
   it('refreshes revoked access and clears on logout', async () => {
     http.get.and.returnValue(of({ data: { permissions: ['orders.refund'] } })); await service.refresh(); expect(service.can('orders.refund')).toBeTrue();
