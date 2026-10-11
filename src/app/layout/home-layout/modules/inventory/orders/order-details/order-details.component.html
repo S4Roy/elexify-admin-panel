@@ -107,6 +107,24 @@
       >
         {{ downloadingInvoice ? 'Preparing receipt…' : 'Download Receipt' }}
       </button>
+      <button *ngIf="canDispatchManually" type="button" (click)="openManualFulfillment('dispatch')" [disabled]="updatingStatus"
+        title="Own-rider delivery or store pickup, without a courier" class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50">
+        Fulfil Manually
+      </button>
+      <ng-container *ngIf="canManageOrderStatus && activeManualPackage as mp">
+        <span class="text-sm font-medium text-gray-700">
+          {{ mp.fulfillment_mode === 'store_pickup' ? 'Store pickup' : 'Own delivery' }}<ng-container *ngIf="mp.delivery_agent_name"> · {{ mp.delivery_agent_name }}</ng-container><ng-container *ngIf="mp.delivery_attempt_count"> · {{ mp.delivery_attempt_count }} failed attempt{{ mp.delivery_attempt_count !== 1 ? 's' : '' }}</ng-container>
+        </span>
+        <button type="button" (click)="openManualFulfillment('deliver')" [disabled]="updatingStatus" class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50">
+          {{ mp.fulfillment_mode === 'store_pickup' ? 'Mark Collected' : 'Mark Delivered' }}
+        </button>
+        <button *ngIf="mp.fulfillment_mode === 'self_delivery'" type="button" (click)="openManualFulfillment('attempt')" [disabled]="updatingStatus" class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50">
+          Failed Attempt
+        </button>
+        <button type="button" (click)="openManualFulfillment('return')" [disabled]="updatingStatus" class="inline-flex items-center rounded-md border border-primary bg-white px-3 py-2 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50">
+          Return to Store
+        </button>
+      </ng-container>
       <button appPermission="orders.fulfill"
         *ngIf="canManagePackages"
         type="button"

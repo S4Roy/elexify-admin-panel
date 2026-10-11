@@ -208,6 +208,20 @@ export class InventoryService {
   registerExternalPackage(payload: { order_id: string; shiprocket_order_id: string; reason: string }) {
     return this.httpService.post(`admin/inventory/order/package/register-external`, payload);
   }
+  // Own-rider delivery / store pickup (no courier). See elexify-backend
+  // services/orderService/packages/manualFulfillment.js.
+  manualDispatch(payload: { order_id: string; mode: string; agent_name: string; agent_phone?: string | null; dispatched_at?: string; reason: string }) {
+    return this.httpService.post(`admin/inventory/order/package/manual-dispatch`, payload);
+  }
+  manualDelivered(packageId: string, payload: any) {
+    return this.httpService.post(`admin/inventory/order/package/${packageId}/manual-delivered`, payload);
+  }
+  manualDeliveryAttempt(packageId: string, payload: { reason: string }) {
+    return this.httpService.post(`admin/inventory/order/package/${packageId}/delivery-attempt`, payload);
+  }
+  manualReturnToStore(packageId: string, payload: { reason: string }) {
+    return this.httpService.post(`admin/inventory/order/package/${packageId}/return-to-store`, payload);
+  }
   // Resyncs an order that's already linked to Shiprocket from a live
   // lookup (for when the webhook missed or was delayed) — does not
   // establish a new link, see registerExternalPackage for that.

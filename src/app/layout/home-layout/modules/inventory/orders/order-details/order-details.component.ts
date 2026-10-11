@@ -3,6 +3,7 @@ import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, PAYMENT_STATUS_LABELS, PAYMEN
 import { isOrderAddressEditable, openOrderAddressEditor } from '../order-address';
 import { ZohoSalesorderComponent } from './zoho-salesorder.component';
 import { ManualPaymentDialogComponent } from './manual-payment-dialog.component';
+import { ManualFulfillmentAction, ManualFulfillmentDialogComponent } from './manual-fulfillment-dialog.component';
 import { PartialCodConsentDialogComponent } from './partial-cod-consent-dialog/partial-cod-consent-dialog.component';
 import {
   CurrencyPipe,
@@ -379,6 +380,51 @@ export class OrderDetailsComponent implements AfterViewInit, OnDestroy {
 
   get packages(): any[] {
     return this.data?.packages ?? [];
+  }
+
+  // ── Own-rider delivery / store pickup ──────────────────────────────────
+  get activeManualPackage(): any {
+    return this.packages.find(p => ['self_delivery', 'store_pickup'].includes(p.fulfillment_mode) &&
+      ['packed', 'out_for_delivery'].includes(p.status));
+  }
+
+  get canDispatchManually(): boolean {
+    return this.canManageOrderStatus && !this.packages.some(p => p.status !== 'cancelled') &&
+      ['confirmed', 'processing', 'packed'].includes(this.data?.order_status) &&
+      !this.data?.awb && !this.data?.shiprocket_order_id && !this.data?.inventory_reverted &&
+      !((this.data?.payment_method === 'razorpay' || this.data?.is_partial_cod) && !['paid', 'advance_paid'].includes(this.data?.payment_status));
+  }
+
+  // Mirrors codAmountDue in the backend service.
+  get codDue(): number {
+    const o = this.data;
+    if (o?.payment_method !== 'cod' || o?.payment_status === 'paid') return 0;
+    if (o.is_partial_cod) return o.payment_status === 'advance_paid' ? Number(o.cod_due_amount) || 0 : 0;
+    return o.payment_status === 'pending' ? Number(o.grand_total) || 0 : 0;
+  }
+
+  openManualFulfillment(action: ManualFulfillmentAction): void {
+    const pkg = this.activeManualPackage;
+    if (this.updatingStatus || !this.data?._id || (action !== 'dispatch' && !pkg?._id)) return;
+    this.dialog.open(ManualFulfillmentDialogComponent, {
+      width: '560px', maxWidth: '96vw', disableClose: true,
+      data: { action, orderNumber: this.data.id, mode: pkg?.fulfillment_mode, agentName: pkg?.delivery_agent_name,
+        codDue: this.codDue, currency: this.data.currency || 'INR' },
+    }).afterClosed().subscribe(result => {
+      if (!result) return;
+      const request$ = action === 'dispatch' ? this.inventoryService.manualDispatch({ order_id: this.data._id, ...result })
+        : action === 'deliver' ? this.inventoryService.manualDelivered(pkg._id, result)
+        : action === 'attempt' ? this.inventoryService.manualDeliveryAttempt(pkg._id, result)
+        : this.inventoryService.manualReturnToStore(pkg._id, result);
+      const done: Record<ManualFulfillmentAction, string> = {
+        dispatch: 'Order dispatched', deliver: 'Delivery recorded', attempt: 'Failed attempt recorded', return: 'Order returned to store',
+      };
+      this.updatingStatus = true;
+      request$.subscribe({
+        next: () => { this.updatingStatus = false; this.toastr.success(done[action]); this.fetchOrderList(); },
+        error: () => { this.updatingStatus = false; this.fetchOrderList(); },
+      });
+    });
   }
 
   openManagePackages(): void {
