@@ -282,6 +282,17 @@ export class ApiService {
     return this.httpService.post(`admin/abandoned-carts/remind`, payload);
   }
 
+  // --- Sales reports (backend services/reports) ---
+  reportList() {
+    return this.httpService.get(`admin/reports`);
+  }
+  report(type: string, params: URLSearchParams) {
+    return this.httpService.get(`admin/reports/${type}?${params.toString()}`);
+  }
+  exportReport(type: string, params: URLSearchParams) {
+    return this.httpService.downloadFile(`admin/reports/${type}/export?${params.toString()}`);
+  }
+
   // --- Stock alerts (backend services/stockAlerts) ---
   lowStockItems(params: URLSearchParams) {
     return this.httpService.get(`admin/stock-alerts/low-stock?${params.toString()}`);

@@ -53,7 +53,7 @@ export class PermissionService {
       ['/settings/email-templates', 'email_template.manage'], ['/settings/sms-templates', 'sms_template.manage'],
       ['/settings/integration-credentials', 'integration_credential.manage'], ['/settings/integrations/zoho-books', 'zoho_sync.view'],
       ['/settings/data-operations', 'system.data.view'], ['/settings/app-updates', 'settings.view'], ['/notifications', 'customer.notification.view'],
-      ['/webhook-logs', 'operations.view'], ['/audit-logs', 'audit_log.view'], ['/checkout-failures', 'operations.view'], ['/abandoned-carts', 'customer.view'], ['/inventory/stock-alerts', 'products.view'], ['/inventory/orders/returns', 'return.view'],
+      ['/webhook-logs', 'operations.view'], ['/audit-logs', 'audit_log.view'], ['/checkout-failures', 'operations.view'], ['/abandoned-carts', 'customer.view'], ['/reports', 'orders.view'], ['/inventory/stock-alerts', 'products.view'], ['/inventory/orders/returns', 'return.view'],
       ['/inventory/orders/reconciliation', 'order.status.manage'],
       ['/inventory/orders/cod-remittance', 'order.payment.manage'],
       ['/inventory/orders/rider-cash', 'order.payment.manage'],

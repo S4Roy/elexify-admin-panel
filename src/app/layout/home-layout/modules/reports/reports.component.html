@@ -1,0 +1,118 @@
+<div class="report-tabs" role="tablist" aria-label="Reports">
+  <button
+    *ngFor="let report of reports"
+    type="button"
+    role="tab"
+    [attr.aria-selected]="report.type === type"
+    (click)="selectReport(report.type)"
+    [ngClass]="report.type === type ? '!bg-primary !text-white !border-primary' : ''"
+  >
+    {{ report.title }}
+  </button>
+</div>
+
+<p class="text-sm text-gray-600 mb-3" *ngIf="current">{{ current.description }}</p>
+
+<div class="filters">
+  <label>
+    Period
+    <select [(ngModel)]="preset" (ngModelChange)="applyFilters()">
+      <option *ngFor="let p of presets" [value]="p.value">{{ p.label }}</option>
+    </select>
+  </label>
+  <ng-container *ngIf="preset === 'custom'">
+    <label>From <input type="date" [(ngModel)]="customFrom" [max]="customTo || null" (change)="applyFilters()" /></label>
+    <label>To <input type="date" [(ngModel)]="customTo" [min]="customFrom || null" (change)="applyFilters()" /></label>
+  </ng-container>
+  <label *ngIf="type === 'sales'">
+    Group by
+    <select [(ngModel)]="groupBy" (ngModelChange)="applyFilters()">
+      <option value="day">Day</option>
+      <option value="week">Week</option>
+      <option value="month">Month</option>
+    </select>
+  </label>
+  <label>
+    Channel
+    <select [(ngModel)]="channel" (ngModelChange)="applyFilters()">
+      <option value="">All channels</option>
+      <option value="storefront">Storefront &amp; app</option>
+      <option value="admin">Admin-created</option>
+    </select>
+  </label>
+  <label *ngIf="type !== 'payment_methods'">
+    Payment
+    <select [(ngModel)]="payment" (ngModelChange)="applyFilters()">
+      <option value="">All payments</option>
+      <option value="prepaid">Prepaid</option>
+      <option value="cod">Cash on delivery</option>
+      <option value="partial_cod">Partial COD</option>
+    </select>
+  </label>
+  <label class="search" *ngIf="current?.searchable">
+    Search
+    <input type="search" [ngModel]="search" (ngModelChange)="onSearch($event)" placeholder="Filter rows…" />
+  </label>
+</div>
+
+<div class="kpi-grid" *ngIf="kpis.length && !loading">
+  <div class="kpi" *ngFor="let k of kpis">
+    <div class="kpi-label">{{ k.label }}</div>
+    <div class="kpi-value">{{ k.kind === 'money' ? (k.value | currency : 'INR' : 'symbol' : '1.0-0') : (k.value | number) }}</div>
+    <div class="kpi-hint" *ngIf="k.hint">{{ k.hint }}</div>
+  </div>
+</div>
+
+<div class="chart-card" *ngIf="type === 'sales' && chartOptions.series?.length && !loading">
+  <highcharts-chart [options]="chartOptions" style="display: block; width: 100%; height: 300px"></highcharts-chart>
+</div>
+
+<div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
+
+<div *ngIf="!loading && data" class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col" *ngFor="let c of columns" [ngClass]="{ 'text-right': isNumeric(c) }">{{ c.header }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of data.rows">
+        <td *ngFor="let c of columns; let first = first" [ngClass]="{ 'text-right whitespace-nowrap': isNumeric(c) }">
+          <ng-container [ngSwitch]="c.kind">
+            <ng-container *ngSwitchCase="'money'">{{ row[c.key] | currency : 'INR' }}</ng-container>
+            <ng-container *ngSwitchCase="'int'">{{ row[c.key] | number }}</ng-container>
+            <ng-container *ngSwitchCase="'pct'">{{ row[c.key] | number : '1.0-2' }}%</ng-container>
+            <ng-container *ngSwitchDefault>
+              <a
+                *ngIf="first && type === 'products' && row.slug; else plain"
+                class="font-medium text-gray-900 hover:underline"
+                [routerLink]="['/inventory/products/details', row.slug]"
+              >{{ row[c.key] || '—' }}</a>
+              <ng-template #plain>{{ row[c.key] || '—' }}</ng-template>
+            </ng-container>
+          </ng-container>
+        </td>
+      </tr>
+      <tr *ngIf="!data.rows?.length">
+        <td class="text-center" [attr.colspan]="columns.length">
+          <app-empty-state message="No sales in this period"></app-empty-state>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot *ngIf="data.rows?.length">
+      <tr>
+        <td *ngFor="let c of columns; let first = first" [ngClass]="{ 'text-right whitespace-nowrap': isNumeric(c) }">
+          <ng-container *ngIf="first">Total{{ data.pagination ? ' (all rows)' : '' }}</ng-container>
+          <ng-container *ngIf="!first && data.totals?.[c.key] !== undefined" [ngSwitch]="c.kind">
+            <ng-container *ngSwitchCase="'money'">{{ data.totals[c.key] | currency : 'INR' }}</ng-container>
+            <ng-container *ngSwitchCase="'int'">{{ data.totals[c.key] | number }}</ng-container>
+            <ng-container *ngSwitchCase="'pct'">{{ data.totals[c.key] | number : '1.0-2' }}%</ng-container>
+          </ng-container>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<pagination *ngIf="paginationOption" [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>

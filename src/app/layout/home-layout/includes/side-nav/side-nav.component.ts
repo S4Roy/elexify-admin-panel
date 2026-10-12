@@ -60,6 +60,12 @@ export class SideNavComponent {
           exact: true,
         },
         {
+          label: 'Reports',
+          icon: 'bar_chart',
+          url: '/reports',
+          exact: true,
+        },
+        {
           label: 'Orders',
           icon: 'shopping_cart',
           url: '/inventory/orders',
