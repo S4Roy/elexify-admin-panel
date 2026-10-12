@@ -88,8 +88,8 @@
             </div>
             <button type="button" class="session-button session-danger" *ngIf="helperService.can('customers.update')" [disabled]="sessionActionBusy" (click)="revokeSession(session.id)" [attr.aria-label]="'Sign out ' + session.deviceName">Sign out</button>
           </article>
-          <nav class="session-pagination" aria-label="Device pages" *ngIf="sessionState.totalDocs > sessionState.limit">
-            <span>Page {{ sessionPage }} · {{ sessionState.totalDocs }} sessions</span><div><button type="button" class="session-button" [disabled]="!sessionState.hasPrevPage || sessionActionBusy" (click)="fetchSessions(sessionPage - 1, false)">Previous</button><button type="button" class="session-button" [disabled]="!sessionState.hasNextPage || sessionActionBusy" (click)="fetchSessions(sessionPage + 1, false)">Next</button></div>
+          <nav aria-label="Device pages" *ngIf="sessionState.totalDocs > sessionState.limit && !sessionActionBusy">
+            <pagination [pagination]="sessionState" (pageChange)="fetchSessions($event, false)"></pagination>
           </nav>
           <p class="session-footnote"><mat-icon aria-hidden="true">info_outline</mat-icon>Online means recently active. Closing the app or browser does not sign out.</p>
         </ng-container>

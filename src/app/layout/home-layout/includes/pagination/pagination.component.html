@@ -15,7 +15,7 @@
   </div>
 
   <!-- Pagination Controls -->
-  <div class="pagination-controls" *ngIf="pagination.totalDocs > 10">
+  <div class="pagination-controls" *ngIf="pagination.totalDocs > pagination.limit">
     <button
       class="page-btn"
       matTooltip="First Page"
