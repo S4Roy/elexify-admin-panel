@@ -86,7 +86,7 @@
   <table class="table-base">
     <thead>
       <tr class="sticky">
-        <th scope="col" *ngIf="canSend" class="w-10">
+        <th scope="col" *ngIf="canSend" class="selection-column">
           <mat-checkbox
             [checked]="allOnPageSelected"
             [disabled]="!selectableOnPage.length"
@@ -100,14 +100,13 @@
         <th scope="col" class="text-right whitespace-nowrap">Cart value</th>
         <th scope="col">Abandoned</th>
         <th scope="col">Status</th>
-        <th scope="col" class="text-center">Reminders</th>
-        <th scope="col" class="text-center">Reachable</th>
+        <th scope="col">Reminders</th>
         <th scope="col" class="text-right"><span class="sr-only">Actions</span></th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let item of itemList" [class.row-selected]="isSelected(item)">
-        <td *ngIf="canSend">
+        <td *ngIf="canSend" class="selection-column">
           <mat-checkbox
             *ngIf="selectable(item)"
             [checked]="isSelected(item)"
@@ -166,22 +165,22 @@
             {{ item.recovered_order_number }}
           </a>
         </td>
-        <td class="text-center whitespace-nowrap">
-          <span class="reminder-count" [class.zero]="!sentReminders(item).length">{{ sentReminders(item).length }}</span>
-          <span class="time-secondary" *ngIf="lastSentAt(item) as last">{{ timeAgo(last) }}</span>
-        </td>
-        <td class="text-center">
-          <span class="channels">
-            <span class="channel" [ngClass]="item.reachable?.email ? 'on' : 'off'" [matTooltip]="item.reachable?.email ? 'Email: opted in' : 'Email: not opted in / unverified'">
-              <mat-icon>mail</mat-icon>
+        <td class="whitespace-nowrap">
+          <div class="reminders-cell">
+            <span class="reminder-count" [class.zero]="!sentReminders(item).length" matTooltip="Reminders sent">{{ sentReminders(item).length }}</span>
+            <span class="channels" aria-label="Reachable channels">
+              <span class="channel" [ngClass]="item.reachable?.email ? 'on' : 'off'" [matTooltip]="item.reachable?.email ? 'Email: opted in' : 'Email: not opted in / unverified'">
+                <mat-icon>mail</mat-icon>
+              </span>
+              <span class="channel" [ngClass]="item.reachable?.whatsapp ? 'on' : 'off'" [matTooltip]="item.reachable?.whatsapp ? 'WhatsApp: opted in' : 'WhatsApp: not opted in / unavailable'">
+                <mat-icon>chat</mat-icon>
+              </span>
+              <span class="channel" [ngClass]="item.reachable?.push ? 'on' : 'off'" [matTooltip]="item.reachable?.push ? 'App push: opted in' : 'App push: no consent or device'">
+                <mat-icon>notifications</mat-icon>
+              </span>
             </span>
-            <span class="channel" [ngClass]="item.reachable?.whatsapp ? 'on' : 'off'" [matTooltip]="item.reachable?.whatsapp ? 'WhatsApp: opted in' : 'WhatsApp: not opted in / unavailable'">
-              <mat-icon>chat</mat-icon>
-            </span>
-            <span class="channel" [ngClass]="item.reachable?.push ? 'on' : 'off'" [matTooltip]="item.reachable?.push ? 'App push: opted in' : 'App push: no consent or device'">
-              <mat-icon>notifications</mat-icon>
-            </span>
-          </span>
+          </div>
+          <span class="time-secondary" *ngIf="lastSentAt(item) as last">Last {{ timeAgo(last) }}</span>
         </td>
         <td class="text-right whitespace-nowrap">
           <div class="row-actions">
@@ -201,7 +200,7 @@
         </td>
       </tr>
       <tr *ngIf="!itemList?.length">
-        <td class="text-center" [attr.colspan]="canSend ? 9 : 8">
+        <td class="text-center" [attr.colspan]="canSend ? 8 : 7">
           <app-empty-state message="No abandoned carts found"></app-empty-state>
         </td>
       </tr>
