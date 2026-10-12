@@ -97,7 +97,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   authEvents: any[] = [];
   sessionPage = 1;
   eventPage = 1;
-  eventTotal = 0;
+  eventPagination: PaginationOptions = { ...Global.resetPaginationOptions(), limit: 10 };
   eventsLoading = false;
   eventsError = '';
   fetchSessions(page = 1, refreshEvents = true): void {
@@ -121,7 +121,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     this.eventsError = '';
     this.authEvents = [];
     this.apiService.customerAuthEvents(id, page).pipe(takeUntil(this.destroy$)).subscribe({
-      next: res => { if (id === this.customerId && page === this.eventPage) { this.authEvents = res.data.docs; this.eventTotal = res.data.totalDocs; this.eventsLoading = false; } },
+      next: res => { if (id === this.customerId && page === this.eventPage) { this.authEvents = res.data.docs; this.eventPagination = { ...res.data }; this.eventsLoading = false; } },
       error: () => { if (id === this.customerId && page === this.eventPage) { this.eventsError = 'Unable to load authentication events.'; this.eventsLoading = false; } },
     });
   }

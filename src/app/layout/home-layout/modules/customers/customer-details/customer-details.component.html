@@ -101,7 +101,9 @@
         <ng-container *ngIf="!eventsLoading && !eventsError">
           <div class="session-empty" *ngIf="!authEvents.length"><mat-icon aria-hidden="true">history</mat-icon><strong>No authentication events</strong><p>New security activity will appear here.</p></div>
           <ol class="auth-timeline"><li *ngFor="let event of authEvents"><span class="event-dot" aria-hidden="true"></span><div><strong>{{ eventLabel(event.eventType) }}</strong><p *ngIf="event.reason" class="event-reason">{{ event.reason }}</p></div><time>{{ event.createdAt | date:'d MMM y, h:mm a' }}</time></li></ol>
-          <nav class="session-pagination" aria-label="Authentication history pages" *ngIf="eventTotal > 10"><span>Page {{ eventPage }} · {{ eventTotal }} events</span><div><button type="button" class="session-button" [disabled]="eventPage <= 1" (click)="fetchAuthEvents(eventPage - 1)">Previous</button><button type="button" class="session-button" [disabled]="eventPage * 10 >= eventTotal" (click)="fetchAuthEvents(eventPage + 1)">Next</button></div></nav>
+          <nav aria-label="Authentication history pages" *ngIf="eventPagination.totalDocs > eventPagination.limit">
+            <pagination [pagination]="eventPagination" (pageChange)="fetchAuthEvents($event)"></pagination>
+          </nav>
         </ng-container>
       </section>
 
