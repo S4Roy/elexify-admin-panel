@@ -12,6 +12,10 @@ export class ApiService {
   customerList(params: any) {
     return this.httpService.get(`admin/customer/list?${params.toString()}`);
   }
+  // States/cities customers were last seen in, with counts (customer list filters).
+  customerLocationAreas() {
+    return this.httpService.get(`admin/customer/location-areas`);
+  }
   getPage(slug: string) {
     return this.httpService.get(`admin/page/details/${slug.toString()}`);
   }

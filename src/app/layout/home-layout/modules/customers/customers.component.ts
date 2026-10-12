@@ -59,7 +59,10 @@ export class CustomersComponent {
     this.router.navigate([], { relativeTo: this.route, queryParams: { from_date: null, to_date: null }, queryParamsHandling: 'merge' });
     this.fetchCutomerList();
   }
-  readonly extraFilterKeys = ['presence', 'active_sessions', 'order_activity', 'has_email', 'has_mobile'];
+  readonly extraFilterKeys = ['presence', 'active_sessions', 'order_activity', 'has_email', 'has_mobile',
+    'has_location', 'location_state', 'location_city', 'location_pincode'];
+  // Areas from the app's last-known-location reports, for the State/City filters.
+  locationAreas: { state: string; count: number; cities: { city: string; count: number }[] }[] = [];
   item_list: any = [];
   paginationOption: PaginationOptions;
 
@@ -92,6 +95,10 @@ export class CustomersComponent {
   public sortKey: string = 'created_at';
   public sortDirection: 'asc' | 'desc' = 'desc';
   ngOnInit(): void {
+    this.apiService.customerLocationAreas().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => (this.locationAreas = res?.data ?? []),
+      error: () => (this.locationAreas = []),
+    });
     combineLatest([
       this.route.paramMap,
       this.route.queryParamMap,
@@ -132,6 +139,7 @@ export class CustomersComponent {
       { key: 'order_activity', label: 'Linked order history', type: 'select', options: [{ value: '', label: 'Any orders' }, { value: 'none', label: 'No orders' }, { value: 'one', label: 'One order' }, { value: 'repeat', label: 'Repeat orders (2+)' }] },
       { key: 'has_email', label: 'Email availability', type: 'select', options: [{ value: '', label: 'Any' }, { value: 'yes', label: 'Email provided' }, { value: 'no', label: 'Missing email' }] },
       { key: 'has_mobile', label: 'Mobile availability', type: 'select', options: [{ value: '', label: 'Any' }, { value: 'yes', label: 'Mobile provided' }, { value: 'no', label: 'Missing mobile' }] },
+      ...this.locationFilterFields(),
       {
         key: 'import_source', label: 'Import source', type: 'select',
         options: [
@@ -167,6 +175,25 @@ export class CustomersComponent {
       },
     ];
   }
+  // Area filters. City options follow the chosen state when one is set.
+  private locationFilterFields(): FilterFieldDef[] {
+    const state = this.locationAreas.find(a => a.state === this.filterValues['location_state']);
+    const cities = (state ? [state] : this.locationAreas).flatMap(a =>
+      a.cities.map(c => ({ value: c.city, label: state ? `${c.city} (${c.count})` : `${c.city}, ${a.state} (${c.count})` })));
+    return [
+      { key: 'has_location', label: 'Location shared', type: 'select', options: [{ value: '', label: 'Any' }, { value: 'yes', label: 'Has a known area' }, { value: 'no', label: 'No location' }] },
+      { key: 'location_state', label: 'State (last seen)', type: 'select',
+        options: [{ value: '', label: 'Any state' }, ...this.locationAreas.map(a => ({ value: a.state, label: `${a.state} (${a.count})` }))] },
+      { key: 'location_city', label: 'City (last seen)', type: 'select', options: [{ value: '', label: 'Any city' }, ...cities] },
+      { key: 'location_pincode', label: 'Pincode (last seen)', type: 'text', placeholder: 'e.g. 700016 or 700' },
+    ];
+  }
+
+  // "Kolkata · 700016" for the list's Location column.
+  areaLabel(location: any): string {
+    return [location?.city || location?.state, location?.pincode].filter(Boolean).join(' · ') || 'Area unknown';
+  }
+
   filterCount(): number {
     let count = this.extraFilterKeys.filter(key => !!this.filterValues[key]).length;
     if (this.filterValues['import_source']) count++;

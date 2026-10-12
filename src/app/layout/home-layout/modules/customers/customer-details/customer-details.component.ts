@@ -215,6 +215,11 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     this.historyPagination = Global.resetPaginationOptions();
   }
 
+  // "Kolkata, West Bengal" from the customer's last reported area.
+  areaName(area: { city?: string | null; state?: string | null }): string {
+    return [area?.city, area?.state].filter(Boolean).join(', ') || 'Unknown area';
+  }
+
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.customerId = params.get('_id');

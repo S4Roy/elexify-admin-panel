@@ -36,6 +36,7 @@
               Joined <span [class]="getSortIcon('created_at')"></span>
             </button>
           </th>
+          <th scope="col">Location</th>
           <th scope="col" [attr.aria-sort]="sortKey === 'source' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'">
             <button type="button" (click)="sort('source')" title="Sort by import source">Source <span [class]="getSortIcon('source')"></span></button>
           </th>
@@ -47,7 +48,7 @@
       </thead>
       <tbody>
         <tr *ngIf="loadError">
-          <td colspan="8">
+          <td colspan="9">
             <div class="customer-list-error" role="alert">
               <mat-icon aria-hidden="true">error_outline</mat-icon>
               <div><strong>Customers couldn't be loaded</strong><p>{{ item_list.length ? 'The displayed results may be out of date. Try refreshing again.' : 'Please try again to load the customer list.' }}</p></div>
@@ -99,6 +100,13 @@
             <span *ngIf="item.created_at" class="secondary joined-time">{{ item.created_at | date: 'h:mm a' }}</span>
 
           </td>
+          <td class="session-cell" [title]="item.last_location ? 'Location from the app: ' + item.last_location.latitude + ', ' + item.last_location.longitude + (item.last_location.accuracy_m != null ? ' (±' + item.last_location.accuracy_m + ' m)' : '') + ', ' + (item.last_location.recorded_at | date:'medium') : 'Customer has not shared location'">
+            <ng-container *ngIf="item.last_location; else noArea">
+              <span>{{ areaLabel(item.last_location) }}</span>
+              <small class="secondary">Seen {{ item.last_location.recorded_at | date:'d MMM' }}</small>
+            </ng-container>
+            <ng-template #noArea><span class="secondary">—</span></ng-template>
+          </td>
           <td>
             <span class="source-badge" [class.imported]="item.imported_from_backup">{{ item.imported_from_backup ?
               "Backup import" : "Other" }}</span>
@@ -117,7 +125,7 @@
           </td>
         </tr>
         <tr *ngIf="!loading && !loadError && !item_list.length">
-          <td colspan="8">
+          <td colspan="9">
             <div class="no-results">
               <mat-icon aria-hidden="true">person_search</mat-icon>
               <h3>No customers found</h3>

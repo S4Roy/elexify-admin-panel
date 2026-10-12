@@ -355,6 +355,21 @@
           <div><dt>Registered</dt><dd>{{ customer?.created_at | date: 'd MMM y, h:mm a' }}</dd></div>
           <div><dt>Last updated</dt><dd>{{ customer?.updated_at ? (customer?.updated_at | date: 'd MMM y, h:mm a') : '—' }}</dd></div>
           <div><dt>First order</dt><dd>{{ stats.first_order_at ? (stats.first_order_at | date: 'd MMM y') : '—' }}</dd></div>
+          <div>
+            <dt>Last location</dt>
+            <dd *ngIf="customer?.last_location as area; else noArea" [title]="'Reported by the app ' + (area.recorded_at | date: 'medium')">
+              {{ areaName(area) }}<ng-container *ngIf="area.pincode"> {{ area.pincode }}</ng-container>
+              <span *ngIf="area.latitude !== null && area.longitude !== null" class="block">
+                <span class="font-mono text-xs">{{ area.latitude }}, {{ area.longitude }}</span>
+                <a class="ml-1 text-primary" target="_blank" rel="noopener"
+                  [href]="'https://www.google.com/maps/search/?api=1&query=' + area.latitude + ',' + area.longitude">Map</a>
+              </span>
+              <small class="block text-gray-500">
+                {{ area.recorded_at | date: 'd MMM y, h:mm a' }}<ng-container *ngIf="area.accuracy_m !== null && area.accuracy_m !== undefined"> · ±{{ area.accuracy_m }} m</ng-container><ng-container *ngIf="area.precise === false"> · approximate only</ng-container><ng-container *ngIf="!area.serviceable"> · not serviceable</ng-container>
+              </small>
+            </dd>
+            <ng-template #noArea><dd>—</dd></ng-template>
+          </div>
         </dl>
       </section>
     </aside>
