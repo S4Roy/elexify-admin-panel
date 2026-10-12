@@ -8,36 +8,73 @@
   transform: translate(-50%, -50%);
 }
 
+// Same brand mark as the boot splash (index.html) and the mobile app's
+// launch screen: white bolt on Elexify teal, here as a pulsing badge.
+$brand-teal: #00796a;
+
 .brand-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 26px;
   color: var(--text-secondary);
 }
 
-.brand-loader__animation {
-  display: block;
-  width: 112px;
-  height: 112px;
-  object-fit: contain;
+.brand-loader__badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: $brand-teal;
+  box-shadow: 0 10px 28px rgba(0, 121, 106, 0.35);
+  animation: brand-loader-breathe 1.6s ease-in-out infinite;
+}
+
+.brand-loader__bolt {
+  position: relative;
+  width: 26px;
+  height: 32px;
+  animation: brand-loader-charge 1.6s ease-in-out infinite;
+}
+
+.brand-loader__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid $brand-teal;
+  opacity: 0;
+  animation: brand-loader-ring 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+
+  &--late { animation-delay: 0.5s; }
 }
 
 .brand-loader__label {
-  margin-top: -7px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .16em;
   text-transform: uppercase;
 }
 
+@keyframes brand-loader-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.94); }
+}
+
+@keyframes brand-loader-charge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes brand-loader-ring {
+  0% { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .brand-loader__animation { display: none; }
-  .brand-loader::before {
-    content: '';
-    display: block;
-    width: 112px;
-    height: 112px;
-    background: url('/assets/elexify-loader-static.png') center / contain no-repeat;
-  }
+  .brand-loader__badge,
+  .brand-loader__bolt { animation: none; }
+  .brand-loader__ring { display: none; }
 }

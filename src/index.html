@@ -32,8 +32,88 @@
         if (dark) document.documentElement.classList.add('dark');
       })();
     </script>
+    <style>
+      /* Boot splash — mirrors the mobile app's launch screen (teal, white
+         bolt, "elexify ONLINE" wordmark). Shown until AppComponent's first
+         navigation settles, then faded out and removed (see app.component.ts). */
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #00796a;
+        color: #fff;
+        font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+        transition: opacity 0.28s ease-in;
+      }
+      #boot-splash.is-hiding { opacity: 0; pointer-events: none; }
+      #boot-splash .bs-brand { display: flex; flex-direction: column; align-items: center; }
+      #boot-splash .bs-bolt {
+        width: 72px;
+        height: 90px;
+        animation: bs-settle 0.45s cubic-bezier(0.33, 1, 0.68, 1) 0.15s both;
+      }
+      #boot-splash .bs-wordmark {
+        margin-top: 14px;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        line-height: 1.2;
+        animation: bs-rise 0.4s cubic-bezier(0.33, 1, 0.68, 1) 0.27s both;
+      }
+      #boot-splash .bs-caption {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 5px;
+        padding-left: 5px;
+        color: rgba(255, 255, 255, 0.8);
+        animation: bs-rise 0.4s cubic-bezier(0.33, 1, 0.68, 1) 0.33s both;
+      }
+      #boot-splash .bs-progress {
+        position: absolute;
+        bottom: 12%;
+        width: 120px;
+        height: 3px;
+        border-radius: 3px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.2);
+        opacity: 0;
+        animation: bs-fade 0.25s ease 2.5s forwards; /* only if loading is slow */
+      }
+      #boot-splash .bs-progress::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        border-radius: inherit;
+        background: #fff;
+        animation: bs-slide 1.1s ease-in-out infinite;
+      }
+      @keyframes bs-settle { from { transform: translateY(20px) scale(1.25); } to { transform: none; } }
+      @keyframes bs-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+      @keyframes bs-fade { to { opacity: 1; } }
+      @keyframes bs-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash .bs-bolt { animation: none; }
+        #boot-splash .bs-wordmark,
+        #boot-splash .bs-caption { animation: bs-fade 0.2s ease both; opacity: 0; }
+        #boot-splash .bs-progress::after { animation: none; width: 100%; opacity: 0.6; }
+      }
+    </style>
   </head>
   <body class="mat-typography">
+    <div id="boot-splash" role="status" aria-label="Loading Elexify admin">
+      <div class="bs-brand">
+        <svg class="bs-bolt" viewBox="0 0 24 30" aria-hidden="true">
+          <path d="M16 1.5 3 17.5h8.5L8.5 28.5 21 12.5h-8.5L16 1.5Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" />
+        </svg>
+        <span class="bs-wordmark">elexify</span>
+        <span class="bs-caption">ONLINE</span>
+      </div>
+      <div class="bs-progress"></div>
+    </div>
     <app-root></app-root>
   </body>
 </html>

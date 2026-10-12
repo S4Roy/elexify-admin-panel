@@ -1,18 +1,24 @@
 import { Component, HostListener } from '@angular/core';
 import {
   ActivatedRoute,
+  NavigationCancel,
   NavigationEnd,
+  NavigationError,
   NavigationStart,
   Router,
   RouterOutlet,
 } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, take } from 'rxjs';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { Title } from '@angular/platform-browser';
 import * as Global from 'app/global';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { DeviceDetectorService } from './core/services/device-detector.service';
 import { ThemeService } from './core/services/theme.service';
+
+// The boot splash in index.html stays up at least this long so its brand
+// reveal (≈0.75s) plays through instead of flashing on fast loads.
+const BOOT_SPLASH_MIN_MS = 900;
 
 @Component({
   selector: 'app-root',
@@ -45,6 +51,12 @@ export class AppComponent {
         if (pathOf((event as NavigationStart).url) !== pathOf(this.router.url)) this.helperService.clearSearchTerm();
       });
     this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError),
+        take(1)
+      )
+      .subscribe(() => this.hideBootSplash());
+    this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         const route = this.getActivatedRouteChild(this.activatedRoute);
@@ -65,6 +77,16 @@ export class AppComponent {
         this.breadcrumbs = this.createBreadcrumbs(this.activatedRoute.root);
         this.helperService.updateBreadCrumbs(this.breadcrumbs);
       });
+  }
+
+  private hideBootSplash(): void {
+    const splash = document.getElementById('boot-splash');
+    if (!splash) return;
+    const wait = Math.max(0, BOOT_SPLASH_MIN_MS - performance.now());
+    setTimeout(() => {
+      splash.classList.add('is-hiding');
+      setTimeout(() => splash.remove(), 300);
+    }, wait);
   }
 
   private createBreadcrumbs(

@@ -5,7 +5,13 @@
   type="ball-scale-multiple"
 >
   <div class="brand-loader" role="status" aria-live="polite" aria-label="Loading Elexify">
-    <img class="brand-loader__animation" src="assets/elexify-loader.gif" alt="" width="112" height="112" />
+    <span class="brand-loader__badge">
+      <span class="brand-loader__ring"></span>
+      <span class="brand-loader__ring brand-loader__ring--late"></span>
+      <svg class="brand-loader__bolt" viewBox="0 0 24 30" aria-hidden="true">
+        <path d="M16 1.5 3 17.5h8.5L8.5 28.5 21 12.5h-8.5L16 1.5Z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" />
+      </svg>
+    </span>
     <span class="brand-loader__label">Loading</span>
   </div>
 </ngx-spinner>
