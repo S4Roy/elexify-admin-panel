@@ -265,6 +265,10 @@ export class ApiService {
   webhookLogDetails(id: string) {
     return this.httpService.get(`admin/operations/webhook-logs/${id}`);
   }
+  // Failed order placements / payment verifications (logCheckoutFailure).
+  checkoutFailures(params: URLSearchParams) {
+    return this.httpService.get(`admin/operations/checkout-failures?${params.toString()}`);
+  }
 
   // --- Audit log (RBAC changes, customer/order edits, verification
   // overrides, data operations, etc. — the append-only trail written by the

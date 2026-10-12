@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>Checkout Failure</h2>
+
+<mat-dialog-content class="detail-content">
+  <div class="detail-grid">
+    <div><span class="detail-label">Stage</span><strong>{{ stageLabel }}</strong></div>
+    <div><span class="detail-label">Time</span><strong>{{ entry?.created_at | date : 'medium' }}</strong></div>
+    <div>
+      <span class="detail-label">Severity</span>
+      <strong>{{ entry?.level === 'error' ? 'Server error' : 'Rejected (warning)' }} · HTTP {{ entry?.status }}</strong>
+    </div>
+    <div><span class="detail-label">Error Code</span><strong>{{ entry?.error_code || '—' }}</strong></div>
+    <div><span class="detail-label">Customer</span><strong>{{ entry?.customer?.name || '—' }}</strong></div>
+    <div><span class="detail-label">Customer Email</span><strong>{{ entry?.customer?.email || '—' }}</strong></div>
+    <div><span class="detail-label">Customer Mobile</span><strong>{{ customerMobile }}</strong></div>
+    <div><span class="detail-label">IP</span><strong>{{ entry?.ip || '—' }}</strong></div>
+    <div><span class="detail-label">Client</span><strong>{{ entry?.client || 'web' }}</strong></div>
+    <div><span class="detail-label">App Version</span><strong>{{ entry?.app_version || '—' }}</strong></div>
+  </div>
+
+  <p class="detail-message"><strong>Reason:</strong> {{ entry?.reason || '—' }}</p>
+
+  <span class="detail-label">Request Details</span>
+  <pre class="payload-block" *ngIf="hasContext; else noContext">{{ entry?.context | json }}</pre>
+  <ng-template #noContext><p class="detail-message">No request details for this entry.</p></ng-template>
+
+  <ng-container *ngIf="entry?.stack">
+    <span class="detail-label mt-3">Stack Trace</span>
+    <pre class="payload-block">{{ entry.stack }}</pre>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button
+    mat-dialog-close
+    type="button"
+    class="inline-flex justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+  >
+    Close
+  </button>
+</mat-dialog-actions>

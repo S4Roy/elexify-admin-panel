@@ -281,6 +281,12 @@ export class SideNavComponent {
           url: '/audit-logs',
           exact: true,
         },
+        {
+          label: 'Checkout Failures',
+          icon: 'production_quantity_limits',
+          url: '/checkout-failures',
+          exact: true,
+        },
       ],
     },
     {
