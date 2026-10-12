@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpService } from './http.service';
 import { firstValueFrom } from 'rxjs';
+import { SETTINGS_SECTIONS } from './settings-sections';
 
 // Route/resource names mirror the existing API, including legacy permission keys.
 const resources: Record<string, string> = {
@@ -28,6 +29,8 @@ export class PermissionService {
   clear(): void { this.keys.set(new Set()); }
   can(key: string): boolean { return this.keys().has(key); }
   canAny(keys: string[]): boolean { return keys.some(key => this.can(key)); }
+  // Own-delivery riders get a stripped-down shell: just My Deliveries.
+  isDeliveryOnly(): boolean { const keys = this.keys(); return keys.size > 0 && [...keys].every(key => key === 'delivery.run'); }
   canAll(keys: string[]): boolean { return keys.every(key => this.can(key)); }
   resource(url: string): string {
     const parts = url.split('?')[0].split('/').filter(Boolean);
@@ -39,7 +42,10 @@ export class PermissionService {
   }
   canRoute(url: string): boolean {
     const path = url.split('?')[0];
-    if (path === '/' || path === '/settings' || path === '/settings/dashboard') return this.keys().size > 0;
+    if (path === '/') return this.keys().size > 0;
+    // The Settings overview only lists pages the user can open; with none
+    // (e.g. a delivery rider) there's nothing to show.
+    if (path === '/settings' || path === '/settings/dashboard') return SETTINGS_SECTIONS.some(section => this.canRoute(section.router_path));
     // The dashboard gates each section by its own permission, so it opens for
     // anyone who can see at least one kind of store data.
     if (path === '/dashboard') return this.canAny(['orders.view', 'customers.view', 'products.view', 'categories.view']);

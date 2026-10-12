@@ -1,29 +1,55 @@
 <div class="mx-auto max-w-xl space-y-4">
-  <div class="flex items-center justify-between">
-    <h2 class="text-lg font-bold text-gray-900">To deliver ({{ open.length }})</h2>
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <h2 class="text-lg font-bold text-gray-900">{{ firstName ? 'Hi ' + firstName : 'My deliveries' }}</h2>
+      <p class="text-xs text-gray-500">
+        <ng-container *ngIf="updatedAt; else notYet">Updated {{ updatedAt | date:'h:mm a' }} · refreshes automatically</ng-container>
+        <ng-template #notYet>Loading your deliveries…</ng-template>
+      </p>
+    </div>
     <button type="button" (click)="load()" [disabled]="loading"
       class="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-2 text-sm font-semibold text-primary disabled:opacity-50">
-      <mat-icon class="!h-5 !w-5 !text-[20px]">refresh</mat-icon>{{ loading ? 'Loading…' : 'Refresh' }}
+      <mat-icon class="!h-5 !w-5 !text-[20px]" [class.animate-spin]="loading">refresh</mat-icon>{{ loading ? 'Loading…' : 'Refresh' }}
     </button>
   </div>
 
-  <div *ngIf="cashInHand?.amount" class="flex items-center justify-between rounded-xl bg-amber-50 p-4">
-    <div>
-      <div class="text-xs font-semibold uppercase text-amber-800">Cash with you</div>
-      <div class="text-sm text-amber-900">{{ cashInHand!.order_count }} COD order{{ cashInHand!.order_count > 1 ? 's' : '' }} · hand it in at the office</div>
+  <!-- At a glance -->
+  <div class="grid grid-cols-2 gap-2">
+    <div class="rounded-xl bg-white p-3 shadow-sm">
+      <div class="text-[11px] font-semibold uppercase text-gray-500">To deliver</div>
+      <div class="text-2xl font-bold text-gray-900">{{ open.length }}</div>
     </div>
-    <div class="text-xl font-bold text-amber-900">{{ cashInHand!.amount | currency:'INR' }}</div>
+    <div class="rounded-xl bg-white p-3 shadow-sm">
+      <div class="text-[11px] font-semibold uppercase text-gray-500">Cash to collect</div>
+      <div class="text-2xl font-bold text-gray-900">{{ codToCollect | currency:'INR':'symbol':'1.0-2' }}</div>
+    </div>
+    <div class="rounded-xl bg-white p-3 shadow-sm">
+      <div class="text-[11px] font-semibold uppercase text-gray-500">Delivered (24h)</div>
+      <div class="text-2xl font-bold text-green-700">{{ done.length }}</div>
+    </div>
+    <div class="rounded-xl p-3 shadow-sm" [class.bg-amber-50]="cashInHand?.amount" [class.bg-white]="!cashInHand?.amount">
+      <div class="text-[11px] font-semibold uppercase" [class.text-amber-800]="cashInHand?.amount" [class.text-gray-500]="!cashInHand?.amount">Cash with you</div>
+      <div class="text-2xl font-bold" [class.text-amber-900]="cashInHand?.amount" [class.text-gray-900]="!cashInHand?.amount">{{ (cashInHand?.amount || 0) | currency:'INR':'symbol':'1.0-2' }}</div>
+    </div>
   </div>
-
-  <p *ngIf="!loading && !open.length" class="rounded-lg bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
-    No deliveries assigned to you right now.
+  <p *ngIf="cashInHand?.amount" class="-mt-2 text-xs text-amber-800">
+    From {{ cashInHand!.order_count }} COD order{{ cashInHand!.order_count > 1 ? 's' : '' }}. Hand it in at the office.
   </p>
 
-  <div *ngFor="let d of open" class="space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <div *ngIf="loaded && !open.length" class="rounded-xl bg-white p-8 text-center shadow-sm">
+    <mat-icon class="!h-12 !w-12 !text-[48px] text-gray-300">local_shipping</mat-icon>
+    <p class="mt-2 font-semibold text-gray-800">{{ done.length ? 'All done for now' : 'Nothing to deliver right now' }}</p>
+    <p class="mt-1 text-sm text-gray-500">New deliveries appear here as soon as the office assigns them to you.</p>
+  </div>
+
+  <div *ngFor="let d of open; let i = index" class="space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
     <div class="flex items-start justify-between gap-3">
-      <div>
-        <div class="text-xs uppercase tracking-wide text-gray-500">Order</div>
-        <div class="text-base font-bold text-gray-900">{{ d.order_number }}</div>
+      <div class="flex items-start gap-3">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">{{ i + 1 }}</div>
+        <div>
+          <div class="text-base font-bold text-gray-900">{{ d.order_number }}</div>
+          <div *ngIf="d.dispatched_at" class="text-xs text-gray-500">Out since {{ d.dispatched_at | date:'h:mm a, d MMM' }}</div>
+        </div>
       </div>
       <div *ngIf="d.cod_due > 0" class="rounded-lg bg-amber-100 px-3 py-1 text-right">
         <div class="text-[11px] font-semibold uppercase text-amber-800">Collect</div>
@@ -39,14 +65,18 @@
       <div>{{ a.city }}<ng-container *ngIf="a.postcode"> – {{ a.postcode }}</ng-container></div>
     </div>
 
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid grid-cols-3 gap-2">
       <a *ngIf="telLink(d.address?.phone) as tel" [href]="tel"
-        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-800">
+        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-2 py-2.5 text-sm font-semibold text-gray-800">
         <mat-icon class="!h-5 !w-5 !text-[20px]">call</mat-icon>Call
       </a>
       <a *ngIf="mapsLink(d.address) as maps" [href]="maps" target="_blank" rel="noopener"
-        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-800">
+        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-2 py-2.5 text-sm font-semibold text-gray-800">
         <mat-icon class="!h-5 !w-5 !text-[20px]">directions</mat-icon>Directions
+      </a>
+      <a *ngIf="whatsappLink(d.address?.phone) as wa" [href]="wa" target="_blank" rel="noopener"
+        class="inline-flex items-center justify-center gap-1 rounded-lg bg-gray-100 px-2 py-2.5 text-sm font-semibold text-gray-800">
+        <mat-icon class="!h-5 !w-5 !text-[20px]">chat</mat-icon>WhatsApp
       </a>
     </div>
 

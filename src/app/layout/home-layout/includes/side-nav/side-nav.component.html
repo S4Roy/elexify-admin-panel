@@ -14,7 +14,7 @@
     class="sidebarMenu min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-3"
     [class]="isNavOpen ? 'px-2' : 'flex flex-col items-center px-2'"
   >
-    <ng-container *ngFor="let item of itemList; let first = first">
+    <ng-container *ngFor="let item of visibleGroups; let first = first">
       <div
         *ngIf="isNavOpen"
         class="px-2"

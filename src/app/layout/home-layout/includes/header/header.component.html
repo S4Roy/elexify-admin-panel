@@ -17,7 +17,7 @@
       </div>
 
       <div class="open-outlet flex justify-end items-center">
-        <div class="max-w-md w-96 flex-1 flex items-center" *ngIf="!device.isMobile()">
+        <div class="max-w-md w-96 flex-1 flex items-center" *ngIf="!device.isMobile() && !deliveryOnly">
           <mat-form-field class="search">
             <mat-icon matPrefix>search</mat-icon>
             <input [(ngModel)]="searchTerm" (input)="onSearchChange($event)" matInput
@@ -29,13 +29,15 @@
             </button>
           </mat-form-field>
         </div>
-        <mat-icon class="mx-4 cursor-pointer">settings</mat-icon>
+        <a *ngIf="canOpenSettings" mat-icon-button class="mr-4" routerLink="/settings" aria-label="Settings">
+          <mat-icon>settings</mat-icon>
+        </a>
         <button type="button" mat-icon-button class="mr-4" (click)="themeService.toggle()" [attr.aria-label]="
             themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme'
           ">
           <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
         </button>
-        <button type="button" mat-icon-button class="mr-4" (click)="showNotifications()" [attr.aria-label]="
+        <button *ngIf="!deliveryOnly" type="button" mat-icon-button class="mr-4" (click)="showNotifications()" [attr.aria-label]="
             total_unread_record
               ? 'Notifications, ' + total_unread_record + ' unread'
               : 'Notifications'
@@ -68,9 +70,6 @@
               </div>
               <div class="item email">{{ userDetails?.email }}</div>
               <div class="item">
-                <a class="text-primary" routerLink="/settings/basic-information">
-                  My Account</a>
-                <span class="dot mx-2"></span>
                 <a href="javascript:void(0)" (click)="signOut()" class="text-danger">Sign Out</a>
               </div>
             </div>

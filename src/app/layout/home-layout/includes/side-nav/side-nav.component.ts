@@ -391,6 +391,10 @@ export class SideNavComponent {
   ) {
     // this.fetchMenuList();
   }
+  // Sections with nothing this user can open are left out entirely, heading included.
+  get visibleGroups(): any[] {
+    return this.itemList.filter((group: any) => group?.menuItems?.some((menu: any) => this.canAccess(menu)));
+  }
   canAccess(item: any): boolean {
     return item?.childMenuItems?.length ? item.childMenuItems.some((child: any) => this.canAccess(child)) : this.helpersService.permissions.canRoute(item?.url || '/');
   }

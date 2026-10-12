@@ -29,6 +29,16 @@ describe('PermissionService', () => {
     await service.refresh();
     expect(service.landingUrl()).toBe('/deliveries');
     expect(service.canRoute('/inventory/orders')).toBeFalse();
+    // Nothing under Settings, so no Settings menu or overview either.
+    expect(service.canRoute('/settings')).toBeFalse();
+    expect(service.canRoute('/settings/dashboard')).toBeFalse();
+    expect(service.isDeliveryOnly()).toBeTrue();
+  });
+  it('opens Settings when any settings page is allowed', async () => {
+    http.get.and.returnValue(of({ data: { permissions: ['delivery.run', 'media.view'] } }));
+    await service.refresh();
+    expect(service.canRoute('/settings')).toBeTrue();
+    expect(service.isDeliveryOnly()).toBeFalse();
   });
   it('refreshes revoked access and clears on logout', async () => {
     http.get.and.returnValue(of({ data: { permissions: ['orders.refund'] } })); await service.refresh(); expect(service.can('orders.refund')).toBeTrue();

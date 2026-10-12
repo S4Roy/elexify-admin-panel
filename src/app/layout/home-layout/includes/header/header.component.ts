@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NgIf } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
@@ -32,6 +33,7 @@ import { ThemeService } from '../../../../core/services/theme.service';
     MatInputModule,
     FormsModule,
     MatButtonModule,
+    RouterLink,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
@@ -63,6 +65,13 @@ export class HeaderComponent {
       .subscribe((term: string) => {
         this.helperService.updateSearchTerm(term);
       });
+  }
+
+  get deliveryOnly(): boolean {
+    return this.helperService.permissions.isDeliveryOnly();
+  }
+  get canOpenSettings(): boolean {
+    return this.helperService.permissions.canRoute('/settings');
   }
 
   onSearchChange(event: any): void {
