@@ -150,7 +150,7 @@
           <span class="cart-value">{{ item.cart_value | currency : 'INR' : 'symbol' : '1.0-0' }}</span>
         </td>
         <td class="whitespace-nowrap">
-          <span class="time-primary" [matTooltip]="(item.abandoned_at | date : 'medium') ?? ''">{{ timeAgo(item.abandoned_at) }}</span>
+          <span class="time-primary" [matTooltip]="(item.abandoned_at | date : 'medium') ?? ''">{{ item.abandoned_at | timeAgo }}</span>
           <span class="time-secondary">{{ item.abandoned_at | date : 'd MMM, h:mm a' }}</span>
         </td>
         <td>
@@ -180,7 +180,7 @@
               </span>
             </span>
           </div>
-          <span class="time-secondary" *ngIf="lastSentAt(item) as last">Last {{ timeAgo(last) }}</span>
+          <span class="time-secondary" *ngIf="lastSentAt(item) as last">Last {{ last | timeAgo }}</span>
         </td>
         <td class="text-right whitespace-nowrap">
           <div class="row-actions">

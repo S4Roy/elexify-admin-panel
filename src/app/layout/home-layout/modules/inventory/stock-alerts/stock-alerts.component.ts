@@ -1,7 +1,8 @@
-import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
@@ -13,6 +14,7 @@ import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-dr
 import { PaginationComponent } from '../../../includes/pagination/pagination.component';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 import { StockAlertSubscribersDialogComponent } from './stock-alert-subscribers-dialog/stock-alert-subscribers-dialog.component';
+import { TimeAgoPipe } from 'app/core/pipe/time-ago.pipe';
 import { StockAlertSettingsDialogComponent } from './stock-alert-settings-dialog/stock-alert-settings-dialog.component';
 
 type Tab = 'low' | 'requests';
@@ -22,7 +24,7 @@ type Tab = 'low' | 'requests';
 // storefront's "Notify me" button — backend services/stockAlerts.
 @Component({
   selector: 'app-stock-alerts',
-  imports: [NgIf, NgFor, NgClass, DatePipe, RouterLink, MatIconModule, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, NgClass, DatePipe, DecimalPipe, TimeAgoPipe, RouterLink, MatIconModule, MatTooltipModule, PaginationComponent, EmptyStateComponent],
   templateUrl: './stock-alerts.component.html',
   styleUrl: './stock-alerts.component.scss',
 })
@@ -38,6 +40,11 @@ export class StockAlertsComponent implements OnInit, OnDestroy {
   readonly canConfigure: boolean;
 
   filterValues: Record<string, any> = { level: null, search_key: null };
+  readonly levelOptions: { value: string | null; label: string }[] = [
+    { value: null, label: 'All' },
+    { value: 'out', label: 'Out of stock' },
+    { value: 'low', label: 'Running low' },
+  ];
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -136,17 +143,32 @@ export class StockAlertsComponent implements OnInit, OnDestroy {
     this.apiService.stockAlertSettings().subscribe({ next: (res: any) => (this.settings = res?.data ?? null) });
   }
 
+  setLevel(level: string | null): void {
+    if (this.filterValues['level'] === level) return;
+    this.filterValues = { ...this.filterValues, level };
+    this.paginationOption.page = 1;
+    this.updateFilterButton();
+    this.fetchList();
+  }
+
   onPageChange(page: number): void {
     this.paginationOption.page = page;
     this.fetchList();
   }
 
-  levelLabel(item: any): string {
-    return item?.stock_quantity <= 0 ? 'Out of stock' : 'Running low';
+  isOut(item: any): boolean {
+    return item?.stock_quantity <= 0;
   }
 
-  levelClass(item: any): string {
-    return item?.stock_quantity <= 0 ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800';
+  levelLabel(item: any): string {
+    return this.isOut(item) ? 'Out of stock' : 'Running low';
+  }
+
+  // Stock as a share of the low-stock threshold, for the mini meter.
+  stockPercent(item: any): number {
+    const threshold = Number(this.settings?.low_stock_threshold ?? this.threshold) || 0;
+    if (!threshold || this.isOut(item)) return 0;
+    return Math.min(100, Math.max(8, (item.stock_quantity / threshold) * 100));
   }
 
   viewSubscribers(item: any): void {

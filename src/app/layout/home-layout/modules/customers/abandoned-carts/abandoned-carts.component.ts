@@ -19,6 +19,7 @@ import { AbandonedCartDetailDialogComponent } from './abandoned-cart-detail-dial
 import { SendCartReminderDialogComponent } from './send-cart-reminder-dialog/send-cart-reminder-dialog.component';
 import { AbandonedCartSettingsDialogComponent } from './abandoned-cart-settings-dialog/abandoned-cart-settings-dialog.component';
 import { customerAvatarColor, customerInitials } from './abandoned-cart.utils';
+import { TimeAgoPipe } from 'app/core/pipe/time-ago.pipe';
 
 // Abandoned carts of signed-in customers, maintained by the backend's
 // services/abandonedCart cron: KPIs for the period, a filterable list with
@@ -26,7 +27,7 @@ import { customerAvatarColor, customerInitials } from './abandoned-cart.utils';
 // reminder sequence settings.
 @Component({
   selector: 'app-abandoned-carts',
-  imports: [NgIf, NgFor, NgClass, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, MatCheckboxModule, MatIconModule, MatTooltipModule, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, NgClass, DatePipe, CurrencyPipe, DecimalPipe, TimeAgoPipe, RouterLink, MatCheckboxModule, MatIconModule, MatTooltipModule, PaginationComponent, EmptyStateComponent],
   templateUrl: './abandoned-carts.component.html',
   styleUrl: './abandoned-carts.component.scss',
 })
@@ -262,17 +263,6 @@ export class AbandonedCartsComponent implements OnInit, OnDestroy {
   lastSentAt(item: any): string | null {
     const sent = this.sentReminders(item);
     return sent.length ? sent[sent.length - 1].sent_at : null;
-  }
-  timeAgo(value: string | Date | null | undefined): string {
-    if (!value) return '—';
-    const mins = Math.floor((Date.now() - new Date(value).getTime()) / 60000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}d ago`;
-    return `${Math.floor(days / 30)}mo ago`;
   }
   initials(name: string | null | undefined): string {
     return customerInitials(name);

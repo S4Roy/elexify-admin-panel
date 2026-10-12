@@ -1,29 +1,31 @@
-<div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-  <div class="inline-flex rounded-md shadow-sm" role="tablist">
-    <button
-      type="button"
-      role="tab"
-      [attr.aria-selected]="tab === 'low'"
-      (click)="setTab('low')"
-      class="px-3 py-1.5 text-sm font-semibold border rounded-l-md"
-      [ngClass]="tab === 'low' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
-    >
+<div class="toolbar">
+  <div class="segmented" role="tablist" aria-label="Stock alert views">
+    <button type="button" role="tab" [attr.aria-selected]="tab === 'low'" [class.active]="tab === 'low'" (click)="setTab('low')">
+      <mat-icon>inventory_2</mat-icon>
       Low &amp; out of stock
+      <span class="count" *ngIf="tab === 'low' && !loading">{{ paginationOption.totalDocs | number }}</span>
     </button>
-    <button
-      type="button"
-      role="tab"
-      [attr.aria-selected]="tab === 'requests'"
-      (click)="setTab('requests')"
-      class="px-3 py-1.5 text-sm font-semibold border rounded-r-md -ml-px"
-      [ngClass]="tab === 'requests' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
-    >
+    <button type="button" role="tab" [attr.aria-selected]="tab === 'requests'" [class.active]="tab === 'requests'" (click)="setTab('requests')">
+      <mat-icon>notifications_active</mat-icon>
       Back-in-stock requests
+      <span class="count" *ngIf="tab === 'requests' && !loading">{{ paginationOption.totalDocs | number }}</span>
+    </button>
+  </div>
+
+  <div class="segmented small" *ngIf="tab === 'low'" role="group" aria-label="Filter by stock level">
+    <button
+      *ngFor="let level of levelOptions"
+      type="button"
+      [class.active]="filterValues['level'] === level.value"
+      [attr.aria-pressed]="filterValues['level'] === level.value"
+      (click)="setLevel(level.value)"
+    >
+      <span class="dot" *ngIf="level.value" [ngClass]="level.value"></span>{{ level.label }}
     </button>
   </div>
 </div>
 
-<div class="status-strip" *ngIf="settings">
+<div class="settings-bar" *ngIf="settings">
   <span class="chip" [ngClass]="settings.low_stock_alerts_enabled ? 'on' : 'off'">
     <mat-icon>{{ settings.low_stock_alerts_enabled ? 'mark_email_read' : 'unsubscribe' }}</mat-icon>
     Low-stock emails {{ settings.low_stock_alerts_enabled ? 'on' : 'off' }}
@@ -32,54 +34,74 @@
     <mat-icon>{{ settings.back_in_stock_enabled ? 'notifications_active' : 'notifications_off' }}</mat-icon>
     Back-in-stock alerts {{ settings.back_in_stock_enabled ? 'on' : 'off' }}
   </span>
-  <span>Low-stock threshold: <strong>{{ settings.low_stock_threshold }}</strong></span>
-  <span *ngIf="tab === 'requests' && totals">
-    <strong>{{ totals.waiting }}</strong> waiting · <strong>{{ totals.notified_30d }}</strong> notified in the last 30 days
+  <span class="chip neutral">
+    <mat-icon>tune</mat-icon>
+    Low-stock threshold <strong>≤ {{ settings.low_stock_threshold }}</strong>
   </span>
-  <button type="button" (click)="openSettings()">{{ canConfigure ? 'Change' : 'View settings' }}</button>
+  <span class="chip neutral" *ngIf="tab === 'requests' && totals">
+    <mat-icon>group</mat-icon>
+    <strong>{{ totals.waiting | number }}</strong> waiting · <strong>{{ totals.notified_30d | number }}</strong> notified (30d)
+  </span>
+  <button type="button" class="settings-link" (click)="openSettings()">
+    {{ canConfigure ? 'Change' : 'View settings' }}<mat-icon>chevron_right</mat-icon>
+  </button>
 </div>
 
 <div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
 
 <!-- Low & out of stock -->
-<div *ngIf="!loading && tab === 'low'" class="table-wrapper">
+<div *ngIf="!loading && tab === 'low'" class="table-wrapper alerts-table">
   <table class="table-base">
-    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    <thead>
       <tr class="sticky">
         <th scope="col">Product</th>
         <th scope="col">SKU</th>
-        <th scope="col" class="text-right">Stock</th>
+        <th scope="col">Stock</th>
         <th scope="col">Level</th>
-        <th scope="col" class="text-right">Customers waiting</th>
+        <th scope="col" class="text-center">Waiting</th>
         <th scope="col">Alerted</th>
-        <th scope="col" class="text-center">Actions</th>
+        <th scope="col" class="text-right"><span class="sr-only">Actions</span></th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of itemList">
+      <tr *ngFor="let item of itemList" [class.is-out]="isOut(item)">
         <td>
           <div class="product-cell">
             <img *ngIf="item.image_url; else noImg" [src]="item.image_url" [alt]="item.name" />
-            <ng-template #noImg><span class="no-img"></span></ng-template>
-            <div>
-              <a class="block font-medium text-gray-900 hover:underline" [routerLink]="['/inventory/products/details', item.slug]">{{ item.name }}</a>
-              <span class="block text-xs text-gray-500" *ngIf="item.variation_name">{{ item.variation_name }}</span>
+            <ng-template #noImg><span class="no-img"><mat-icon>image</mat-icon></span></ng-template>
+            <div class="min-w-0">
+              <a class="product-name" [routerLink]="['/inventory/products/details', item.slug]" [title]="item.name">{{ item.name }}</a>
+              <span class="variation" *ngIf="item.variation_name">{{ item.variation_name }}</span>
             </div>
           </div>
         </td>
-        <td>{{ item.sku || '—' }}</td>
-        <td class="text-right font-semibold">{{ item.stock_quantity }}</td>
-        <td><span class="table-status" [ngClass]="levelClass(item)">{{ levelLabel(item) }}</span></td>
-        <td class="text-right">
-          <button *ngIf="item.waiting; else none" type="button" class="font-semibold text-primary hover:underline" (click)="viewSubscribers(item)">
-            {{ item.waiting }}
-          </button>
-          <ng-template #none><span class="text-gray-400">0</span></ng-template>
+        <td><span class="sku" *ngIf="item.sku; else noSku">{{ item.sku }}</span><ng-template #noSku><span class="muted">—</span></ng-template></td>
+        <td class="whitespace-nowrap">
+          <div class="stock-cell" [matTooltip]="item.stock_quantity + ' in stock · threshold ' + (settings?.low_stock_threshold ?? threshold)">
+            <span class="stock-qty" [ngClass]="isOut(item) ? 'out' : 'low'">{{ item.stock_quantity }}</span>
+            <span class="stock-meter" [ngClass]="isOut(item) ? 'out' : 'low'"><span [style.width.%]="stockPercent(item)"></span></span>
+          </div>
         </td>
-        <td class="whitespace-nowrap">{{ item.alerted_at ? (item.alerted_at | date : 'short') : '—' }}</td>
-        <td class="text-center whitespace-nowrap">
-          <a *ngIf="canEditProducts" class="text-xs font-medium text-primary hover:underline" [routerLink]="['/inventory/products/update', item.product_id]">Update stock</a>
-          <a *ngIf="!canEditProducts" class="text-xs font-medium text-primary hover:underline" [routerLink]="['/inventory/products/details', item.slug]">View</a>
+        <td>
+          <span class="level-pill" [ngClass]="isOut(item) ? 'out' : 'low'"><span class="dot"></span>{{ levelLabel(item) }}</span>
+        </td>
+        <td class="text-center">
+          <button *ngIf="item.waiting; else none" type="button" class="waiting-btn" (click)="viewSubscribers(item)" [matTooltip]="'View ' + item.waiting + ' waiting customer(s)'">
+            <mat-icon>group</mat-icon>{{ item.waiting }}
+          </button>
+          <ng-template #none><span class="muted">—</span></ng-template>
+        </td>
+        <td class="whitespace-nowrap">
+          <ng-container *ngIf="item.alerted_at; else notAlerted">
+            <span class="time-primary" [matTooltip]="(item.alerted_at | date : 'medium') ?? ''">{{ item.alerted_at | timeAgo }}</span>
+          </ng-container>
+          <ng-template #notAlerted><span class="muted">—</span></ng-template>
+        </td>
+        <td class="text-right whitespace-nowrap">
+          <a *ngIf="canEditProducts" class="action-btn" [routerLink]="['/inventory/products/update', item.product_id]">
+            <mat-icon>edit</mat-icon>Update stock
+          </a>
+          <a *ngIf="!canEditProducts" class="action-btn" [routerLink]="['/inventory/products/details', item.slug]">View</a>
         </td>
       </tr>
       <tr *ngIf="!itemList?.length">
@@ -92,16 +114,16 @@
 </div>
 
 <!-- Back-in-stock requests -->
-<div *ngIf="!loading && tab === 'requests'" class="table-wrapper">
+<div *ngIf="!loading && tab === 'requests'" class="table-wrapper alerts-table">
   <table class="table-base">
-    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    <thead>
       <tr class="sticky">
         <th scope="col">Product</th>
         <th scope="col">SKU</th>
-        <th scope="col" class="text-right">Customers waiting</th>
-        <th scope="col" class="text-right">Current stock</th>
+        <th scope="col" class="text-center">Waiting</th>
+        <th scope="col">Current stock</th>
         <th scope="col">Latest request</th>
-        <th scope="col" class="text-center">Actions</th>
+        <th scope="col" class="text-right"><span class="sr-only">Actions</span></th>
       </tr>
     </thead>
     <tbody>
@@ -109,29 +131,38 @@
         <td>
           <div class="product-cell">
             <img *ngIf="item.image_url; else noImg2" [src]="item.image_url" [alt]="item.name" />
-            <ng-template #noImg2><span class="no-img"></span></ng-template>
-            <div>
-              <a class="block font-medium text-gray-900 hover:underline" [routerLink]="['/inventory/products/details', item.slug]">{{ item.name }}</a>
-              <span class="block text-xs text-gray-500" *ngIf="item.variation_name">{{ item.variation_name }}</span>
+            <ng-template #noImg2><span class="no-img"><mat-icon>image</mat-icon></span></ng-template>
+            <div class="min-w-0">
+              <a class="product-name" [routerLink]="['/inventory/products/details', item.slug]" [title]="item.name">{{ item.name }}</a>
+              <span class="variation" *ngIf="item.variation_name">{{ item.variation_name }}</span>
             </div>
           </div>
         </td>
-        <td>{{ item.sku || '—' }}</td>
-        <td class="text-right font-semibold">{{ item.waiting }}</td>
-        <td class="text-right">
-          {{ item.stock_quantity ?? '—' }}
-          <span *ngIf="item.stock_quantity > 0" class="block text-xs text-green-700">Notifying shortly</span>
+        <td><span class="sku" *ngIf="item.sku; else noSku2">{{ item.sku }}</span><ng-template #noSku2><span class="muted">—</span></ng-template></td>
+        <td class="text-center">
+          <button type="button" class="waiting-btn" (click)="viewSubscribers(item)" [matTooltip]="'View waiting customers'">
+            <mat-icon>group</mat-icon>{{ item.waiting }}
+          </button>
         </td>
         <td class="whitespace-nowrap">
-          {{ item.last_requested_at | date : 'short' }}
-          <span class="block text-xs text-gray-500">First {{ item.first_requested_at | date : 'mediumDate' }}</span>
-        </td>
-        <td class="text-center whitespace-nowrap">
-          <button type="button" class="text-xs font-medium text-primary hover:underline" (click)="viewSubscribers(item)">Customers</button>
-          <ng-container *ngIf="canEditProducts">
-            <span class="text-gray-300 mx-1">|</span>
-            <a class="text-xs font-medium text-primary hover:underline" [routerLink]="['/inventory/products/update', item.product_id]">Update stock</a>
+          <ng-container *ngIf="item.stock_quantity != null; else noStock">
+            <span class="level-pill" [ngClass]="item.stock_quantity > 0 ? 'in' : 'out'">
+              <span class="dot"></span>{{ item.stock_quantity > 0 ? item.stock_quantity + ' in stock' : 'Out of stock' }}
+            </span>
+            <span class="time-secondary notify" *ngIf="item.stock_quantity > 0">Notifying shortly</span>
           </ng-container>
+          <ng-template #noStock><span class="muted">—</span></ng-template>
+        </td>
+        <td class="whitespace-nowrap">
+          <span class="time-primary" [matTooltip]="(item.last_requested_at | date : 'medium') ?? ''">{{ item.last_requested_at | timeAgo }}</span>
+          <span class="time-secondary">First {{ item.first_requested_at | date : 'd MMM y' }}</span>
+        </td>
+        <td class="text-right whitespace-nowrap">
+          <div class="row-actions">
+            <a *ngIf="canEditProducts" class="action-btn" [routerLink]="['/inventory/products/update', item.product_id]">
+              <mat-icon>edit</mat-icon>Update stock
+            </a>
+          </div>
         </td>
       </tr>
       <tr *ngIf="!itemList?.length">
