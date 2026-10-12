@@ -1,4 +1,5 @@
 import { ActivatedRouteSnapshot, Routes } from '@angular/router';
+import { StockAlertsComponent } from './stock-alerts/stock-alerts.component';
 import { CategoriesComponent } from './categories/categories.component';
 import { HomeLayoutComponent } from '../../home-layout.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -178,6 +179,11 @@ export const routes: Routes = [
             },
           },
         ],
+      },
+      {
+        path: 'stock-alerts',
+        component: StockAlertsComponent,
+        data: { pageTitle: 'Stock Alerts', breadcrumb: 'Stock Alerts' },
       },
       {
         path: 'products',

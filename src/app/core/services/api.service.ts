@@ -282,6 +282,23 @@ export class ApiService {
     return this.httpService.post(`admin/abandoned-carts/remind`, payload);
   }
 
+  // --- Stock alerts (backend services/stockAlerts) ---
+  lowStockItems(params: URLSearchParams) {
+    return this.httpService.get(`admin/stock-alerts/low-stock?${params.toString()}`);
+  }
+  backInStockRequests(params: URLSearchParams) {
+    return this.httpService.get(`admin/stock-alerts/requests?${params.toString()}`);
+  }
+  stockAlertSubscribers(params: URLSearchParams) {
+    return this.httpService.get(`admin/stock-alerts/requests/subscribers?${params.toString()}`);
+  }
+  stockAlertSettings() {
+    return this.httpService.get(`admin/stock-alerts/settings`);
+  }
+  updateStockAlertSettings(payload: any) {
+    return this.httpService.put(`admin/stock-alerts/settings`, payload);
+  }
+
   // Failed order placements / payment verifications (logCheckoutFailure).
   checkoutFailures(params: URLSearchParams) {
     return this.httpService.get(`admin/operations/checkout-failures?${params.toString()}`);

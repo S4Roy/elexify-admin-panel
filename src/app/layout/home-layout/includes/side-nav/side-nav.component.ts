@@ -100,6 +100,11 @@ export class SideNavComponent {
               exact: true,
             },
             {
+              label: 'Stock Alerts',
+              url: '/inventory/stock-alerts',
+              exact: true,
+            },
+            {
               label: 'SEO Manager',
               url: '/inventory/products/seo-manager',
               exact: true,
