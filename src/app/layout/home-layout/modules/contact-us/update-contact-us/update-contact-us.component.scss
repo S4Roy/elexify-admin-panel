@@ -25,3 +25,30 @@ mat-dialog-actions { padding: 16px 24px; border-top: 1px solid #edf0f4; }
   :host > .enquiry-content { padding: 8px 18px 16px !important; }
   :host > mat-dialog-actions { padding: 12px 18px; }
 }
+.ticket-reference { display: block; margin-top: 5px; font-size: 10px; font-weight: 500; color: #748196; overflow-wrap: anywhere; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 12px; }
+.section-heading h3 { font-size: 15px; }
+.thread-entry { border: 1px solid #dbe5ed; border-left: 3px solid #21866e; border-radius: 8px; padding: 16px; margin: 12px 0; background: #f8fcfa; }
+.customer-entry { border-left-color: #5685b5; background: #f7faff; }
+.internal-entry { border-color: #eadcb9; border-left-color: #b78b36; background: #fffbf0; }
+.activity-entry { border-left-color: #a1adba; background: #f8f9fb; }
+.entry-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+.entry-heading span { color: #64748b; font-size: 10px; }
+.entry-heading time { margin-left: auto; color: #64748b; font-size: 10px; }
+.entry-content, .thread-entry .message-body { color: #334155; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.8; margin: 12px 0 0; padding: 0; }
+.delivery { font-size: 11px; color: #167d69; }
+.delivery-error { color: #b54750; }
+.timeline-hint { color: #64748b; }
+.composer-section { margin: 22px 0; border: 1px solid #dbe5ed; border-radius: 10px; padding: 16px; }
+.composer-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.composer-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; border: 1px solid #dbe5ed; border-radius: 6px; background: #fff; color: #64748b; font-size: 12px; cursor: pointer; }
+.composer-tabs button.active { border-color: #167d69; background: #eaf6f1; color: #167d69; }
+.composer-tabs mat-icon, .private-hint mat-icon { width: 16px; height: 16px; font-size: 16px; }
+.composer-hint { color: #52647a; margin: 12px 0; }
+.private-hint { color: #8b6826; display: flex; align-items: center; gap: 6px; margin: 12px 0; }
+.composer-field { width: 100%; margin-top: 12px; }
+.composer-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.composer-footer span { color: #64748b; font-size: 11px; max-width: 280px; }
+.status-section { grid-template-columns: 1fr; }
+.workflow-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .workflow-fields { grid-template-columns: 1fr; } .entry-heading time { margin-left: 0; width: 100%; } .composer-section { padding: 12px; } }

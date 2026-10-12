@@ -57,6 +57,7 @@ export class ContactUsComponent {
   // the (page-agnostic) filter drawer and read back from it.
   filterValues: Record<string, any> = {
     status: [],
+    priority: null,
     from_date: null,
     to_date: null,
   };
@@ -89,6 +90,10 @@ export class ContactUsComponent {
 
   get filterFields(): FilterFieldDef[] {
     return [
+      { key: 'priority', label: 'Priority', type: 'select', options: [
+        { value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' },
+        { value: 'high', label: 'High' }, { value: 'urgent', label: 'Urgent' },
+      ] },
       {
         key: 'status',
         label: 'Status',
@@ -112,6 +117,7 @@ export class ContactUsComponent {
   filterCount(): number {
     let count = 0;
     if (this.filterValues['status']?.length) count++;
+    if (this.filterValues['priority']) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
     return count;
   }
@@ -156,6 +162,7 @@ export class ContactUsComponent {
     if (this.filterOption.status) {
       params.set('status', this.filterOption.status);
     }
+    if (this.filterValues['priority']) params.set('priority', this.filterValues['priority']);
     if (this.filterOption.from_date) {
       params.set('from_date', this.filterOption.from_date);
     }
@@ -177,15 +184,14 @@ export class ContactUsComponent {
     this.dialog
       .open(UpdateContactUsComponent, {
         data: item,
-        width: '680px',
+        width: '860px',
         maxWidth: '95vw',
         maxHeight: '90vh',
       })
       .afterClosed()
+      .pipe(takeUntil(this.destroy$))
       .subscribe((res: any) => {
-        if (res) {
-          this.fetchEnquiries();
-        }
+        this.fetchEnquiries();
       });
   }
   deleteItem(item: any) {

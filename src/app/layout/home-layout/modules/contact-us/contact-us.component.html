@@ -1,6 +1,7 @@
 <header class="inbox-header">
   <div class="heading-icon"><mat-icon>forum</mat-icon></div>
-  <div><p class="eyebrow">CUSTOMER SUPPORT</p><h1>Contact enquiries</h1><p class="subtitle">Stay close to your customers. Review questions and keep every enquiry organized.</p></div>
+  <div><p class="eyebrow">CUSTOMER SUPPORT</p><h1>Contact enquiries</h1><p class="subtitle">Reply to customers, keep private remarks, and follow every conversation.</p></div>
+  <button type="button" class="filter-button refresh-button" [disabled]="loading" (click)="fetchEnquiries()"><mat-icon>refresh</mat-icon>Refresh</button>
 </header>
 <section class="inbox-panel" aria-label="Customer enquiries" [attr.aria-busy]="loading">
   <div class="inbox-toolbar">
@@ -20,6 +21,8 @@
             <th scope="col">Customer</th>
             <th scope="col">Enquiry</th>
             <th scope="col">Submitted</th>
+            <th scope="col">Latest activity</th>
+            <th scope="col">Priority</th>
             <th scope="col" class="text-center">Status</th>
             <th scope="col" class="text-center">Action</th>
           </tr>
@@ -28,25 +31,28 @@
           <ng-container *ngFor="let item of item_list">
             <tr>
               <td>
-                <button [disabled]="!permissions.includes('edit')" type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
+                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
                 <div class="text-xs text-gray-500">{{ item.email || item.phone || 'No contact details' }}</div>
               </td>
               <td>
-                <button [disabled]="!permissions.includes('edit')" type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.subject || 'General enquiry' }}</button>
+                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.subject || 'General enquiry' }}</button>
+                <div class="ticket-id">CON-{{ item._id }} · {{ item.source || 'web' }}</div>
                 <p class="line-clamp-2 max-w-md text-xs text-gray-500 mt-1">{{ messagePreview(item.message) }}</p>
               </td>
               <td class="whitespace-nowrap">{{ item.created_at | date:'dd MMM yyyy' }}<div class="text-xs text-gray-500">{{ item.created_at | date:'shortTime' }}</div></td>
+              <td><ng-container *ngIf="item.latest_message; else noActivity"><span class="activity-label">{{ item.latest_message.kind === 'reply' ? 'Email reply' : item.latest_message.kind === 'activity' ? 'Workflow update' : 'Internal remark' }}</span><div class="text-xs text-gray-500">{{ item.latest_message.author_name }}</div><div class="text-xs text-gray-500">{{ item.latest_message.created_at | date:'dd MMM, h:mm a' }}</div><span class="send-warning" *ngIf="item.latest_message.delivery_status && item.latest_message.delivery_status !== 'sent'">{{ item.latest_message.delivery_status === 'failed' ? 'Not sent' : 'Send unconfirmed' }}</span></ng-container><ng-template #noActivity><span class="text-xs text-gray-500">No replies yet</span></ng-template></td>
+              <td><span class="priority-badge" [class]="'priority-badge ' + (item.priority || 'normal')">{{ item.priority || 'normal' }}</span></td>
               <td class="text-center">
                 <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item.status">{{ item.status }}</button>
               </td>
               <td class="text-center">
-                <button [disabled]="!permissions.includes('edit')" type="button" class="text-xs font-medium text-primary hover:underline" (click)="updateStatus(item)" [attr.aria-label]="'View enquiry from ' + item.name">View</button>
+                <button type="button" class="text-xs font-medium text-primary hover:underline" (click)="updateStatus(item)" [attr.aria-label]="'View conversation with ' + item.name">Open thread</button>
                 <app-menu (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
               </td>
             </tr>
           </ng-container>
           <tr *ngIf="!item_list.length">
-            <td colspan="5" class="text-center"><app-empty-state message="No enquiries found"></app-empty-state></td>
+            <td colspan="7" class="text-center"><app-empty-state message="No enquiries found"></app-empty-state></td>
           </tr>
         </tbody>
       </table>

@@ -1,10 +1,32 @@
-<h2 mat-dialog-title>Enquiry details</h2>
-<mat-dialog-content class="enquiry-content" [formGroup]="formGroup">
-  <div class="enquiry-heading"><span class="eyebrow">CUSTOMER MESSAGE</span><h3>{{ data.subject || 'General enquiry' }}</h3><p>Received {{ data.created_at | date:'medium' }}</p></div>
-  <div class="contact-card"><div><span class="field-label">Customer</span><strong>{{ data.name || 'Customer' }}</strong></div><div><span class="field-label">Email</span><a *ngIf="data.email" [href]="emailLink">{{ data.email }}</a><span *ngIf="!data.email">Not provided</span></div><div><span class="field-label">Phone</span><a *ngIf="data.phone" [href]="phoneLink">{{ data.phone }}</a><span *ngIf="!data.phone">Not provided</span></div></div>
-  <div class="message-body" [innerHTML]="data.message"></div>
-  <div class="reply-actions"><a *ngIf="data.email" class="reply-link" [href]="emailLink">Reply by email ↗</a><p>Opens your email app. Mark as answered after you have replied.</p></div>
-  <div class="status-section"><div><h3>Enquiry status</h3><p>Pending needs a response. Archive enquiries that no longer need action.</p></div><mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="status"><mat-option *ngFor="let status of ['pending', 'answered', 'archived', 'spam']" [value]="status">{{ status | uppercase }}</mat-option></mat-select></mat-form-field></div>
+<h2 mat-dialog-title>Conversation <span class="ticket-reference">{{ reference }}</span></h2>
+<mat-dialog-content class="enquiry-content">
+  <div class="enquiry-heading"><span class="eyebrow">CONTACT ENQUIRY · {{ data.source || 'web' }}</span><h3>{{ data.subject || 'General enquiry' }}</h3><p>Received {{ data.created_at | date:'medium' }}</p></div>
+  <div class="contact-card"><div><span class="field-label">Customer</span><strong>{{ data.name || 'Customer' }}</strong></div><div><span class="field-label">Email</span><span>{{ data.email || 'Not provided' }}</span></div><div><span class="field-label">Phone</span><a *ngIf="data.phone" [href]="phoneLink">{{ data.phone }}</a><span *ngIf="!data.phone">Not provided</span></div><div><span class="field-label">Status</span><strong>{{ data.status | uppercase }}</strong></div></div>
+  <section class="conversation" aria-label="Conversation history" [attr.aria-busy]="loading">
+    <div class="section-heading"><h3>Conversation history</h3><button mat-button [disabled]="loading || sending || saving" (click)="loadThread(page)"><mat-icon>refresh</mat-icon>Refresh</button></div>
+    <article class="thread-entry customer-entry"><div class="entry-heading"><strong>{{ data.name || 'Customer' }}</strong><span>Customer message</span><time>{{ data.created_at | date:'medium' }}</time></div><div class="message-body" [innerHTML]="data.message"></div></article>
+    <p role="status" *ngIf="loading">Loading conversation…</p>
+    <div class="save-error" role="alert" *ngIf="threadError">{{ threadError }} <button mat-button (click)="loadThread(page)">Retry</button></div>
+    <ng-container *ngIf="!loading && !threadError">
+      <p class="timeline-hint" *ngIf="pagination?.totalPages > 1">Page 1 contains the latest activity. Entries on each page are shown in time order.</p>
+      <article *ngFor="let entry of timeline" class="thread-entry" [class.internal-entry]="!entry.kind || entry.kind === 'note'" [class.activity-entry]="entry.kind === 'activity'">
+        <div class="entry-heading"><strong>{{ entry.author_name || 'Support team' }}</strong><span>{{ entry.kind === 'reply' ? 'Email reply' : entry.kind === 'activity' ? 'Workflow update' : 'Internal remark · private' }}</span><time>{{ entry.created_at | date:'medium' }}</time></div>
+        <p class="entry-content">{{ entry.content }}</p>
+        <p *ngIf="entry.recipient" class="delivery" [class.delivery-error]="entry.delivery_status === 'failed' || entry.delivery_status === 'unknown'">To {{ entry.recipient }} · {{ entry.delivery_status === 'sent' ? 'Accepted by mail server' : entry.delivery_status === 'failed' ? 'Not sent' : entry.delivery_status === 'unknown' ? 'Send status unconfirmed' : 'Sending — do not resend' }}</p>
+      </article>
+      <nav aria-label="Conversation pages" *ngIf="pagination?.totalDocs > pagination?.limit"><pagination [pagination]="pagination" (pageChange)="loadThread($event)"></pagination></nav>
+    </ng-container>
+  </section>
+  <section class="composer-section" *ngIf="canEdit" [formGroup]="composer">
+    <div class="composer-tabs" role="group" aria-label="Message type"><button type="button" [disabled]="sending || saving" [class.active]="mode === 'reply'" [attr.aria-pressed]="mode === 'reply'" (click)="setMode('reply')"><mat-icon>reply</mat-icon>Reply to customer</button><button type="button" [disabled]="sending || saving" [class.active]="mode === 'note'" [attr.aria-pressed]="mode === 'note'" (click)="setMode('note')"><mat-icon>lock</mat-icon>Internal remark</button></div>
+    <p class="composer-hint" *ngIf="mode === 'reply' && canReply">This reply will be emailed to {{ data.email }}. Customer email responses go to the support mailbox.</p>
+    <p class="save-error" *ngIf="mode === 'reply' && !canReply">{{ data.email ? 'Reopen this archived or spam enquiry before replying.' : 'This customer has no email address. You can add an internal remark.' }}</p>
+    <p class="private-hint" *ngIf="mode === 'note'"><mat-icon>lock</mat-icon>Private to your support team. Never emailed to the customer.</p>
+    <mat-form-field appearance="outline" class="composer-field"><mat-label>{{ mode === 'reply' ? 'Write your reply' : 'Add an internal remark' }}</mat-label><textarea matInput formControlName="content" rows="5" maxlength="10000" [readonly]="sending || saving"></textarea><mat-hint align="end">{{ composer.value.content?.length || 0 }}/10000</mat-hint><mat-error>A message is required (maximum 10,000 characters).</mat-error></mat-form-field>
+    <p class="save-error" role="alert" *ngIf="sendError">{{ sendError }}</p>
+    <div class="composer-footer"><span>{{ mode === 'reply' ? 'Successful replies mark the enquiry as answered.' : 'Remarks do not change the enquiry status.' }}</span><button mat-flat-button color="primary" [disabled]="sending || saving || loading || !!threadError || composer.invalid || (mode === 'reply' && !canReply)" (click)="send()">{{ sending ? 'Saving…' : mode === 'reply' ? 'Send reply' : 'Add remark' }}</button></div>
+  </section>
+  <section class="status-section" *ngIf="canEdit" [formGroup]="formGroup"><div><h3>Enquiry workflow</h3><p>Reopen with Pending, or archive when no further action is needed. Changes are recorded in the conversation.</p></div><div class="workflow-fields"><mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="status"><mat-option *ngFor="let status of ['pending', 'answered', 'archived', 'spam']" [value]="status">{{ status | uppercase }}</mat-option></mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Priority</mat-label><mat-select formControlName="priority"><mat-option *ngFor="let priority of ['low', 'normal', 'high', 'urgent']" [value]="priority">{{ priority | uppercase }}</mat-option></mat-select></mat-form-field></div></section>
   <p class="save-error" role="alert" *ngIf="error">{{ error }}</p>
 </mat-dialog-content>
-<mat-dialog-actions align="end"><button mat-stroked-button [disabled]="saving" mat-dialog-close>Close</button><button mat-flat-button color="primary" [disabled]="saving || formGroup.pristine || formGroup.invalid" (click)="onSubmit()">{{ saving ? 'Saving…' : 'Save status' }}</button></mat-dialog-actions>
+<mat-dialog-actions align="end"><button mat-stroked-button [disabled]="saving || sending" (click)="close()">Close</button><button *ngIf="canEdit" mat-flat-button color="primary" [disabled]="saving || sending || loading || !!threadError || formGroup.pristine || formGroup.invalid" (click)="onSubmit()">{{ saving ? 'Saving…' : 'Save workflow' }}</button></mat-dialog-actions>

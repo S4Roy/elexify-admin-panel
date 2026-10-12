@@ -101,6 +101,12 @@ export class ApiService {
   updateContactUsStatus(payload: any) {
     return this.httpService.put(`admin/contact-us/edit`, payload);
   }
+  contactUsThread(id: string, page = 1) {
+    return this.httpService.get(`admin/contact-us/${id}/thread?page=${page}`);
+  }
+  addContactUsMessage(id: string, payload: { request_id: string; kind: string; content: string }) {
+    return this.httpService.post(`admin/contact-us/${id}/messages`, payload);
+  }
   deleteContactUs(payload: any) {
     return this.httpService.delete(`admin/contact-us/delete`, payload);
   }
