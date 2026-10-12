@@ -1,88 +1,139 @@
-<h2 mat-dialog-title>Abandoned Cart</h2>
+<div class="dialog-header">
+  <span class="avatar" [style.background]="avatarColor">{{ initials }}</span>
+  <div class="min-w-0 flex-1">
+    <h2 class="dialog-title">
+      <a *ngIf="entry?.customer?._id; else noName" mat-dialog-close [routerLink]="['/customers/details', entry.customer._id]">
+        {{ entry.customer.name || 'Unnamed customer' }}
+      </a>
+      <ng-template #noName>Deleted customer</ng-template>
+    </h2>
+    <div class="dialog-subtitle">
+      <span class="status-pill" [ngClass]="entry?.status"><span class="dot"></span>{{ entry?.status | titlecase }}</span>
+      <span>Abandoned {{ entry?.abandoned_at | date : 'd MMM y, h:mm a' }}</span>
+    </div>
+  </div>
+  <button type="button" class="close-btn" mat-dialog-close aria-label="Close"><mat-icon>close</mat-icon></button>
+</div>
 
 <mat-dialog-content class="detail-content">
-  <div class="detail-grid">
+  <div class="summary">
     <div>
-      <span class="detail-label">Customer</span>
-      <strong>
-        <a *ngIf="entry?.customer?._id; else noName" mat-dialog-close class="hover:underline" [routerLink]="['/customers/details', entry.customer._id]">
-          {{ entry.customer.name || 'Unnamed customer' }}
-        </a>
-        <ng-template #noName>—</ng-template>
-      </strong>
+      <span class="summary-label">Cart value</span>
+      <span class="summary-value">{{ entry?.cart_value | currency : 'INR' }}</span>
     </div>
-    <div><span class="detail-label">Status</span><strong>{{ entry?.status | titlecase }}</strong></div>
-    <div><span class="detail-label">Email</span><strong>{{ entry?.customer?.email || '—' }}</strong></div>
-    <div><span class="detail-label">Mobile</span><strong>{{ customerMobile }}</strong></div>
-    <div><span class="detail-label">Abandoned</span><strong>{{ entry?.abandoned_at | date : 'medium' }}</strong></div>
-    <div><span class="detail-label">Last Cart Activity</span><strong>{{ entry?.last_activity_at | date : 'medium' }}</strong></div>
-    <div class="col-span-2"><span class="detail-label">Can Be Reminded Via</span><strong>{{ reachableChannels }}</strong></div>
+    <div>
+      <span class="summary-label">Items</span>
+      <span class="summary-value">{{ entry?.item_count }}</span>
+    </div>
+    <div>
+      <span class="summary-label">Reminders sent</span>
+      <span class="summary-value">{{ sentCount }}</span>
+    </div>
   </div>
 
-  <p class="detail-message" *ngIf="entry?.status === 'recovered'">
-    <strong>Recovered</strong> {{ entry.recovered_at | date : 'medium' }} —
-    <a mat-dialog-close class="text-primary hover:underline" [routerLink]="['/inventory/orders/details', entry.recovered_order_id]">order {{ entry.recovered_order_number }}</a>
-    ({{ entry.recovered_value | currency : 'INR' }}){{ entry.recovered_via_reminder ? ', after a reminder' : '' }}.
-  </p>
-  <p class="detail-message" *ngIf="entry?.status === 'expired' && closedLabel"><strong>Expired:</strong> {{ closedLabel }}.</p>
+  <div class="callout recovered" *ngIf="entry?.status === 'recovered'">
+    <mat-icon>check_circle</mat-icon>
+    <span>
+      Recovered {{ entry.recovered_at | date : 'medium' }} —
+      <a mat-dialog-close [routerLink]="['/inventory/orders/details', entry.recovered_order_id]">order {{ entry.recovered_order_number }}</a>
+      ({{ entry.recovered_value | currency : 'INR' }}){{ entry.recovered_via_reminder ? ', after a reminder' : '' }}.
+    </span>
+  </div>
+  <div class="callout expired" *ngIf="entry?.status === 'expired' && closedLabel">
+    <mat-icon>info</mat-icon>
+    <span><strong>Expired:</strong> {{ closedLabel }}.</span>
+  </div>
 
-  <span class="detail-label">Items ({{ entry?.item_count }})</span>
-  <table class="items-table">
-    <tr *ngFor="let line of entry?.items">
-      <td class="w-12">
-        <img *ngIf="line.image; else noImg" [src]="line.image" [alt]="line.product_name" />
-        <ng-template #noImg><div class="no-img"></div></ng-template>
-      </td>
-      <td>
-        <div class="font-medium text-gray-900">{{ line.product_name }}</div>
-        <div class="text-xs text-gray-500" *ngIf="line.variation_name">{{ line.variation_name }}</div>
-        <div class="text-xs text-gray-500">Qty {{ line.quantity }} × {{ line.unit_price | currency : 'INR' }}</div>
-      </td>
-      <td class="text-right whitespace-nowrap">{{ line.total_price | currency : 'INR' }}</td>
-    </tr>
-    <tr class="total">
-      <td></td>
-      <td>Cart value</td>
-      <td class="text-right whitespace-nowrap">{{ entry?.cart_value | currency : 'INR' }}</td>
-    </tr>
-  </table>
-
-  <span class="detail-label">Reminder History</span>
-  <ul class="timeline" *ngIf="entry?.reminders?.length; else noReminders">
-    <li *ngFor="let r of entry.reminders">
-      <span class="dot" [ngClass]="{ sent: r.channels?.length }"></span>
-      <div>
-        <div class="font-medium">
-          {{ r.kind === 'auto' ? 'Automatic reminder #' + r.step : 'Manual reminder' }}
-          <span class="text-gray-500 font-normal">· {{ r.sent_at | date : 'medium' }}</span>
-        </div>
-        <div class="text-xs text-gray-600" *ngIf="r.channels?.length">Sent via {{ channelList(r.channels) }}</div>
-        <div class="text-xs text-amber-700" *ngIf="!r.channels?.length">Skipped — customer not opted in on any channel</div>
-        <div class="text-xs text-gray-600" *ngIf="r.coupon_code">Coupon offered: <strong>{{ r.coupon_code }}</strong></div>
+  <section class="section">
+    <h3 class="section-title">Contact</h3>
+    <div class="contact-grid">
+      <div class="contact-row">
+        <mat-icon>mail</mat-icon>
+        <span class="truncate">{{ entry?.customer?.email || '—' }}</span>
       </div>
-    </li>
-    <li *ngIf="entry?.status === 'recovered'">
-      <span class="dot recovered"></span>
-      <div class="font-medium">Order placed <span class="text-gray-500 font-normal">· {{ entry.recovered_at | date : 'medium' }}</span></div>
-    </li>
-  </ul>
-  <ng-template #noReminders><p class="detail-message">No reminders sent yet.</p></ng-template>
+      <div class="contact-row">
+        <mat-icon>call</mat-icon>
+        <span>{{ customerMobile }}</span>
+      </div>
+      <div class="contact-row">
+        <mat-icon>schedule</mat-icon>
+        <span>Last cart activity {{ entry?.last_activity_at | date : 'd MMM y, h:mm a' }}</span>
+      </div>
+    </div>
+
+    <div class="reach">
+      <span class="reach-label">Can be reminded via</span>
+      <div class="reach-chips">
+        <span *ngFor="let c of channels" class="chip" [ngClass]="c.on ? 'on' : 'off'">
+          <mat-icon>{{ c.on ? 'check' : 'close' }}</mat-icon>{{ c.label }}
+        </span>
+      </div>
+      <p class="reach-hint" *ngIf="!isReachable">Customer hasn't opted in to cart reminders on any channel.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="section-title">Items <span class="count">{{ entry?.item_count }}</span></h3>
+    <ul class="items">
+      <li *ngFor="let line of entry?.items">
+        <img *ngIf="line.image; else noImg" [src]="line.image" [alt]="line.product_name" />
+        <ng-template #noImg><span class="no-img"><mat-icon>image</mat-icon></span></ng-template>
+        <div class="min-w-0 flex-1">
+          <div class="item-name">{{ line.product_name }}</div>
+          <div class="item-meta" *ngIf="line.variation_name">{{ line.variation_name }}</div>
+          <div class="item-meta">Qty {{ line.quantity }} × {{ line.unit_price | currency : 'INR' }}</div>
+        </div>
+        <span class="item-total">{{ line.total_price | currency : 'INR' }}</span>
+      </li>
+    </ul>
+    <div class="items-total">
+      <span>Cart value</span>
+      <span>{{ entry?.cart_value | currency : 'INR' }}</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="section-title">Reminder history</h3>
+    <ul class="timeline" *ngIf="entry?.reminders?.length; else noReminders">
+      <li *ngFor="let r of entry.reminders">
+        <span class="marker" [ngClass]="r.channels?.length ? 'sent' : 'skipped'">
+          <mat-icon>{{ r.channels?.length ? 'send' : 'block' }}</mat-icon>
+        </span>
+        <div class="min-w-0">
+          <div class="tl-title">
+            {{ r.kind === 'auto' ? 'Automatic reminder #' + r.step : 'Manual reminder' }}
+            <span class="tl-time">{{ r.sent_at | date : 'd MMM y, h:mm a' }}</span>
+          </div>
+          <div class="tl-meta" *ngIf="r.channels?.length">Sent via {{ channelList(r.channels) }}</div>
+          <div class="tl-meta warn" *ngIf="!r.channels?.length">Skipped — customer not opted in on any channel</div>
+          <div class="tl-meta" *ngIf="r.coupon_code">Coupon offered: <span class="coupon">{{ r.coupon_code }}</span></div>
+        </div>
+      </li>
+      <li *ngIf="entry?.status === 'recovered'">
+        <span class="marker recovered"><mat-icon>shopping_bag</mat-icon></span>
+        <div class="tl-title">Order placed <span class="tl-time">{{ entry.recovered_at | date : 'd MMM y, h:mm a' }}</span></div>
+      </li>
+    </ul>
+    <ng-template #noReminders>
+      <div class="empty">
+        <mat-icon>notifications_none</mat-icon>
+        <span>No reminders sent yet.</span>
+      </div>
+    </ng-template>
+  </section>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button
-    mat-dialog-close
-    type="button"
-    class="inline-flex justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
-  >
-    Close
-  </button>
+<mat-dialog-actions class="dialog-actions">
+  <button mat-dialog-close type="button" class="btn-secondary">Close</button>
   <button
     *ngIf="data?.canSend"
     [mat-dialog-close]="'remind'"
+    [disabled]="!isReachable"
+    [title]="isReachable ? '' : 'Customer hasn\'t opted in to cart reminders'"
     type="button"
-    class="ml-2 inline-flex justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+    class="btn-primary-solid"
   >
+    <mat-icon>send</mat-icon>
     Send reminder
   </button>
 </mat-dialog-actions>

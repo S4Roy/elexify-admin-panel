@@ -1,43 +1,90 @@
 <div *ngIf="autoRemindersEnabled !== null" class="automation-banner" [ngClass]="autoRemindersEnabled ? 'on' : 'off'">
-  <mat-icon class="text-base">{{ autoRemindersEnabled ? 'notifications_active' : 'notifications_off' }}</mat-icon>
-  <span *ngIf="autoRemindersEnabled">Automatic cart reminders are on. Opted-in customers are reminded on the configured schedule.</span>
-  <span *ngIf="!autoRemindersEnabled">Automatic cart reminders are off. You can still send reminders manually.</span>
-  <button type="button" (click)="openSettings()">{{ canConfigure ? 'Configure' : 'View settings' }}</button>
+  <span class="banner-icon"><mat-icon>{{ autoRemindersEnabled ? 'notifications_active' : 'notifications_off' }}</mat-icon></span>
+  <div class="banner-text">
+    <strong>Automatic reminders {{ autoRemindersEnabled ? 'on' : 'off' }}</strong>
+    <span *ngIf="autoRemindersEnabled">Opted-in customers are reminded on the configured schedule.</span>
+    <span *ngIf="!autoRemindersEnabled">You can still send reminders manually.</span>
+  </div>
+  <button type="button" class="banner-action" (click)="openSettings()">
+    {{ canConfigure ? 'Configure' : 'View settings' }}
+    <mat-icon>chevron_right</mat-icon>
+  </button>
 </div>
 
 <div class="kpi-grid" *ngIf="stats">
   <div class="kpi">
-    <div class="kpi-label">Abandoned carts</div>
-    <div class="kpi-value">{{ stats.total }}</div>
+    <div class="kpi-head">
+      <span class="kpi-label">Abandoned carts</span>
+      <span class="kpi-icon slate"><mat-icon>remove_shopping_cart</mat-icon></span>
+    </div>
+    <div class="kpi-value">{{ stats.total | number }}</div>
     <div class="kpi-sub">{{ stats.total_value | currency : 'INR' : 'symbol' : '1.0-0' }} total value</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">Open (value at risk)</div>
+    <div class="kpi-head">
+      <span class="kpi-label">Value at risk</span>
+      <span class="kpi-icon amber"><mat-icon>hourglass_top</mat-icon></span>
+    </div>
     <div class="kpi-value">{{ stats.open_value | currency : 'INR' : 'symbol' : '1.0-0' }}</div>
-    <div class="kpi-sub">{{ stats.open }} cart(s)</div>
+    <div class="kpi-sub">{{ stats.open | number }} open cart(s)</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">Recovered revenue</div>
+    <div class="kpi-head">
+      <span class="kpi-label">Recovered revenue</span>
+      <span class="kpi-icon green"><mat-icon>trending_up</mat-icon></span>
+    </div>
     <div class="kpi-value">{{ stats.recovered_value | currency : 'INR' : 'symbol' : '1.0-0' }}</div>
-    <div class="kpi-sub">{{ stats.recovered }} order(s) · {{ stats.recovery_rate }}% recovery rate</div>
+    <div class="kpi-sub">{{ stats.recovered | number }} order(s)</div>
+    <div class="kpi-meter" [title]="stats.recovery_rate + '% recovery rate'">
+      <span [style.width.%]="meterWidth(stats.recovery_rate)"></span>
+    </div>
+    <div class="kpi-sub">{{ stats.recovery_rate }}% recovery rate</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">Recovered by reminders</div>
+    <div class="kpi-head">
+      <span class="kpi-label">Recovered by reminders</span>
+      <span class="kpi-icon blue"><mat-icon>mark_email_read</mat-icon></span>
+    </div>
     <div class="kpi-value">{{ stats.recovered_via_reminder_value | currency : 'INR' : 'symbol' : '1.0-0' }}</div>
-    <div class="kpi-sub">{{ stats.recovered_via_reminder }} of {{ stats.reminded }} reminded ({{ stats.reminder_recovery_rate }}%)</div>
+    <div class="kpi-sub">{{ stats.recovered_via_reminder | number }} of {{ stats.reminded | number }} reminded</div>
+    <div class="kpi-meter blue" [title]="stats.reminder_recovery_rate + '% of reminded carts recovered'">
+      <span [style.width.%]="meterWidth(stats.reminder_recovery_rate)"></span>
+    </div>
+    <div class="kpi-sub">{{ stats.reminder_recovery_rate }}% conversion</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">Reminders sent</div>
-    <div class="kpi-value">{{ stats.reminders_sent }}</div>
+    <div class="kpi-head">
+      <span class="kpi-label">Reminders sent</span>
+      <span class="kpi-icon violet"><mat-icon>send</mat-icon></span>
+    </div>
+    <div class="kpi-value">{{ stats.reminders_sent | number }}</div>
     <div class="kpi-sub">{{ filterValues['from_date'] || filterValues['to_date'] ? 'Selected period' : 'Last 30 days' }}</div>
   </div>
 </div>
 
+<div class="toolbar">
+  <div class="status-tabs" role="tablist" aria-label="Filter by cart status">
+    <button
+      *ngFor="let tab of statusTabs"
+      type="button"
+      role="tab"
+      [attr.aria-selected]="filterValues['status'] === tab.value"
+      [class.active]="filterValues['status'] === tab.value"
+      (click)="setStatus(tab.value)"
+    >
+      {{ tab.label }}
+    </button>
+  </div>
+  <span class="toolbar-note" *ngIf="!loading && paginationOption?.totalDocs">
+    {{ paginationOption.totalDocs | number }} cart(s)
+  </span>
+</div>
+
 <div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
 
-<div *ngIf="!loading" class="table-wrapper">
+<div *ngIf="!loading" class="table-wrapper carts-table">
   <table class="table-base">
-    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    <thead>
       <tr class="sticky">
         <th scope="col" *ngIf="canSend" class="w-10">
           <mat-checkbox
@@ -50,16 +97,16 @@
         </th>
         <th scope="col">Customer</th>
         <th scope="col">Items</th>
-        <th scope="col" class="text-right">Cart value</th>
+        <th scope="col" class="text-right whitespace-nowrap">Cart value</th>
         <th scope="col">Abandoned</th>
         <th scope="col">Status</th>
-        <th scope="col">Reminders</th>
+        <th scope="col" class="text-center">Reminders</th>
         <th scope="col" class="text-center">Reachable</th>
-        <th scope="col" class="text-center">Actions</th>
+        <th scope="col" class="text-right"><span class="sr-only">Actions</span></th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of itemList">
+      <tr *ngFor="let item of itemList" [class.row-selected]="isSelected(item)">
         <td *ngIf="canSend">
           <mat-checkbox
             *ngIf="selectable(item)"
@@ -69,68 +116,88 @@
           ></mat-checkbox>
         </td>
         <td>
-          <ng-container *ngIf="item?.customer; else noCustomer">
-            <a class="block font-medium text-gray-900 hover:underline" [routerLink]="['/customers/details', item.customer._id]">
-              {{ item.customer.name || 'Unnamed customer' }}
-            </a>
-            <span class="block text-xs text-gray-500">{{ item.customer.email || item.customer.mobile || '' }}</span>
-          </ng-container>
-          <ng-template #noCustomer><span class="text-gray-400">Deleted customer</span></ng-template>
+          <div class="customer-cell" *ngIf="item?.customer; else noCustomer">
+            <span class="avatar" [style.background]="avatarColor(item.customer.name)">{{ initials(item.customer.name) }}</span>
+            <div class="min-w-0">
+              <a class="customer-name" [routerLink]="['/customers/details', item.customer._id]">
+                {{ item.customer.name || 'Unnamed customer' }}
+              </a>
+              <span class="customer-contact">{{ item.customer.email || item.customer.mobile || '' }}</span>
+            </div>
+          </div>
+          <ng-template #noCustomer>
+            <div class="customer-cell">
+              <span class="avatar muted"><mat-icon>person_off</mat-icon></span>
+              <span class="text-gray-400">Deleted customer</span>
+            </div>
+          </ng-template>
         </td>
         <td>
-          <div class="flex items-center gap-2">
+          <div class="items-cell">
             <div class="thumbs">
               <ng-container *ngFor="let line of item.items.slice(0, 3)">
                 <img *ngIf="line.image; else noImg" [src]="line.image" [alt]="line.product_name" />
-                <ng-template #noImg><span class="thumb-more"><mat-icon class="text-sm">image</mat-icon></span></ng-template>
+                <ng-template #noImg><span class="thumb"><mat-icon>image</mat-icon></span></ng-template>
               </ng-container>
-              <span *ngIf="item.items.length > 3" class="thumb-more">+{{ item.items.length - 3 }}</span>
+              <span *ngIf="item.items.length > 3" class="thumb more">+{{ item.items.length - 3 }}</span>
             </div>
-            <span class="text-xs text-gray-600 max-w-[160px] truncate" [title]="item.items[0]?.product_name">
-              {{ item.item_count }} item(s)<br />{{ item.items[0]?.product_name }}
-            </span>
+            <div class="items-text">
+              <span class="items-count">{{ item.item_count }} {{ item.item_count === 1 ? 'item' : 'items' }}</span>
+              <span class="items-name" [title]="item.items[0]?.product_name">{{ item.items[0]?.product_name }}</span>
+            </div>
           </div>
         </td>
-        <td class="text-right font-semibold whitespace-nowrap">{{ item.cart_value | currency : 'INR' }}</td>
+        <td class="text-right whitespace-nowrap">
+          <span class="cart-value">{{ item.cart_value | currency : 'INR' : 'symbol' : '1.0-0' }}</span>
+        </td>
         <td class="whitespace-nowrap">
-          {{ item.abandoned_at | date : 'short' }}
-          <span class="block text-xs text-gray-500">Last activity {{ item.last_activity_at | date : 'short' }}</span>
+          <span class="time-primary" [matTooltip]="(item.abandoned_at | date : 'medium') ?? ''">{{ timeAgo(item.abandoned_at) }}</span>
+          <span class="time-secondary">{{ item.abandoned_at | date : 'd MMM, h:mm a' }}</span>
         </td>
         <td>
-          <span class="table-status" [ngClass]="statusClass(item.status)">{{ statusLabel(item) }}</span>
+          <span class="status-pill" [ngClass]="item.status">
+            <span class="dot"></span>{{ statusLabel(item) }}
+          </span>
           <a
             *ngIf="item.recovered_order_id"
-            class="block text-xs text-primary hover:underline mt-1"
+            class="order-link"
             [routerLink]="['/inventory/orders/details', item.recovered_order_id]"
           >
             {{ item.recovered_order_number }}
           </a>
         </td>
-        <td class="whitespace-nowrap">
-          <span class="font-medium">{{ sentReminders(item).length }}</span>
-          <span class="block text-xs text-gray-500" *ngIf="lastSentAt(item) as last">Last {{ last | date : 'short' }}</span>
+        <td class="text-center whitespace-nowrap">
+          <span class="reminder-count" [class.zero]="!sentReminders(item).length">{{ sentReminders(item).length }}</span>
+          <span class="time-secondary" *ngIf="lastSentAt(item) as last">{{ timeAgo(last) }}</span>
         </td>
         <td class="text-center">
           <span class="channels">
-            <mat-icon [ngClass]="item.reachable?.email ? 'on' : 'off'" [matTooltip]="item.reachable?.email ? 'Email: opted in' : 'Email: not opted in / unverified'">mail</mat-icon>
-            <mat-icon [ngClass]="item.reachable?.whatsapp ? 'on' : 'off'" [matTooltip]="item.reachable?.whatsapp ? 'WhatsApp: opted in' : 'WhatsApp: not opted in / unavailable'">chat</mat-icon>
-            <mat-icon [ngClass]="item.reachable?.push ? 'on' : 'off'" [matTooltip]="item.reachable?.push ? 'App push: opted in' : 'App push: no consent or device'">notifications</mat-icon>
+            <span class="channel" [ngClass]="item.reachable?.email ? 'on' : 'off'" [matTooltip]="item.reachable?.email ? 'Email: opted in' : 'Email: not opted in / unverified'">
+              <mat-icon>mail</mat-icon>
+            </span>
+            <span class="channel" [ngClass]="item.reachable?.whatsapp ? 'on' : 'off'" [matTooltip]="item.reachable?.whatsapp ? 'WhatsApp: opted in' : 'WhatsApp: not opted in / unavailable'">
+              <mat-icon>chat</mat-icon>
+            </span>
+            <span class="channel" [ngClass]="item.reachable?.push ? 'on' : 'off'" [matTooltip]="item.reachable?.push ? 'App push: opted in' : 'App push: no consent or device'">
+              <mat-icon>notifications</mat-icon>
+            </span>
           </span>
         </td>
-        <td class="text-center whitespace-nowrap">
-          <button type="button" (click)="viewDetails(item)" class="text-xs font-medium text-primary hover:underline">View</button>
-          <ng-container *ngIf="selectable(item)">
-            <span class="text-gray-300 mx-1">|</span>
+        <td class="text-right whitespace-nowrap">
+          <div class="row-actions">
             <button
+              *ngIf="selectable(item)"
               type="button"
+              class="icon-btn"
               (click)="sendReminder([item])"
               [disabled]="!isReachable(item)"
-              [matTooltip]="isReachable(item) ? '' : 'Customer hasn\'t opted in to cart reminders'"
-              class="text-xs font-medium text-primary hover:underline disabled:text-gray-400 disabled:no-underline"
+              [matTooltip]="isReachable(item) ? 'Send reminder' : 'Customer hasn\'t opted in to cart reminders'"
+              aria-label="Send reminder"
             >
-              Remind
+              <mat-icon>send</mat-icon>
             </button>
-          </ng-container>
+            <button type="button" class="view-btn" (click)="viewDetails(item)">View</button>
+          </div>
         </td>
       </tr>
       <tr *ngIf="!itemList?.length">

@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
@@ -18,12 +18,7 @@ import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.c
 import { AbandonedCartDetailDialogComponent } from './abandoned-cart-detail-dialog/abandoned-cart-detail-dialog.component';
 import { SendCartReminderDialogComponent } from './send-cart-reminder-dialog/send-cart-reminder-dialog.component';
 import { AbandonedCartSettingsDialogComponent } from './abandoned-cart-settings-dialog/abandoned-cart-settings-dialog.component';
-
-export const CART_STATUS_STYLES: Record<string, string> = {
-  open: 'bg-amber-100 text-amber-800',
-  recovered: 'bg-green-100 text-green-800',
-  expired: 'bg-gray-100 text-gray-600',
-};
+import { customerAvatarColor, customerInitials } from './abandoned-cart.utils';
 
 // Abandoned carts of signed-in customers, maintained by the backend's
 // services/abandonedCart cron: KPIs for the period, a filterable list with
@@ -31,7 +26,7 @@ export const CART_STATUS_STYLES: Record<string, string> = {
 // reminder sequence settings.
 @Component({
   selector: 'app-abandoned-carts',
-  imports: [NgIf, NgFor, NgClass, DatePipe, CurrencyPipe, RouterLink, MatCheckboxModule, MatIconModule, MatTooltipModule, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, NgClass, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, MatCheckboxModule, MatIconModule, MatTooltipModule, PaginationComponent, EmptyStateComponent],
   templateUrl: './abandoned-carts.component.html',
   styleUrl: './abandoned-carts.component.scss',
 })
@@ -55,6 +50,12 @@ export class AbandonedCartsComponent implements OnInit, OnDestroy {
     from_date: null,
     to_date: null,
   };
+  readonly statusTabs: { value: string | null; label: string }[] = [
+    { value: 'open', label: 'Open' },
+    { value: 'recovered', label: 'Recovered' },
+    { value: 'expired', label: 'Expired' },
+    { value: null, label: 'All' },
+  ];
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -196,6 +197,14 @@ export class AbandonedCartsComponent implements OnInit, OnDestroy {
     });
   }
 
+  setStatus(status: string | null): void {
+    if (this.filterValues['status'] === status) return;
+    this.filterValues = { ...this.filterValues, status };
+    this.paginationOption.page = 1;
+    this.updateFilterButton();
+    this.fetchList();
+  }
+
   onPageChange(page: number): void {
     this.paginationOption.page = page;
     this.fetchList();
@@ -242,9 +251,6 @@ export class AbandonedCartsComponent implements OnInit, OnDestroy {
   }
 
   // --- display helpers ---
-  statusClass(status: string): string {
-    return CART_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-600';
-  }
   statusLabel(item: any): string {
     if (item?.status === 'recovered') return item.recovered_via_reminder ? 'Recovered · reminder' : 'Recovered';
     if (item?.status === 'expired') return item.closed_reason === 'cart_emptied' ? 'Expired · emptied' : 'Expired';
@@ -256,6 +262,26 @@ export class AbandonedCartsComponent implements OnInit, OnDestroy {
   lastSentAt(item: any): string | null {
     const sent = this.sentReminders(item);
     return sent.length ? sent[sent.length - 1].sent_at : null;
+  }
+  timeAgo(value: string | Date | null | undefined): string {
+    if (!value) return '—';
+    const mins = Math.floor((Date.now() - new Date(value).getTime()) / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    return `${Math.floor(days / 30)}mo ago`;
+  }
+  initials(name: string | null | undefined): string {
+    return customerInitials(name);
+  }
+  avatarColor(name: string | null | undefined): string {
+    return customerAvatarColor(name);
+  }
+  meterWidth(rate: number | null | undefined): number {
+    return Math.max(0, Math.min(100, Number(rate) || 0));
   }
   isReachable(item: any): boolean {
     const r = item?.reachable;
