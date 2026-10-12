@@ -22,9 +22,12 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   paginationOption: PaginationOptions;
   loading = true;
   error = false;
-  summary = { searches: 0, zero_results: 0 };
+  summary = { searches: 0, zero_results: 0, measured: 0, first_tracked: null as string | null };
 
   filterValues: Record<string, any> = {
+    event_type: 'search',
+    platform: null,
+    filtered: null,
     zero_results: null,
     from_date: null,
     to_date: null,
@@ -55,6 +58,13 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
 
   get filterFields(): FilterFieldDef[] {
     return [
+      { key: 'event_type', label: 'Activity', type: 'select', options: [
+        { value: 'search', label: 'Completed searches' },
+        { value: 'suggestion', label: 'Suggestion selections' },
+        { value: 'legacy', label: 'Legacy search requests (includes typing)' },
+      ] },
+      { key: 'platform', label: 'Platform', type: 'select', options: [{ value: 'web', label: 'Web' }, { value: 'mobile', label: 'Mobile' }] },
+      { key: 'filtered', label: 'Search scope', type: 'select', options: [{ value: 'false', label: 'Without filters' }, { value: 'true', label: 'With filters' }] },
       { key: 'zero_results', label: 'Results', type: 'select', options: [{ value: 'true', label: 'Queries with no-result searches' }] },
       {
         key: 'created_at',
@@ -68,6 +78,9 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
 
   filterCount(): number {
     let count = 0;
+    if (this.filterValues['event_type'] && this.filterValues['event_type'] !== 'search') count++;
+    if (this.filterValues['platform']) count++;
+    if (this.filterValues['filtered']) count++;
     if (this.filterValues['zero_results']) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
     return count;
@@ -97,7 +110,10 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     this.error = false;
     const params = new URLSearchParams();
     const f = this.filterValues;
-    if (f['zero_results']) params.set('zero_results', f['zero_results']);
+    params.set('event_type', f['event_type'] || 'search');
+    if (f['event_type'] !== 'legacy' && f['platform']) params.set('platform', f['platform']);
+    if ((f['event_type'] || 'search') === 'search' && f['filtered']) params.set('filtered', f['filtered']);
+    if (f['event_type'] !== 'suggestion' && f['zero_results']) params.set('zero_results', f['zero_results']);
     if (f['from_date']) params.set('from', f['from_date']);
     if (f['to_date']) params.set('to', f['to_date']);
     if (this.paginationOption.limit) params.set('limit', String(this.paginationOption.limit));
@@ -105,7 +121,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
 
     this.apiService.searchInsights(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
-        this.summary = res?.data?.summary ?? { searches: 0, zero_results: 0 };
+        this.summary = res?.data?.summary ?? { searches: 0, zero_results: 0, measured: 0, first_tracked: null };
         this.itemList = res?.data?.docs ?? [];
         this.paginationOption = { ...res?.data };
         this.loading = false;
@@ -115,6 +131,15 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
     });
+  }
+
+  get activityLabel(): string {
+    return this.filterValues['event_type'] === 'legacy' ? 'Legacy search requests'
+      : this.filterValues['event_type'] === 'suggestion' ? 'Suggestion selections' : 'Completed searches';
+  }
+
+  get zeroResultRate(): string {
+    return this.summary.measured ? (100 * this.summary.zero_results / this.summary.measured).toFixed(1) + '%' : '—';
   }
 
   onPageChange(page: number) {

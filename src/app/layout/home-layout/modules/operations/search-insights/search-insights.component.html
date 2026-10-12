@@ -1,13 +1,16 @@
-<p class="text-sm text-gray-500 mb-4">Search requests from the last 90 days, including autocomplete. Only first pages are counted. Date filters use India Standard Time. Tracking starts after deployment.</p>
+<p class="text-sm text-gray-500 mb-4">Completed searches count submitted queries and viewed search results. Suggestion selections and legacy requests are available in Filters. Data is retained for 90 days; dates use India Standard Time.</p>
 <div *ngIf="loading" class="text-center py-6">Loading…</div>
 <div *ngIf="error" class="text-center py-6">Could not load search insights. <button type="button" (click)="fetchList()" class="text-primary">Retry</button></div>
 <ng-container *ngIf="!loading && !error">
-  <p class="mb-4">Search requests: <strong>{{ summary.searches }}</strong> · No-result requests: <strong>{{ summary.zero_results }}</strong></p>
+  <p class="mb-4">{{ activityLabel }}: <strong>{{ summary.searches }}</strong><ng-container *ngIf="filterValues['event_type'] !== 'suggestion'"> · No results: <strong>{{ summary.zero_results }}</strong> · No-result rate: <strong>{{ zeroResultRate }}</strong></ng-container></p>
+  <p *ngIf="filterValues['event_type'] !== 'suggestion' && summary.searches > summary.measured" class="text-sm text-gray-500 mb-4">{{ summary.searches - summary.measured }} searches have no confirmed result count. They are excluded from the no-result rate.</p>
+  <p *ngIf="summary.first_tracked" class="text-sm text-gray-500 mb-4">First recorded activity in this selection: {{ summary.first_tracked | date:'medium':'+0530' }}</p>
+  <p *ngIf="filterValues['event_type'] === 'legacy'" class="text-sm text-gray-500 mb-4">Legacy requests include autocomplete fragments. Platform and search scope were not recorded.</p>
   <div class="table-wrapper">
     <table class="table-base">
-      <thead><tr><th scope="col">Query</th><th scope="col">Search requests</th><th scope="col">No-result requests</th><th scope="col">Last searched (IST)</th></tr></thead>
+      <thead><tr><th scope="col">Query</th><th scope="col">{{ activityLabel }}</th><th scope="col" *ngIf="filterValues['event_type'] !== 'suggestion'">No results</th><th scope="col">Last searched (IST)</th></tr></thead>
       <tbody>
-        <tr *ngFor="let item of itemList"><td class="break-all">{{ item._id }}</td><td>{{ item.searches }}</td><td>{{ item.zero_results }}</td><td>{{ item.last_searched | date:'medium':'+0530' }}</td></tr>
+        <tr *ngFor="let item of itemList"><td class="break-all">{{ item._id }}</td><td>{{ item.searches }}</td><td *ngIf="filterValues['event_type'] !== 'suggestion'">{{ item.zero_results }}</td><td>{{ item.last_searched | date:'medium':'+0530' }}</td></tr>
         <tr *ngIf="!itemList.length"><td colspan="4"><app-empty-state message="No recorded searches for these filters"></app-empty-state></td></tr>
       </tbody>
     </table>
