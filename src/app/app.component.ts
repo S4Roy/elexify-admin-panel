@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import {
   ActivatedRoute,
   NavigationEnd,
+  NavigationStart,
   Router,
   RouterOutlet,
 } from '@angular/router';
@@ -35,6 +36,14 @@ export class AppComponent {
     public deviceService: DeviceDetectorService,
     public themeService: ThemeService
   ) {
+    // Clear the header search before the next page reads it (NavigationStart),
+    // unless only the query string changes on the same page.
+    const pathOf = (url: string) => url.split(/[?#]/)[0];
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationStart))
+      .subscribe((event) => {
+        if (pathOf((event as NavigationStart).url) !== pathOf(this.router.url)) this.helperService.clearSearchTerm();
+      });
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {

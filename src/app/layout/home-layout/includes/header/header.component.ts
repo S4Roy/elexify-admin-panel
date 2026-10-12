@@ -17,7 +17,7 @@ import { DeviceDetectorService } from 'app/core/services/device-detector.service
 import { NavService } from 'app/core/services/nav.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { ThemeService } from '../../../../core/services/theme.service';
@@ -44,7 +44,7 @@ export class HeaderComponent {
 
   total_unread_record: any = null;
   userDetails: any = null;
-  searchTerm: any = null;
+  searchTerm = '';
 
   constructor(
     public helperService: HelpersService,
@@ -60,8 +60,13 @@ export class HeaderComponent {
     // this.fetchNotificationList()
   }
   ngOnInit(): void {
+    // Keep the box in step with the shared term (cleared on page change,
+    // or still set when this header is re-created by another layout).
+    this.helperService.searchKey$.pipe(takeUntil(this.destroy$)).subscribe((term) => {
+      if ((term || '') !== this.searchTerm.trim()) this.searchTerm = term || '';
+    });
     this.searchSubject
-      .pipe(debounceTime(300), distinctUntilChanged())
+      .pipe(debounceTime(300))
       .subscribe((term: string) => {
         this.helperService.updateSearchTerm(term);
       });

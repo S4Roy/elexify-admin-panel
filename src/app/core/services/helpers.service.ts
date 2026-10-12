@@ -20,7 +20,7 @@ export class HelpersService {
   private backUrl = new BehaviorSubject<any>({});
   private breadcrumbs = new BehaviorSubject<any>([]);
   breadcrumbs$ = this.breadcrumbs.asObservable();
-  private searchKey = new BehaviorSubject<any>([]);
+  private searchKey = new BehaviorSubject<string>('');
   searchKey$ = this.searchKey.asObservable();
   // Lets any list page register a "Filters" button (with an active-filter
   // count badge) that renders on the right side of the shared breadcrumb
@@ -136,7 +136,13 @@ export class HelpersService {
     this.exportActionClick.next();
   }
   updateSearchTerm(searchKey: string) {
-    this.searchKey.next(searchKey.trim());
+    const term = searchKey.trim();
+    if (term !== this.searchKey.value) this.searchKey.next(term);
+  }
+  // The header search filters the current list only. Cleared when moving to
+  // another page so a term typed on Customers doesn't silently filter Orders.
+  clearSearchTerm() {
+    if (this.searchKey.value) this.searchKey.next('');
   }
   updateBreadCrumbs(data: any) {
     this.breadcrumbs.next(data);
