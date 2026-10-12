@@ -1,3 +1,4 @@
+import { SearchInsightsComponent } from './modules/operations/search-insights/search-insights.component';
 import { CampaignsComponent } from './modules/notifications/campaigns/campaigns.component';
 import { Routes } from '@angular/router';
 import { HomeLayoutComponent } from './home-layout.component';
@@ -105,6 +106,11 @@ export const routes: Routes = [
         path: 'audit-logs',
         component: AuditLogsComponent,
         data: { pageTitle: 'Audit Logs', breadcrumb: 'Audit Logs' },
+      },
+      {
+        path: 'search-insights',
+        component: SearchInsightsComponent,
+        data: { pageTitle: 'Search Insights', breadcrumb: 'Search Insights' },
       },
       {
         path: 'checkout-failures',

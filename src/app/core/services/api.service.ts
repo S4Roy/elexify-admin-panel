@@ -317,6 +317,10 @@ export class ApiService {
   }
 
   // Failed order placements / payment verifications (logCheckoutFailure).
+  searchInsights(params: URLSearchParams) {
+    return this.httpService.get(`admin/operations/search-insights?${params.toString()}`);
+  }
+
   checkoutFailures(params: URLSearchParams) {
     return this.httpService.get(`admin/operations/checkout-failures?${params.toString()}`);
   }
