@@ -44,7 +44,7 @@ export class SideNavComponent {
   // third, site configuration last. Orders promoted to its own top-level
   // item (still routes to /inventory/orders — the module wasn't split,
   // just the menu entry) since it's one of the most-used sections in
-  // day-to-day operation. Abandoned Carts / Notification Logs / FAQ
+  // day-to-day operation. Notification Logs / FAQ
   // Category / Email Templates from the reference structure are left out
   // — there's no matching route for them in this app.
   itemList: any = [
@@ -160,6 +160,11 @@ export class SideNavComponent {
           label: 'Customers',
           icon: 'group',
           url: '/customers',
+        },
+        {
+          label: 'Abandoned Carts',
+          icon: 'remove_shopping_cart',
+          url: '/abandoned-carts',
         },
       ],
     },

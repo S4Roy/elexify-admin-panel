@@ -265,6 +265,23 @@ export class ApiService {
   webhookLogDetails(id: string) {
     return this.httpService.get(`admin/operations/webhook-logs/${id}`);
   }
+  // --- Abandoned carts (backend services/abandonedCart) ---
+  abandonedCarts(params: URLSearchParams) {
+    return this.httpService.get(`admin/abandoned-carts?${params.toString()}`);
+  }
+  abandonedCartStats(params: URLSearchParams) {
+    return this.httpService.get(`admin/abandoned-carts/stats?${params.toString()}`);
+  }
+  abandonedCartSettings() {
+    return this.httpService.get(`admin/abandoned-carts/settings`);
+  }
+  updateAbandonedCartSettings(payload: any) {
+    return this.httpService.put(`admin/abandoned-carts/settings`, payload);
+  }
+  remindAbandonedCarts(payload: { ids: string[]; coupon_code?: string }) {
+    return this.httpService.post(`admin/abandoned-carts/remind`, payload);
+  }
+
   // Failed order placements / payment verifications (logCheckoutFailure).
   checkoutFailures(params: URLSearchParams) {
     return this.httpService.get(`admin/operations/checkout-failures?${params.toString()}`);

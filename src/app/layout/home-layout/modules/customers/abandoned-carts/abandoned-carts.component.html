@@ -1,0 +1,145 @@
+<div *ngIf="autoRemindersEnabled !== null" class="automation-banner" [ngClass]="autoRemindersEnabled ? 'on' : 'off'">
+  <mat-icon class="text-base">{{ autoRemindersEnabled ? 'notifications_active' : 'notifications_off' }}</mat-icon>
+  <span *ngIf="autoRemindersEnabled">Automatic cart reminders are on. Opted-in customers are reminded on the configured schedule.</span>
+  <span *ngIf="!autoRemindersEnabled">Automatic cart reminders are off. You can still send reminders manually.</span>
+  <button type="button" (click)="openSettings()">{{ canConfigure ? 'Configure' : 'View settings' }}</button>
+</div>
+
+<div class="kpi-grid" *ngIf="stats">
+  <div class="kpi">
+    <div class="kpi-label">Abandoned carts</div>
+    <div class="kpi-value">{{ stats.total }}</div>
+    <div class="kpi-sub">{{ stats.total_value | currency : 'INR' : 'symbol' : '1.0-0' }} total value</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Open (value at risk)</div>
+    <div class="kpi-value">{{ stats.open_value | currency : 'INR' : 'symbol' : '1.0-0' }}</div>
+    <div class="kpi-sub">{{ stats.open }} cart(s)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Recovered revenue</div>
+    <div class="kpi-value">{{ stats.recovered_value | currency : 'INR' : 'symbol' : '1.0-0' }}</div>
+    <div class="kpi-sub">{{ stats.recovered }} order(s) · {{ stats.recovery_rate }}% recovery rate</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Recovered by reminders</div>
+    <div class="kpi-value">{{ stats.recovered_via_reminder_value | currency : 'INR' : 'symbol' : '1.0-0' }}</div>
+    <div class="kpi-sub">{{ stats.recovered_via_reminder }} of {{ stats.reminded }} reminded ({{ stats.reminder_recovery_rate }}%)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Reminders sent</div>
+    <div class="kpi-value">{{ stats.reminders_sent }}</div>
+    <div class="kpi-sub">{{ filterValues['from_date'] || filterValues['to_date'] ? 'Selected period' : 'Last 30 days' }}</div>
+  </div>
+</div>
+
+<div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
+
+<div *ngIf="!loading" class="table-wrapper">
+  <table class="table-base">
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+      <tr class="sticky">
+        <th scope="col" *ngIf="canSend" class="w-10">
+          <mat-checkbox
+            [checked]="allOnPageSelected"
+            [disabled]="!selectableOnPage.length"
+            [indeterminate]="selectedIds.size > 0 && !allOnPageSelected"
+            (change)="toggleSelectAllOnPage($event.checked)"
+            aria-label="Select all open carts on this page"
+          ></mat-checkbox>
+        </th>
+        <th scope="col">Customer</th>
+        <th scope="col">Items</th>
+        <th scope="col" class="text-right">Cart value</th>
+        <th scope="col">Abandoned</th>
+        <th scope="col">Status</th>
+        <th scope="col">Reminders</th>
+        <th scope="col" class="text-center">Reachable</th>
+        <th scope="col" class="text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of itemList">
+        <td *ngIf="canSend">
+          <mat-checkbox
+            *ngIf="selectable(item)"
+            [checked]="isSelected(item)"
+            (change)="toggleSelected(item, $event.checked)"
+            [aria-label]="'Select cart of ' + (item?.customer?.name || 'customer')"
+          ></mat-checkbox>
+        </td>
+        <td>
+          <ng-container *ngIf="item?.customer; else noCustomer">
+            <a class="block font-medium text-gray-900 hover:underline" [routerLink]="['/customers/details', item.customer._id]">
+              {{ item.customer.name || 'Unnamed customer' }}
+            </a>
+            <span class="block text-xs text-gray-500">{{ item.customer.email || item.customer.mobile || '' }}</span>
+          </ng-container>
+          <ng-template #noCustomer><span class="text-gray-400">Deleted customer</span></ng-template>
+        </td>
+        <td>
+          <div class="flex items-center gap-2">
+            <div class="thumbs">
+              <ng-container *ngFor="let line of item.items.slice(0, 3)">
+                <img *ngIf="line.image; else noImg" [src]="line.image" [alt]="line.product_name" />
+                <ng-template #noImg><span class="thumb-more"><mat-icon class="text-sm">image</mat-icon></span></ng-template>
+              </ng-container>
+              <span *ngIf="item.items.length > 3" class="thumb-more">+{{ item.items.length - 3 }}</span>
+            </div>
+            <span class="text-xs text-gray-600 max-w-[160px] truncate" [title]="item.items[0]?.product_name">
+              {{ item.item_count }} item(s)<br />{{ item.items[0]?.product_name }}
+            </span>
+          </div>
+        </td>
+        <td class="text-right font-semibold whitespace-nowrap">{{ item.cart_value | currency : 'INR' }}</td>
+        <td class="whitespace-nowrap">
+          {{ item.abandoned_at | date : 'short' }}
+          <span class="block text-xs text-gray-500">Last activity {{ item.last_activity_at | date : 'short' }}</span>
+        </td>
+        <td>
+          <span class="table-status" [ngClass]="statusClass(item.status)">{{ statusLabel(item) }}</span>
+          <a
+            *ngIf="item.recovered_order_id"
+            class="block text-xs text-primary hover:underline mt-1"
+            [routerLink]="['/inventory/orders/details', item.recovered_order_id]"
+          >
+            {{ item.recovered_order_number }}
+          </a>
+        </td>
+        <td class="whitespace-nowrap">
+          <span class="font-medium">{{ sentReminders(item).length }}</span>
+          <span class="block text-xs text-gray-500" *ngIf="lastSentAt(item) as last">Last {{ last | date : 'short' }}</span>
+        </td>
+        <td class="text-center">
+          <span class="channels">
+            <mat-icon [ngClass]="item.reachable?.email ? 'on' : 'off'" [matTooltip]="item.reachable?.email ? 'Email: opted in' : 'Email: not opted in / unverified'">mail</mat-icon>
+            <mat-icon [ngClass]="item.reachable?.whatsapp ? 'on' : 'off'" [matTooltip]="item.reachable?.whatsapp ? 'WhatsApp: opted in' : 'WhatsApp: not opted in / unavailable'">chat</mat-icon>
+            <mat-icon [ngClass]="item.reachable?.push ? 'on' : 'off'" [matTooltip]="item.reachable?.push ? 'App push: opted in' : 'App push: no consent or device'">notifications</mat-icon>
+          </span>
+        </td>
+        <td class="text-center whitespace-nowrap">
+          <button type="button" (click)="viewDetails(item)" class="text-xs font-medium text-primary hover:underline">View</button>
+          <ng-container *ngIf="selectable(item)">
+            <span class="text-gray-300 mx-1">|</span>
+            <button
+              type="button"
+              (click)="sendReminder([item])"
+              [disabled]="!isReachable(item)"
+              [matTooltip]="isReachable(item) ? '' : 'Customer hasn\'t opted in to cart reminders'"
+              class="text-xs font-medium text-primary hover:underline disabled:text-gray-400 disabled:no-underline"
+            >
+              Remind
+            </button>
+          </ng-container>
+        </td>
+      </tr>
+      <tr *ngIf="!itemList?.length">
+        <td class="text-center" [attr.colspan]="canSend ? 9 : 8">
+          <app-empty-state message="No abandoned carts found"></app-empty-state>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>

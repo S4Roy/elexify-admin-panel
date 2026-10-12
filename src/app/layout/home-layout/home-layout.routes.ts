@@ -18,6 +18,7 @@ import { DeadLetterComponent } from './modules/notifications/dead-letter/dead-le
 import { NotificationHistoryComponent } from './modules/notifications/notification-history/notification-history.component';
 import { WebhookLogsComponent } from './modules/operations/webhook-logs/webhook-logs.component';
 import { AuditLogsComponent } from './modules/operations/audit-logs/audit-logs.component';
+import { AbandonedCartsComponent } from './modules/customers/abandoned-carts/abandoned-carts.component';
 import { CheckoutFailuresComponent } from './modules/operations/checkout-failures/checkout-failures.component';
 import { MyDeliveriesComponent } from './modules/deliveries/my-deliveries.component';
 
@@ -56,6 +57,11 @@ export const routes: Routes = [
             data: { pageTitle: 'Customer Details', breadcrumb: 'Details' },
           },
         ],
+      },
+      {
+        path: 'abandoned-carts',
+        component: AbandonedCartsComponent,
+        data: { pageTitle: 'Abandoned Carts', breadcrumb: 'Abandoned Carts' },
       },
       {
         path: 'notifications',
