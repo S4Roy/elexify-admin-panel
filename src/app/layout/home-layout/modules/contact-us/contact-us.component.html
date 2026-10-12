@@ -46,8 +46,7 @@
                 <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item.status">{{ item.status }}</button>
               </td>
               <td class="text-center">
-                <button type="button" class="text-xs font-medium text-primary hover:underline" (click)="updateStatus(item)" [attr.aria-label]="'View conversation with ' + item.name">Open thread</button>
-                <app-menu (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
+                <app-menu [modalItem]="item" modalButtonText="Open thread" modalButtonIcon="forum" (initModal)="updateStatus($event)" (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
               </td>
             </tr>
           </ng-container>

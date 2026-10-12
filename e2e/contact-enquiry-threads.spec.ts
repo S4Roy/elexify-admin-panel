@@ -38,7 +38,8 @@ async function mockInbox(page: Page, canEdit = true) {
 test('portal replies, private remarks, and conversation pagination', async ({ page }) => {
   const { requests, requestedPages } = await mockInbox(page);
   await page.goto('/contact-us');
-  await page.getByRole('button', { name: 'View conversation with Asha Roy' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Open thread' }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('When will my order arrive?')).toBeVisible();
   await dialog.getByLabel('Write your reply').fill('Your order will arrive tomorrow.');
@@ -64,7 +65,8 @@ test('view-only staff can read threads on mobile without reply controls', async 
   await page.setViewportSize({ width: 390, height: 844 });
   await mockInbox(page, false);
   await page.goto('/contact-us');
-  await page.getByRole('button', { name: 'View conversation with Asha Roy' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Open thread' }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('When will my order arrive?')).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Send reply', exact: true })).toHaveCount(0);
