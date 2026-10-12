@@ -6,6 +6,7 @@ import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, switchMap,
 import { ApiService } from 'app/core/services/api.service';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { HelpersService } from 'app/core/services/helpers.service';
+import { DialogService } from 'app/core/services/dialog.service';
 
 // Destinations are limited to the routes the released app accepts
 // (safeNotificationRoute in elexify-mobile, validRoute on the server).
@@ -72,11 +73,13 @@ export class CampaignsComponent implements OnInit, OnDestroy {
   private customerSearch$ = new Subject<string>();
   private testSearch$ = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private confirmationPending = false;
 
   constructor(
     private api: ApiService,
     private inventory: InventoryService,
     public helper: HelpersService,
+    private dialogService: DialogService,
   ) {}
 
   ngOnInit() {
@@ -339,12 +342,29 @@ export class CampaignsComponent implements OnInit, OnDestroy {
   }
 
   async action(action: 'send' | 'schedule' | 'cancel' | 'test') {
+    if (this.busy || this.confirmationPending || !this.selected) return;
     if ((action === 'send' || action === 'schedule') && !this.confirmed) {
       this.error = 'Confirm the message and audience first.';
       return;
     }
-    if (action === 'send' && !window.confirm(`Send "${this.selected.title}" to ${this.preview?.recipient_count} customers now? This can't be undone.`)) return;
-    if (action === 'cancel' && !window.confirm('Cancel this campaign? Sends already in progress may still finish.')) return;
+    if (action === 'send' || action === 'cancel') {
+      const campaign = this.selected;
+      this.confirmationPending = true;
+      let result: any;
+      try {
+        result = await firstValueFrom(this.dialogService.confirmDialog({
+          title: action === 'send' ? 'Send this campaign?' : 'Cancel this campaign?',
+          message: action === 'send'
+            ? `Send "${campaign.title}" to ${this.preview?.recipient_count} customers now? This can't be undone.`
+            : 'Sends already in progress may still finish.',
+          cancelText: action === 'send' ? 'Cancel' : 'Keep campaign',
+          saveText: action === 'send' ? 'Send campaign' : 'Cancel campaign',
+        }));
+      } finally {
+        this.confirmationPending = false;
+      }
+      if (!result?.confirm || this.selected !== campaign) return;
+    }
     await this.run(async () => {
       const payload =
         action === 'test'
