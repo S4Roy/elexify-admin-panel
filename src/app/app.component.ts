@@ -40,9 +40,14 @@ export class AppComponent {
       .subscribe(() => {
         const route = this.getActivatedRouteChild(this.activatedRoute);
         route.data.subscribe((data: any) => {
-          if (data?.pageTitle) {
+          // Like breadcrumbs, a title may be a function of the route
+          // (e.g. Orders - Confirmed & Processing).
+          const pageTitle = typeof data?.pageTitle === 'function'
+            ? data.pageTitle(data, route.snapshot)
+            : data?.pageTitle;
+          if (pageTitle) {
             this.titleService.setTitle(
-              data?.pageTitle + ' | ' + this.PageMainTitle
+              pageTitle + ' | ' + this.PageMainTitle
             );
           } else {
             this.titleService.setTitle(this.PageMainTitle);
