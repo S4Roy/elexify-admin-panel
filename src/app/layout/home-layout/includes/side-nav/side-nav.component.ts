@@ -254,6 +254,11 @@ export class SideNavComponent {
           url: '/contact-us',
         },
         {
+          label: 'Email campaigns',
+          icon: 'campaign',
+          url: '/email-campaigns',
+        },
+        {
           label: 'Subscriber',
           icon: 'mail',
           url: '/subscriber',

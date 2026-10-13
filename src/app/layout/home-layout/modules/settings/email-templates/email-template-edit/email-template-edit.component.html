@@ -34,7 +34,7 @@
     You have view-only access to email templates. Editing, resetting, and test-sending require the Email Templates permission (superadmin/manager).
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="template-edit-layout">
     <!-- Editor -->
     <form [formGroup]="formGroup" class="space-y-4">
       <mat-form-field class="w-full" appearance="outline">
@@ -58,13 +58,15 @@
 
       <div>
         <label class="mb-1 block text-sm font-medium text-gray-700">Body</label>
-        <ckeditor
-          [editor]="Editor"
-          [config]="config"
-          formControlName="body"
-          (ready)="onEditorReady($event)"
-          (blur)="refreshPreview()"
-        ></ckeditor>
+        <div class="template-body-modes" role="group" aria-label="Content editing mode"><button mat-button type="button" [attr.aria-pressed]="bodyMode === 'visual'" (click)="setBodyMode('visual')">Formatted editor</button><button mat-button type="button" [attr.aria-pressed]="bodyMode === 'source'" (click)="setBodyMode('source')">Advanced source</button></div>
+        <p *ngIf="hasTemplateSections && bodyMode === 'visual'" class="template-editor-hint">Edit the message below. Order details, buttons and other dynamic sections are preserved automatically.</p>
+        <mat-form-field *ngIf="bodyMode === 'source'" class="w-full" appearance="outline"><mat-label>Template content</mat-label><textarea matInput formControlName="body" rows="14" class="template-source" [readonly]="saving || resetting" (blur)="refreshPreview()"></textarea></mat-form-field>
+        <div *ngIf="bodyMode === 'visual'" class="template-formatted-body">
+          <ng-container *ngFor="let section of bodySections">
+            <div *ngIf="section.kind === 'dynamic'" class="template-dynamic-section"><strong>{{ section.label }}</strong><span>Populated automatically in the email</span></div>
+            <ckeditor *ngIf="section.kind === 'content' && section.initialValue.trim()" [editor]="Editor" [config]="config" [data]="section.initialValue" [disabled]="!isPrivileged || saving || resetting" (ready)="section.editorValue = $event.getData()" (change)="bodySectionChanged(section, $event)" (blur)="refreshPreview()"></ckeditor>
+          </ng-container>
+        </div>
         <p *ngIf="formGroup.get('body')?.touched && formGroup.get('body')?.hasError('required')" class="mt-1 text-xs text-red-600">
           Body is required
         </p>
@@ -112,7 +114,8 @@
 
       <div class="preview-frame-wrapper" [ngClass]="previewMode">
         <div *ngIf="previewLoading" class="py-10 text-center text-sm text-gray-500">Rendering preview...</div>
-        <div *ngIf="!previewLoading && previewHtml" class="preview-frame" [innerHTML]="sanitizeService.safeHtml(previewHtml)"></div>
+        <p *ngIf="previewError" role="alert" class="template-preview-error">{{ previewError }}</p>
+        <iframe *ngIf="previewHtml" class="preview-frame" title="Email template preview" sandbox="" referrerpolicy="no-referrer" [srcdoc]="previewDocument"></iframe>
       </div>
     </div>
   </div>

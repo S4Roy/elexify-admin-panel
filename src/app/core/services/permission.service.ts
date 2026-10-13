@@ -49,6 +49,7 @@ export class PermissionService {
     // The dashboard gates each section by its own permission, so it opens for
     // anyone who can see at least one kind of store data.
     if (path === '/dashboard') return this.canAny(['orders.view', 'customers.view', 'products.view', 'categories.view']);
+    if (path === '/email-campaigns') return this.canAll(['subscribers.view', 'customer.notification.view']);
     const special: [string, string][] = [
       ['/settings/email-templates', 'email_template.manage'], ['/settings/sms-templates', 'sms_template.manage'],
       ['/settings/integration-credentials', 'integration_credential.manage'], ['/settings/integrations/zoho-books', 'zoho_sync.view'],

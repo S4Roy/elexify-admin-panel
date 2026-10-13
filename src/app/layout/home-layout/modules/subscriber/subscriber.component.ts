@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from 'app/core/services/api.service';
 import * as Global from 'app/global';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import FilterOptions from 'app/core/models/FilterOptions';
 import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { HelpersService } from 'app/core/services/helpers.service';
@@ -14,9 +14,7 @@ import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { PaginationComponent } from '../../includes/pagination/pagination.component';
 import { MenuComponent } from '../../includes/menu/menu.component';
 import PaginationOptions from 'app/core/models/PaginationOptions';
-import { InventoryService } from 'app/core/services/inventory.service';
 import { MatIconModule } from '@angular/material/icon';
-import { ReadMoreClampDirective } from 'app/core/directives/read-more-clamp.directive';
 import { SubscriberUpdateComponent } from './subscriber-update/subscriber-update.component';
 import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawer.component';
@@ -24,13 +22,13 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
 @Component({
   selector: 'app-subscriber',
   imports: [
+    DatePipe,
     EmptyStateComponent,
     MenuComponent,
     NgFor,
     NgIf,
     PaginationComponent,
     MatIconModule,
-    ReadMoreClampDirective,
   ],
   templateUrl: './subscriber.component.html',
   styleUrl: './subscriber.component.scss',
@@ -38,12 +36,16 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
 export class SubscriberComponent {
   Global = Global;
   item_list: any = [];
+  loading = false;
+  error = "";
+  private requestSequence = 0;
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
   // Working filter values, keyed to match filterFields below — handed to
   // the (page-agnostic) filter drawer and read back from it.
   filterValues: Record<string, any> = {
     status: [],
+    source: null,
     from_date: null,
     to_date: null,
   };
@@ -60,12 +62,11 @@ export class SubscriberComponent {
     combineLatest([
       this.route.paramMap,
       this.helperService.searchKey$,
-    ]).subscribe(([params, searchKey]) => {
-      this.filterOption = Global.resetTableFilterOptions();
+    ]).pipe(takeUntil(this.destroy$)).subscribe(([params, searchKey]) => {
       this.filterOption.slug = params.get('slug');
       this.filterOption.search_key = searchKey;
       this.paginationOption.page = 1;
-      this.fetchRating();
+      this.fetchSubscribers();
     });
   }
   ngOnInit(): void {
@@ -82,11 +83,18 @@ export class SubscriberComponent {
         label: 'Status',
         type: 'multiselect',
         options: [
-          { value: 'pending', label: 'Pending' },
-          { value: 'answered', label: 'Answered' },
-          { value: 'archived', label: 'Archived' },
-          { value: 'spam', label: 'Spam' },
+          { value: 'subscribed', label: 'Subscribed' },
+          { value: 'unsubscribed', label: 'Unsubscribed' },
+          { value: 'suppressed', label: 'Suppressed' },
+          { value: 'pending', label: 'Legacy · Pending' },
+          { value: 'answered', label: 'Legacy · Answered' },
+          { value: 'archived', label: 'Legacy · Archived' },
+          { value: 'spam', label: 'Legacy · Spam' },
         ],
+      },
+      {
+        key: 'source', label: 'Source', type: 'select',
+        options: ['web', 'mobile', 'api', 'widget', 'other'].map(value => ({ value, label: value })),
       },
       {
         key: 'created_at',
@@ -98,7 +106,7 @@ export class SubscriberComponent {
     ];
   }
   filterCount(): number {
-    let count = 0;
+    let count = this.filterValues['source'] ? 1 : 0;
     if (this.filterValues['status']?.length) count++;
     if (this.filterValues['from_date'] || this.filterValues['to_date']) count++;
     return count;
@@ -121,13 +129,17 @@ export class SubscriberComponent {
         this.filterOption.from_date = this.filterValues['from_date'] || null;
         this.filterOption.to_date = this.filterValues['to_date'] || null;
         this.paginationOption.page = 1;
-        this.fetchRating();
+        this.fetchSubscribers();
         this.updateFilterButton();
       });
   }
 
-  fetchRating() {
+  fetchSubscribers() {
+    const request = ++this.requestSequence;
+    this.loading = true;
+    this.error = "";
     let params = new URLSearchParams();
+    if (this.filterValues["source"]) params.set("source", this.filterValues["source"]);
     params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
@@ -147,41 +159,38 @@ export class SubscriberComponent {
     if (this.filterOption.to_date) {
       params.set('to_date', this.filterOption.to_date);
     }
-    this.apiService.subscriberList(params).subscribe({
+    this.apiService.subscriberList(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
+        if (request !== this.requestSequence) return;
+        this.loading = false;
         this.item_list = res?.data?.docs ?? [];
         this.paginationOption = {
           ...res?.data,
         };
       },
-      error: (err) => {},
+      error: () => { if (request !== this.requestSequence) return; this.loading = false; this.error = "Unable to load subscribers. Please retry."; },
     });
   }
   updateStatus(item: any) {
-    // this.dialog
-    //   .open(SubscriberUpdateComponent, {
-    //     data: item,
-    //     width: '400px',
-    //   })
-    //   .afterClosed()
-    //   .subscribe((res: any) => {
-    //     if (res) {
-    //       this.fetchRating();
-    //     }
-    //   });
+    if (!this.permissions.includes('edit')) return;
+    this.dialog.open(SubscriberUpdateComponent, { data: item, width: '520px', maxWidth: '95vw' })
+      .afterClosed().pipe(takeUntil(this.destroy$)).subscribe(changed => {
+        if (changed) this.fetchSubscribers();
+      });
   }
+
   deleteItem(item: any) {
     this.apiService.deleteSubscriber({ _id: item._id }).subscribe({
       next: (res: any) => {
         this.toastr.success(res?.body?.message);
-        this.fetchRating();
+        this.fetchSubscribers();
       },
-      error: (err: any) => {},
+      error: () => this.toastr.error("Unable to delete subscriber. Please retry."),
     });
   }
   onPageChange(data: any) {
     this.paginationOption.page = data;
-    this.fetchRating();
+    this.fetchSubscribers();
   }
   private readonly access = injectPermissions(PermissionService);
   get permissions(): string[] { return this.access.actions('subscribers'); }

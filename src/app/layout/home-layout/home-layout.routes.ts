@@ -1,3 +1,4 @@
+import { EmailCampaignsComponent } from "./modules/email-campaigns/email-campaigns.component";
 import { SearchInsightsComponent } from './modules/operations/search-insights/search-insights.component';
 import { CampaignsComponent } from './modules/notifications/campaigns/campaigns.component';
 import { Routes } from '@angular/router';
@@ -141,6 +142,11 @@ export const routes: Routes = [
         path: 'enquiries',
         component: EnquiriesComponent,
         data: { pageTitle: 'Enquiries', breadcrumb: 'Enquiries' },
+      },
+      {
+        path: 'email-campaigns',
+        component: EmailCampaignsComponent,
+        data: { pageTitle: 'Email campaigns', breadcrumb: 'Email campaigns' },
       },
       {
         path: 'subscriber',
