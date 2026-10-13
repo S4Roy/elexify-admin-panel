@@ -1361,12 +1361,14 @@ a.kpi-card:hover {
   }
 }
 
-// Reviews opt into available-space sizing. Header, breadcrumb and pagination
+// Reviews and the contact inbox opt into available-space sizing. Header, breadcrumb and pagination
 // keep their natural height; the table owns scrolling at every viewport size.
-.page-wrapper:has(> .right-wrapper > .outlet > app-rating-reveiws) {
+.page-wrapper:has(> .right-wrapper > .outlet > app-rating-reveiws),
+.page-wrapper:has(> .right-wrapper > .outlet > app-contact-us) {
   height: 100dvh;
 }
-.page-wrapper .right-wrapper:has(> .outlet > app-rating-reveiws) {
+.page-wrapper .right-wrapper:has(> .outlet > app-rating-reveiws),
+.page-wrapper .right-wrapper:has(> .outlet > app-contact-us) {
   display: flex;
   flex-direction: column;
   min-height: 0;

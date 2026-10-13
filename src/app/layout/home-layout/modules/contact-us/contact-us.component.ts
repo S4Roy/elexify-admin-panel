@@ -2,7 +2,7 @@ import { inject as injectPermissions } from '@angular/core';
 import { PermissionService } from 'app/core/services/permission.service';
 import { EmptyStateComponent } from '../../includes/empty-state/empty-state.component';
 import { Component } from '@angular/core';
-import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, TitleCasePipe, NgFor, NgIf } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from 'app/core/services/api.service';
@@ -29,6 +29,8 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
     PaginationComponent,
     MatIconModule,
     DatePipe,
+    DecimalPipe,
+    TitleCasePipe,
   ],
   templateUrl: './contact-us.component.html',
   styleUrl: './contact-us.component.scss',
@@ -42,12 +44,18 @@ export class ContactUsComponent {
 
   get activeStatus(): string { return this.filterValues['status']?.length === 1 ? this.filterValues['status'][0] : ''; }
   setStatus(status: string): void {
+    if (this.loading || (status ? this.activeStatus === status : !this.filterValues['status']?.length)) return;
     this.filterValues['status'] = status ? [status] : [];
     this.filterOption.status = status || null;
     this.paginationOption.page = 1;
     this.updateFilterButton();
     this.fetchEnquiries();
   }
+  initials(name: string): string {
+    return (name?.trim() || 'Customer').split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase();
+  }
+  ticketLabel(id: string): string { return 'CON-' + String(id || '').slice(-8).toUpperCase(); }
+  trackEnquiry(_: number, item: any): string { return item._id; }
   messagePreview(message: string): string { return (message || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }
 
   item_list: any = [];

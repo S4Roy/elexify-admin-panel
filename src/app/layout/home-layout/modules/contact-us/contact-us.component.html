@@ -1,61 +1,49 @@
-<header class="inbox-header">
-  <div class="heading-icon"><mat-icon>forum</mat-icon></div>
-  <div><p class="eyebrow">CUSTOMER SUPPORT</p><h1>Contact enquiries</h1><p class="subtitle">Reply to customers, keep private remarks, and follow every conversation.</p></div>
-  <button type="button" class="filter-button refresh-button" [disabled]="loading" (click)="fetchEnquiries()"><mat-icon>refresh</mat-icon>Refresh</button>
-</header>
 <section class="inbox-panel" aria-label="Customer enquiries" [attr.aria-busy]="loading">
   <div class="inbox-toolbar">
     <nav class="status-tabs" aria-label="Filter enquiries by status">
-      <button (click)="setStatus('')" [class.active]="!filterValues['status']?.length" [attr.aria-pressed]="!filterValues['status']?.length">All enquiries</button>
-      <button *ngFor="let status of statuses" (click)="setStatus(status)" [class.active]="activeStatus === status" [attr.aria-pressed]="activeStatus === status">{{ status }}</button>
+      <button type="button" [disabled]="loading" (click)="setStatus('')" [class.active]="!filterValues['status']?.length" [attr.aria-pressed]="!filterValues['status']?.length">All enquiries</button>
+      <button type="button" [disabled]="loading" *ngFor="let status of statuses" (click)="setStatus(status)" [class.active]="activeStatus === status" [attr.aria-pressed]="activeStatus === status">{{ status | titlecase }}</button>
     </nav>
-    <span class="result-count" *ngIf="!loading && !error">{{ paginationOption.totalDocs || 0 }} results</span>
+    <span class="result-count" *ngIf="!loading && !error">{{ (paginationOption.totalDocs || 0) | number }} enquiries</span>
   </div>
-  <div class="feedback" role="status" *ngIf="loading"><mat-icon>hourglass_empty</mat-icon><h2>Loading enquiries…</h2></div>
-  <div class="feedback error" role="alert" *ngIf="error && !loading"><mat-icon>error_outline</mat-icon><h2>{{ error }}</h2><button class="filter-button" (click)="fetchEnquiries()">Try again</button></div>
-  <ng-container *ngIf="!loading && !error">
-    <div class="table-wrapper">
-      <table class="table-base">
-        <thead>
-          <tr>
-            <th scope="col">Customer</th>
-            <th scope="col">Enquiry</th>
-            <th scope="col">Submitted</th>
-            <th scope="col">Latest activity</th>
-            <th scope="col">Priority</th>
-            <th scope="col" class="text-center">Status</th>
-            <th scope="col" class="text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let item of item_list">
-            <tr>
-              <td>
-                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
-                <div class="text-xs text-gray-500">{{ item.email || item.phone || 'No contact details' }}</div>
-              </td>
-              <td>
-                <button type="button" class="font-medium text-primary hover:underline" (click)="updateStatus(item)">{{ item.subject || 'General enquiry' }}</button>
-                <div class="ticket-id">CON-{{ item._id }} · {{ item.source || 'web' }}</div>
-                <p class="line-clamp-2 max-w-md text-xs text-gray-500 mt-1">{{ messagePreview(item.message) }}</p>
-              </td>
-              <td class="whitespace-nowrap">{{ item.created_at | date:'dd MMM yyyy' }}<div class="text-xs text-gray-500">{{ item.created_at | date:'shortTime' }}</div></td>
-              <td><ng-container *ngIf="item.latest_message; else noActivity"><span class="activity-label">{{ item.latest_message.kind === 'reply' ? 'Email reply' : item.latest_message.kind === 'activity' ? 'Workflow update' : 'Internal remark' }}</span><div class="text-xs text-gray-500">{{ item.latest_message.author_name }}</div><div class="text-xs text-gray-500">{{ item.latest_message.created_at | date:'dd MMM, h:mm a' }}</div><span class="send-warning" *ngIf="item.latest_message.delivery_status && item.latest_message.delivery_status !== 'sent'">{{ item.latest_message.delivery_status === 'failed' ? 'Not sent' : 'Send unconfirmed' }}</span></ng-container><ng-template #noActivity><span class="text-xs text-gray-500">No replies yet</span></ng-template></td>
-              <td><span class="priority-badge" [class]="'priority-badge ' + (item.priority || 'normal')">{{ item.priority || 'normal' }}</span></td>
-              <td class="text-center">
-                <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item.status" (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item.status">{{ item.status }}</button>
-              </td>
-              <td class="text-center">
-                <app-menu [modalItem]="item" modalButtonText="Open thread" modalButtonIcon="forum" (initModal)="updateStatus($event)" (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu>
-              </td>
-            </tr>
-          </ng-container>
-          <tr *ngIf="!item_list.length">
-            <td colspan="7" class="text-center"><app-empty-state message="No enquiries found"></app-empty-state></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <pagination *ngIf="item_list.length" [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
-  </ng-container>
+  <div class="feedback" role="status" *ngIf="loading"><mat-icon aria-hidden="true">hourglass_empty</mat-icon><h2>Loading enquiries…</h2></div>
+  <div class="feedback error" role="alert" *ngIf="error && !loading"><mat-icon aria-hidden="true">error_outline</mat-icon><h2>{{ error }}</h2><button type="button" class="refresh-button" (click)="fetchEnquiries()">Try again</button></div>
+  <div class="table-wrapper enquiries-table-wrapper" *ngIf="!loading && !error">
+    <table class="table-base enquiries-table">
+      <colgroup><col class="customer-col"><col class="enquiry-col"><col class="activity-col"><col class="priority-col"><col class="status-col"><col class="action-col"></colgroup>
+      <thead><tr><th scope="col">Customer</th><th scope="col">Enquiry</th><th scope="col">Latest activity</th><th scope="col">Priority</th><th scope="col">Status</th><th scope="col" class="text-center">Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of item_list; trackBy: trackEnquiry">
+          <td>
+            <div class="customer-cell"><span class="customer-avatar" aria-hidden="true">{{ initials(item.name) }}</span><div class="customer-details">
+              <button type="button" class="customer-name text-link" (click)="updateStatus(item)">{{ item.name || 'Customer' }}</button>
+              <span class="customer-contact" [title]="item.email || item.phone || ''">{{ item.email || item.phone || 'No contact details' }}</span>
+              <time *ngIf="item.created_at" class="submitted-date" [title]="(item.created_at | date:'medium':'+0530') || ''">{{ item.created_at | date:'dd MMM yyyy':'+0530' }}</time>
+            </div></div>
+          </td>
+          <td>
+            <button type="button" class="enquiry-subject text-link" (click)="updateStatus(item)" [title]="item.subject || 'General enquiry'">{{ item.subject || 'General enquiry' }}</button>
+            <p class="message-preview">{{ messagePreview(item.message) || 'No message provided' }}</p>
+            <div class="ticket-meta"><span class="ticket-id" [title]="'CON-' + item._id">{{ ticketLabel(item._id) }}</span><span class="source-label">{{ (item.source || 'web') | titlecase }}</span></div>
+          </td>
+          <td>
+            <ng-container *ngIf="item.latest_message; else noActivity">
+              <span class="activity-label" [class.private-activity]="item.latest_message.kind === 'note'"><mat-icon aria-hidden="true">{{ item.latest_message.kind === 'reply' ? 'reply' : item.latest_message.kind === 'activity' ? 'sync' : 'lock' }}</mat-icon>{{ item.latest_message.kind === 'reply' ? 'Email reply' : item.latest_message.kind === 'activity' ? 'Workflow update' : 'Private note' }}</span>
+              <span class="activity-author">{{ item.latest_message.author_name || 'Support team' }}</span>
+              <time class="activity-date">{{ item.latest_message.created_at | date:'dd MMM, h:mm a':'+0530' }}</time>
+              <span class="send-warning" *ngIf="item.latest_message.delivery_status && item.latest_message.delivery_status !== 'sent'"><mat-icon aria-hidden="true">error_outline</mat-icon>{{ item.latest_message.delivery_status === 'failed' ? 'Not sent' : 'Send unconfirmed' }}</span>
+            </ng-container>
+            <ng-template #noActivity><span class="no-activity">No replies yet</span></ng-template>
+          </td>
+          <td><span class="priority-badge" [class.priority-high]="item.priority === 'high'" [class.priority-urgent]="item.priority === 'urgent'"><span class="badge-dot" aria-hidden="true"></span>{{ (item.priority || 'normal') | titlecase }}</span></td>
+          <td><button [disabled]="!permissions.includes('edit')" type="button" class="status-badge"
+            [class.status-pending]="item.status === 'pending'" [class.status-answered]="item.status === 'answered'" [class.status-spam]="item.status === 'spam'"
+            (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + (item.status || 'Unknown')"><span class="badge-dot" aria-hidden="true"></span>{{ (item.status || 'Unknown') | titlecase }}</button></td>
+          <td><div class="row-actions"><button type="button" class="open-thread" [attr.aria-label]="'Open conversation with ' + (item.name || 'customer')" title="Open conversation" (click)="updateStatus(item)"><mat-icon aria-hidden="true">chat_bubble_outline</mat-icon></button><app-menu *ngIf="permissions.includes('delete')" (deleteItem)="deleteItem($event)" [delete]="item"></app-menu></div></td>
+        </tr>
+        <tr *ngIf="!item_list.length"><td colspan="6" class="text-center"><app-empty-state message="No enquiries match your filters"></app-empty-state></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <pagination *ngIf="!error" [embedded]="true" [disabled]="loading" [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
 </section>
