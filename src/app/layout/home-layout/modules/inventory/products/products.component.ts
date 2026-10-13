@@ -303,7 +303,7 @@ export class ProductsComponent {
     this.destroy$.complete();
   }
   sort(field: string): void {
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption = { ...Global.resetPaginationOptions(), limit: this.paginationOption.limit };
 
     if (this.sortKey === field) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -413,6 +413,7 @@ export class ProductsComponent {
   fetchProductList() {
     this.selectedIds.clear();
     const params = this.buildFilterParams();
+    params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) params.set('page', String(this.paginationOption.page));
     this.inventoryService.productList(params).subscribe({
       next: (res: any) => {

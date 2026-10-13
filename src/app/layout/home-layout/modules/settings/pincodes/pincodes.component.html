@@ -71,6 +71,6 @@
 <ng-container>
   <pagination
     [pagination]="paginationOption"
-    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"
   ></pagination>
 </ng-container>

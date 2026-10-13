@@ -79,7 +79,7 @@
             <div class="fixed bg-white bottom-0">
               <pagination
                 [pagination]="paginationOption"
-                (pageChange)="onPageChange($event)"
+                (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"
               ></pagination>
             </div>
           </div>

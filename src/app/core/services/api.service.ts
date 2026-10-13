@@ -101,8 +101,8 @@ export class ApiService {
   updateContactUsStatus(payload: any) {
     return this.httpService.put(`admin/contact-us/edit`, payload);
   }
-  contactUsThread(id: string, page = 1) {
-    return this.httpService.get(`admin/contact-us/${id}/thread?page=${page}`);
+  contactUsThread(id: string, page = 1, limit?: number) {
+    return this.httpService.get(`admin/contact-us/${id}/thread?page=${page}${limit ? `&limit=${limit}` : ''}`);
   }
   addContactUsMessage(id: string, payload: { request_id: string; kind: string; content: string }) {
     return this.httpService.post(`admin/contact-us/${id}/messages`, payload);
@@ -214,8 +214,8 @@ export class ApiService {
   editCustomerAddress(id: string, addressId: string, payload: any) {
     return this.httpService.put(`admin/customers/${id}/addresses/${addressId}`, payload);
   }
-  customerSessions(id: string, page = 1) { return this.httpService.get(`admin/customers/${id}/sessions?page=${page}`); }
-  customerAuthEvents(id: string, page = 1) { return this.httpService.get(`admin/customers/${id}/auth-events?page=${page}`); }
+  customerSessions(id: string, page = 1, limit?: number) { return this.httpService.get(`admin/customers/${id}/sessions?page=${page}${limit ? `&limit=${limit}` : ''}`); }
+  customerAuthEvents(id: string, page = 1, limit?: number) { return this.httpService.get(`admin/customers/${id}/auth-events?page=${page}${limit ? `&limit=${limit}` : ''}`); }
   revokeCustomerSession(id: string, sessionId: string | null, reason: string) {
     return sessionId ? this.httpService.delete(`admin/customers/${id}/sessions/${sessionId}`, { reason })
       : this.httpService.post(`admin/customers/${id}/logout-all`, { reason });

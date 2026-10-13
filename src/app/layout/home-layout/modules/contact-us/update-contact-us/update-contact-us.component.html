@@ -14,7 +14,7 @@
         <p class="entry-content">{{ entry.content }}</p>
         <p *ngIf="entry.recipient" class="delivery" [class.delivery-error]="entry.delivery_status === 'failed' || entry.delivery_status === 'unknown'">To {{ entry.recipient }} · {{ entry.delivery_status === 'sent' ? 'Accepted by mail server' : entry.delivery_status === 'failed' ? 'Not sent' : entry.delivery_status === 'unknown' ? 'Send status unconfirmed' : 'Sending — do not resend' }}</p>
       </article>
-      <nav aria-label="Conversation pages" *ngIf="pagination?.totalDocs > pagination?.limit"><pagination [pagination]="pagination" (pageChange)="loadThread($event)"></pagination></nav>
+      <nav aria-label="Conversation pages" *ngIf="pagination?.totalDocs > pagination?.limit"><pagination [pagination]="pagination" (pageSizeChange)="pageSize = $event; loadThread(1)" (pageChange)="loadThread($event)"></pagination></nav>
     </ng-container>
   </section>
   <section class="composer-section" *ngIf="canEdit" [formGroup]="composer">

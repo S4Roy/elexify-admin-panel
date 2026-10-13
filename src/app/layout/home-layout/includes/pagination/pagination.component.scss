@@ -1,102 +1,170 @@
+:host { display: block; }
+
 .pagination-container {
   display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  // Mobile drops .pagination-info entirely (see template), leaving only
-  // .pagination-controls in this container — center it instead of
-  // flex-start so the prev/next buttons sit in the middle of the bar
-  // instead of pinned to the left edge.
   align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  margin-top: 0.4rem;
-  background-color: var(--bg-surface);
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 12px 16px;
+  margin-top: 8px;
   border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.65rem 1rem;
-  }
-
-  .pagination-info {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-
-    b {
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-  }
-
-  .pagination-controls {
-    display: flex;
-    gap: 0.25rem;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-  }
+  border-radius: 12px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
+.pagination-info { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.pagination-info b { font-weight: 500; color: var(--text-primary); }
+.record-range {
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: var(--bg-surface-alt, #f8fafc);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pagination-actions { display: flex; align-items: center; gap: 12px; }
+.page-size-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  font-size: 12px;
+
+  select {
+    appearance: none;
+    width: 47px;
+    height: 34px;
+    padding: 0 16px 0 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  mat-icon { position: absolute; right: 8px; width: 16px; height: 16px; font-size: 16px; pointer-events: none; }
+  &:focus-within { outline: 2px solid #2563eb; outline-offset: 2px; }
+  select:focus { outline: 0; }
+}
+
+.pagination-controls, .page-numbers { display: flex; align-items: center; gap: 4px; }
 .page-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  padding: 0 0.5rem;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid transparent;
-  border-radius: 0.5rem;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+  transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  mat-icon { width: 18px; height: 18px; font-size: 18px; }
+  &:hover:not(:disabled) { background: var(--bg-surface-alt); color: var(--text-primary); }
+  &:disabled { opacity: 0.35; cursor: default; }
+  &:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+}
+.direction-btn { border-color: var(--border-color); }
+.page-number.active {
+  background: #2563eb;
+  color: #fff;
+  opacity: 1;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.18);
+}
+.page-ellipsis { display: inline-flex; align-items: center; justify-content: center; width: 24px; }
+.page-count { padding: 0 6px; color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+.page-count span { color: var(--text-secondary); font-weight: 400; }
 
-  mat-icon {
-    font-size: 18px;
-    height: 18px;
-    width: 18px;
+.page-jump-menu {
+  position: relative;
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker { display: none; }
+    &:hover { background: var(--bg-surface-alt); }
+    &:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+    mat-icon { width: 20px; height: 20px; font-size: 20px; }
   }
-
-  &:hover:not(:disabled) {
-    background-color: var(--bg-surface-alt);
+  &[open] summary { background: var(--bg-surface-alt); color: var(--text-primary); }
+}
+.page-jump-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  width: 200px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
+}
+.page-jump {
+  display: grid;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+  .page-total { color: var(--text-secondary); }
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    background: var(--bg-surface);
     color: var(--text-primary);
-  }
-
-  &:disabled {
-    color: var(--text-secondary);
-    opacity: 0.45;
-    cursor: not-allowed;
+    font: inherit;
+    &:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
   }
 }
-
-.page-number {
-  &.active {
-    background-color: #2563eb;
-    color: #ffffff;
-    border-color: #2563eb;
-  }
-
-  &.active:disabled {
-    color: #ffffff;
-    opacity: 1;
-  }
-}
-
-.page-ellipsis {
-  display: inline-flex;
+.jump-submit {
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+  mat-icon { width: 15px; height: 15px; font-size: 15px; }
+  &:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 }
+
+@media (max-width: 1024px) {
+  .pagination-container { padding: 10px 12px; }
+  .pagination-actions { gap: 8px; }
+}
+@media (max-width: 480px) {
+  .pagination-container { justify-content: center; }
+  .pagination-info { justify-content: center; width: 100%; font-size: 12px; }
+  .pagination-actions { justify-content: center; width: 100%; }
+  .page-btn { width: 34px; }
+}
+
+.page-error { color: #dc2626; font-size: 12px; line-height: 1.4; }

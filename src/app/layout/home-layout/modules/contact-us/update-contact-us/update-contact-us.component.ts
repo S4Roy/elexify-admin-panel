@@ -32,6 +32,7 @@ export class UpdateContactUsComponent implements OnInit, OnDestroy {
   changed = false;
   messages: any[] = [];
   pagination: any = null;
+  pageSize = 20;
   page = 1;
   mode: 'reply' | 'note' = 'reply';
   private requestId: string | null = null;
@@ -62,7 +63,7 @@ export class UpdateContactUsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.formGroup.disable({ emitEvent: false });
     this.threadError = '';
-    this.apiService.contactUsThread(this.data._id, page).pipe(takeUntil(this.destroy$)).subscribe({
+    this.apiService.contactUsThread(this.data._id, page, this.pageSize).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         if (page !== this.page) return;
         this.data = res.data.contact;

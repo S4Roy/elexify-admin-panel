@@ -28,7 +28,7 @@ describe('Contact enquiry conversation', () => {
     fixture.detectChanges();
   });
   it('loads the thread and retains the original customer message', () => {
-    expect(api.contactUsThread).toHaveBeenCalledWith(contact._id, 1);
+    expect(api.contactUsThread).toHaveBeenCalledWith(contact._id, 1, 20);
     expect(fixture.nativeElement.textContent).toContain('Original question');
   });
   it('sends a customer reply and clears the draft after acceptance', () => {
@@ -82,7 +82,7 @@ describe('Contact enquiry conversation', () => {
   });
   it('requests the selected conversation page', () => {
     component.loadThread(2);
-    expect(api.contactUsThread).toHaveBeenCalledWith(contact._id, 2);
+    expect(api.contactUsThread).toHaveBeenCalledWith(contact._id, 2, 20);
   });
   it('saves workflow changes without closing the conversation', () => {
     component.formGroup.patchValue({ status: 'pending', priority: 'urgent' });

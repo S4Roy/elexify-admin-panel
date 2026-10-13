@@ -47,6 +47,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   channel = '';
   payment = '';
   search = '';
+  pageSize = 25;
   page = 1;
 
   loading = false;
@@ -176,7 +177,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.syncUrl();
     const params = this.params();
     params.set('page', String(this.page));
-    params.set('limit', '25');
+    params.set('limit', String(this.pageSize));
     const type = this.type;
     this.apiService.report(type, params).subscribe({
       next: (res: any) => {

@@ -167,7 +167,7 @@ export class CategoriesComponent {
     return this.sortDirection === 'asc' ? 'sort-icon-up' : 'sort-icon-down';
   }
   sort(field: string): void {
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption = { ...Global.resetPaginationOptions(), limit: this.paginationOption.limit };
 
     if (this.sortKey === field) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';

@@ -33,6 +33,8 @@ export class ZohoBooksComponent implements OnInit {
   total = 0;
   filter = '';
   logPage = 1;
+  jobsPageSize = 50;
+  logsPageSize = 50;
   jobsPagination = { page: 1, limit: 50, totalDocs: 0, totalPages: 1 };
   logsPagination = { page: 1, limit: 50, totalDocs: 0, totalPages: 1 };
   reason = '';
@@ -106,9 +108,9 @@ export class ZohoBooksComponent implements OnInit {
   }
   retry(id: string): void { this.run(this.api.retry(id), () => this.loadJobs()); }
   loadJobs(): void {
-    this.api.jobs(this.page, this.filter).subscribe({ next: response => { this.jobs = response.data.jobs; this.total = response.data.total; this.jobsPagination = { page: this.page, limit: 50, totalDocs: this.total, totalPages: Math.max(1, Math.ceil(this.total / 50)) }; }, error: () => this.error = 'Unable to load sync jobs.' });
+    this.api.jobs(this.page, this.filter, this.jobsPageSize).subscribe({ next: response => { this.jobs = response.data.jobs; this.total = response.data.total; this.jobsPagination = { page: this.page, limit: this.jobsPageSize, totalDocs: this.total, totalPages: Math.max(1, Math.ceil(this.total / this.jobsPageSize)) }; }, error: () => this.error = 'Unable to load sync jobs.' });
   }
-  loadLogs(): void { this.api.logs(this.logPage).subscribe({ next: response => { this.logs = response.data.logs; this.logsPagination = { page: this.logPage, limit: 50, totalDocs: response.data.total, totalPages: Math.max(1, Math.ceil(response.data.total / 50)) }; }, error: () => this.error = 'Unable to load integration logs.' }); }
+  loadLogs(): void { this.api.logs(this.logPage, this.logsPageSize).subscribe({ next: response => { this.logs = response.data.logs; this.logsPagination = { page: this.logPage, limit: this.logsPageSize, totalDocs: response.data.total, totalPages: Math.max(1, Math.ceil(response.data.total / this.logsPageSize)) }; }, error: () => this.error = 'Unable to load integration logs.' }); }
   saveAccounting(): void {
     const metadata = this.accountingKind === 'contact' ? { ...(this.gstin ? { gstin: this.gstin } : {}), gst_treatment: this.gstTreatment } :
       { ...(this.hsn ? { hsn_sac: this.hsn } : {}), ...(this.unit ? { accounting_unit: this.unit } : {}), ...(this.taxId ? { zoho_tax_id: this.taxId } : {}) };

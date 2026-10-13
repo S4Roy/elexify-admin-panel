@@ -92,6 +92,6 @@
     <p *ngIf="request.review_note" class="mt-3 rounded-lg bg-gray-50 p-3 text-xs"><strong>Review note:</strong> {{ request.review_note }}</p>
     </div>
   </article>
-  <pagination *ngIf="pagination.totalDocs > 0" [pagination]="pagination" (pageChange)="changePage($event)"></pagination>
+  <pagination *ngIf="pagination.totalDocs > 0" [pagination]="pagination" (pageSizeChange)="pageSize = $event; changePage(1)" (pageChange)="changePage($event)"></pagination>
   </ng-container>
 </div>

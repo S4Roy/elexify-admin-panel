@@ -85,6 +85,7 @@ export class MenuListComponent implements OnInit {
   fetch() {
     this.loading = true;
     const params = new URLSearchParams();
+    params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
     }

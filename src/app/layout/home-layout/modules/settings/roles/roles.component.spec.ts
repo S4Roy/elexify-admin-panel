@@ -45,6 +45,14 @@ describe('RolesComponent permission editor', () => {
     component.rolePage = 1;
     expect(component.visibleRoles.length).toBe(1);
   });
+  it('uses the selected size for the client-side role list', () => {
+    component.roles = Array.from({ length: 63 }, (_, i) => ({ name: 'Role ' + i, description: '' } as any));
+    component.rolePageSize = 25;
+    component.rolePage = 3;
+    expect(component.visibleRoles.length).toBe(13);
+    expect(component.rolePagination.limit).toBe(25);
+    expect(component.rolePagination.totalPages).toBe(3);
+  });
   it('selects only permissions the current user can delegate', () => {
     component.selectAll();
     expect([...component.selected]).toEqual(['zoho_sync.view']);

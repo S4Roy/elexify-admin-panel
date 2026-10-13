@@ -95,6 +95,8 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
   sessionsError = '';
   sessionActionBusy = false;
   authEvents: any[] = [];
+  sessionPageSize = 5;
+  eventPageSize = 10;
   sessionPage = 1;
   eventPage = 1;
   eventPagination: PaginationOptions = { ...Global.resetPaginationOptions(), limit: 10 };
@@ -107,7 +109,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     this.sessionsError = '';
     this.sessionState = null;
     this.sessionPage = page;
-    this.apiService.customerSessions(id, page).pipe(takeUntil(this.destroy$)).subscribe({
+    this.apiService.customerSessions(id, page, this.sessionPageSize).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { if (id === this.customerId && page === this.sessionPage) { this.sessionState = res.data; this.sessionsLoading = false; } },
       error: () => { if (id === this.customerId && page === this.sessionPage) { this.sessionsError = 'Unable to load sessions. Please retry.'; this.sessionsLoading = false; } },
     });
@@ -120,7 +122,7 @@ export class CustomerDetailsComponent implements OnInit, OnDestroy {
     this.eventsLoading = true;
     this.eventsError = '';
     this.authEvents = [];
-    this.apiService.customerAuthEvents(id, page).pipe(takeUntil(this.destroy$)).subscribe({
+    this.apiService.customerAuthEvents(id, page, this.eventPageSize).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => { if (id === this.customerId && page === this.eventPage) { this.authEvents = res.data.docs; this.eventPagination = { ...res.data }; this.eventsLoading = false; } },
       error: () => { if (id === this.customerId && page === this.eventPage) { this.eventsError = 'Unable to load authentication events.'; this.eventsLoading = false; } },
     });

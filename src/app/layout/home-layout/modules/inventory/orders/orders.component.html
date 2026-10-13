@@ -194,6 +194,6 @@
 <ng-container *ngIf="!loading && !loadError && item_list.length">
   <pagination
     [pagination]="paginationOption"
-    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"
   ></pagination>
 </ng-container>

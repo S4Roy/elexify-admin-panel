@@ -77,7 +77,7 @@ export class StockAlertsComponent implements OnInit, OnDestroy {
     if (this.tab === tab) return;
     this.tab = tab;
     this.filterValues = { level: null, search_key: null };
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption = { ...Global.resetPaginationOptions(), limit: this.paginationOption.limit };
     this.updateFilterButton();
     this.fetchList();
   }

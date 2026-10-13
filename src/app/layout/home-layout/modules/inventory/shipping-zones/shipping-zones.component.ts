@@ -120,6 +120,7 @@ export class ShippingZonesComponent {
   }
   fetchZones() {
     let params = new URLSearchParams();
+    params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
     }

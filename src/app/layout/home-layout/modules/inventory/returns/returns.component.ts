@@ -48,6 +48,7 @@ export class ReturnsComponent implements OnInit, OnDestroy {
   clearFilter(): void { this.status = ''; this.page = 1; this.load(); }
   changePage(page: number): void { this.page = page; this.load(); }
 
+  pageSize = 20;
   page = 1;
   totalPages = 1;
   booking: Record<string, any> = {};
@@ -73,7 +74,7 @@ export class ReturnsComponent implements OnInit, OnDestroy {
     this.helper.setFilterButton(this.status ? 1 : 0);
     this.error = '';
     this.loading = true;
-    const params = new URLSearchParams({ page: String(this.page), limit: '20' });
+    const params = new URLSearchParams({ page: String(this.page), limit: String(this.pageSize) });
     if (this.status) params.set('status', this.status);
     this.listRequest = this.inventory.returnRequests(params).subscribe({
       next: (response: any) => { this.requests = response?.data?.docs ?? []; this.pagination = response?.data || {}; this.totalPages = response?.data?.totalPages || 1; this.loading = false; },

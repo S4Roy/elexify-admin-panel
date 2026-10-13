@@ -101,7 +101,7 @@
         </tbody>
       </table>
     </div>
-    <pagination *ngIf="rolePagination.totalDocs" [pagination]="rolePagination" (pageChange)="rolePage = $event">
+    <pagination *ngIf="rolePagination.totalDocs" [pagination]="rolePagination" (pageSizeChange)="rolePageSize = $event; rolePage = 1" (pageChange)="rolePage = $event">
     </pagination>
   </section>
   <section *ngIf="access.can('staff.view')" class="card space-y-4">
@@ -189,7 +189,7 @@
       </table>
     </div>
     <pagination *ngIf="staffPagination.totalDocs" [pagination]="staffPagination"
-      (pageChange)="staffPage = $event; loadStaff()"></pagination>
+      (pageSizeChange)="staffPageSize = $event; staffPage = 1; loadStaff()" (pageChange)="staffPage = $event; loadStaff()"></pagination>
   </section>
 </section>
 

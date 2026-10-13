@@ -39,7 +39,7 @@
       </table>
     </div>
     <ng-template #empty><div class="empty"><h3>No usage records found</h3><p>Try another search or date range. History appears when coupon usage is recorded for an order.</p></div></ng-template>
-    <pagination *ngIf="pagination.totalDocs > 0" [pagination]="pagination" (pageChange)="load($event)"></pagination>
+    <pagination *ngIf="pagination.totalDocs > 0" [pagination]="pagination" (pageSizeChange)="filters.limit = $event.toString(); load(1)" (pageChange)="load($event)"></pagination>
   </ng-container>
 </div>
 </section>

@@ -89,7 +89,7 @@
             <button type="button" class="session-button session-danger" *ngIf="helperService.can('customers.update')" [disabled]="sessionActionBusy" (click)="revokeSession(session.id)" [attr.aria-label]="'Sign out ' + session.deviceName">Sign out</button>
           </article>
           <nav aria-label="Device pages" *ngIf="sessionState.totalDocs > sessionState.limit && !sessionActionBusy">
-            <pagination [pagination]="sessionState" (pageChange)="fetchSessions($event, false)"></pagination>
+            <pagination [pagination]="sessionState" (pageSizeChange)="sessionPageSize = $event; fetchSessions(1, false)" (pageChange)="fetchSessions($event, false)"></pagination>
           </nav>
           <p class="session-footnote"><mat-icon aria-hidden="true">info_outline</mat-icon>Online means recently active. Closing the app or browser does not sign out.</p>
         </ng-container>
@@ -102,7 +102,7 @@
           <div class="session-empty" *ngIf="!authEvents.length"><mat-icon aria-hidden="true">history</mat-icon><strong>No authentication events</strong><p>New security activity will appear here.</p></div>
           <ol class="auth-timeline"><li *ngFor="let event of authEvents"><span class="event-dot" aria-hidden="true"></span><div><strong>{{ eventLabel(event.eventType) }}</strong><p *ngIf="event.reason" class="event-reason">{{ event.reason }}</p></div><time>{{ event.createdAt | date:'d MMM y, h:mm a' }}</time></li></ol>
           <nav aria-label="Authentication history pages" *ngIf="eventPagination.totalDocs > eventPagination.limit">
-            <pagination [pagination]="eventPagination" (pageChange)="fetchAuthEvents($event)"></pagination>
+            <pagination [pagination]="eventPagination" (pageSizeChange)="eventPageSize = $event; fetchAuthEvents(1)" (pageChange)="fetchAuthEvents($event)"></pagination>
           </nav>
         </ng-container>
       </section>
@@ -209,7 +209,7 @@
           </table>
         </div>
         <div class="px-4 pb-3">
-          <pagination [pagination]="historyPagination" (pageChange)="onHistoryPageChange($event)"></pagination>
+          <pagination [pagination]="historyPagination" (pageSizeChange)="historyPagination.limit = $event; onHistoryPageChange(1)" (pageChange)="onHistoryPageChange($event)"></pagination>
         </div>
       </section>
 

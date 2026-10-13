@@ -93,7 +93,7 @@ export class StocksComponent {
       )
       .subscribe((data: any) => {
         this.transactions = [];
-        this.paginationOption = Global.resetPaginationOptions();
+        this.paginationOption = { ...Global.resetPaginationOptions(), limit: this.paginationOption.limit };
         this.filterOption = Global.resetTableFilterOptions();
         this.filterOption.search_key = data?.term ?? '';
         this.fetchTransactions();
@@ -102,6 +102,7 @@ export class StocksComponent {
   }
   fetchTransactions() {
     let params = new URLSearchParams();
+    params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) {
       params.set('page', String(this.paginationOption.page));
     }
@@ -113,7 +114,7 @@ export class StocksComponent {
     }
     this.inventoryService.stockTransactions(params).subscribe({
       next: (res: any) => {
-        this.transactions = [...this.transactions, ...res?.data?.docs];
+        this.transactions = res?.data?.docs ?? [];
         this.paginationOption = {
           ...res?.data,
         };

@@ -115,4 +115,4 @@
   </table>
 </div>
 
-<pagination *ngIf="paginationOption" [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
+<pagination *ngIf="paginationOption" [pagination]="paginationOption" (pageSizeChange)="pageSize = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>

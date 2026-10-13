@@ -139,5 +139,5 @@
     </ng-template>
   </div>
 
-  <pagination [pagination]="paginationOption" (pageChange)="onPageChange($event)"></pagination>
+  <pagination [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
 </div>

@@ -1,73 +1,55 @@
 <div class="pagination-container">
-  <!-- Info Display — desktop only. On mobile the "Page X of Y" text was
-       redundant with the prev/next controls right below it and just ate
-       vertical space, so it's dropped rather than shown. -->
-  <div class="pagination-info" *ngIf="device.isDesktop()">
-    Showing
-    <b>{{ (pagination.page - 1) * pagination.limit + 1 }}</b>
-    –
-    <b>{{
-      pagination.page === pagination.totalPages
-        ? pagination.totalDocs
-        : pagination.page * pagination.limit
-    }}</b>
-    of <b>{{ pagination.totalDocs }}</b> records
+  <div class="pagination-info" role="status" aria-live="polite">
+    <span class="record-range">{{ rangeStart | number }}–{{ rangeEnd | number }}</span>
+    <span>of <b>{{ (pagination.totalDocs || 0) | number }}</b> records</span>
   </div>
 
-  <!-- Pagination Controls -->
-  <div class="pagination-controls" *ngIf="pagination.totalDocs > pagination.limit">
-    <button
-      class="page-btn"
-      matTooltip="First Page"
-      [disabled]="value === 1"
-      (click)="selectPage(1)"
-    >
-      <mat-icon>first_page</mat-icon>
-    </button>
+  <div class="pagination-actions">
+    <label class="page-size-control" matTooltip="Rows per page">
+      <span>Rows</span>
+      <select aria-label="Rows per page" [ngModel]="pageSize"
+        [ngModelOptions]="{ standalone: true }" (ngModelChange)="selectPageSize($event)">
+        <option *ngFor="let size of availablePageSizes" [ngValue]="size">{{ size }}</option>
+      </select>
+      <mat-icon aria-hidden="true">expand_more</mat-icon>
+    </label>
 
-    <button
-      class="page-btn"
-      matTooltip="Previous Page"
-      [disabled]="value === 1"
-      (click)="selectPage(value - 1)"
-    >
-      <mat-icon>chevron_left</mat-icon>
-    </button>
+    <div class="pagination-controls" *ngIf="pagination.totalDocs > pagination.limit">
+      <button type="button" class="page-btn direction-btn" matTooltip="Previous Page"
+        aria-label="Previous Page" [disabled]="value === 1" (click)="selectPage(value - 1)">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <div class="page-numbers" *ngIf="device.isDesktop()">
+        <ng-container *ngFor="let page of visiblePages">
+          <span class="page-ellipsis" *ngIf="page === '…'">…</span>
+          <button *ngIf="page !== '…'" type="button" class="page-btn page-number"
+            [class.active]="value === page" [attr.aria-current]="value === page ? 'page' : null"
+            [attr.aria-label]="'Page ' + page" [disabled]="value === page" (click)="selectPage($any(page))">
+            {{ page }}
+          </button>
+        </ng-container>
+      </div>
+      <span class="page-count" *ngIf="!device.isDesktop()">{{ value }} <span>/ {{ pagination.totalPages | number }}</span></span>
+      <button type="button" class="page-btn direction-btn" matTooltip="Next Page"
+        aria-label="Next Page" [disabled]="value === pagination.totalPages" (click)="selectPage(value + 1)">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
 
-    <!-- Only show page numbers on desktop -->
-    <ng-container *ngIf="device.isDesktop()">
-      <ng-container *ngFor="let page of pageItems">
-        <span *ngIf="page === ELLIPSIS" class="page-ellipsis">{{
-          ELLIPSIS
-        }}</span>
-        <button
-          *ngIf="page !== ELLIPSIS"
-          class="page-btn page-number"
-          [class.active]="value === page"
-          [disabled]="value === page"
-          (click)="selectPage($any(page))"
-        >
-          {{ page }}
-        </button>
-      </ng-container>
-    </ng-container>
-
-    <button
-      class="page-btn"
-      matTooltip="Next Page"
-      [disabled]="value === pagination.totalPages"
-      (click)="selectPage(value + 1)"
-    >
-      <mat-icon>chevron_right</mat-icon>
-    </button>
-
-    <button
-      class="page-btn"
-      matTooltip="Last Page"
-      [disabled]="value === pagination.totalPages"
-      (click)="selectPage(pagination.totalPages)"
-    >
-      <mat-icon>last_page</mat-icon>
-    </button>
+    <details class="page-jump-menu" *ngIf="pagination.totalDocs > pagination.limit" #jumpMenu>
+      <summary aria-label="Jump to a page" matTooltip="Jump to page"><mat-icon>more_horiz</mat-icon></summary>
+      <div class="page-jump-panel">
+        <label class="page-jump">
+          <span>Go to page <span class="page-total">(1–{{ pagination.totalPages | number }})</span></span>
+          <input #pageInput type="text" inputmode="numeric" autocomplete="off" [value]="value"
+            aria-label="Page number" [attr.aria-invalid]="pageError ? true : null"
+            (input)="pageError = ''"
+            (keydown.enter)="$event.preventDefault(); submitPageJump(pageInput)"
+            (keydown.escape)="pageInput.value = value.toString(); pageError = ''; jumpMenu.open = false" />
+          <span class="page-error" *ngIf="pageError" role="alert">{{ pageError }}</span>
+        </label>
+        <button type="button" class="jump-submit" (click)="submitPageJump(pageInput)">Go <mat-icon>arrow_forward</mat-icon></button>
+      </div>
+    </details>
   </div>
 </div>

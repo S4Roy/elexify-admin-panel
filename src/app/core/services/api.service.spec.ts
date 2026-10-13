@@ -41,4 +41,12 @@ describe('Customer account pagination requests', () => {
 
     http.expectOne(`${baseUrl}admin/customers/customer-id/sessions?page=1`).flush({ data: { docs: [] } });
   });
+  it('sends selected page sizes while retaining existing default request URLs', () => {
+    api.customerSessions('customer-id', 1, 25).subscribe();
+    http.expectOne(`${baseUrl}admin/customers/customer-id/sessions?page=1&limit=25`).flush({ data: {} });
+    api.customerAuthEvents('customer-id', 1, 50).subscribe();
+    http.expectOne(`${baseUrl}admin/customers/customer-id/auth-events?page=1&limit=50`).flush({ data: {} });
+    api.contactUsThread('contact-id', 1, 100).subscribe();
+    http.expectOne(`${baseUrl}admin/contact-us/contact-id/thread?page=1&limit=100`).flush({ data: {} });
+  });
 });

@@ -75,6 +75,8 @@ export class RolesComponent implements OnInit, OnDestroy {
   private editorRef?: MatDialogRef<unknown>;
   @ViewChild('roleDialog') roleDialog!: TemplateRef<unknown>;
   @ViewChild('staffDialog') staffDialog!: TemplateRef<unknown>;
+  rolePageSize = 10;
+  staffPageSize = 50;
   rolePage = 1;
   roleSearch = '';
   staffPagination = { page: 1, limit: 50, totalDocs: 0, totalPages: 1 };
@@ -88,15 +90,15 @@ export class RolesComponent implements OnInit, OnDestroy {
   get rolePagination() {
     return {
       page: this.rolePage,
-      limit: 10,
+      limit: this.rolePageSize,
       totalDocs: this.filteredRoles.length,
-      totalPages: Math.max(1, Math.ceil(this.filteredRoles.length / 10)),
+      totalPages: Math.max(1, Math.ceil(this.filteredRoles.length / this.rolePageSize)),
     };
   }
   get visibleRoles() {
     return this.filteredRoles.slice(
-      (this.rolePage - 1) * 10,
-      this.rolePage * 10,
+      (this.rolePage - 1) * this.rolePageSize,
+      this.rolePage * this.rolePageSize,
     );
   }
   openDialog(template: TemplateRef<unknown>, width: string) {
@@ -308,7 +310,7 @@ export class RolesComponent implements OnInit, OnDestroy {
       const result = (
         await firstValueFrom(
           this.http.get(
-            `admin/role/staff?paginated=true&page=${this.staffPage}&search=${encodeURIComponent(this.staffSearch)}`,
+            `admin/role/staff?paginated=true&page=${this.staffPage}&limit=${this.staffPageSize}&search=${encodeURIComponent(this.staffSearch)}`,
           ),
         )
       ).data;
