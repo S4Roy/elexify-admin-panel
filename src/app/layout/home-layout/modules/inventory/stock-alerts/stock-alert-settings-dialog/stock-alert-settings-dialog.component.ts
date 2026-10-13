@@ -15,7 +15,7 @@ import { ApiService } from 'app/core/services/api.service';
   imports: [MatDialogModule, NgIf, FormsModule, MatFormFieldModule, MatInputModule, MatSlideToggleModule],
   template: `
     <h2 mat-dialog-title>Stock alert settings</h2>
-    <mat-dialog-content>
+    <mat-dialog-content class="dialog-body">
       <div *ngIf="loading" class="text-center text-gray-500 py-6">Loading…</div>
       <div *ngIf="!loading && form" class="flex flex-col gap-4">
         <div class="rounded-lg border p-3">

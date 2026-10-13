@@ -16,7 +16,7 @@ export interface SendCartReminderDialogData {
   imports: [MatDialogModule, NgIf, CurrencyPipe, FormsModule, MatFormFieldModule, MatInputModule],
   template: `
     <h2 mat-dialog-title>Send cart reminder</h2>
-    <mat-dialog-content>
+    <mat-dialog-content class="dialog-body">
       <p class="text-sm text-gray-700 mb-3" *ngIf="data.items.length === 1">
         Remind <strong>{{ data.items[0]?.customer?.name || 'this customer' }}</strong> about their cart worth
         <strong>{{ data.items[0]?.cart_value | currency : 'INR' }}</strong>.

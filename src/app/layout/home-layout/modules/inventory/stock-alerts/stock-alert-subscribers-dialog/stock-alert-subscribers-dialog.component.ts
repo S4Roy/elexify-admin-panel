@@ -13,7 +13,7 @@ const CHANNEL_LABELS: Record<string, string> = { email: 'Email', whatsapp: 'What
   imports: [MatDialogModule, NgIf, NgFor, DatePipe, RouterLink],
   template: `
     <h2 mat-dialog-title>Notify-me requests</h2>
-    <mat-dialog-content>
+    <mat-dialog-content class="dialog-body">
       <p class="text-sm text-gray-700 mb-3">
         <strong>{{ data.item?.name }}</strong><span *ngIf="data.item?.variation_name"> · {{ data.item.variation_name }}</span>
       </p>

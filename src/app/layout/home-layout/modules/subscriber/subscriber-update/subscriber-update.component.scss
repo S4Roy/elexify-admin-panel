@@ -1,0 +1,40 @@
+.subscriber-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+
+  dt {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subscriber-note {
+  font-size: 13px;
+  color: #475569;
+  margin: 0 0 16px;
+}
+
+.subscriber-error {
+  font-size: 13px;
+  color: #dc2626;
+  margin: 8px 0 0;
+}
+
+:host .mat-mdc-dialog-actions {
+  padding: 8px 24px 20px;
+}

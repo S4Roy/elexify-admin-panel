@@ -1,5 +1,25 @@
 <h2 mat-dialog-title>Manage subscription</h2>
-<mat-dialog-content><p>{{ data.email }}</p><p>Current status: {{ data.status }}</p><p>Mark this contact as unsubscribed, or suppress it from marketing. A fresh customer opt-in is required to subscribe again.</p>
-<mat-form-field appearance="outline"><mat-label>New status</mat-label><mat-select [formControl]="status"><mat-option value="unsubscribed">Unsubscribed</mat-option><mat-option value="suppressed">Suppressed</mat-option></mat-select><mat-error>Select a status</mat-error></mat-form-field>
-<p *ngIf="error" role="alert">{{ error }}</p></mat-dialog-content>
-<mat-dialog-actions align="end"><button mat-button mat-dialog-close [disabled]="saving">Cancel</button><button mat-flat-button color="primary" [disabled]="saving || status.invalid || !access.can('subscribers.update')" (click)="save()">{{ saving ? 'Saving…' : 'Save changes' }}</button></mat-dialog-actions>
+<mat-dialog-content class="dialog-body">
+  <dl class="subscriber-summary">
+    <div><dt>Email</dt><dd>{{ data.email }}</dd></div>
+    <div><dt>Current status</dt><dd class="capitalize">{{ data.status }}</dd></div>
+  </dl>
+  <p class="subscriber-note">
+    Mark this contact as unsubscribed, or suppress it from marketing. A fresh customer opt-in is required to subscribe again.
+  </p>
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>New status</mat-label>
+    <mat-select [formControl]="status">
+      <mat-option value="unsubscribed">Unsubscribed</mat-option>
+      <mat-option value="suppressed">Suppressed</mat-option>
+    </mat-select>
+    <mat-hint>Unsubscribed: the contact opted out. Suppressed: never send (e.g. bounced or complaint).</mat-hint>
+  </mat-form-field>
+  <p *ngIf="error" role="alert" class="subscriber-error">{{ error }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close [disabled]="saving">Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="saving || status.invalid || !access.can('subscribers.update')" (click)="save()">
+    {{ saving ? 'Saving…' : 'Save changes' }}
+  </button>
+</mat-dialog-actions>

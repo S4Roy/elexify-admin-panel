@@ -1420,6 +1420,15 @@ textarea.mat-mdc-input-element {
 .mat-mdc-dialog-container .mat-mdc-dialog-content {
   padding: 0 !important;
 }
+// Opt-in standard spacing for simple form/detail dialogs — the reset above
+// leaves dialog content flush against the dialog edges.
+.mat-mdc-dialog-container .mat-mdc-dialog-content.dialog-body {
+  padding: 4px 24px 8px !important;
+
+  @media (max-width: 600px) {
+    padding: 4px 16px 8px !important;
+  }
+}
 .mat-h2,
 .mat-headline-6,
 .mat-typography .mat-h2,
