@@ -9,7 +9,7 @@
   </p>
   <mat-form-field appearance="outline" class="w-full">
     <mat-label>New status</mat-label>
-    <mat-select [formControl]="status">
+    <mat-select [formControl]="status" [errorStateMatcher]="statusErrorState">
       <mat-option value="unsubscribed">Unsubscribed</mat-option>
       <mat-option value="suppressed">Suppressed</mat-option>
     </mat-select>

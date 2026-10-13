@@ -173,7 +173,7 @@ export class SubscriberComponent {
   }
   updateStatus(item: any) {
     if (!this.permissions.includes('edit')) return;
-    this.dialog.open(SubscriberUpdateComponent, { data: item, width: '520px', maxWidth: '95vw' })
+    this.dialog.open(SubscriberUpdateComponent, { data: item, width: '520px', maxWidth: '95vw', autoFocus: 'dialog' })
       .afterClosed().pipe(takeUntil(this.destroy$)).subscribe(changed => {
         if (changed) this.fetchSubscribers();
       });

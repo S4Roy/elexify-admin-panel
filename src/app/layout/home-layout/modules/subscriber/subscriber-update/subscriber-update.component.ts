@@ -1,3 +1,4 @@
+import { ErrorStateMatcher } from '@angular/material/core';
 import { Component, Inject } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -16,6 +17,7 @@ import { PermissionService } from 'app/core/services/permission.service';
 })
 export class SubscriberUpdateComponent {
   status = new FormControl('', { nonNullable: true, validators: [Validators.required] });
+  readonly statusErrorState: ErrorStateMatcher = { isErrorState: control => Boolean(control?.invalid && control?.touched) };
   saving = false;
   error = '';
   constructor(@Inject(MAT_DIALOG_DATA) public data: any, private dialogRef: MatDialogRef<SubscriberUpdateComponent>,
