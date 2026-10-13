@@ -138,4 +138,23 @@ describe('Pagination page sizes', () => {
     expect(fixture.componentInstance.value).toBe(7);
     expect(menu.open).toBeFalse();
   });
+  it('prevents duplicate navigation and resizing while the parent is loading', async () => {
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const page = spyOn(fixture.componentInstance.pageChange, 'emit');
+    const size = spyOn(fixture.componentInstance.pageSizeChange, 'emit');
+    fixture.componentInstance.selectPage(2);
+    fixture.componentInstance.selectPageSize(25);
+    expect(page).not.toHaveBeenCalled();
+    expect(size).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('select').disabled).toBeTrue();
+  });
+  it('omits the jump menu when numbered buttons cover every page', () => {
+    fixture.componentRef.setInput('pagination', { page: 1, limit: 20, totalDocs: 23, totalPages: 2 });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('details')).toBeNull();
+    expect(fixture.componentInstance.visiblePages).toEqual([1, 2]);
+  });
 });

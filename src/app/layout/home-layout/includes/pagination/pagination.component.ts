@@ -26,6 +26,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   styleUrl: './pagination.component.scss',
 })
 export class PaginationComponent implements OnChanges {
+  @Input() embedded = false;
+  @Input() disabled = false;
   @Input() pagination: any = Global.resetPaginationOptions();
   @Input() pageSizeOptions: readonly number[] = [10, 25, 50, 100];
   @Output() pageSizeChange = new EventEmitter<number>();
@@ -43,6 +45,7 @@ export class PaginationComponent implements OnChanges {
 
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['disabled'] && this.disabled && this.jumpMenu) this.jumpMenu.nativeElement.open = false;
     if (changes['pagination']) {
       // Reset current page if pagination input changes
       this.value = this.pagination.page || 1;
@@ -85,13 +88,14 @@ export class PaginationComponent implements OnChanges {
 
   selectPageSize(rawSize: string | number): void {
     const size = Number(rawSize);
-    if (!this.availablePageSizes.includes(size) || size === this.pageSize) return;
+    if (this.disabled || !this.availablePageSizes.includes(size) || size === this.pageSize) return;
     // The parent owns the limit and reload. Emit once to avoid duplicate requests.
     this.value = 1;
     this.pageSizeChange.emit(size);
   }
 
   submitPageJump(input: HTMLInputElement): void {
+    if (this.disabled) return;
     const text = input.value.trim();
     const page = Number(text);
     if (!/^\d+$/.test(text) || !Number.isSafeInteger(page) || page < 1 || page > this.pagination.totalPages) {
@@ -111,7 +115,7 @@ export class PaginationComponent implements OnChanges {
   }
 
   public selectPage(page: number): void {
-    if (!Number.isSafeInteger(page) || page < 1 || page > this.pagination.totalPages || page === this.value) return;
+    if (this.disabled || !Number.isSafeInteger(page) || page < 1 || page > this.pagination.totalPages || page === this.value) return;
 
     this.value = page;
     this.pageChange.emit(this.value);

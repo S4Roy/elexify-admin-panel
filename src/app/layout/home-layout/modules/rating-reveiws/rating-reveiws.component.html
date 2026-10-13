@@ -1,59 +1,71 @@
-<p *ngIf="loading" role="status" class="p-4 text-sm text-gray-500">Loading reviews…</p>
-<div *ngIf="loadError" role="alert" class="p-4 text-sm">
-  Reviews could not be loaded. <button type="button" class="underline" (click)="fetchRating()">Try again</button>
+<p *ngIf="loading" role="status" class="review-feedback">Loading reviews…</p>
+<div *ngIf="loadError" role="alert" class="review-feedback review-error">
+  Reviews could not be loaded. <button type="button" (click)="fetchRating()">Try again</button>
 </div>
-<div class="table-wrapper" [attr.aria-busy]="loading">
-  <table class="table-base">
-    <thead class="">
-      <tr class="">
-        <th scope="col"></th>
-        <th scope="col">Customer</th>
-        <th scope="col">Product</th>
-        <th scope="col">Reviews</th>
-        <th scope="col">Rating</th>
-        <th scope="col" class="text-center">Status</th>
-        <th class="text-center">Action</th>
-      </tr>
-    </thead>
+<div class="reviews-card">
+  <div class="review-toolbar">
+    <div class="review-tabs" role="group" aria-label="Review status">
+      <button *ngFor="let status of reviewStatuses" type="button" [disabled]="loading"
+        [class.selected]="selectedReviewStatus === status.value" [attr.aria-pressed]="selectedReviewStatus === status.value"
+        (click)="selectReviewStatus(status.value)">{{ status.label }}</button>
+    </div>
+    <span class="review-count">{{ paginationOption.totalDocs }} reviews</span>
+  </div>
+<div class="table-wrapper reviews-wrapper" [attr.aria-busy]="loading">
+  <table class="table-base reviews-table">
+    <colgroup><col class="customer-col"><col class="product-col"><col class="review-col"><col class="status-col"><col class="actions-col"></colgroup>
+    <thead><tr>
+      <th scope="col">Customer</th><th scope="col">Product</th><th scope="col">Customer feedback</th><th scope="col">Status</th><th scope="col" class="text-center">Actions</th>
+    </tr></thead>
     <tbody>
-      <ng-container *ngFor="let item of item_list">
-        <tr>
-          <td>
-            <img *ngIf="item?.image?.url" [src]="item?.image?.url" alt="Image" loading="lazy" />
-          </td>
-          <td>{{ item?.user?.name }} <span *ngIf="item?.verified_purchase" class="text-xs text-green-700">Verified Purchase</span> <span *ngIf="item?.imported_from_backup" class="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800" title="Created by the WooCommerce backup import">Imported</span></td>
-          <td>{{ item?.product?.name }}</td>
-          <td>
-            <strong *ngIf="item.title">{{ item.title }}</strong>
-            <div [appReadMoreClamp]="110" readMoreLabel="Read More" readLessLabel="Read Less">{{ item.description }}</div>
-            <div class="flex flex-wrap gap-2">
-              <a *ngFor="let media of item.media" [href]="media.url" target="_blank" rel="noopener noreferrer" aria-label="Open review attachment">
-                <img *ngIf="media.type === 'image'" [src]="media.url" alt="Review attachment" loading="lazy" class="h-12 w-12 object-cover" />
-                <span *ngIf="media.type === 'video'">View video</span>
-              </a>
+      <tr *ngFor="let item of item_list; trackBy: trackReview">
+        <td>
+          <div class="customer-cell">
+            <span class="customer-avatar" aria-hidden="true">{{ initials(item?.user?.name) }}</span>
+            <div class="customer-details">
+              <span class="customer-name">{{ item?.user?.name || 'Customer unavailable' }}</span>
+              <div class="customer-badges">
+                <span *ngIf="item?.verified_purchase" class="verified-badge"><mat-icon aria-hidden="true">verified</mat-icon>Verified purchase</span>
+                <span *ngIf="item?.imported_from_backup" class="imported-badge" title="Created by the WooCommerce backup import">Imported</span>
+              </div>
+              <time *ngIf="item?.created_at" class="review-date">{{ item.created_at | date:'mediumDate':'+0530' }}</time>
             </div>
-          </td>
-          <td>{{ item?.rating }}</td>
-          <td class="text-center">
-            <button [disabled]="!permissions.includes('edit')" type="button" class="table-status cursor-pointer" [class]="item?.status"
-              (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + item?.status">
-              {{ item?.status }}
-            </button>
-          </td>
-          <td class="text-center">
-            <app-menu (deleteItem)="deleteItem($event)"
-              [delete]="permissions.includes('delete') ? item : null"></app-menu>
-          </td>
-        </tr>
-      </ng-container>
-      <ng-container *ngIf="!loading && !loadError && !item_list?.length">
-        <tr>
-          <td class="text-center" colspan="7"><app-empty-state message="No Items Found"></app-empty-state></td>
-        </tr>
-      </ng-container>
+          </div>
+        </td>
+        <td>
+          <div class="product-cell">
+            <img *ngIf="item?.product_images?.[0]?.url" [src]="item.product_images[0].url" alt="" loading="lazy" class="product-thumb" />
+            <span class="product-name" [title]="item?.product?.name || ''">{{ item?.product?.name || 'Product unavailable' }}</span>
+          </div>
+        </td>
+        <td>
+          <div *ngIf="ratingValue(item.rating) !== null; else noRating" class="rating-display" role="img" [attr.aria-label]="ratingValue(item.rating) + ' out of 5 stars'">
+            <span class="rating-score">{{ ratingValue(item.rating) }}<span>/5</span></span>
+            <span class="rating-stars" aria-hidden="true"><mat-icon *ngFor="let star of stars">{{ star <= $any(ratingValue(item.rating)) ? 'star' : star - 0.5 <= $any(ratingValue(item.rating)) ? 'star_half' : 'star_border' }}</mat-icon></span>
+          </div>
+          <ng-template #noRating><span class="no-review">Unrated</span></ng-template>
+          <strong *ngIf="item.title?.trim()" class="review-title">{{ item.title }}</strong>
+          <div *ngIf="item.description?.trim()" class="review-description" [appReadMoreClamp]="140" readMoreLabel="Read more" readLessLabel="Show less">{{ item.description }}</div>
+          <span *ngIf="!item.title?.trim() && !item.description?.trim()" class="no-review">No written review</span>
+          <div class="review-attachments" *ngIf="item.media?.length">
+            <a *ngFor="let media of item.media" [href]="media.url" target="_blank" rel="noopener noreferrer" aria-label="Open review attachment">
+              <img *ngIf="media.type === 'image'" [src]="media.url" alt="Review attachment" loading="lazy" />
+              <span *ngIf="media.type === 'video'" class="video-attachment"><mat-icon aria-hidden="true">play_circle</mat-icon>Video</span>
+            </a>
+          </div>
+        </td>
+        <td>
+          <button [disabled]="!permissions.includes('edit')" type="button" class="review-status"
+            [class.status-approved]="item.status === 'approved'" [class.status-pending]="item.status === 'pending'" [class.status-rejected]="item.status === 'rejected'"
+            (click)="updateStatus(item)" [attr.aria-label]="'Change status: ' + (item.status || 'Unknown')">
+            <span class="status-dot" aria-hidden="true"></span>{{ (item.status || 'Unknown') | titlecase }}
+          </button>
+        </td>
+        <td class="text-center"><app-menu (deleteItem)="deleteItem($event)" [delete]="permissions.includes('delete') ? item : null"></app-menu></td>
+      </tr>
+      <tr *ngIf="!loading && !loadError && !item_list?.length"><td class="text-center" colspan="5"><app-empty-state message="No reviews match your filters"></app-empty-state></td></tr>
     </tbody>
   </table>
 </div>
-<ng-container>
-  <pagination [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
-</ng-container>
+<pagination [embedded]="true" [pagination]="paginationOption" [disabled]="loading" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
+</div>

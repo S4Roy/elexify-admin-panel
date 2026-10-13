@@ -1,7 +1,7 @@
 import { inject as injectPermissions } from '@angular/core';
 import { PermissionService } from 'app/core/services/permission.service';
 import { Component } from '@angular/core';
-import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, TitleCasePipe, NgFor, NgIf } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from 'app/core/services/api.service';
@@ -28,6 +28,8 @@ import { FilterDrawerComponent } from '../../includes/filter-drawer/filter-drawe
     MenuComponent,
     NgFor,
     NgIf,
+    DatePipe,
+    TitleCasePipe,
     PaginationComponent,
     MatIconModule,
     ReadMoreClampDirective,
@@ -58,7 +60,7 @@ export class RatingReveiwsComponent {
     private route: ActivatedRoute,
     private toastr: ToastrService
   ) {
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption = { ...Global.resetPaginationOptions(), limit: 20 };
     this.filterOption = Global.resetTableFilterOptions();
     combineLatest([
       this.route.paramMap,
@@ -159,7 +161,7 @@ export class RatingReveiwsComponent {
     this.loading = true;
     this.loadError = false;
     let params = new URLSearchParams();
-    params.set("limit", "20");
+    params.set('limit', String(this.paginationOption.limit));
     if (this.filterValues['product_id']) params.set('product_id', this.filterValues['product_id'].trim());
     if (this.filterValues['verified_purchase']) params.set('verified_purchase', this.filterValues['verified_purchase']);
     if (this.filterValues['import_source']) params.set('import_source', this.filterValues['import_source']);
@@ -211,6 +213,39 @@ export class RatingReveiwsComponent {
       error: (err: any) => {},
     });
   }
+  readonly reviewStatuses = [
+    { value: '', label: 'All reviews' }, { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Approved' }, { value: 'rejected', label: 'Rejected' },
+  ];
+
+  get selectedReviewStatus(): string | null {
+    const statuses = this.filterValues['status'] || [];
+    return statuses.length === 0 ? '' : statuses.length === 1 ? statuses[0] : null;
+  }
+
+  selectReviewStatus(status: string): void {
+    if (this.loading || status === this.selectedReviewStatus) return;
+    this.filterValues['status'] = status ? [status] : [];
+    this.filterOption.status = status || null;
+    this.paginationOption.page = 1;
+    this.fetchRating();
+    this.updateFilterButton();
+  }
+
+  readonly stars = [1, 2, 3, 4, 5];
+
+  ratingValue(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const rating = Number(value);
+    return Number.isFinite(rating) && rating >= 1 && rating <= 5 ? rating : null;
+  }
+
+  initials(name: string | null | undefined): string {
+    return (name || 'Customer').trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase();
+  }
+
+  trackReview(_: number, item: any): string { return item._id; }
+
   onPageChange(data: any) {
     this.paginationOption.page = data;
     this.fetchRating();
