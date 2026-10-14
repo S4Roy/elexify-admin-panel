@@ -139,7 +139,7 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
           .filter(term => term && !this.counts.has(term))
           .slice(0, MAX_ALTERNATIVES + 1);
         return terms.length
-          ? this.apiService.previewSearchSynonym(terms).pipe(catchError(() => of({ failed: true })))
+          ? this.apiService.previewSearchSynonym(terms, true).pipe(catchError(() => of({ failed: true })))
           : of(null);
       }),
       takeUntil(this.destroy$),
@@ -160,7 +160,7 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
         this.suggestions = suggestions;
         const missing = suggestions.filter(s => !this.counts.has(s));
         return missing.length
-          ? this.apiService.previewSearchSynonym(missing).pipe(catchError(() => of(null)))
+          ? this.apiService.previewSearchSynonym(missing, true).pipe(catchError(() => of(null)))
           : of(null);
       }),
       takeUntil(this.destroy$),

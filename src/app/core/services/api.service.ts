@@ -335,8 +335,9 @@ export class ApiService {
   suggestSearchSynonyms(term: string) {
     return this.httpService.get(`admin/operations/search-synonyms/suggest?term=${encodeURIComponent(term)}`);
   }
-  previewSearchSynonym(terms: string[]) {
-    return this.httpService.post(`admin/operations/search-synonyms/preview`, { terms });
+  // exact: skip the storefront's zero-result spelling fallback and count only literal matches.
+  previewSearchSynonym(terms: string[], exact = false) {
+    return this.httpService.post(`admin/operations/search-synonyms/preview`, { terms, exact });
   }
   createSearchSynonym(payload: { term: string; alternatives: string[] }) {
     return this.httpService.post(`admin/operations/search-synonyms`, payload);
