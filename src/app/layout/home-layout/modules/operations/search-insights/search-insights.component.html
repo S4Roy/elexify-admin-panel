@@ -16,6 +16,26 @@
   </p>
   <p *ngIf="filterValues['event_type'] === 'legacy'" class="text-sm text-gray-500 mb-1">Legacy requests include autocomplete fragments. Platform and search scope were not recorded.</p>
 
+  <section class="chart-card trend-card mt-3" aria-labelledby="trend-title">
+    <div class="flex items-baseline justify-between gap-2 flex-wrap">
+      <h2 id="trend-title" class="text-sm font-semibold">{{ showsResults ? 'Searches per day' : activityLabel + ' per day' }}</h2>
+      <span class="text-xs text-gray-500">IST · all matching queries</span>
+    </div>
+    <p *ngIf="trendError" class="text-sm text-gray-500 py-6 text-center">Could not load the daily trend. <button type="button" class="text-primary" (click)="fetchTrend()">Retry</button></p>
+    <p *ngIf="!trendError && trendDays.length && !summary.searches" class="text-sm text-gray-500 py-6 text-center">No activity in this selection.</p>
+    <highcharts-chart *ngIf="!trendError && summary.searches && trendOptions.series?.length" [options]="trendOptions"
+      style="display: block; width: 100%; height: 220px"></highcharts-chart>
+    <details *ngIf="trendDays.length && summary.searches" class="mt-1">
+      <summary class="text-xs text-gray-500 cursor-pointer">Daily numbers</summary>
+      <div class="table-wrapper mt-2 trend-table">
+        <table class="table-base">
+          <thead><tr><th scope="col">Day</th><th scope="col">{{ activityLabel }}</th><ng-container *ngIf="showsResults"><th scope="col">No results</th><th scope="col">Unknown count</th><th scope="col">No-result rate</th></ng-container></tr></thead>
+          <tbody><tr *ngFor="let day of trendDays"><td>{{ dayName(day.date) }}</td><td>{{ day.searches | number }}</td><ng-container *ngIf="showsResults"><td>{{ day.zero_results | number }}</td><td>{{ day.searches - day.measured | number }}</td><td>{{ dayRate(day) }}</td></ng-container></tr></tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
   <div class="insights-toolbar my-3">
     <div class="segmented" role="group" aria-label="Rows to show" *ngIf="showsResults">
       <button type="button" [class.active]="filterValues['zero_results'] !== 'true'" [attr.aria-pressed]="filterValues['zero_results'] !== 'true'" (click)="setNoResultsOnly(false)">All queries</button>

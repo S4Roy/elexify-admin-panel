@@ -321,6 +321,10 @@ export class ApiService {
     return this.httpService.get(`admin/operations/search-insights?${params.toString()}`);
   }
 
+  searchInsightsTrend(params: URLSearchParams) {
+    return this.httpService.get(`admin/operations/search-insights/trend?${params.toString()}`);
+  }
+
   // Whole-query synonyms that widen storefront product search.
   searchSynonyms(params: URLSearchParams) {
     return this.httpService.get(`admin/operations/search-synonyms?${params.toString()}`);

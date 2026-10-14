@@ -2,6 +2,8 @@ import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
+import * as Highcharts from 'highcharts';
+import { HighchartsChartComponent } from 'highcharts-angular';
 import { ToastrService } from 'ngx-toastr';
 import { RouterLink } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, takeUntil } from 'rxjs';
@@ -16,11 +18,17 @@ import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.c
 import { SynonymDialogComponent } from './synonym-dialog/synonym-dialog.component';
 
 
+const CHART_FONT = 'Rethink Sans, sans-serif';
+const dayLabel = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const numberFormat = new Intl.NumberFormat('en-IN');
+
+interface TrendDay { date: string; searches: number; measured: number; zero_results: number }
+
 type SortKey = 'searches' | 'zero_results' | 'zero_rate' | 'last_searched';
 
 @Component({
   selector: 'app-search-insights',
-  imports: [NgIf, NgFor, DatePipe, DecimalPipe, MatIcon, RouterLink, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, DatePipe, DecimalPipe, MatIcon, RouterLink, HighchartsChartComponent, PaginationComponent, EmptyStateComponent],
   templateUrl: './search-insights.component.html',
   styleUrl: './search-insights.component.scss',
 })
@@ -31,6 +39,9 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   error = false;
   exporting = false;
   canEditSynonyms = false;
+  trendDays: TrendDay[] = [];
+  trendOptions: Highcharts.Options = {};
+  trendError = false;
   summary = this.emptySummary();
   sort: SortKey = 'searches';
   searchText = '';
@@ -65,10 +76,12 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         this.searchText = text;
         this.paginationOption.page = 1;
         this.fetchList();
+        this.fetchTrend();
       });
     this.canEditSynonyms = this.helperService.can('operations.update');
     this.updateFilterButton();
     this.fetchList();
+    this.fetchTrend();
   }
 
   ngOnDestroy(): void {
@@ -123,6 +136,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         this.filterValues = result;
         this.paginationOption.page = 1;
         this.fetchList();
+        this.fetchTrend();
         this.updateFilterButton();
       });
   }
@@ -236,6 +250,106 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
       },
       error: () => this.toastr.error('Could not load synonyms'),
     });
+  }
+
+  // The trend ignores sort, paging and the no-results row filter: it always shows every matching search per day.
+  fetchTrend(): void {
+    this.trendError = false;
+    const params = this.buildParams();
+    params.delete('sort');
+    params.delete('zero_results');
+    this.apiService.searchInsightsTrend(params).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => {
+        this.trendDays = res?.data?.days ?? [];
+        this.trendOptions = this.buildTrendOptions(this.trendDays);
+      },
+      error: () => {
+        this.trendError = true;
+        this.trendDays = [];
+      },
+    });
+  }
+
+  dayName(date: string): string {
+    return dayLabel.format(new Date(`${date}T00:00:00Z`));
+  }
+
+  dayRate(day: TrendDay): string {
+    return day.measured ? (100 * day.zero_results / day.measured).toFixed(1) + '%' : '—';
+  }
+
+  // Colors are CSS variables (see the stylesheet) so the chart follows the light/dark theme without a rebuild.
+  private buildTrendOptions(days: TrendDay[]): Highcharts.Options {
+    const categories = days.map(day => this.dayName(day.date));
+    const series: Highcharts.SeriesColumnOptions[] = this.showsResults
+      ? [
+          // Highcharts stacks the first series on top; no-result searches sit on the baseline where they are easiest to compare.
+          { type: 'column', name: 'Unknown count', color: 'var(--si-unknown)', data: days.map(d => d.searches - d.measured), legendIndex: 2 },
+          { type: 'column', name: 'Results found', color: 'var(--si-found)', data: days.map(d => d.measured - d.zero_results), legendIndex: 1 },
+          { type: 'column', name: 'No results', color: 'var(--si-none)', data: days.map(d => d.zero_results), legendIndex: 0 },
+        ]
+      : [{ type: 'column', name: this.activityLabel, color: 'var(--si-found)', data: days.map(d => d.searches) }];
+    const self = this;
+    return {
+      chart: { type: 'column', height: 220, spacing: [8, 4, 8, 4], style: { fontFamily: CHART_FONT }, backgroundColor: 'transparent' },
+      title: { text: undefined },
+      credits: { enabled: false },
+      accessibility: { enabled: false },
+      xAxis: {
+        categories,
+        tickInterval: Math.max(1, Math.ceil(categories.length / 12)),
+        lineColor: 'var(--border-color)',
+        tickLength: 0,
+        labels: { style: { color: 'var(--text-secondary)', fontSize: '11px' } },
+        crosshair: { color: 'var(--bg-surface-alt)' },
+      },
+      yAxis: {
+        title: { text: undefined },
+        allowDecimals: false,
+        gridLineColor: 'var(--bg-surface-alt)',
+        labels: { style: { color: 'var(--text-secondary)', fontSize: '11px' } },
+      },
+      legend: {
+        enabled: series.length > 1,
+        align: 'left',
+        verticalAlign: 'top',
+        margin: 8,
+        symbolRadius: 2,
+        itemStyle: { color: 'var(--text-primary)', fontWeight: '500', fontSize: '12px' },
+        itemHoverStyle: { color: 'var(--text-primary)' },
+      },
+      tooltip: {
+        shared: true,
+        borderRadius: 8,
+        backgroundColor: 'var(--bg-surface)',
+        borderColor: 'var(--border-color)',
+        style: { fontSize: '12px', color: 'var(--text-primary)' },
+        formatter: function () {
+          const day = days[(this as any).points?.[0]?.point?.index ?? 0];
+          if (!day) return false;
+          const row = (label: string, color: string, value: number) =>
+            `<span style="color:${color}">■</span> ${label}: <b>${numberFormat.format(value)}</b><br/>`;
+          let html = `<b>${self.dayName(day.date)}</b><br/>`;
+          if (!self.showsResults) return html + row(self.activityLabel, 'var(--si-found)', day.searches);
+          html += row('No results', 'var(--si-none)', day.zero_results);
+          html += row('Results found', 'var(--si-found)', day.measured - day.zero_results);
+          if (day.searches > day.measured) html += row('Unknown count', 'var(--si-unknown)', day.searches - day.measured);
+          return html + `Total: <b>${numberFormat.format(day.searches)}</b> · No-result rate: <b>${self.dayRate(day)}</b>`;
+        },
+      },
+      plotOptions: {
+        column: {
+          stacking: 'normal',
+          borderWidth: 1,
+          borderColor: 'var(--bg-surface)',
+          borderRadius: { radius: 3, scope: 'stack', where: 'end' } as any,
+          maxPointWidth: 22,
+          groupPadding: 0.08,
+          states: { hover: { brightness: 0 }, inactive: { opacity: 1 } },
+        },
+      },
+      series,
+    };
   }
 
   // Pages through the API so the export matches the table's filters and sort.
