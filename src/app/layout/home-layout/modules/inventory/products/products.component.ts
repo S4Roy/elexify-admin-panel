@@ -21,7 +21,7 @@ import { FilterFieldDef } from 'app/core/models/FilterFieldDef';
 import { NewProductComponent } from './new-product/new-product.component';
 import { StocksComponent } from './stocks/stocks.component';
 import { MatIconModule } from '@angular/material/icon';
-import { Subject, combineLatest, takeUntil } from 'rxjs';
+import { Subject, combineLatest, finalize, forkJoin, takeUntil } from 'rxjs';
 import { HelpersService } from 'app/core/services/helpers.service';
 import { DialogService } from 'app/core/services/dialog.service';
 import { ConfirmDialogData } from 'app/layout/home-layout/includes/confirm-dialog/confirm-dialog.component';
@@ -56,6 +56,29 @@ export class ProductsComponent {
   Global = Global;
   item_list: any = [];
   expanded = new Set<string>();
+  loading = false;
+  bulkBusy = false;
+  // Catalog-wide counts for the summary cards (product stats endpoint).
+  stats: any = null;
+  siteThreshold = 5;
+  readonly skeletonRows = Array.from({ length: 6 });
+  readonly statusTabs = [
+    { value: null, label: 'All' },
+    ...Global.STATUS_OPTIONS,
+  ];
+  readonly sortOptions: { key: string; dir: 'asc' | 'desc'; label: string }[] = [
+    { key: 'created_at', dir: 'desc', label: 'Newest first' },
+    { key: 'created_at', dir: 'asc', label: 'Oldest first' },
+    { key: 'name', dir: 'asc', label: 'Name A–Z' },
+    { key: 'name', dir: 'desc', label: 'Name Z–A' },
+  ];
+  readonly stockStatusLabels: Record<string, string> = {
+    in_stock: 'In stock',
+    low_stock: 'Low stock',
+    out_of_stock: 'Out of stock',
+    on_backorder: 'Backorder',
+    untracked: 'Not tracked',
+  };
 
   paginationOption: PaginationOptions;
   filterOption: FilterOptions;
@@ -111,6 +134,7 @@ export class ProductsComponent {
     this.helperService.filterButtonClick$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.openFilters());
+    this.fetchStats();
     // Only active rows — a truncated, unfiltered page can silently miss
     // every active row if inactive ones happen to sort first.
     this.inventoryService
@@ -284,32 +308,84 @@ export class ProductsComponent {
       .afterClosed()
       .subscribe((result: Record<string, any> | undefined) => {
         if (!result) return;
-        this.filterValues = result;
-        this.filterOption.category = this.filterValues['category']?.length
-          ? this.filterValues['category'].join(',')
-          : null;
-        this.filterOption.brand = this.filterValues['brand']?.length
-          ? this.filterValues['brand'].join(',')
-          : null;
-        this.filterOption.status = this.filterValues['status'] || null;
-        this.filterOption.stock_status =
-          this.filterValues['stock_status'] || null;
-        this.filterOption.hsn_status = this.filterValues['hsn_status'] || null;
-        this.filterOption.type = this.filterValues['type'] || null;
-        this.filterOption.tags = this.filterValues['tags']?.length
-          ? this.filterValues['tags'].join(',')
-          : null;
-        this.filterOption.classifications = this.filterValues[
-          'classifications'
-        ]?.length
-          ? this.filterValues['classifications'].join(',')
-          : null;
-        this.filterOption.min_price = this.filterValues['min_price'] || null;
-        this.filterOption.max_price = this.filterValues['max_price'] || null;
-        this.paginationOption.page = 1;
-        this.fetchProductList();
-        this.updateFilterButton();
+        this.applyFilterValues(result);
       });
+  }
+  // Single path for every filter change — the drawer, status tabs, summary
+  // cards and the applied-filter chips — so they all stay in sync.
+  applyFilterValues(values: Record<string, any>): void {
+    this.filterValues = values;
+    this.filterOption.category = this.filterValues['category']?.length
+      ? this.filterValues['category'].join(',')
+      : null;
+    this.filterOption.brand = this.filterValues['brand']?.length
+      ? this.filterValues['brand'].join(',')
+      : null;
+    this.filterOption.status = this.filterValues['status'] || null;
+    this.filterOption.stock_status =
+      this.filterValues['stock_status'] || null;
+    this.filterOption.hsn_status = this.filterValues['hsn_status'] || null;
+    this.filterOption.type = this.filterValues['type'] || null;
+    this.filterOption.tags = this.filterValues['tags']?.length
+      ? this.filterValues['tags'].join(',')
+      : null;
+    this.filterOption.classifications = this.filterValues[
+      'classifications'
+    ]?.length
+      ? this.filterValues['classifications'].join(',')
+      : null;
+    this.filterOption.min_price = this.filterValues['min_price'] || null;
+    this.filterOption.max_price = this.filterValues['max_price'] || null;
+    this.paginationOption.page = 1;
+    this.fetchProductList();
+    this.updateFilterButton();
+  }
+  setStatusTab(status: string | null): void {
+    if ((this.filterValues['status'] || null) === status) return;
+    this.applyFilterValues({ ...this.filterValues, status });
+  }
+  // Summary cards toggle their stock filter.
+  filterByStock(status: string): void {
+    const next = this.filterValues['stock_status'] === status ? null : status;
+    this.applyFilterValues({ ...this.filterValues, stock_status: next });
+  }
+  // Applied filters as chips. Status is left out — the tabs already show it.
+  get activeFilters(): { key: string; label: string; value: string }[] {
+    const v = this.filterValues;
+    const names = (values: string[], options: { value: string; label: string }[]) =>
+      values.map((x) => options.find((o) => o.value === x)?.label ?? x).join(', ');
+    const optionLabel = (key: string) =>
+      this.filterFields.find((f) => f.key === key)?.options?.find((o: any) => o.value === v[key])?.label ?? v[key];
+    const chips: { key: string; label: string; value: string }[] = [];
+    if (v['category']?.length) chips.push({ key: 'category', label: 'Category', value: names(v['category'], this.categoryOptions) });
+    if (v['brand']?.length) chips.push({ key: 'brand', label: 'Brand', value: names(v['brand'], this.brandOptions) });
+    if (v['stock_status']) chips.push({ key: 'stock_status', label: 'Stock', value: optionLabel('stock_status') });
+    if (v['hsn_status']) chips.push({ key: 'hsn_status', label: 'HSN', value: optionLabel('hsn_status') });
+    if (v['type']) chips.push({ key: 'type', label: 'Type', value: optionLabel('type') });
+    if (v['tags']?.length) chips.push({ key: 'tags', label: 'Tags', value: names(v['tags'], this.tagOptions) });
+    if (v['classifications']?.length) chips.push({ key: 'classifications', label: 'Classification', value: names(v['classifications'], this.classificationOptions) });
+    if (v['min_price'] || v['max_price']) {
+      const value = v['min_price'] && v['max_price'] ? `₹${v['min_price']} – ₹${v['max_price']}`
+        : v['min_price'] ? `from ₹${v['min_price']}` : `up to ₹${v['max_price']}`;
+      chips.push({ key: 'price', label: 'Price', value });
+    }
+    return chips;
+  }
+  removeFilter(key: string): void {
+    const values = { ...this.filterValues };
+    if (key === 'price') {
+      values['min_price'] = null;
+      values['max_price'] = null;
+    } else {
+      values[key] = Array.isArray(values[key]) ? [] : null;
+    }
+    this.applyFilterValues(values);
+  }
+  clearFilters(): void {
+    this.applyFilterValues({
+      category: [], brand: [], status: null, stock_status: null, hsn_status: null,
+      type: null, tags: [], classifications: [], min_price: null, max_price: null,
+    });
   }
   // True when an item of this product would ship without an HSN code: no product
   // code, and (for variable products) some variation has none of its own.
@@ -325,6 +401,19 @@ export class ProductsComponent {
     this.helperService.clearFilterButton();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+  setSort(key: string, dir: 'asc' | 'desc'): void {
+    if (this.isSort(key, dir)) return;
+    this.sortKey = key;
+    this.sortDirection = dir;
+    this.paginationOption = { ...Global.resetPaginationOptions(), limit: this.paginationOption.limit };
+    this.fetchProductList();
+  }
+  isSort(key: string, dir: 'asc' | 'desc'): boolean {
+    return this.sortKey === key && this.sortDirection === dir;
+  }
+  get sortLabel(): string {
+    return this.sortOptions.find((o) => this.isSort(o.key, o.dir))?.label ?? 'Sort';
   }
   sort(field: string): void {
     this.paginationOption = { ...Global.resetPaginationOptions(), limit: this.paginationOption.limit };
@@ -369,6 +458,7 @@ export class ProductsComponent {
       .subscribe((res: any) => {
         if (res) {
           this.fetchProductList();
+          this.fetchStats();
         }
       });
   }
@@ -442,7 +532,8 @@ export class ProductsComponent {
     const params = this.buildFilterParams();
     params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) params.set('page', String(this.paginationOption.page));
-    this.inventoryService.productList(params).subscribe({
+    this.loading = true;
+    this.inventoryService.productList(params).pipe(finalize(() => (this.loading = false))).subscribe({
       next: (res: any) => {
         this.item_list = res?.data?.docs ?? [];
         this.paginationOption = {
@@ -452,11 +543,48 @@ export class ProductsComponent {
       error: (err) => {},
     });
   }
+  fetchStats() {
+    this.inventoryService.productStats(new URLSearchParams()).subscribe({
+      next: (res: any) => {
+        this.stats = res?.data ?? null;
+        this.siteThreshold = Number(res?.data?.low_stock_threshold ?? this.siteThreshold);
+      },
+      error: () => {},
+    });
+  }
+  // Activate / deactivate the selected products, skipping ones already there.
+  bulkSetStatus(status: 'active' | 'inactive') {
+    const targets = this.item_list.filter((item: any) => this.selectedIds.has(item._id) && item.status !== status);
+    const verb = status === 'active' ? 'activate' : 'deactivate';
+    if (!targets.length) {
+      this.toastr.info(`The selected products are already ${status}.`);
+      return;
+    }
+    this.dialogService.confirmDialog({
+      title: 'Are you sure?',
+      message: `Do you want to ${verb} ${targets.length} product${targets.length === 1 ? '' : 's'}?`,
+      cancelText: 'Cancel',
+      saveText: 'Confirm',
+    }).subscribe((result: any) => {
+      if (!result?.confirm) return;
+      this.bulkBusy = true;
+      forkJoin(targets.map((item: any) => this.inventoryService.updateProductStatus({ _id: item._id, status })))
+        .pipe(finalize(() => {
+          this.bulkBusy = false;
+          this.fetchProductList();
+        }))
+        .subscribe({
+          next: () => this.toastr.success(`${targets.length} product${targets.length === 1 ? '' : 's'} ${verb}d`),
+          error: () => {},
+        });
+    });
+  }
   deleteItem(item: any) {
     this.inventoryService.deleteProduct({ _id: item._id }).subscribe({
       next: (res: any) => {
         this.toastr.success(res?.body?.message);
         this.fetchProductList();
+        this.fetchStats();
       },
       error: (err: any) => {},
     });
@@ -470,6 +598,68 @@ export class ProductsComponent {
   readonly zohoActions = [{ label: 'Sync with Zoho', icon: 'sync', action: 'zoho_sync' }];
   get canSyncZoho(): boolean { return this.access.can('zoho_sync.view'); }
   get canViewStock(): boolean { return this.access.can('inventory.view'); }
+  get canExport(): boolean { return this.access.can('products.export'); }
+  get rangeStart(): number {
+    const p = this.paginationOption;
+    return p?.totalDocs ? (Number(p.page || 1) - 1) * Number(p.limit || 0) + 1 : 0;
+  }
+  get rangeEnd(): number {
+    return Math.min(this.rangeStart + (this.item_list?.length || 0) - 1, Number(this.paginationOption?.totalDocs || 0));
+  }
+  // One SKU's selling state. Low uses the SKU's own threshold, else the
+  // site's — the same rule as the stock panel.
+  private skuStock(sku: any) {
+    if (sku?.manage_stock === false) return { tracked: false, available: 0, reserved: 0, status: 'untracked' };
+    const reserved = Number(sku?.reserved_quantity ?? 0);
+    const available = Number(sku?.available_quantity ?? Number(sku?.stock_quantity ?? 0) - reserved);
+    let status = 'in_stock';
+    if (available <= 0) status = sku?.allow_backorders ? 'on_backorder' : 'out_of_stock';
+    else if (available <= Number(sku?.low_stock_threshold ?? this.siteThreshold)) status = 'low_stock';
+    return { tracked: true, available: Math.max(0, available), reserved, status };
+  }
+  // Inventory cell: a simple product, a single variant, or a variable product
+  // rolled up across its variants (worst state wins, but a few sold-out
+  // variants read as "low" rather than "out").
+  inventoryOf(item: any) {
+    const skus = item?.type === 'variable' ? item?.variations ?? [] : [item];
+    const states = skus.map((sku: any) => this.skuStock(sku));
+    const tracked = states.filter((s: any) => s.tracked);
+    const outCount = tracked.filter((s: any) => s.status === 'out_of_stock').length;
+    let status = 'untracked';
+    if (tracked.length) {
+      if (outCount === tracked.length) status = 'out_of_stock';
+      else if (tracked.every((s: any) => s.status === 'on_backorder' || s.status === 'out_of_stock')) status = 'on_backorder';
+      else if (outCount || tracked.some((s: any) => s.status === 'low_stock')) status = 'low_stock';
+      else status = 'in_stock';
+    }
+    return {
+      status,
+      tracked: tracked.length > 0,
+      available: tracked.reduce((sum: number, s: any) => sum + s.available, 0),
+      reserved: tracked.reduce((sum: number, s: any) => sum + s.reserved, 0),
+      skus: skus.length,
+      outCount: skus.length > 1 && outCount < tracked.length ? outCount : 0,
+    };
+  }
+  // Selling price (sale when it undercuts regular) — a range for variable
+  // products, with the struck-through regular price when there's one SKU.
+  priceOf(item: any) {
+    const skus = item?.type === 'variable' ? item?.variations ?? [] : [item];
+    const onSale = (sku: any) => Number(sku?.sale_price) > 0 && Number(sku.sale_price) < Number(sku?.regular_price);
+    const prices = skus
+      .map((sku: any) => (onSale(sku) ? Number(sku.sale_price) : Number(sku?.regular_price)))
+      .filter((n: number) => Number.isFinite(n) && n > 0);
+    if (!prices.length) return { min: null, max: null, compareAt: null, discount: 0, anyOnSale: false };
+    const single = skus.length === 1 && onSale(skus[0]);
+    const compareAt = single ? Number(skus[0].regular_price) : null;
+    return {
+      min: Math.min(...prices),
+      max: Math.max(...prices),
+      compareAt,
+      discount: single ? Math.round((1 - Number(skus[0].sale_price) / compareAt!) * 100) : 0,
+      anyOnSale: skus.some(onSale),
+    };
+  }
   // "available (reserved)" — available = on hand minus units held for
   // orders awaiting payment.
   stockText(sku: any): string {
@@ -549,6 +739,10 @@ export class ProductsComponent {
   isExpanded(productId: string | number | undefined): boolean {
     if (!productId) return false;
     return this.expanded.has(String(productId));
+  }
+
+  trackByProduct(index: number, item: any) {
+    return item?._id || item?.id || index;
   }
 
   trackByVariant(index: number, variant: any) {
