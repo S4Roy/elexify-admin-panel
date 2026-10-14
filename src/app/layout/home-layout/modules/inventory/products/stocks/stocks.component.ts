@@ -2,10 +2,7 @@ import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -14,8 +11,7 @@ import PaginationOptions from 'app/core/models/PaginationOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { PermissionService } from 'app/core/services/permission.service';
 import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
-import { EmptyStateComponent } from '../../../../includes/empty-state/empty-state.component';
-import { STOCK_ADJUSTMENT_REASONS, STOCK_STATUS_LABELS, movementLabel } from './stock-reasons';
+import { STOCK_ADJUSTMENT_REASONS, STOCK_STATUS_LABELS, movementIcon, movementLabel } from './stock-reasons';
 
 /**
  * Stock for one product: on-hand / reserved / available per SKU, manual
@@ -26,8 +22,7 @@ import { STOCK_ADJUSTMENT_REASONS, STOCK_STATUS_LABELS, movementLabel } from './
   selector: 'app-stocks',
   imports: [
     ReactiveFormsModule, NgIf, NgFor, NgClass, DatePipe, RouterLink,
-    MatDialogModule, MatIconModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatTooltipModule,
-    PaginationComponent, EmptyStateComponent,
+    MatDialogModule, MatIconModule, MatTooltipModule, PaginationComponent,
   ],
   templateUrl: './stocks.component.html',
   styleUrl: './stocks.component.scss',
@@ -37,6 +32,10 @@ export class StocksComponent implements OnInit {
   reasons = STOCK_ADJUSTMENT_REASONS;
   statusLabels = STOCK_STATUS_LABELS;
   movementLabel = movementLabel;
+  movementIcon = movementIcon;
+  // Site-wide low-stock level (a SKU's own threshold wins).
+  siteThreshold = 5;
+  loading = true;
 
   levels: any[] = [];
   transactions: any[] = [];
@@ -82,6 +81,8 @@ export class StocksComponent implements OnInit {
     this.inventoryService.stockLevels(params).subscribe({
       next: (res: any) => {
         this.levels = res?.data?.docs ?? [];
+        this.siteThreshold = res?.data?.low_stock_threshold ?? this.siteThreshold;
+        this.loading = false;
         // Keep an open form pointed at the fresh figures.
         if (this.adjusting) this.adjusting = this.levels.find((l) => this.skuKey(l) === this.skuKey(this.adjusting)) ?? null;
       },
@@ -104,8 +105,39 @@ export class StocksComponent implements OnInit {
     return String(level?.variation ?? level?.product);
   }
 
+  // Variations are named by their attribute combination; a simple product
+  // is just "Default".
   skuLabel(level: any): string {
-    return level?.variation_name || level?.sku || this.data?.name;
+    return level?.variation ? (level?.variation_name || level?.sku) : 'Default';
+  }
+
+  // Falls back to deriving the status when the server hasn't stored one yet
+  // (before the stock-ledger-foundation migration has run).
+  statusOf(level: any): string {
+    if (level?.stock_status) return level.stock_status;
+    if (level?.manage_stock === false) return 'in_stock';
+    if (Number(level?.available_quantity) > 0) return 'in_stock';
+    return level?.allow_backorders ? 'on_backorder' : 'out_of_stock';
+  }
+
+  isLow(level: any): boolean {
+    if (!level?.manage_stock) return false;
+    const available = Number(level.available_quantity);
+    return available > 0 && available <= Number(level.low_stock_threshold ?? this.siteThreshold);
+  }
+
+  step(by: number) {
+    const current = Number(this.formGroup.value.quantity) || 0;
+    this.formGroup.patchValue({ quantity: Math.max(0, current + by) });
+  }
+
+  setMode(mode: 'add' | 'remove' | 'set') {
+    this.formGroup.patchValue({ mode });
+    this.onModeChange();
+  }
+
+  get hasMorePages(): boolean {
+    return Number(this.paginationOption?.totalPages ?? 1) > 1;
   }
 
   openAdjust(level: any) {

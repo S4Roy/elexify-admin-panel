@@ -34,3 +34,13 @@ export const STOCK_STATUS_LABELS: Partial<Record<string, string>> = {
   out_of_stock: 'Out of stock',
   on_backorder: 'On backorder',
 };
+
+// Timeline icon + tone for a ledger row.
+export const movementIcon = (row: any): { icon: string; tone: 'in' | 'out' | 'neutral' } => {
+  const delta = Number(row?.delta ?? 0);
+  const tone = delta > 0 ? 'in' : delta < 0 ? 'out' : 'neutral';
+  const icon = ({
+    sale: 'shopping_bag', restock: 'undo', opening_balance: 'inventory_2', adjustment: 'tune',
+  } as Record<string, string>)[row?.type] ?? (delta >= 0 ? 'add' : 'remove');
+  return { icon: row?.reason === 'received' ? 'local_shipping' : row?.reason === 'customer_return' ? 'assignment_return' : icon, tone };
+};

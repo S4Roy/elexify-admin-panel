@@ -1,181 +1,168 @@
 <div class="fixed inset-0 overflow-hidden">
   <div class="absolute inset-0 overflow-hidden">
     <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-      <div class="pointer-events-auto relative w-screen max-w-3xl">
-        <div class="stock-panel flex h-full flex-col overflow-y-auto shadow-xl">
-          <h2 class="header" id="slide-over-title">
-            Stock · {{ data?.name }}
-            <button color="warn" mat-icon-button (click)="close()" aria-label="Close">
-              <mat-icon class="text-red-700">close</mat-icon>
+      <div class="pointer-events-auto relative w-screen max-w-2xl">
+        <div class="stock-panel">
+          <!-- Header -->
+          <header class="panel-head">
+            <div class="min-w-0">
+              <p class="eyebrow">Inventory</p>
+              <h2 class="title" [title]="data?.name">{{ data?.name }}</h2>
+            </div>
+            <button type="button" mat-icon-button (click)="close()" aria-label="Close">
+              <mat-icon>close</mat-icon>
             </button>
-          </h2>
+          </header>
 
-          <div class="flex-1 space-y-6 px-4 py-4 sm:px-6">
-            <!-- Levels -->
-            <section>
-              <div class="section-title">
-                Stock levels
-                <span class="hint">Available = on hand − reserved for orders awaiting payment</span>
-              </div>
-              <div class="table-wrapper">
-                <table class="table-base">
-                  <thead>
-                    <tr>
-                      <th scope="col">SKU</th>
-                      <th scope="col" class="num">On hand</th>
-                      <th scope="col" class="num">Reserved</th>
-                      <th scope="col" class="num">Available</th>
-                      <th scope="col">Status</th>
-                      <th scope="col"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <ng-container *ngFor="let level of levels">
-                      <tr [class.is-active]="adjusting && skuKey(adjusting) === skuKey(level)">
-                        <td>
-                          <div class="sku-name">{{ skuLabel(level) }}</div>
-                          <div class="sku-code" *ngIf="level.sku">{{ level.sku }}</div>
-                        </td>
-                        <td class="num">{{ level.manage_stock ? level.stock_quantity : '—' }}</td>
-                        <td class="num">
-                          <span [matTooltip]="level.reserved_quantity ? 'Held for unpaid online orders; released automatically if payment does not arrive' : ''">
-                            {{ level.manage_stock ? level.reserved_quantity : '—' }}
-                          </span>
-                        </td>
-                        <td class="num font-semibold">
-                          {{ level.manage_stock ? level.available_quantity : 'Not tracked' }}
-                        </td>
-                        <td>
-                          <span class="stock-chip" [ngClass]="level.stock_status">{{ statusLabels[level.stock_status] ?? level.stock_status }}</span>
-                          <span *ngIf="level.allow_backorders" class="sku-code block">Backorders allowed</span>
-                        </td>
-                        <td class="actions">
-                          <button type="button" mat-icon-button matTooltip="Movement history" aria-label="Movement history"
-                            [class.is-on]="historySku && skuKey(historySku) === skuKey(level)" (click)="filterHistory(level)">
-                            <mat-icon>history</mat-icon>
-                          </button>
-                          <button *ngIf="canAdjust && level.manage_stock" type="button" mat-icon-button matTooltip="Adjust stock"
-                            aria-label="Adjust stock" (click)="openAdjust(level)">
-                            <mat-icon>tune</mat-icon>
-                          </button>
-                        </td>
-                      </tr>
-                    </ng-container>
-                    <tr *ngIf="!levels.length">
-                      <td colspan="6" class="text-center"><app-empty-state message="No stock-keeping units"></app-empty-state></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <!-- Adjust -->
-            <section *ngIf="adjusting" class="adjust-card" [formGroup]="formGroup">
-              <div class="section-title">
-                Adjust {{ skuLabel(adjusting) }}
-                <button type="button" mat-icon-button (click)="closeAdjust()" aria-label="Cancel adjustment"><mat-icon>close</mat-icon></button>
+          <div class="panel-body">
+            <!-- One card per stock-keeping unit -->
+            <section class="sku-card" *ngFor="let level of levels"
+              [class.is-editing]="adjusting && skuKey(adjusting) === skuKey(level)">
+              <div class="sku-head">
+                <div class="min-w-0">
+                  <div class="sku-name">{{ skuLabel(level) }}</div>
+                  <div class="muted" *ngIf="level.sku">SKU {{ level.sku }}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="chip" [ngClass]="statusOf(level)">
+                    <span class="dot"></span>{{ statusLabels[statusOf(level)] ?? statusOf(level) }}
+                  </span>
+                  <span class="chip low" *ngIf="isLow(level)">Low stock</span>
+                </div>
               </div>
 
-              <div class="mode-toggle" role="radiogroup" aria-label="Adjustment type">
-                <label [class.selected]="formGroup.value.mode === 'add'">
-                  <input type="radio" formControlName="mode" value="add" (change)="onModeChange()" /> Add units
-                </label>
-                <label [class.selected]="formGroup.value.mode === 'remove'">
-                  <input type="radio" formControlName="mode" value="remove" (change)="onModeChange()" /> Remove units
-                </label>
-                <label [class.selected]="formGroup.value.mode === 'set'">
-                  <input type="radio" formControlName="mode" value="set" (change)="onModeChange()" /> Set counted quantity
-                </label>
-              </div>
+              <ng-container *ngIf="level.manage_stock; else untracked">
+                <div class="stats">
+                  <div class="stat">
+                    <span class="stat-label">On hand</span>
+                    <span class="stat-value">{{ level.stock_quantity }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">
+                      Reserved
+                      <mat-icon class="info" matTooltip="Held for online orders awaiting payment. Released automatically if payment doesn't arrive.">info_outline</mat-icon>
+                    </span>
+                    <span class="stat-value">{{ level.reserved_quantity }}</span>
+                  </div>
+                  <div class="stat primary">
+                    <span class="stat-label">Available to sell</span>
+                    <span class="stat-value">{{ level.available_quantity }}</span>
+                  </div>
+                </div>
+                <p class="muted mt-2" *ngIf="level.allow_backorders">Customers can order past zero (backorders on).</p>
+              </ng-container>
+              <ng-template #untracked>
+                <p class="untracked"><mat-icon>all_inclusive</mat-icon> Stock isn't tracked for this item — it's always available.</p>
+              </ng-template>
 
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <mat-form-field appearance="outline">
-                  <mat-label>{{ formGroup.value.mode === 'set' ? 'Counted on hand' : 'Quantity' }}</mat-label>
-                  <input matInput type="number" min="0" step="1" formControlName="quantity" />
-                  <mat-error *ngIf="!Global.isInputValid(formGroup, 'quantity')">Enter a whole number</mat-error>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                  <mat-label>Reason</mat-label>
-                  <mat-select formControlName="reason">
-                    <mat-option *ngFor="let reason of reasons" [value]="reason.value">
-                      {{ reason.label }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Note (optional)</mat-label>
-                <input matInput formControlName="note" maxlength="500" placeholder="e.g. PO number, who counted" />
-              </mat-form-field>
-
-              <p class="preview" *ngIf="previewOnHand !== null">
-                On hand {{ adjusting.stock_quantity }} → <strong>{{ previewOnHand }}</strong>
-                <ng-container *ngIf="adjusting.reserved_quantity"> · {{ adjusting.reserved_quantity }} reserved</ng-container>
-              </p>
-              <p class="error" *ngIf="belowReserved">
-                {{ adjusting.reserved_quantity }} unit(s) are reserved for orders awaiting payment, so on hand can't go below that.
-              </p>
-
-              <div class="flex justify-end">
-                <button type="button" class="btn-primary w-auto px-6 text-xs uppercase"
-                  [disabled]="formGroup.disabled || belowReserved" (click)="onSubmit()">
-                  {{ formGroup.disabled ? 'Saving…' : 'Save adjustment' }}
+              <div class="sku-actions" *ngIf="!(adjusting && skuKey(adjusting) === skuKey(level))">
+                <button type="button" class="btn-ghost" (click)="filterHistory(level)" *ngIf="levels.length > 1"
+                  [class.on]="historySku && skuKey(historySku) === skuKey(level)">
+                  <mat-icon>history</mat-icon>
+                  {{ historySku && skuKey(historySku) === skuKey(level) ? 'Showing history' : 'History' }}
+                </button>
+                <button type="button" class="btn-solid" *ngIf="canAdjust && level.manage_stock" (click)="openAdjust(level)">
+                  <mat-icon>edit</mat-icon> Adjust stock
                 </button>
               </div>
+
+              <!-- Inline adjust form -->
+              <form class="adjust" *ngIf="adjusting && skuKey(adjusting) === skuKey(level)" [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+                <div class="segmented" role="radiogroup" aria-label="Adjustment type">
+                  <button type="button" role="radio" [attr.aria-checked]="formGroup.value.mode === 'add'"
+                    [class.active]="formGroup.value.mode === 'add'" (click)="setMode('add')">Add</button>
+                  <button type="button" role="radio" [attr.aria-checked]="formGroup.value.mode === 'remove'"
+                    [class.active]="formGroup.value.mode === 'remove'" (click)="setMode('remove')">Remove</button>
+                  <button type="button" role="radio" [attr.aria-checked]="formGroup.value.mode === 'set'"
+                    [class.active]="formGroup.value.mode === 'set'" (click)="setMode('set')">Set count</button>
+                </div>
+
+                <div class="adjust-grid">
+                  <div>
+                    <label class="field-label" for="adjust-qty">{{ formGroup.value.mode === 'set' ? 'Counted on hand' : 'Quantity' }}</label>
+                    <div class="stepper">
+                      <button type="button" (click)="step(-1)" aria-label="Decrease"><mat-icon>remove</mat-icon></button>
+                      <input id="adjust-qty" type="number" min="0" step="1" inputmode="numeric" formControlName="quantity" placeholder="0" />
+                      <button type="button" (click)="step(1)" aria-label="Increase"><mat-icon>add</mat-icon></button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="field-label" for="adjust-reason">Reason</label>
+                    <select id="adjust-reason" class="select" formControlName="reason">
+                      <option *ngFor="let reason of reasons" [value]="reason.value">{{ reason.label }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <label class="field-label" for="adjust-note">Note <span class="muted">(optional)</span></label>
+                <input id="adjust-note" class="text-input" formControlName="note" maxlength="500" placeholder="PO number, who counted, etc." />
+
+                <div class="preview" *ngIf="previewOnHand !== null" [class.bad]="belowReserved">
+                  <span>On hand</span>
+                  <strong>{{ adjusting.stock_quantity }}</strong>
+                  <mat-icon>arrow_forward</mat-icon>
+                  <strong>{{ previewOnHand }}</strong>
+                  <span class="muted" *ngIf="!belowReserved && adjusting.reserved_quantity">· available {{ previewOnHand - adjusting.reserved_quantity }}</span>
+                </div>
+                <p class="error" *ngIf="belowReserved">
+                  {{ adjusting.reserved_quantity }} unit(s) are reserved for orders awaiting payment — on hand can't go below that.
+                </p>
+
+                <div class="form-actions">
+                  <button type="button" class="btn-ghost" (click)="closeAdjust()">Cancel</button>
+                  <button type="submit" class="btn-solid" [disabled]="formGroup.disabled || belowReserved">
+                    {{ formGroup.disabled ? 'Saving…' : 'Save' }}
+                  </button>
+                </div>
+              </form>
             </section>
 
-            <!-- History -->
-            <section>
-              <div class="section-title">
-                Movement history
-                <span class="hint" *ngIf="historySku">
-                  {{ skuLabel(historySku) }} ·
-                  <button type="button" class="link" (click)="filterHistory(historySku)">show all</button>
-                </span>
+            <div class="skeleton" *ngIf="loading"></div>
+            <div class="empty" *ngIf="!loading && !levels.length">No stock-keeping units for this product.</div>
+
+            <!-- History timeline -->
+            <section class="history">
+              <div class="history-head">
+                <h3>Movement history</h3>
+                <button type="button" class="chip-filter" *ngIf="historySku" (click)="filterHistory(historySku)">
+                  {{ skuLabel(historySku) }} <mat-icon>close</mat-icon>
+                </button>
               </div>
-              <div class="table-wrapper">
-                <table class="table-base">
-                  <thead>
-                    <tr>
-                      <th scope="col">When</th>
-                      <th scope="col">Movement</th>
-                      <th scope="col" class="num">Change</th>
-                      <th scope="col" class="num">Balance</th>
-                      <th scope="col">By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let item of transactions">
-                      <td class="whitespace-nowrap">{{ item.created_at | date: 'd MMM y, h:mm a' }}</td>
-                      <td>
-                        <div>{{ movementLabel(item) }}
-                          <a *ngIf="item.order_number" class="link" [routerLink]="['/inventory/orders/details', item.reference_id]" (click)="close()">
-                            #{{ item.order_number }}
-                          </a>
-                        </div>
-                        <div class="sku-code" *ngIf="item.variation?.name || levels.length > 1">{{ item.variation?.name || item.variation?.sku || item.product?.sku }}</div>
-                        <div class="sku-code" *ngIf="item.note">{{ item.note }}</div>
-                      </td>
-                      <td class="num font-semibold" [class.pos]="(item.delta ?? 0) > 0" [class.neg]="(item.delta ?? 0) < 0">
-                        {{ item.delta === undefined || item.delta === null ? item.quantity : (item.delta > 0 ? '+' + item.delta : item.delta) }}
-                      </td>
-                      <td class="num">{{ item.balance_after ?? '—' }}</td>
-                      <td>{{ item.created_by?.name || (item.actor_type === 'customer' ? 'Customer' : 'System') }}</td>
-                    </tr>
-                    <tr *ngIf="!transactions.length">
-                      <td colspan="5" class="text-center"><app-empty-state message="No stock movements yet"></app-empty-state></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+
+              <ol class="timeline" *ngIf="transactions.length; else noHistory">
+                <li *ngFor="let item of transactions">
+                  <span class="t-icon" [ngClass]="movementIcon(item).tone"><mat-icon>{{ movementIcon(item).icon }}</mat-icon></span>
+                  <div class="t-body">
+                    <div class="t-title">
+                      {{ movementLabel(item) }}
+                      <a *ngIf="item.order_number" [routerLink]="['/inventory/orders/details', item.reference_id]" (click)="close()">#{{ item.order_number }}</a>
+                    </div>
+                    <div class="muted">
+                      {{ item.created_at | date: 'd MMM y, h:mm a' }}
+                      · {{ item.created_by?.name || (item.actor_type === 'customer' ? 'Customer' : 'System') }}
+                      <ng-container *ngIf="levels.length > 1 && (item.variation?.name || item.variation?.sku)"> · {{ item.variation?.name || item.variation?.sku }}</ng-container>
+                    </div>
+                    <div class="t-note" *ngIf="item.note">{{ item.note }}</div>
+                  </div>
+                  <div class="t-qty">
+                    <span class="delta" [ngClass]="movementIcon(item).tone">
+                      {{ item.delta === undefined || item.delta === null ? item.quantity : (item.delta > 0 ? '+' + item.delta : item.delta) }}
+                    </span>
+                    <span class="muted" *ngIf="item.balance_after !== undefined && item.balance_after !== null">Balance {{ item.balance_after }}</span>
+                  </div>
+                </li>
+              </ol>
+              <ng-template #noHistory>
+                <div class="empty">No stock movements yet.</div>
+              </ng-template>
             </section>
           </div>
 
-          <div class="p-1">
+          <footer class="panel-foot" *ngIf="hasMorePages">
             <pagination [pagination]="paginationOption"
               (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)"
               (pageChange)="onPageChange($event)"></pagination>
-          </div>
+          </footer>
         </div>
       </div>
     </div>
