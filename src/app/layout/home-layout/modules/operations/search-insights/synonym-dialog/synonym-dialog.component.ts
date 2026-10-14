@@ -2,7 +2,7 @@ import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Subject, debounceTime, switchMap, takeUntil, of, catchError } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, of, catchError, map } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
 
 export interface SynonymDialogData {
@@ -40,6 +40,14 @@ const separatorless = (value: string) => value.trim().toLowerCase().replace(/[\s
         Add alternatives only to include products listed under other names.
       </p>
 
+      <div class="suggest" *ngIf="suggestions.length">
+        <span class="hint">Catalog spellings:</span>
+        <button *ngFor="let s of suggestions" type="button" class="suggest-chip" [disabled]="isAdded(s)"
+          [attr.aria-label]="(isAdded(s) ? 'Added: ' : 'Add alternative ') + s" (click)="addAlternative(s)">
+          {{ isAdded(s) ? '✓' : '+' }} {{ s }}<span *ngIf="counts.has(s)" class="suggest-count">· {{ counts.get(s) | number }}</span>
+        </button>
+      </div>
+
       <label class="block mt-4">
         <span class="label">Also search for</span>
         <textarea class="field" name="alternatives" rows="3" [(ngModel)]="alternatives" (ngModelChange)="schedulePreview()"
@@ -76,6 +84,11 @@ const separatorless = (value: string) => value.trim().toLowerCase().replace(/[\s
     .note-ok { color: #065f46; background: #ecfdf5; }
     :host-context(.dark) .note { color: #fcd34d; background: rgba(245, 158, 11, .12); }
     :host-context(.dark) .note-ok { color: #6ee7b7; background: rgba(16, 185, 129, .12); }
+.suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+    .suggest-chip { padding: 3px 10px; font-size: 12px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--nav-primary); }
+    .suggest-chip:hover:not(:disabled) { border-color: var(--nav-primary); }
+    .suggest-chip:disabled { color: var(--text-secondary); cursor: default; }
+    .suggest-count { margin-left: 3px; color: var(--text-secondary); }
     .cancel-btn { padding: 8px 14px; border-radius: 6px; }
     .field { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); font-size: 14px; }
     .field::placeholder { color: var(--text-secondary); opacity: .6; font-style: italic; }
@@ -103,8 +116,10 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
   termCount: number | null = null;
   previewFailed = false;
   previewRows: PreviewRow[] = [];
-  private counts = new Map<string, number>();
+  suggestions: string[] = [];
+  counts = new Map<string, number>();
   private preview$ = new Subject<void>();
+  private suggest$ = new Subject<string>();
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -134,8 +149,41 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
       for (const row of res?.data ?? []) this.counts.set(row.term, row.count);
       this.refreshPreview();
     });
+    // Close catalog spellings for the term, with their counts so the useful ones stand out.
+    this.suggest$.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      switchMap(term => term
+        ? this.apiService.suggestSearchSynonyms(term).pipe(map((res: any) => res?.data ?? []), catchError(() => of([])))
+        : of([])),
+      switchMap((suggestions: string[]) => {
+        this.suggestions = suggestions;
+        const missing = suggestions.filter(s => !this.counts.has(s));
+        return missing.length
+          ? this.apiService.previewSearchSynonym(missing).pipe(catchError(() => of(null)))
+          : of(null);
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe((res: any) => {
+      for (const row of res?.data ?? []) this.counts.set(row.term, row.count);
+      // Spellings that find nothing would not help; keep the rest, most products first.
+      this.suggestions = this.suggestions
+        .filter(s => this.counts.get(s) !== 0)
+        .sort((a, b) => (this.counts.get(b) ?? 0) - (this.counts.get(a) ?? 0));
+    });
     this.refreshPreview();
     this.preview$.next();
+    this.suggest$.next(this.normalizedTerm);
+  }
+
+  isAdded(suggestion: string): boolean {
+    return this.alternativeList.includes(suggestion);
+  }
+
+  addAlternative(suggestion: string): void {
+    if (this.isAdded(suggestion)) return;
+    this.alternatives = [...this.alternatives.split('\n').map(line => line.trim()).filter(Boolean), suggestion].join('\n');
+    this.schedulePreview();
   }
 
   ngOnDestroy(): void {
@@ -165,6 +213,7 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
     this.error = '';
     this.refreshPreview();
     this.preview$.next();
+    this.suggest$.next(this.normalizedTerm);
   }
 
   private refreshPreview(): void {
