@@ -119,8 +119,12 @@
       <!-- Product Details-->
       <div class="space-y-3">
         <div class="space-y-3 bg-white shadow-sm">
-          <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
+          <h2 class="flex items-center justify-between gap-2 text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
             Product Details
+            <button *ngIf="canSyncZoho" type="button" mat-stroked-button (click)="openZohoSync()"
+              title="Compare this product with Zoho Books and push or pull changes">
+              <mat-icon aria-hidden="true">sync_alt</mat-icon>Sync with Zoho
+            </button>
           </h2>
 
           <div class="px-3 pb-3">
@@ -335,12 +339,9 @@
             </mat-form-field>
             <p *ngIf="formGroup.get('hsn_sac') as hsn" id="hsn-help" class="-mt-1 text-xs"
               [class.text-red-600]="hsn.invalid && hsn.touched" [class.text-gray-500]="!(hsn.invalid && hsn.touched)">
-              {{ hsn.invalid && hsn.touched ? 'Enter 4, 6 or 8 digits.' : 'GST HSN, 4, 6 or 8 digits. Shown on invoices and sent to Shiprocket.' }}
+              {{ hsn.invalid && hsn.touched ? 'Enter 4, 6 or 8 digits.' : 'GST HSN, 4, 6 or 8 digits. Shown on invoices and sent to Shiprocket and Zoho.' }}
               <ng-container *ngIf="formGroup.getRawValue().product_type === 'variable'"> Variations use it unless they set their own.</ng-container>
             </p>
-            <button *ngIf="canSyncZoho" type="button" mat-stroked-button class="mt-2 zoho-sync-btn" (click)="openZohoHsnSync()">
-              <mat-icon aria-hidden="true">sync_alt</mat-icon>Sync HSN with Zoho
-            </button>
           </div>
         </div>
       </div>

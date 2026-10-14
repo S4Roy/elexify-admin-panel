@@ -1,0 +1,99 @@
+<h2 mat-dialog-title>Sync with Zoho Books</h2>
+<mat-dialog-content class="zoho-sync">
+  <p class="lead">{{ data.productName }}</p>
+  <p *ngIf="data.unsaved && !applied" class="note note-warn" role="status">
+    <mat-icon aria-hidden="true">info</mat-icon>
+    This compares the saved product. Save your changes first if you want them included.
+  </p>
+
+  <p *ngIf="loading" class="state">Reading Zoho Books…</p>
+  <p *ngIf="error" class="note note-error" role="alert">
+    <mat-icon aria-hidden="true">error_outline</mat-icon><span>{{ error }}</span>
+    <button *ngIf="!items.length && !loading" type="button" class="link" (click)="load()">Retry</button>
+  </p>
+
+  <ng-container *ngIf="!loading && items.length">
+    <div class="bulk" *ngIf="!applied && data.canManage">
+      <span>For every difference:</span>
+      <button type="button" class="link" (click)="chooseAll('pull')">Use Zoho's</button>
+      <button type="button" class="link" (click)="chooseAll('push')">Use ours</button>
+      <button type="button" class="link" (click)="chooseAll('skip')">Skip</button>
+    </div>
+
+    <section *ngFor="let item of items" class="item" [attr.aria-label]="item.name">
+      <header class="item-head">
+        <div>
+          <div class="item-name">{{ item.name }}</div>
+          <div class="item-meta">SKU {{ item.sku || '—' }}<ng-container *ngIf="item.sku_mismatch"> · Zoho SKU {{ item.zoho_sku || '—' }}</ng-container></div>
+        </div>
+        <span class="chip" [ngClass]="'chip-' + status(item).tone">{{ status(item).label }}</span>
+      </header>
+
+      <p *ngIf="item.result" class="result" [class.result-ok]="item.result.ok" [class.result-fail]="!item.result.ok" role="status">
+        <mat-icon aria-hidden="true">{{ item.result.ok ? 'check_circle' : 'error' }}</mat-icon>
+        <span [title]="item.result.error || ''">{{ resultText(item) }}</span>
+      </p>
+
+      <ng-container *ngIf="!item.in_zoho; else compareTable">
+        <div class="create-row" *ngIf="!applied">
+          <label class="create-label">
+            <input type="checkbox" [checked]="item.create" [disabled]="!item.can_create || !data.canManage || applying"
+              (change)="item.create = $any($event.target).checked" />
+            Create this item in Zoho Books
+          </label>
+          <span *ngIf="!item.can_create" class="sub">Needs a SKU and a price.</span>
+        </div>
+      </ng-container>
+
+      <ng-template #compareTable>
+        <p *ngIf="item.sku_mismatch" class="note note-error">
+          <mat-icon aria-hidden="true">link_off</mat-icon>
+          The Zoho item linked to this product has a different SKU. Correct the SKU on one side before syncing.
+        </p>
+        <div class="table-scroll">
+          <table class="sync-table">
+            <thead><tr><th scope="col">Field</th><th scope="col">Our store</th><th scope="col">Zoho Books</th><th scope="col">Action</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let field of item.fields" [class.same]="!differs(field)">
+                <th scope="row">{{ field.label }}</th>
+                <td class="value">{{ display(field, field.ours) }}</td>
+                <td class="value">{{ display(field, field.zoho) }}</td>
+                <td>
+                  <span *ngIf="!differs(field)" class="same-label"><mat-icon aria-hidden="true">check</mat-icon>Same</span>
+                  <div *ngIf="differs(field)" class="segmented" role="radiogroup" [attr.aria-label]="field.label + ' for ' + item.name">
+                    <button type="button" role="radio" [attr.aria-checked]="field.choice === 'pull'" [class.active]="field.choice === 'pull'"
+                      [disabled]="!field.pullable || !editable(item)" (click)="choose(item, field, 'pull')" title="Use Zoho's value here">
+                      <mat-icon aria-hidden="true">south_west</mat-icon>Pull
+                    </button>
+                    <button type="button" role="radio" [attr.aria-checked]="field.choice === 'push'" [class.active]="field.choice === 'push'"
+                      [disabled]="!field.pushable || !editable(item)" (click)="choose(item, field, 'push')" title="Send our value to Zoho">
+                      <mat-icon aria-hidden="true">north_east</mat-icon>Push
+                    </button>
+                    <button type="button" role="radio" [attr.aria-checked]="field.choice === 'skip'" [class.active]="field.choice === 'skip'"
+                      [disabled]="!editable(item)" (click)="choose(item, field, 'skip')">Skip</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-template>
+    </section>
+
+    <p *ngIf="!data.canManage" class="note">You can view the comparison. Syncing needs the Zoho sync manage permission.</p>
+    <p *ngIf="!applied" class="hint">Pull saves Zoho's value in our store. Push updates only that field in Zoho. SKUs link the two and aren't changed here.</p>
+    <p *ngIf="applied" class="state" role="status">{{ failures ? failures + ' item' + (failures > 1 ? 's' : '') + ' failed.' : 'Sync complete.' }}</p>
+  </ng-container>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <ng-container *ngIf="!applied; else done">
+    <span class="summary" *ngIf="pending">
+      {{ counts.pull }} to pull · {{ counts.push }} to push<ng-container *ngIf="counts.create"> · {{ counts.create }} to create</ng-container>
+    </span>
+    <button mat-button type="button" (click)="close()" [disabled]="applying">Cancel</button>
+    <button mat-flat-button color="primary" type="button" (click)="apply()" [disabled]="!pending || applying || !data.canManage || loading">
+      {{ applying ? 'Syncing…' : 'Apply' }}
+    </button>
+  </ng-container>
+  <ng-template #done><button mat-flat-button color="primary" type="button" (click)="close()">Close</button></ng-template>
+</mat-dialog-actions>
