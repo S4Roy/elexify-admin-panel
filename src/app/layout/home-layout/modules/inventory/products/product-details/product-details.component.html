@@ -1,284 +1,262 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-  <!-- Product Images -->
-  <div class="grid grid-cols-1 gap-8">
-    <div class="space-y-4">
-      <ng-container *ngIf="product?.images?.length; else noImage">
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <img
-            *ngFor="let img of product?.images"
-            [src]="img?.url"
-            alt="{{ product?.name }}"
-            class="w-full h-48 object-cover rounded-lg shadow-md"
-          />
-        </div>
-      </ng-container>
-      <ng-template #noImage>
-        <div class="text-gray-500">No images available</div>
-      </ng-template>
-    </div>
-
-    <!-- Product Basic Info -->
-    <div class="space-y-4">
-      <h1 class="text-3xl font-bold text-gray-900">{{ product?.name }}</h1>
-      <div [innerHTML]="product?.description"></div>
-
-      <!-- Simple Pricing -->
-      <ng-container *ngIf="product?.type === 'simple'">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <span class="text-gray-500">Regular Price:</span> ₹<strong>{{
-              product?.regular_price
-            }}</strong>
-          </div>
-          <div>
-            <span class="text-gray-500">Sale Price:</span> ₹<strong>{{
-              product?.sale_price || "—"
-            }}</strong>
-          </div>
-          <div><span class="text-gray-500">SKU:</span> {{ product?.sku }}</div>
-          <div>
-            <span class="text-gray-500">Stock Quantity:</span>
-            <span
-              class="font-semibold text-{{
-                product?.stock_quantity ? 'green' : 'red'
-              }}-600"
-              >{{ product?.stock_quantity || "0" }}</span
-            >
-          </div>
-          <div>
-            <span class="text-gray-500">Stock Status:</span>
-            {{ product?.stock_quantity ? "In Stock" : "Out of Stock" }}
-          </div>
-        </div>
-      </ng-container>
-
-      <!-- Stock Info -->
-      <!-- <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        
-        <div>
-          <span class="text-gray-500">Allow Backorders:</span>
-          {{ product?.allow_backorders ? "Yes" : "No" }}
-        </div>
-        <div>
-          <span class="text-gray-500">Manage Stock:</span>
-          {{ product?.manage_stock ? "Yes" : "No" }}
-        </div>
-        <div>
-          <span class="text-gray-500">Sold Individually:</span>
-          {{ product?.sold_individually ? "Yes" : "No" }}
-        </div>
-      </div> -->
-
-      <!-- Category & Brand -->
-      <div class="grid grid-cols-1 gap-4">
-        <div>
-          <span class="text-gray-500">Category:</span>
-          {{ product?.categories?.[0]?.name || '—' }}
-        </div>
-        <div>
-          <span class="text-gray-500">Brand:</span>
-          {{ product?.brand?.name || "—" }}
-        </div>
-        <div>
-          <special-button
-            [ask_for_price]="product?.ask_for_price"
-            [enable_enquiry]="product?.enable_enquiry"
-          ></special-button>
-        </div>
+<div class="pd" *ngIf="product; else notFound">
+  <!-- Header -->
+  <header class="pd-head">
+    <a class="back" routerLink="/inventory/products" aria-label="Back to products"><mat-icon>arrow_back</mat-icon></a>
+    <div class="pd-title">
+      <h1>{{ product.name }}</h1>
+      <div class="badges">
+        <span class="badge" [ngClass]="product.status === 'active' ? 'ok' : 'off'"><span class="dot"></span>{{ product.status === 'active' ? 'Active' : 'Inactive' }}</span>
+        <span class="badge neutral">{{ isVariable ? (product.variations?.length || 0) + ' variants' : 'Simple product' }}</span>
+        <span class="badge accent" *ngIf="product.is_featured"><mat-icon>star</mat-icon>Featured</span>
+        <span class="badge accent" *ngIf="product.is_bestseller"><mat-icon>local_fire_department</mat-icon>Bestseller</span>
+        <special-button [ask_for_price]="product.ask_for_price" [enable_enquiry]="product.enable_enquiry"></special-button>
       </div>
     </div>
-  </div>
-
-  <!-- Variants (for Variable Products) -->
-  <div
-    *ngIf="product?.type === 'variable' && product?.variations?.length"
-    class="bg-white rounded-xl shadow p-6"
-  >
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Variations</h2>
-    <div class="space-y-3">
-      <div
-        *ngFor="let variant of product?.variations"
-        class="border p-4 rounded-md"
-      >
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-          <div><span class="text-gray-500">SKU:</span> {{ variant?.sku }}</div>
-          <div>
-            <span class="text-gray-500">Price:</span> ₹{{
-              variant?.regular_price
-            }}
-          </div>
-          <div>
-            <span class="text-gray-500">Stock:</span>
-            {{ variant?.stock_quantity }}
-          </div>
-          <div>
-            <span class="text-gray-500">Attributes:</span>
-            <ng-container *ngFor="let attr of variant?.attributes">
-              <span
-                class="inline-block bg-gray-200 rounded px-2 py-0.5 mx-1 text-xs"
-              >
-                <strong>{{ attr?.attribute?.name }}:</strong>
-                {{ attr?.value?.value }}
-              </span>
-            </ng-container>
-          </div>
-        </div>
-      </div>
+    <div class="pd-actions">
+      <a class="btn-ghost" *ngIf="storefrontUrl && product.status === 'active'" [href]="storefrontUrl" target="_blank" rel="noopener">
+        <mat-icon>open_in_new</mat-icon> View on store
+      </a>
+      <button type="button" class="btn-ghost" *ngIf="canViewStock" (click)="openStock()"><mat-icon>inventory</mat-icon> Manage stock</button>
+      <a class="btn-solid" *ngIf="canEdit" [routerLink]="['/inventory/products/update', product._id]"><mat-icon>edit</mat-icon> Edit product</a>
     </div>
-  </div>
+  </header>
 
-  <!-- Shipping Info -->
-  <div
-    class="bg-white rounded-xl shadow p-6"
-    *ngIf="
-      product?.weight ||
-      product?.length ||
-      product?.width ||
-      product?.height ||
-      product?.shipping_class
-    "
-  >
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">
-      Shipping Information
-    </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-      <div>
-        <span class="text-gray-500">Weight:</span> {{ product?.weight }} kg
-      </div>
-      <div>
-        <span class="text-gray-500">Dimensions:</span>
-        {{ product?.length }} x {{ product?.width }} x {{ product?.height }} cm
-      </div>
-      <!-- <div>
-        <span class="text-gray-500">Shipping Class:</span>
-        {{ product?.shipping_class || "—" }}
-      </div> -->
-    </div>
-  </div>
-
-  <!-- SEO Info -->
-  <div *ngIf="product?.seo" class="bg-white rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">SEO Information</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label class="block text-sm font-medium text-gray-700"
-          >Meta Title</label
-        >
-        <textarea
-          class="w-full px-4 py-2 border rounded bg-gray-50 h-20"
-          readonly
-          >{{ product?.seo?.meta_title }}</textarea
-        >
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700"
-          >Meta Description</label
-        >
-        <textarea
-          class="w-full px-4 py-2 border rounded bg-gray-50 h-20"
-          readonly
-          >{{ product?.seo?.meta_description }}</textarea
-        >
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700"
-          >Meta Keywords</label
-        >
-        <div class="flex flex-wrap gap-2 mt-1">
-          <span
-            *ngFor="let keyword of product?.seo?.meta_keywords"
-            class="bg-red-100 text-teal-700 text-xs px-2 py-1 rounded"
-          >
-            {{ keyword }}
-          </span>
-        </div>
-      </div>
-      <!-- <div>
-        <label class="block text-sm font-medium text-gray-700"
-          >Canonical URL</label
-        >
-        <input
-          type="text"
-          [value]="product?.seo?.canonical_url"
-          class="w-full px-4 py-2 border rounded bg-gray-50"
-          readonly
-        />
-      </div> -->
-    </div>
-  </div>
-
-  <!-- Table Wrapper -->
-  <div
-    class="product overflow-x-auto hidden md:block border border-red-900"
-    *ngIf="product?.specifications?.length"
-  >
-    <table class="w-full border border-red-900 rounded-lg overflow-hidden">
-      <tbody class="divide-y divide-red-900">
-        <tr
-          class="border-x border-red-900"
-          *ngFor="let spec of product?.specifications"
-        >
-          <td class="p-4 font-semibold text-gray-800">{{ spec?.label }}</td>
-          <td class="p-4 text-gray-700">
-            <ng-container [ngSwitch]="spec?.specification?.type">
-              <span *ngSwitchCase="'text'">{{ spec?.value }}</span>
-              <span *ngSwitchCase="'number'">{{ spec?.value }}</span>
-              <span *ngSwitchCase="'boolean'">{{
-                spec?.value ? "Yes" : "No"
-              }}</span>
-              <span *ngSwitchCase="'richtext'" [innerHTML]="spec?.value"></span>
-              <span *ngSwitchDefault>—</span>
-            </ng-container>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Mobile View (Stacked Cards) -->
-  <div
-    class="product space-y-4 md:hidden"
-    *ngIf="product?.specifications?.length"
-  >
-    <div
-      class="border border-red-900 rounded-lg p-4"
-      *ngFor="let spec of product?.specifications"
-    >
-      <p class="font-semibold text-gray-800">{{ spec?.label }}</p>
-      <p class="text-gray-700">
-        <ng-container [ngSwitch]="spec?.specification?.type">
-          <span *ngSwitchCase="'text'">{{ spec?.value }}</span>
-          <span *ngSwitchCase="'number'">{{ spec?.value }}</span>
-          <span *ngSwitchCase="'boolean'">{{
-            spec?.value ? "Yes" : "No"
-          }}</span>
-          <span *ngSwitchCase="'richtext'" [innerHTML]="spec?.value"></span>
-          <span *ngSwitchDefault>—</span>
+  <div class="pd-grid">
+    <!-- Main column -->
+    <div class="pd-main">
+      <section class="card gallery">
+        <ng-container *ngIf="mainImage; else noImage">
+          <div class="gallery-main">
+            <img [src]="mainImage.url" [alt]="mainImage.alt || product.name" />
+          </div>
+          <div class="thumbs" *ngIf="images.length > 1" role="listbox" aria-label="Product images">
+            <button type="button" *ngFor="let img of images; let i = index" role="option"
+              [class.active]="i === activeImage" [attr.aria-selected]="i === activeImage"
+              [attr.aria-label]="'Image ' + (i + 1)" (click)="activeImage = i">
+              <img [src]="img.url" alt="" loading="lazy" />
+            </button>
+          </div>
         </ng-container>
-      </p>
-    </div>
-  </div>
+        <ng-template #noImage>
+          <div class="no-image"><mat-icon>image_not_supported</mat-icon><span>No images yet</span></div>
+        </ng-template>
+      </section>
 
-  <!-- Admin Metadata -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Admin Info</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-      <div>
-        <span class="text-gray-500">Created By:</span>
-        {{ product?.created_by?.name || "—" }}
-      </div>
-      <div>
-        <span class="text-gray-500">Updated By:</span>
-        {{ product?.updated_by?.name || "—" }}
-      </div>
-      <div>
-        <span class="text-gray-500">Created At:</span>
-        {{ product?.created_at | date : "medium" }}
-      </div>
-      <div>
-        <span class="text-gray-500">Updated At:</span>
-        {{ product?.updated_at | date : "medium" }}
-      </div>
+      <section class="card" *ngIf="product.short_description || product.description">
+        <h2>Description</h2>
+        <div class="highlights rich" *ngIf="product.short_description" [innerHTML]="product.short_description"></div>
+        <div class="rich" *ngIf="product.description" [innerHTML]="product.description"></div>
+      </section>
+
+      <!-- Variants -->
+      <section class="card flush" *ngIf="isVariable">
+        <div class="card-head">
+          <h2>Variants</h2>
+          <span class="muted" *ngIf="product.variations?.length">{{ product.variations.length }} total</span>
+        </div>
+        <div class="table-scroll" *ngIf="product.variations?.length; else noVariants">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th>SKU</th>
+                <th class="num">Price</th>
+                <th class="num">Available</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let variant of product.variations; trackBy: trackById">
+                <td>
+                  <div class="variant-cell">
+                    <img *ngIf="variant.images?.[0]?.url" [src]="variant.images[0].url" alt="" loading="lazy" />
+                    <span *ngIf="!variant.images?.[0]?.url" class="thumb-placeholder"><mat-icon>image</mat-icon></span>
+                    <div class="attrs">
+                      <span class="attr" *ngFor="let attr of variant.attributes">
+                        <span class="attr-key">{{ attr?.attribute?.name }}</span> {{ attrValue(attr) }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="mono">{{ variant.sku || '—' }}</span>
+                  <div class="muted small" *ngIf="variant.hsn_sac">HSN {{ variant.hsn_sac }}</div>
+                </td>
+                <td class="num">
+                  <ng-container *ngIf="sellingPrice(variant) !== null; else dash">
+                    <div class="strong">{{ sellingPrice(variant) | currency: 'INR' }}</div>
+                    <div class="muted small" *ngIf="isOnSale(variant)"><s>{{ variant.regular_price | currency: 'INR' }}</s></div>
+                  </ng-container>
+                </td>
+                <td class="num">
+                  <ng-container *ngIf="stockOf(variant) as s">
+                    <span *ngIf="s.tracked; else notTracked" class="strong" [class.danger-text]="s.status === 'out_of_stock'">{{ s.available | number }}</span>
+                    <div class="muted small" *ngIf="s.reserved">{{ s.reserved }} reserved</div>
+                  </ng-container>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="variant.status === 'active' ? 'ok' : 'off'"><span class="dot"></span>{{ variant.status === 'active' ? 'Active' : 'Inactive' }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noVariants><p class="empty">No variants have been added yet.</p></ng-template>
+      </section>
+
+      <!-- Specifications -->
+      <section class="card flush" *ngIf="product.specifications?.length">
+        <div class="card-head"><h2>Specifications</h2></div>
+        <dl class="spec-list">
+          <div class="spec-row" *ngFor="let spec of product.specifications; trackBy: trackById">
+            <dt>{{ spec?.label || spec?.specification?.label }}</dt>
+            <dd>
+              <ng-container [ngSwitch]="spec?.specification?.type">
+                <span *ngSwitchCase="'boolean'">{{ spec?.value ? 'Yes' : 'No' }}</span>
+                <span *ngSwitchCase="'richtext'" class="rich" [innerHTML]="spec?.value"></span>
+                <span *ngSwitchDefault>{{ spec?.value ?? '—' }}<ng-container *ngIf="spec?.unit || spec?.specification?.unit"> {{ spec?.unit || spec?.specification?.unit }}</ng-container></span>
+              </ng-container>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Search listing preview -->
+      <section class="card" *ngIf="product.seo">
+        <div class="card-head">
+          <h2>Search engine listing</h2>
+          <a class="link" routerLink="/inventory/products/seo-manager">SEO manager</a>
+        </div>
+        <div class="serp">
+          <div class="serp-url">{{ storefrontUrl || '/product/' + product.slug }}</div>
+          <div class="serp-title">{{ product.seo.meta_title || product.name }}</div>
+          <div class="serp-desc">{{ product.seo.meta_description || 'No meta description — search engines will pick text from the page.' }}</div>
+        </div>
+        <div class="keywords" *ngIf="product.seo.meta_keywords?.length">
+          <span class="tag" *ngFor="let keyword of product.seo.meta_keywords">{{ keyword }}</span>
+        </div>
+      </section>
     </div>
+
+    <!-- Sidebar -->
+    <aside class="pd-side">
+      <section class="card">
+        <h2>Pricing</h2>
+        <ng-container *ngIf="priceRange; else noPrice">
+          <ng-container *ngIf="!isVariable; else variablePrice">
+            <div class="price-big">{{ sellingPrice(product) | currency: 'INR' }}</div>
+            <div class="price-compare" *ngIf="isOnSale(product)">
+              <s>{{ product.regular_price | currency: 'INR' }}</s>
+              <span class="sale">-{{ discountOf(product) }}%</span>
+            </div>
+          </ng-container>
+          <ng-template #variablePrice>
+            <div class="price-big">
+              {{ priceRange.min | currency: 'INR' }}<ng-container *ngIf="priceRange.max !== priceRange.min"> – {{ priceRange.max | currency: 'INR' }}</ng-container>
+            </div>
+            <div class="muted small">Across {{ product.variations?.length }} variants</div>
+          </ng-template>
+        </ng-container>
+        <ng-template #noPrice><p class="muted">No price set.</p></ng-template>
+
+        <div class="tiers" *ngIf="product.quantity_discounts?.length">
+          <div class="sub-title">Quantity discounts</div>
+          <div class="tier" *ngFor="let tier of product.quantity_discounts">
+            <span>Buy {{ tier.min_quantity }}+</span><strong>{{ tier.discount_percent }}% off</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Inventory</h2>
+          <span class="stock-chip" [ngClass]="stockSummary.status"><span class="dot"></span>{{ stockLabels[stockSummary.status] }}</span>
+        </div>
+        <ng-container *ngIf="stockSummary.tracked; else untracked">
+          <div class="stats">
+            <div class="stat"><span>On hand</span><strong>{{ stockSummary.onHand | number }}</strong></div>
+            <div class="stat"><span>Reserved</span><strong>{{ stockSummary.reserved | number }}</strong></div>
+            <div class="stat primary"><span>Available</span><strong>{{ stockSummary.available | number }}</strong></div>
+          </div>
+          <p class="muted small" *ngIf="stockSummary.skuCount > 1">
+            Across {{ stockSummary.skuCount }} variants<ng-container *ngIf="stockSummary.outCount"> · <span class="danger-text">{{ stockSummary.outCount }} out of stock</span></ng-container>
+          </p>
+          <ul class="facts" *ngIf="!isVariable">
+            <li><span>Backorders</span><strong>{{ product.allow_backorders ? 'Allowed' : 'Not allowed' }}</strong></li>
+            <li><span>Low-stock alert</span><strong>{{ product.low_stock_threshold ?? 'Store default' }}</strong></li>
+          </ul>
+        </ng-container>
+        <ng-template #untracked><p class="muted">Stock isn't tracked — always available.</p></ng-template>
+        <button type="button" class="btn-ghost full" *ngIf="canViewStock" (click)="openStock()"><mat-icon>tune</mat-icon> Adjust &amp; view history</button>
+      </section>
+
+      <section class="card">
+        <h2>Organization</h2>
+        <ul class="facts stacked">
+          <li>
+            <span>Categories</span>
+            <div class="tags">
+              <a class="tag" *ngFor="let c of product.categories" [routerLink]="['/inventory/products', c.slug]">{{ c.name }}</a>
+              <strong *ngIf="!product.categories?.length">—</strong>
+            </div>
+          </li>
+          <li *ngIf="product.sub_categories?.length">
+            <span>Sub-categories</span>
+            <div class="tags"><span class="tag" *ngFor="let c of product.sub_categories">{{ c.name }}</span></div>
+          </li>
+          <li><span>Brand</span><strong>{{ product.brand?.name || '—' }}</strong></li>
+          <li *ngIf="product.tags?.length">
+            <span>Tags</span>
+            <div class="tags"><span class="tag" *ngFor="let t of product.tags">{{ t.name }}</span></div>
+          </li>
+          <li *ngIf="product.classifications?.length">
+            <span>Classification</span>
+            <div class="tags"><span class="tag" *ngFor="let c of product.classifications">{{ c.name }}</span></div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Identifiers</h2>
+        <ul class="facts">
+          <li *ngIf="!isVariable"><span>SKU</span><strong class="mono">{{ product.sku || '—' }}</strong></li>
+          <li>
+            <span>HSN / SAC</span>
+            <strong *ngIf="product.hsn_sac" class="mono">{{ product.hsn_sac }}</strong>
+            <span *ngIf="!product.hsn_sac && hsnMissing" class="warn-pill" matTooltip="Needed on GST invoices and Shiprocket orders.">Missing</span>
+            <strong *ngIf="!product.hsn_sac && !hsnMissing">Set per variant</strong>
+          </li>
+          <li><span>Slug</span><strong class="mono ellipsis" [title]="product.slug">{{ product.slug }}</strong></li>
+        </ul>
+      </section>
+
+      <section class="card" *ngIf="product.weight || hasDimensions || product.shipping_class">
+        <h2>Shipping</h2>
+        <ul class="facts">
+          <li *ngIf="product.weight"><span>Weight</span><strong>{{ product.weight }} kg</strong></li>
+          <li *ngIf="hasDimensions"><span>Dimensions</span><strong>{{ product.dimensions.length || 0 }} × {{ product.dimensions.width || 0 }} × {{ product.dimensions.height || 0 }} cm</strong></li>
+          <li *ngIf="product.shipping_class"><span>Shipping class</span><strong>{{ product.shipping_class.name || '—' }}</strong></li>
+          <li *ngIf="product.sold_individually"><span>Limit</span><strong>One per order</strong></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Activity</h2>
+        <ul class="facts">
+          <li><span>Created</span><strong>{{ product.created_at | date: 'd MMM y, h:mm a' }}<ng-container *ngIf="product.created_by?.name"> · {{ product.created_by.name }}</ng-container></strong></li>
+          <li><span>Last updated</span><strong>{{ product.updated_at | date: 'd MMM y, h:mm a' }}<ng-container *ngIf="product.updated_by?.name"> · {{ product.updated_by.name }}</ng-container></strong></li>
+        </ul>
+      </section>
+    </aside>
   </div>
 </div>
+
+<ng-template #notFound>
+  <div class="not-found">
+    <mat-icon>search_off</mat-icon>
+    <p>This product couldn't be loaded. It may have been deleted.</p>
+    <a class="btn-ghost" routerLink="/inventory/products">Back to products</a>
+  </div>
+</ng-template>
+<ng-template #dash><span class="muted">—</span></ng-template>
+<ng-template #notTracked><span class="muted">Not tracked</span></ng-template>
