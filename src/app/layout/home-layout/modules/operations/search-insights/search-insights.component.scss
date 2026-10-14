@@ -24,7 +24,11 @@
 .export-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .insights-table { table-layout: fixed; width: 100%; }
-.insights-table .col-query { width: 40%; }
+.insights-table .col-query { width: 36%; }
+.insights-table .col-platform { width: 150px; }
+.platform-cell { white-space: nowrap; color: var(--text-secondary); }
+.platform-cell span { display: inline-flex; align-items: center; gap: 3px; margin-right: 12px; }
+.platform-cell mat-icon { font-size: 15px; width: 15px; height: 15px; }
 .insights-table td { font-variant-numeric: tabular-nums; }
 
 .sort-btn { display: inline-flex; align-items: center; gap: 2px; font: inherit; text-transform: inherit; letter-spacing: inherit; color: inherit; }

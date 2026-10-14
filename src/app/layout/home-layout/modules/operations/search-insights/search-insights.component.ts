@@ -149,6 +149,15 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     return zeroResults === 'true' ? 'zero_results' : 'searches';
   }
 
+  // Legacy rows never recorded a platform, and a platform filter makes the split redundant.
+  get showsPlatforms(): boolean {
+    return this.filterValues['event_type'] !== 'legacy' && !this.filterValues['platform'];
+  }
+
+  get columnCount(): number {
+    return 3 + (this.showsResults ? 1 : 0) + (this.showsPlatforms ? 1 : 0);
+  }
+
   get showsResults(): boolean {
     return this.filterValues['event_type'] !== 'suggestion';
   }
@@ -366,8 +375,9 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         rows.push(...(res?.data?.docs ?? []));
         if (!res?.data?.hasNextPage) break;
       }
-      const header = ['query', 'searches', ...(this.showsResults ? ['no_results', 'confirmed_counts'] : []), 'last_searched'];
-      const lines = rows.map(r => [r._id, r.searches, ...(this.showsResults ? [r.zero_results, r.measured] : []), r.last_searched]
+      const platforms = this.showsPlatforms;
+      const header = ['query', 'searches', ...(this.showsResults ? ['no_results', 'confirmed_counts'] : []), ...(platforms ? ['web', 'mobile'] : []), 'last_searched'];
+      const lines = rows.map(r => [r._id, r.searches, ...(this.showsResults ? [r.zero_results, r.measured] : []), ...(platforms ? [r.web, r.mobile] : []), r.last_searched]
         .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
       const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
