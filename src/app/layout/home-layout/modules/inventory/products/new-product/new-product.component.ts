@@ -1,4 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
 import { Component, Inject, Optional } from '@angular/core';
 import {
   FormGroup,
@@ -42,6 +43,10 @@ import { ProductSeoComponent } from './product-seo/product-seo.component';
 @Component({
   selector: 'app-new-product',
   imports: [
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
+    CdkDragPlaceholder,
     ReactiveFormsModule,
     MatIconModule,
     MatFormFieldModule,
@@ -506,17 +511,73 @@ export class NewProductComponent {
       })
       .afterClosed()
       .subscribe((res: any) => {
-        if (res) {
-          this.images.clear();
-          res.forEach((file: any) => {
-            this.images.push(this.fb.group(file));
-          });
-        }
+        if (!res) return;
+        // Keep the current arrangement: existing images stay in place, new picks
+        // are appended, and images deselected in the picker are dropped.
+        const picked = new Map<string, any>(res.map((file: any) => [String(file._id), file]));
+        const kept = this.images.value.filter((img: any) => picked.has(String(img._id)));
+        const keptIds = new Set(kept.map((img: any) => String(img._id)));
+        const added = res.filter((file: any) => !keptIds.has(String(file._id)));
+        this.images.clear();
+        [...kept.map((img: any) => picked.get(String(img._id))), ...added].forEach((file: any) => {
+          this.images.push(this.fb.group(file));
+        });
+        if (added.length) this.announceImages(`${added.length} image${added.length === 1 ? '' : 's'} added at the end.`);
       });
   }
   removeImage(index: number) {
     this.images?.removeAt(index);
-    this.images.updateValueAndValidity(); // if using FormArray
+    this.images.markAsDirty();
+    this.announceImages(index === 0 && this.images.length ? 'Image removed. The next image is now the main image.' : 'Image removed.');
+  }
+
+  // ── Image arrangement (first image = main image) ─────────────────────────
+  imageAnnouncement = '';
+
+  trackImage = (_: number, img: any) => img?._id ?? img?.url;
+
+  dropImage(event: CdkDragDrop<unknown>) {
+    this.reorderImage(event.previousIndex, event.currentIndex);
+  }
+
+  moveImage(index: number, delta: -1 | 1) {
+    this.reorderImage(index, index + delta);
+  }
+
+  makeMainImage(index: number) {
+    this.reorderImage(index, 0);
+  }
+
+  // Arrow keys on a focused drag handle move the image; Home makes it the main image.
+  onHandleKey(event: KeyboardEvent, index: number) {
+    const target = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? index - 1
+      : event.key === 'ArrowRight' || event.key === 'ArrowDown' ? index + 1
+        : event.key === 'Home' ? 0
+          : event.key === 'End' ? this.images.length - 1 : null;
+    if (target === null) return;
+    event.preventDefault();
+    if (this.reorderImage(index, target)) {
+      // Keep focus on the moved image's handle.
+      setTimeout(() => (document.querySelectorAll<HTMLElement>('.image-tile .drag-handle')[target] as HTMLElement | undefined)?.focus());
+    }
+  }
+
+  private reorderImage(from: number, to: number): boolean {
+    const last = this.images.length - 1;
+    to = Math.max(0, Math.min(last, to));
+    if (from === to || from < 0 || from > last) return false;
+    const control = this.images.at(from);
+    this.images.removeAt(from, { emitEvent: false });
+    this.images.insert(to, control);
+    this.images.markAsDirty();
+    this.announceImages(to === 0 ? 'Moved to first. This is now the main image.' : `Moved to position ${to + 1} of ${last + 1}.`);
+    return true;
+  }
+
+  private announceImages(message: string) {
+    // Reset first so repeating the same message is announced again.
+    this.imageAnnouncement = '';
+    setTimeout(() => (this.imageAnnouncement = message));
   }
   onProductTypeChange(event: any) {
     if (event.value === 'variable') {

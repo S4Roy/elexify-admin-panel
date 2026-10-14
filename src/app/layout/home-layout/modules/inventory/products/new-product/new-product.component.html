@@ -329,54 +329,80 @@
         </div>
       </div>
     </div>
-    <!-- Uploaded Images -->
-    <div class="space-y-3 bg-white shadow-sm mt-4">
-      <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">
-        Product Image
-      </h2>
+    <!-- Product Images: drag to arrange; the first image is the main image everywhere. -->
+    <section class="space-y-3 bg-white shadow-sm mt-4" aria-labelledby="product-images-title">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+        <h2 id="product-images-title" class="text-md font-normal text-gray-600">
+          Product Images
+          <span *ngIf="images.length" class="ml-1 text-xs text-gray-400">({{ images.length }})</span>
+        </h2>
+        <p *ngIf="images.length > 1" class="text-xs text-gray-500">
+          Drag to reorder. The first image is the main image on the store, in search and in feeds.
+        </p>
+      </div>
       <div class="px-3 pb-3">
-        <ng-container>
-          <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <div
-              class="border rounded-md h-36 relative flex items-center justify-center bg-gray-50"
-            >
-              <div class="text-center cursor-pointer" (click)="chooseFile()">
-                <img
-                  src="assets/placeholder-image-outline.png"
-                  alt="Upload"
-                  class="mx-auto h-16"
-                />
-                <p class="mt-2 text-sm">Choose Product Images</p>
-              </div>
+        <div
+          class="image-grid"
+          cdkDropList
+          cdkDropListOrientation="mixed"
+          (cdkDropListDropped)="dropImage($event)"
+          role="list"
+          aria-describedby="image-order-hint"
+        >
+          <div
+            *ngFor="let img of images.value; let i = index; trackBy: trackImage"
+            class="image-tile"
+            [class.is-main]="i === 0"
+            cdkDrag
+            [cdkDragData]="i"
+            role="listitem"
+            [attr.aria-label]="(i === 0 ? 'Main image, ' : 'Image ' + (i + 1) + ' of ' + images.length + ', ') + (img?.alt_text || 'product image')"
+          >
+            <img [src]="img?.thumbnail || img?.url" alt="" loading="lazy" decoding="async" class="image-preview" />
+
+            <span *ngIf="i === 0" class="main-badge"><mat-icon aria-hidden="true">star</mat-icon>Main</span>
+            <span *ngIf="i > 0" class="position-badge" aria-hidden="true">{{ i + 1 }}</span>
+
+            <button type="button" class="drag-handle" cdkDragHandle
+              [attr.aria-label]="'Reorder image ' + (i + 1) + '. Use the arrow keys to move it.'"
+              (keydown)="onHandleKey($event, i)" matTooltip="Drag to reorder">
+              <mat-icon aria-hidden="true">drag_indicator</mat-icon>
+            </button>
+
+            <div class="tile-actions">
+              <button type="button" class="tile-btn" [disabled]="i === 0" (click)="moveImage(i, -1)"
+                [attr.aria-label]="'Move image ' + (i + 1) + ' earlier'" matTooltip="Move earlier">
+                <mat-icon aria-hidden="true">chevron_left</mat-icon>
+              </button>
+              <button type="button" class="tile-btn" *ngIf="i > 0" (click)="makeMainImage(i)"
+                [attr.aria-label]="'Make image ' + (i + 1) + ' the main image'" matTooltip="Make main image">
+                <mat-icon aria-hidden="true">star_outline</mat-icon>
+              </button>
+              <button type="button" class="tile-btn" [disabled]="i === images.length - 1" (click)="moveImage(i, 1)"
+                [attr.aria-label]="'Move image ' + (i + 1) + ' later'" matTooltip="Move later">
+                <mat-icon aria-hidden="true">chevron_right</mat-icon>
+              </button>
+              <button type="button" class="tile-btn tile-btn-danger" (click)="removeImage(i)"
+                [attr.aria-label]="'Remove image ' + (i + 1)" matTooltip="Remove">
+                <mat-icon aria-hidden="true">delete</mat-icon>
+              </button>
             </div>
 
-            <ng-container *ngFor="let img of images?.value; let i = index">
-              <div
-                class="relative group h-36 rounded-md overflow-hidden bg-gray-100"
-              >
-                <img
-                  [src]="img?.url"
-                  alt="Preview"
-                  class="w-full h-full object-contain"
-                />
-
-                <!-- Delete Button -->
-                <button
-                  (click)="removeImage(i)"
-                  class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </ng-container>
+            <div *cdkDragPlaceholder class="image-placeholder"></div>
           </div>
-        </ng-container>
-        <div class="text-xs text-center text-red-500 mt-2">
-          <b>Note:</b> Only .png, .jpg, .jpeg formats supported. Recommended
-          size: 500x500px.
+
+          <button type="button" class="image-add" (click)="chooseFile()" [class.is-empty]="!images.length">
+            <mat-icon aria-hidden="true">add_photo_alternate</mat-icon>
+            <span>{{ images.length ? 'Add images' : 'Choose product images' }}</span>
+          </button>
         </div>
+
+        <p id="image-order-hint" class="mt-2 text-xs text-gray-500">
+          JPG or PNG, square works best. Large photos are resized to 1600px automatically.
+        </p>
+        <p class="sr-only" aria-live="polite">{{ imageAnnouncement }}</p>
       </div>
-    </div>
+    </section>
     <div class="space-y-3 shadow-sm my-4">
       <!-- Product Data-->
       <h2 class="text-md px-3 py-2 font-normal text-gray-600 border-b pb-2">

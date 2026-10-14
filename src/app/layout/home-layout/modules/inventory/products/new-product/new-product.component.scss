@@ -1,0 +1,151 @@
+// Product image manager: responsive grid, first image marked as main.
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.image-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+
+  &.is-main {
+    border: 2px solid var(--nav-primary, #2563eb);
+  }
+
+  &:hover .tile-actions,
+  &:focus-within .tile-actions {
+    opacity: 1;
+  }
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.main-badge,
+.position-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.main-badge {
+  color: #fff;
+  background: var(--nav-primary, #2563eb);
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}
+.position-badge {
+  min-width: 20px;
+  justify-content: center;
+  color: #374151;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+}
+
+.drag-handle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #4b5563;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #e5e7eb;
+  cursor: grab;
+  touch-action: none; // only the handle captures touch, so the page still scrolls
+  &:active { cursor: grabbing; }
+  &:focus-visible { outline: 2px solid var(--nav-primary, #2563eb); outline-offset: 2px; }
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+}
+
+.tile-actions {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  background: linear-gradient(to top, rgba(17, 24, 39, 0.65), transparent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+// Touch screens have no hover: keep actions visible.
+@media (hover: none) {
+  .tile-actions { opacity: 1; }
+}
+
+.tile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #111827;
+  background: rgba(255, 255, 255, 0.95);
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover:not(:disabled) { background: #fff; color: var(--nav-primary, #2563eb); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+}
+.tile-btn-danger:hover:not(:disabled) { color: #dc2626; }
+
+.image-add {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb;
+  &:hover, &:focus-visible { border-color: var(--nav-primary, #2563eb); color: var(--nav-primary, #2563eb); }
+  mat-icon { font-size: 28px; width: 28px; height: 28px; }
+  &.is-empty { grid-column: span 2; aspect-ratio: auto; min-height: 160px; }
+}
+
+// Where the dragged image will land (overrides the global hidden placeholder).
+.image-grid .image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border: 2px dashed var(--nav-primary, #2563eb);
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.06);
+}
+.image-grid .cdk-drag-placeholder { opacity: 1; }
+.image-grid.cdk-drop-list-dragging .image-tile:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+:host-context(.dark) {
+  .image-tile, .image-add { background: var(--bg-surface, #1a1f2b); }
+  .image-add { border-color: #374151; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-actions, .image-grid.cdk-drop-list-dragging .image-tile { transition: none; }
+}
