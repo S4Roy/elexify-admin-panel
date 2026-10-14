@@ -1,7 +1,9 @@
-import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Subject, takeUntil } from 'rxjs';
+import { MatIcon } from '@angular/material/icon';
+import { ToastrService } from 'ngx-toastr';
+import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, takeUntil } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
 import { HelpersService } from 'app/core/services/helpers.service';
 import * as Global from 'app/global';
@@ -12,17 +14,24 @@ import { PaginationComponent } from '../../../includes/pagination/pagination.com
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 
 
+type SortKey = 'searches' | 'zero_results' | 'zero_rate' | 'last_searched';
+
 @Component({
   selector: 'app-search-insights',
-  imports: [NgIf, NgFor, DatePipe, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, DatePipe, DecimalPipe, MatIcon, PaginationComponent, EmptyStateComponent],
   templateUrl: './search-insights.component.html',
+  styleUrl: './search-insights.component.scss',
 })
 export class SearchInsightsComponent implements OnInit, OnDestroy {
   itemList: any[] = [];
   paginationOption: PaginationOptions;
   loading = true;
   error = false;
-  summary = { searches: 0, zero_results: 0, measured: 0, first_tracked: null as string | null };
+  exporting = false;
+  summary = this.emptySummary();
+  sort: SortKey = 'searches';
+  searchText = '';
+  private search$ = new Subject<string>();
 
   filterValues: Record<string, any> = {
     event_type: 'search',
@@ -38,6 +47,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private apiService: ApiService,
     public helperService: HelpersService,
+    private toastr: ToastrService,
   ) {
     this.paginationOption = Global.resetPaginationOptions();
   }
@@ -46,6 +56,13 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     this.helperService.filterButtonClick$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.openFilters());
+    this.search$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(text => {
+        this.searchText = text;
+        this.paginationOption.page = 1;
+        this.fetchList();
+      });
     this.updateFilterButton();
     this.fetchList();
   }
@@ -98,6 +115,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((result: Record<string, any> | undefined) => {
         if (!result) return;
+        if (result['zero_results'] !== this.filterValues['zero_results']) this.sort = this.defaultSort(result['zero_results']);
         this.filterValues = result;
         this.paginationOption.page = 1;
         this.fetchList();
@@ -105,9 +123,60 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
       });
   }
 
-  fetchList() {
-    this.loading = true;
-    this.error = false;
+  private emptySummary() {
+    return { searches: 0, zero_results: 0, measured: 0, distinct_queries: 0, failing_queries: 0, first_tracked: null as string | null };
+  }
+
+  private defaultSort(zeroResults: string | null): SortKey {
+    return zeroResults === 'true' ? 'zero_results' : 'searches';
+  }
+
+  get showsResults(): boolean {
+    return this.filterValues['event_type'] !== 'suggestion';
+  }
+
+  setNoResultsOnly(on: boolean): void {
+    const value = on ? 'true' : null;
+    if (this.filterValues['zero_results'] === value) return;
+    this.filterValues = { ...this.filterValues, zero_results: value };
+    this.sort = this.defaultSort(value);
+    this.paginationOption.page = 1;
+    this.fetchList();
+    this.updateFilterButton();
+  }
+
+  setSort(sort: SortKey): void {
+    if (this.sort === sort) return;
+    this.sort = sort;
+    this.paginationOption.page = 1;
+    this.fetchList();
+  }
+
+  onSearchInput(value: string): void {
+    this.search$.next(value.trim());
+  }
+
+  noResultLabel(item: any): string {
+    return item.measured ? `${item.zero_results} / ${item.measured}` : '—';
+  }
+
+  alwaysFails(item: any): boolean {
+    return item.measured > 0 && item.zero_results === item.measured;
+  }
+
+  get scopeLabel(): string {
+    const f = this.filterValues;
+    const dates = f['from_date'] || f['to_date']
+      ? `${f['from_date'] || 'Start'} to ${f['to_date'] || 'today'}`
+      : 'Last 90 days';
+    const parts = [dates, this.activityLabel];
+    if (f['event_type'] !== 'legacy') parts.push(f['platform'] === 'web' ? 'Web' : f['platform'] === 'mobile' ? 'Mobile' : 'All platforms');
+    if ((f['event_type'] || 'search') === 'search' && f['filtered']) parts.push(f['filtered'] === 'true' ? 'With filters' : 'Without filters');
+    if (this.searchText) parts.push(`Query contains “${this.searchText}”`);
+    return parts.join(' · ');
+  }
+
+  private buildParams(): URLSearchParams {
     const params = new URLSearchParams();
     const f = this.filterValues;
     params.set('event_type', f['event_type'] || 'search');
@@ -116,12 +185,21 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     if (f['event_type'] !== 'suggestion' && f['zero_results']) params.set('zero_results', f['zero_results']);
     if (f['from_date']) params.set('from', f['from_date']);
     if (f['to_date']) params.set('to', f['to_date']);
+    if (this.searchText) params.set('q', this.searchText);
+    params.set('sort', this.sort);
+    return params;
+  }
+
+  fetchList() {
+    this.loading = true;
+    this.error = false;
+    const params = this.buildParams();
     if (this.paginationOption.limit) params.set('limit', String(this.paginationOption.limit));
     if (this.paginationOption.page) params.set('page', String(this.paginationOption.page));
 
     this.apiService.searchInsights(params).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
-        this.summary = res?.data?.summary ?? { searches: 0, zero_results: 0, measured: 0, first_tracked: null };
+        this.summary = { ...this.emptySummary(), ...res?.data?.summary };
         this.itemList = res?.data?.docs ?? [];
         this.paginationOption = { ...res?.data };
         this.loading = false;
@@ -140,6 +218,37 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
 
   get zeroResultRate(): string {
     return this.summary.measured ? (100 * this.summary.zero_results / this.summary.measured).toFixed(1) + '%' : '—';
+  }
+
+  // Pages through the API so the export matches the table's filters and sort.
+  async exportCsv(): Promise<void> {
+    if (this.exporting) return;
+    this.exporting = true;
+    try {
+      const rows: any[] = [];
+      for (let page = 1; page <= 50; page++) {
+        const params = this.buildParams();
+        params.set('limit', '100');
+        params.set('page', String(page));
+        const res: any = await firstValueFrom(this.apiService.searchInsights(params));
+        rows.push(...(res?.data?.docs ?? []));
+        if (!res?.data?.hasNextPage) break;
+      }
+      const header = ['query', 'searches', ...(this.showsResults ? ['no_results', 'confirmed_counts'] : []), 'last_searched'];
+      const lines = rows.map(r => [r._id, r.searches, ...(this.showsResults ? [r.zero_results, r.measured] : []), r.last_searched]
+        .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+      const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `search-insights-${this.filterValues['event_type'] || 'search'}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      this.toastr.error('Could not export search insights');
+    } finally {
+      this.exporting = false;
+    }
   }
 
   onPageChange(page: number) {

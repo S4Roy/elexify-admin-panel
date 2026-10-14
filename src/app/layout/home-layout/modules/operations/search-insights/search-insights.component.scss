@@ -1,0 +1,31 @@
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.kpi-grid .kpi-card { padding: 14px 16px; }
+.kpi-grid .kpi-value { font-variant-numeric: tabular-nums; }
+
+.insights-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.segmented { display: inline-flex; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-surface); }
+.segmented button { padding: 7px 14px; font-size: 13px; color: var(--text-secondary); }
+.segmented button + button { border-left: 1px solid var(--border-color); }
+.segmented button.active { background: var(--nav-primary); color: #fff; }
+
+.query-search { display: flex; align-items: center; gap: 6px; flex: 1 1 220px; max-width: 360px; padding: 0 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); }
+.query-search mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--text-secondary); }
+.query-search input { flex: 1; min-width: 0; padding: 7px 0; font-size: 13px; background: transparent; outline: none; color: var(--text-primary); }
+
+.export-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 12px; font-size: 13px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); }
+.export-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+.export-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.insights-table { table-layout: fixed; width: 100%; }
+.insights-table .col-query { width: 40%; }
+.insights-table td { font-variant-numeric: tabular-nums; }
+
+.sort-btn { display: inline-flex; align-items: center; gap: 2px; font: inherit; text-transform: inherit; letter-spacing: inherit; color: inherit; }
+.sort-btn mat-icon { font-size: 14px; width: 14px; height: 14px; visibility: hidden; }
+.sort-btn.active { color: var(--nav-primary); }
+.sort-btn.active mat-icon { visibility: visible; }
+.sort-alt { margin-left: 6px; padding: 0 5px; border: 1px solid currentColor; border-radius: 4px; opacity: .7; }
+.sort-alt.active { opacity: 1; }
+
+.fail-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 600; border-radius: 999px; color: #b91c1c; background: #fee2e2; }
+:host-context(.dark) .fail-badge { color: #fca5a5; background: rgba(239, 68, 68, .15); }

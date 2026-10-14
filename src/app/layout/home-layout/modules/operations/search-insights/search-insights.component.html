@@ -1,19 +1,69 @@
 <p class="text-sm text-gray-500 mb-4">Completed searches count submitted queries and viewed search results. Suggestion selections and legacy requests are available in Filters. Data is retained for 90 days; dates use India Standard Time.</p>
-<div *ngIf="loading" class="text-center py-6">Loading…</div>
 <div *ngIf="error" class="text-center py-6">Could not load search insights. <button type="button" (click)="fetchList()" class="text-primary">Retry</button></div>
-<ng-container *ngIf="!loading && !error">
-  <p class="mb-4">{{ activityLabel }}: <strong>{{ summary.searches }}</strong><ng-container *ngIf="filterValues['event_type'] !== 'suggestion'"> · No results: <strong>{{ summary.zero_results }}</strong> · No-result rate: <strong>{{ zeroResultRate }}</strong></ng-container></p>
-  <p *ngIf="filterValues['event_type'] !== 'suggestion' && summary.searches > summary.measured" class="text-sm text-gray-500 mb-4">{{ summary.searches - summary.measured }} searches have no confirmed result count. They are excluded from the no-result rate.</p>
-  <p *ngIf="summary.first_tracked" class="text-sm text-gray-500 mb-4">First recorded activity in this selection: {{ summary.first_tracked | date:'medium':'+0530' }}</p>
-  <p *ngIf="filterValues['event_type'] === 'legacy'" class="text-sm text-gray-500 mb-4">Legacy requests include autocomplete fragments. Platform and search scope were not recorded.</p>
-  <div class="table-wrapper">
-    <table class="table-base">
-      <thead><tr><th scope="col">Query</th><th scope="col">{{ activityLabel }}</th><th scope="col" *ngIf="filterValues['event_type'] !== 'suggestion'">No results</th><th scope="col">Last searched (IST)</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let item of itemList"><td class="break-all">{{ item._id }}</td><td>{{ item.searches }}</td><td *ngIf="filterValues['event_type'] !== 'suggestion'">{{ item.zero_results }}</td><td>{{ item.last_searched | date:'medium':'+0530' }}</td></tr>
-        <tr *ngIf="!itemList.length"><td colspan="4"><app-empty-state message="No recorded searches for these filters"></app-empty-state></td></tr>
-      </tbody>
-    </table>
+<ng-container *ngIf="!error">
+  <div class="kpi-grid mb-3">
+    <div class="kpi-card"><div class="min-w-0"><p class="kpi-label">{{ activityLabel }}</p><p class="kpi-value">{{ summary.searches | number }}</p></div></div>
+    <ng-container *ngIf="showsResults">
+      <div class="kpi-card"><div class="min-w-0"><p class="kpi-label">No-result searches</p><p class="kpi-value">{{ summary.zero_results | number }}</p></div></div>
+      <div class="kpi-card"><div class="min-w-0"><p class="kpi-label">No-result rate</p><p class="kpi-value">{{ zeroResultRate }}</p></div></div>
+    </ng-container>
+    <div class="kpi-card"><div class="min-w-0"><p class="kpi-label">Distinct queries</p><p class="kpi-value">{{ summary.distinct_queries | number }}</p></div></div>
+    <div class="kpi-card" *ngIf="showsResults"><div class="min-w-0"><p class="kpi-label">Queries that always fail</p><p class="kpi-value text-red-600">{{ summary.failing_queries | number }}</p></div></div>
   </div>
-  <pagination [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
+  <p class="text-sm text-gray-500 mb-1">
+    <ng-container *ngIf="showsResults && summary.searches > summary.measured">{{ summary.searches - summary.measured | number }} searches have no confirmed result count and are excluded from the no-result rate. </ng-container>
+    <ng-container *ngIf="summary.first_tracked">First recorded activity in this selection: {{ summary.first_tracked | date:'medium':'+0530' }}.</ng-container>
+  </p>
+  <p *ngIf="filterValues['event_type'] === 'legacy'" class="text-sm text-gray-500 mb-1">Legacy requests include autocomplete fragments. Platform and search scope were not recorded.</p>
+
+  <div class="insights-toolbar my-3">
+    <div class="segmented" role="group" aria-label="Rows to show" *ngIf="showsResults">
+      <button type="button" [class.active]="filterValues['zero_results'] !== 'true'" [attr.aria-pressed]="filterValues['zero_results'] !== 'true'" (click)="setNoResultsOnly(false)">All queries</button>
+      <button type="button" [class.active]="filterValues['zero_results'] === 'true'" [attr.aria-pressed]="filterValues['zero_results'] === 'true'" (click)="setNoResultsOnly(true)">No results only</button>
+    </div>
+    <label class="query-search">
+      <mat-icon aria-hidden="true">search</mat-icon>
+      <input type="search" placeholder="Filter queries" aria-label="Filter queries" maxlength="100" (input)="onSearchInput($any($event.target).value)" />
+    </label>
+    <button type="button" class="export-btn" [disabled]="exporting || !itemList.length" (click)="exportCsv()">
+      <mat-icon aria-hidden="true">download</mat-icon>{{ exporting ? 'Exporting…' : 'Export CSV' }}
+    </button>
+  </div>
+  <p class="text-xs text-gray-500 mb-2">Showing: {{ scopeLabel }}</p>
+
+  <div *ngIf="loading" class="text-center py-6">Loading…</div>
+  <ng-container *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="table-base insights-table">
+        <colgroup>
+          <col class="col-query" />
+          <col />
+          <col *ngIf="showsResults" />
+          <col />
+        </colgroup>
+        <thead><tr>
+          <th scope="col">Query</th>
+          <th scope="col" [attr.aria-sort]="sort === 'searches' ? 'descending' : null"><button type="button" class="sort-btn" [class.active]="sort === 'searches'" (click)="setSort('searches')">{{ activityLabel }}<mat-icon aria-hidden="true">arrow_downward</mat-icon></button></th>
+          <th scope="col" *ngIf="showsResults" [attr.aria-sort]="sort === 'zero_results' || sort === 'zero_rate' ? 'descending' : null">
+            <button type="button" class="sort-btn" [class.active]="sort === 'zero_results'" (click)="setSort('zero_results')" title="Sort by number of no-result searches">No results<mat-icon aria-hidden="true">arrow_downward</mat-icon></button>
+            <button type="button" class="sort-btn sort-alt" [class.active]="sort === 'zero_rate'" (click)="setSort('zero_rate')" title="Sort by share of searches with no results">%</button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sort === 'last_searched' ? 'descending' : null"><button type="button" class="sort-btn" [class.active]="sort === 'last_searched'" (click)="setSort('last_searched')">Last searched (IST)<mat-icon aria-hidden="true">arrow_downward</mat-icon></button></th>
+        </tr></thead>
+        <tbody>
+          <tr *ngFor="let item of itemList">
+            <td class="break-all">{{ item._id }}</td>
+            <td>{{ item.searches | number }}</td>
+            <td *ngIf="showsResults">
+              <span [title]="item.measured ? 'No-result searches / searches with a confirmed count' : 'No confirmed result count'">{{ noResultLabel(item) }}</span>
+              <span *ngIf="alwaysFails(item)" class="fail-badge">Always fails</span>
+            </td>
+            <td>{{ item.last_searched | date:'medium':'+0530' }}</td>
+          </tr>
+          <tr *ngIf="!itemList.length"><td [attr.colspan]="showsResults ? 4 : 3"><app-empty-state message="No recorded searches for these filters"></app-empty-state></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pagination [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
+  </ng-container>
 </ng-container>
