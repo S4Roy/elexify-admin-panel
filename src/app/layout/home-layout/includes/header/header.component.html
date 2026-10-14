@@ -21,7 +21,8 @@
           <mat-form-field class="search">
             <mat-icon matPrefix>search</mat-icon>
             <input [(ngModel)]="searchTerm" (input)="onSearchChange($event)" matInput
-              placeholder="Enter your search keywords" aria-label="Search" />
+              [placeholder]="(helperService.searchPlaceholder | async) || 'Enter your search keywords'"
+              [attr.aria-label]="(helperService.searchPlaceholder | async) || 'Search'" />
 
             <button type="button" mat-icon-button *ngIf="searchTerm" (click)="clearSearch()" matSuffix
               aria-label="Clear search">

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -25,6 +25,7 @@ import { ThemeService } from '../../../../core/services/theme.service';
   selector: 'app-header',
   imports: [
     NgIf,
+    AsyncPipe,
     MatIconModule,
     MatMenuModule,
     MatDividerModule,

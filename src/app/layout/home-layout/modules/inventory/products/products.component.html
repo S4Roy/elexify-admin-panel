@@ -41,9 +41,12 @@
             <a [routerLink]="'/inventory/products/details/' + item?.slug">{{
               item?.name
             }}</a>
-            <ng-container *ngIf="item?.sku">
-              <div class="text-xs text-gray-500">SKU: {{ item?.sku }}</div>
-            </ng-container>
+            <div class="product-codes" *ngIf="item?.sku || item?.hsn_sac || hsnMissing(item)">
+              <span *ngIf="item?.sku">SKU: {{ item.sku }}</span>
+              <span *ngIf="item?.hsn_sac">HSN: {{ item.hsn_sac }}</span>
+              <span *ngIf="hsnMissing(item)" class="hsn-missing"
+                title="Some items of this product have no HSN code. It is needed on GST invoices and Shiprocket orders.">No HSN</span>
+            </div>
               </div>
             </div>
           </td>
@@ -158,7 +161,7 @@
                     </div>
                     <ng-container *ngIf="item?.variations[0]?.sku">
                       <div class="text-xs text-gray-500">
-                        {{ item?.variations[0]?.sku }}
+                        {{ item?.variations[0]?.sku }}<ng-container *ngIf="item?.variations[0]?.hsn_sac"> · HSN {{ item.variations[0].hsn_sac }}</ng-container>
                       </div>
                     </ng-container>
                   </div>
@@ -271,7 +274,7 @@
 
                         <ng-container *ngIf="variant?.sku">
                           <div class="text-xs text-gray-500">
-                            {{ variant?.sku }}
+                            {{ variant?.sku }}<ng-container *ngIf="variant?.hsn_sac"> · HSN {{ variant.hsn_sac }}</ng-container>
                           </div>
                         </ng-container>
                       </div>

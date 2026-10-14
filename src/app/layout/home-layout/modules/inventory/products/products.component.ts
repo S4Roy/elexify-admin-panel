@@ -69,6 +69,7 @@ export class ProductsComponent {
     brand: [],
     status: null,
     stock_status: null,
+    hsn_status: null,
     type: null,
     tags: [],
     classifications: [],
@@ -94,6 +95,7 @@ export class ProductsComponent {
     // this.checkPermission();
   }
   ngOnInit(): void {
+    this.helperService.searchPlaceholder.next('Search name, SKU or HSN');
     if (this.helperService.can('products.export')) this.helperService.setExportAction({ label: 'Export', icon: 'download' });
     this.helperService.exportActionClick$.pipe(takeUntil(this.destroy$)).subscribe(() => this.openExportDialog());
     if (this.permissions.includes('add')) {
@@ -163,6 +165,7 @@ export class ProductsComponent {
         this.filterOption = Global.resetTableFilterOptions();
         this.filterOption.category = params.get('slug');
         this.filterOption.stock_status = queryParam.get('stock_status');
+        this.filterOption.hsn_status = queryParam.get('hsn_status');
         this.filterOption.tags = queryParam.get('tags');
         this.filterOption.classifications = queryParam.get('classifications');
         this.filterOption.search_key = searchKey;
@@ -179,6 +182,7 @@ export class ProductsComponent {
             ? this.filterOption.classifications.split(',')
             : [],
           stock_status: this.filterOption.stock_status || null,
+          hsn_status: this.filterOption.hsn_status || null,
         };
         this.paginationOption.page = 1;
         this.fetchProductList();
@@ -213,6 +217,15 @@ export class ProductsComponent {
           { value: 'in_stock', label: 'In Stock' },
           { value: 'low_stock', label: 'Low Stock' },
           { value: 'out_of_stock', label: 'Out of Stock' },
+        ],
+      },
+      {
+        key: 'hsn_status',
+        label: 'HSN Code',
+        type: 'select',
+        options: [
+          { value: 'missing', label: 'Missing HSN' },
+          { value: 'present', label: 'Has HSN' },
         ],
       },
       {
@@ -251,6 +264,7 @@ export class ProductsComponent {
     if (this.filterValues['brand']?.length) count++;
     if (this.filterValues['status']) count++;
     if (this.filterValues['stock_status']) count++;
+    if (this.filterValues['hsn_status']) count++;
     if (this.filterValues['type']) count++;
     if (this.filterValues['tags']?.length) count++;
     if (this.filterValues['classifications']?.length) count++;
@@ -279,6 +293,7 @@ export class ProductsComponent {
         this.filterOption.status = this.filterValues['status'] || null;
         this.filterOption.stock_status =
           this.filterValues['stock_status'] || null;
+        this.filterOption.hsn_status = this.filterValues['hsn_status'] || null;
         this.filterOption.type = this.filterValues['type'] || null;
         this.filterOption.tags = this.filterValues['tags']?.length
           ? this.filterValues['tags'].join(',')
@@ -295,7 +310,15 @@ export class ProductsComponent {
         this.updateFilterButton();
       });
   }
+  // True when an item of this product would ship without an HSN code: no product
+  // code, and (for variable products) some variation has none of its own.
+  hsnMissing(item: any): boolean {
+    if (item?.hsn_sac) return false;
+    const variations = item?.type === 'variable' ? item?.variations ?? [] : [];
+    return !variations.length || variations.some((v: any) => !v?.hsn_sac);
+  }
   ngOnDestroy(): void {
+    this.helperService.searchPlaceholder.next(null);
     this.helperService.clearExportAction();
     this.helperService.clearActionButton();
     this.helperService.clearFilterButton();
@@ -383,6 +406,9 @@ export class ProductsComponent {
     }
     if (this.filterOption.stock_status) {
       params.set('stock_status', this.filterOption.stock_status);
+    }
+    if (this.filterOption.hsn_status) {
+      params.set('hsn_status', this.filterOption.hsn_status);
     }
     if (this.filterOption.search_key) {
       params.set('search_key', this.filterOption.search_key);

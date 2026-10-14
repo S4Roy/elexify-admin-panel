@@ -22,6 +22,8 @@ export class HelpersService {
   breadcrumbs$ = this.breadcrumbs.asObservable();
   private searchKey = new BehaviorSubject<string>('');
   searchKey$ = this.searchKey.asObservable();
+  // Pages can say what the header search looks at (e.g. "name, SKU or HSN").
+  readonly searchPlaceholder = new BehaviorSubject<string | null>(null);
   // Lets any list page register a "Filters" button (with an active-filter
   // count badge) that renders on the right side of the shared breadcrumb
   // bar, and lets that same page know when it was clicked — keeps the

@@ -5,6 +5,7 @@ export default class FilterOptions {
   name: string | null = null;
   _id: string | null = null;
   stock_status: string | null = null;
+  hsn_status?: string | null = null;
   list_type: string = '';
   order_status: string | null = null;
   customer_id?: string | null;
