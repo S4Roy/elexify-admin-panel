@@ -255,7 +255,7 @@
             <tbody>
               <tr *ngFor="let row of leaderboardCategories">
                 <td>
-                  <a *ngIf="canCategories; else plainCategory" [title]="row.name" [routerLink]="['/inventory/categories']">{{ row.name }}</a>
+                  <a *ngIf="canProducts && row.slug; else plainCategory" [title]="'View products in ' + row.name" [routerLink]="['/inventory/products', row.slug]">{{ row.name }}</a>
                   <ng-template #plainCategory><span [title]="row.name">{{ row.name }}</span></ng-template>
                 </td>
                 <td class="text-right">{{ row.items_sold }}</td>
@@ -292,7 +292,7 @@
             <tbody>
               <tr *ngFor="let row of leaderboardProducts">
                 <td>
-                  <a *ngIf="canProducts; else plainProduct" [title]="row.name" [routerLink]="['/inventory/products']">{{ row.name }}</a>
+                  <a *ngIf="canProducts && row.slug; else plainProduct" [title]="row.name" [routerLink]="['/inventory/products/details', row.slug]">{{ row.name }}</a>
                   <ng-template #plainProduct><span [title]="row.name">{{ row.name }}</span></ng-template>
                 </td>
                 <td class="text-right">{{ row.items_sold }}</td>
