@@ -44,6 +44,11 @@
 .sort-alt.active { opacity: 1; }
 
 .fail-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 600; border-radius: 999px; color: #b91c1c; background: #fee2e2; }
+.now-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 600; border-radius: 999px; white-space: nowrap; }
+.now-fixed { color: #047857; background: #d1fae5; }
+.now-failing { color: #b45309; background: #fef3c7; }
+:host-context(.dark) .now-fixed { color: #6ee7b7; background: rgba(16, 185, 129, .15); }
+:host-context(.dark) .now-failing { color: #fcd34d; background: rgba(245, 158, 11, .15); }
 :host-context(.dark) .fail-badge { color: #fca5a5; background: rgba(239, 68, 68, .15); }
 
 .row-action { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; color: var(--text-secondary); }

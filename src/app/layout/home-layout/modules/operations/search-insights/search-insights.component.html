@@ -45,7 +45,11 @@
       <mat-icon aria-hidden="true">search</mat-icon>
       <input type="search" placeholder="Filter queries" aria-label="Filter queries" maxlength="100" (input)="onSearchInput($any($event.target).value)" />
     </label>
-    <a routerLink="/search-insights/synonyms" class="export-btn ml-auto"><mat-icon aria-hidden="true">swap_horiz</mat-icon>Synonyms</a>
+    <button *ngIf="canRecheck || checking" type="button" class="export-btn ml-auto" [disabled]="checking" (click)="recheck()"
+      title="Search the store now for this page's no-result queries">
+      <mat-icon aria-hidden="true">{{ checking ? 'hourglass_top' : 'fact_check' }}</mat-icon>{{ checking ? 'Checking…' : 'Re-check no-results' }}
+    </button>
+    <a routerLink="/search-insights/synonyms" class="export-btn" [class.ml-auto]="!(canRecheck || checking)"><mat-icon aria-hidden="true">swap_horiz</mat-icon>Synonyms</a>
     <button type="button" class="export-btn" [disabled]="exporting || !itemList.length" (click)="exportCsv()">
       <mat-icon aria-hidden="true">download</mat-icon>{{ exporting ? 'Exporting…' : 'Export CSV' }}
     </button>
@@ -83,7 +87,11 @@
             <td>{{ item.searches | number }}</td>
             <td *ngIf="showsResults">
               <span [title]="item.measured ? 'No-result searches / searches with a confirmed count' : 'No confirmed result count'">{{ noResultLabel(item) }}</span>
-              <span *ngIf="alwaysFails(item)" class="fail-badge">Always fails</span>
+              <ng-container *ngIf="item.zero_results > 0 && nowCounts.has(item._id); else pastBadge">
+                <span *ngIf="nowCounts.get(item._id)! > 0" class="now-badge now-fixed" [title]="'A search for this today returns ' + nowCounts.get(item._id) + ' products'">Now finds {{ nowCounts.get(item._id) | number }}</span>
+                <span *ngIf="nowCounts.get(item._id) === 0" class="now-badge now-failing" title="A search for this today still returns no products">Still no results</span>
+              </ng-container>
+              <ng-template #pastBadge><span *ngIf="alwaysFails(item)" class="fail-badge">Always fails</span></ng-template>
             </td>
             <td *ngIf="showsPlatforms" class="platform-cell">
               <span [attr.aria-label]="(item.web || 0) + ' on web'" title="Web"><mat-icon aria-hidden="true">language</mat-icon>{{ item.web || 0 | number }}</span>

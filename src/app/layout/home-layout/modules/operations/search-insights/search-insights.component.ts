@@ -38,6 +38,9 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   loading = true;
   error = false;
   exporting = false;
+  checking = false;
+  // Today's storefront result count per query, from the re-check. Kept across pages and filters.
+  nowCounts = new Map<string, number>();
   canEditSynonyms = false;
   canViewProducts = false;
   trendDays: TrendDay[] = [];
@@ -257,6 +260,35 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     return this.summary.measured ? (100 * this.summary.zero_results / this.summary.measured).toFixed(1) + '%' : '—';
   }
 
+  get uncheckedFailures(): string[] {
+    return this.itemList.filter(item => item.zero_results > 0 && !this.nowCounts.has(item._id)).map(item => item._id);
+  }
+
+  get canRecheck(): boolean {
+    return this.showsResults && this.filterValues['event_type'] !== 'suggestion' && this.uncheckedFailures.length > 0;
+  }
+
+  // Runs this page's no-result queries through today's storefront search (catalog, synonyms and
+  // matching rules as they are now). Past counts can't tell whether a query has since been fixed.
+  async recheck(queries = this.uncheckedFailures, announce = true): Promise<void> {
+    if (this.checking || !queries.length) return;
+    this.checking = true;
+    try {
+      for (let i = 0; i < queries.length; i += 10) {
+        const res: any = await firstValueFrom(this.apiService.previewSearchSynonym(queries.slice(i, i + 10)));
+        for (const row of res?.data ?? []) this.nowCounts.set(row.term, row.count);
+      }
+      if (announce) {
+        const fixed = queries.filter(query => (this.nowCounts.get(query) ?? 0) > 0).length;
+        this.toastr.info(`${fixed} of ${queries.length} no-result ${queries.length === 1 ? 'query now finds' : 'queries now find'} products.`);
+      }
+    } catch {
+      this.toastr.error('Could not check today\'s results');
+    } finally {
+      this.checking = false;
+    }
+  }
+
   // Opens the existing rule for this query when there is one, so edits never hit the duplicate-term conflict.
   addSynonym(query: string): void {
     this.apiService.searchSynonymByTerm(query).subscribe({
@@ -264,7 +296,11 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         const existing = res?.data;
         const data = existing ? { id: existing._id, term: existing.term, alternatives: existing.alternatives } : { term: query };
         this.dialog.open(SynonymDialogComponent, { width: '480px', maxWidth: '94vw', ariaLabelledBy: 'synonym-title', data }).afterClosed().subscribe(saved => {
-          if (saved) this.toastr.success(`Synonym saved. New searches for "${query}" will include the alternatives.`);
+          if (!saved) return;
+          this.toastr.success(`Synonym saved. New searches for "${query}" will include the alternatives.`);
+          // The saved synonym can change today's count; check it again.
+          this.nowCounts.delete(query);
+          this.recheck([query], false);
         });
       },
       error: () => this.toastr.error('Could not load synonyms'),
