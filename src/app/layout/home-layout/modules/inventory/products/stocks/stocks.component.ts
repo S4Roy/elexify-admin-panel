@@ -1,5 +1,5 @@
 import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,7 @@ import PaginationOptions from 'app/core/models/PaginationOptions';
 import { InventoryService } from 'app/core/services/inventory.service';
 import { PermissionService } from 'app/core/services/permission.service';
 import { PaginationComponent } from 'app/layout/home-layout/includes/pagination/pagination.component';
+import { finalize } from 'rxjs';
 import { STOCK_ADJUSTMENT_REASONS, STOCK_STATUS_LABELS, movementIcon, movementLabel } from './stock-reasons';
 
 /**
@@ -36,6 +37,9 @@ export class StocksComponent implements OnInit {
   // Site-wide low-stock level (a SKU's own threshold wins).
   siteThreshold = 5;
   loading = true;
+  historyLoading = false;
+  readonly pageSizeOptions = [10, 25, 50];
+  @ViewChild('historyTop') historyTop?: ElementRef<HTMLElement>;
 
   levels: any[] = [];
   transactions: any[] = [];
@@ -54,7 +58,7 @@ export class StocksComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private dialogRef: MatDialogRef<StocksComponent>
   ) {
-    this.paginationOption = Global.resetPaginationOptions();
+    this.paginationOption = { ...Global.resetPaginationOptions(), limit: 10 };
     this.buildForm();
   }
 
@@ -93,7 +97,8 @@ export class StocksComponent implements OnInit {
     const params = new URLSearchParams({ product: this.data?._id, limit: String(this.paginationOption.limit) });
     if (this.paginationOption.page) params.set('page', String(this.paginationOption.page));
     if (this.historySku?.variation) params.set('variation', this.historySku.variation);
-    this.inventoryService.stockTransactions(params).subscribe({
+    this.historyLoading = true;
+    this.inventoryService.stockTransactions(params).pipe(finalize(() => (this.historyLoading = false))).subscribe({
       next: (res: any) => {
         this.transactions = res?.data?.docs ?? [];
         this.paginationOption = { ...res?.data };
@@ -134,10 +139,6 @@ export class StocksComponent implements OnInit {
   setMode(mode: 'add' | 'remove' | 'set') {
     this.formGroup.patchValue({ mode });
     this.onModeChange();
-  }
-
-  get hasMorePages(): boolean {
-    return Number(this.paginationOption?.totalPages ?? 1) > 1;
   }
 
   openAdjust(level: any) {
@@ -225,6 +226,7 @@ export class StocksComponent implements OnInit {
   onPageChange(page: any) {
     this.paginationOption.page = page;
     this.fetchTransactions();
+    this.historyTop?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   close() {

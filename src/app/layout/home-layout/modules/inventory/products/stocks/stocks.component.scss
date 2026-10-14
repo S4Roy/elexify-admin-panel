@@ -48,18 +48,17 @@
 
 .panel-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+
+  // Cards keep their full height; the body scrolls instead of squeezing them.
+  > * { flex-shrink: 0; }
 }
 
-.panel-foot {
-  padding: 4px 8px;
-  background: var(--bg-surface);
-  border-top: 1px solid var(--border-color);
-}
 
 .muted {
   font-size: 12px;
@@ -374,7 +373,8 @@
 
 // ── History timeline ────────────────────────────────────────────────────
 .history {
-  padding: 16px;
+  overflow: hidden;
+  padding: 16px 16px 0;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
@@ -471,6 +471,11 @@
   &.in { color: var(--in); }
   &.out { color: var(--out); }
 }
+
+// Pager sits flush along the card's bottom edge.
+.history-pager { margin: 0 -16px; }
+.history > .timeline:last-child,
+.history > .empty:last-child { margin-bottom: 8px; }
 
 .empty {
   padding: 24px;

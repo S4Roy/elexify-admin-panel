@@ -121,9 +121,9 @@
             <div class="empty" *ngIf="!loading && !levels.length">No stock-keeping units for this product.</div>
 
             <!-- History timeline -->
-            <section class="history">
+            <section class="history" #historyTop>
               <div class="history-head">
-                <h3>Movement history</h3>
+                <h3>Movement history <span class="muted" *ngIf="paginationOption?.totalDocs">· {{ paginationOption.totalDocs }}</span></h3>
                 <button type="button" class="chip-filter" *ngIf="historySku" (click)="filterHistory(historySku)">
                   {{ skuLabel(historySku) }} <mat-icon>close</mat-icon>
                 </button>
@@ -153,16 +153,17 @@
                 </li>
               </ol>
               <ng-template #noHistory>
-                <div class="empty">No stock movements yet.</div>
+                <div class="empty">{{ historyLoading ? 'Loading…' : 'No stock movements yet.' }}</div>
               </ng-template>
+              <div class="history-pager" *ngIf="paginationOption?.totalDocs">
+                <pagination [embedded]="true" [disabled]="historyLoading" [pagination]="paginationOption"
+                  [pageSizeOptions]="pageSizeOptions"
+                  (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)"
+                  (pageChange)="onPageChange($event)"></pagination>
+              </div>
             </section>
           </div>
 
-          <footer class="panel-foot" *ngIf="hasMorePages">
-            <pagination [pagination]="paginationOption"
-              (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)"
-              (pageChange)="onPageChange($event)"></pagination>
-          </footer>
         </div>
       </div>
     </div>
