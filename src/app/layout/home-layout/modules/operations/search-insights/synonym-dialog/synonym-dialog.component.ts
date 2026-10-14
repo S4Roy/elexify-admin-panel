@@ -17,6 +17,14 @@ const MAX_ALTERNATIVES = 10;
 // Mirrors the storefront: spaces, hyphens and underscores between words already match each other.
 const separatorless = (value: string) => value.trim().toLowerCase().replace(/[\s_-]+/g, '');
 
+interface Suggestion { term: string; reason: 'spelling' | 'full_form' | 'shoppers' }
+// Why each kind is suggested; the number on a chip is how many products it finds.
+const SUGGESTION_GROUPS: { reason: Suggestion['reason']; label: string; help: string }[] = [
+  { reason: 'spelling', label: 'Catalog spellings', help: 'Close spellings of words your products use' },
+  { reason: 'full_form', label: 'Full forms in your catalog', help: 'What the short words stand for in product names' },
+  { reason: 'shoppers', label: 'Shoppers also searched', help: 'Searches where shoppers picked the same products' },
+];
+
 @Component({
   selector: 'app-synonym-dialog',
   imports: [FormsModule, NgIf, NgFor, DecimalPipe],
@@ -40,9 +48,9 @@ const separatorless = (value: string) => value.trim().toLowerCase().replace(/[\s
         Add alternatives only to include products listed under other names.
       </p>
 
-      <div class="suggest" *ngIf="suggestions.length">
-        <span class="hint">Catalog spellings:</span>
-        <button *ngFor="let s of suggestions" type="button" class="suggest-chip" [disabled]="isAdded(s)"
+      <div class="suggest" *ngFor="let group of suggestionGroups">
+        <span class="hint" [title]="group.help">{{ group.label }}:</span>
+        <button *ngFor="let s of group.terms" type="button" class="suggest-chip" [disabled]="isAdded(s)"
           [attr.aria-label]="(isAdded(s) ? 'Added: ' : 'Add alternative ') + s" (click)="addAlternative(s)">
           {{ isAdded(s) ? '✓' : '+' }} {{ s }}<span *ngIf="counts.has(s)" class="suggest-count">· {{ counts.get(s) | number }}</span>
         </button>
@@ -116,7 +124,7 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
   termCount: number | null = null;
   previewFailed = false;
   previewRows: PreviewRow[] = [];
-  suggestions: string[] = [];
+  suggestions: Suggestion[] = [];
   counts = new Map<string, number>();
   private preview$ = new Subject<void>();
   private suggest$ = new Subject<string>();
@@ -154,11 +162,14 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
       debounceTime(500),
       distinctUntilChanged(),
       switchMap(term => term
-        ? this.apiService.suggestSearchSynonyms(term).pipe(map((res: any) => res?.data ?? []), catchError(() => of([])))
+        ? this.apiService.suggestSearchSynonyms(term).pipe(
+            // Older servers sent bare spellings.
+            map((res: any) => (res?.data ?? []).map((s: any) => (typeof s === 'string' ? { term: s, reason: 'spelling' } : s))),
+            catchError(() => of([])))
         : of([])),
-      switchMap((suggestions: string[]) => {
+      switchMap((suggestions: Suggestion[]) => {
         this.suggestions = suggestions;
-        const missing = suggestions.filter(s => !this.counts.has(s));
+        const missing = suggestions.map(s => s.term).filter(t => !this.counts.has(t));
         return missing.length
           ? this.apiService.previewSearchSynonym(missing, true).pipe(catchError(() => of(null)))
           : of(null);
@@ -166,14 +177,20 @@ export class SynonymDialogComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
     ).subscribe((res: any) => {
       for (const row of res?.data ?? []) this.counts.set(row.term, row.count);
-      // Spellings that find nothing would not help; keep the rest, most products first.
+      // Suggestions that find nothing would not help; keep the rest, most products first.
       this.suggestions = this.suggestions
-        .filter(s => this.counts.get(s) !== 0)
-        .sort((a, b) => (this.counts.get(b) ?? 0) - (this.counts.get(a) ?? 0));
+        .filter(s => this.counts.get(s.term) !== 0)
+        .sort((a, b) => (this.counts.get(b.term) ?? 0) - (this.counts.get(a.term) ?? 0));
     });
     this.refreshPreview();
     this.preview$.next();
     this.suggest$.next(this.normalizedTerm);
+  }
+
+  get suggestionGroups(): { label: string; help: string; terms: string[] }[] {
+    return SUGGESTION_GROUPS
+      .map(group => ({ ...group, terms: this.suggestions.filter(s => s.reason === group.reason).map(s => s.term) }))
+      .filter(group => group.terms.length);
   }
 
   isAdded(suggestion: string): boolean {
