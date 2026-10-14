@@ -163,6 +163,10 @@ export class CustomerAddressDialogComponent implements OnInit, OnDestroy {
   }
 
   save(): void {
+    if (!/^(?=.*[A-Za-z])[A-Za-z .'-]+$/.test(String(this.value.full_name || '').trim())) {
+      this.error = 'Recipient name must use English letters (A-Z), spaces, apostrophes, hyphens and periods only';
+      return;
+    }
     if (!this.addressLinesValid || (this.data.orderId && !this.chargesConfirmed) || !this.callingCodes.some(c => c.code === this.value.phone_code) || this.saving || this.optionsLoading || this.optionsError || !this.value.state || (!this.data.create && this.value.reason.trim().length < 10)) return;
     this.saving = true;
     this.error = '';

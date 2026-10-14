@@ -20,12 +20,15 @@
                                     <span class="text-red-500"
                                         *ngIf="Global.isInputRuleAvailable(formGroup, 'name', 'required')">*</span>
                                 </mat-label>
+                                <mat-hint>Use English letters (A-Z), spaces, apostrophes, hyphens and periods.</mat-hint>
                                 <input formControlName="name" matInput
                                     [class.is-invalid]="!Global.isInputValid(formGroup, 'name')"
                                     placeholder="Enter customer name" />
                                 <mat-error *ngIf="!Global.isInputRuleValid(formGroup, 'name', 'required')">
                                     Name is required
                                 </mat-error>
+                                <mat-error *ngIf="formGroup.get('name')?.hasError('pattern')">Use English letters (A-Z), spaces, apostrophes, hyphens and periods only</mat-error>
+                                <mat-error *ngIf="formGroup.get('name')?.hasError('minlength') || formGroup.get('name')?.hasError('maxlength')">Name must be 2–100 characters</mat-error>
                             </mat-form-field>
 
                             <!-- Email -->

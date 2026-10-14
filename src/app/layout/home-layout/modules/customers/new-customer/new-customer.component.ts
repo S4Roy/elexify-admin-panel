@@ -51,7 +51,7 @@ export class NewCustomerComponent implements OnInit {
     this.formGroup = this.fb.group({
       name: [
         this.data?.name ?? null,
-        Validators.compose([Validators.required]),
+        Validators.compose([Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^(?=.*[A-Za-z])[A-Za-z .'-]+$/)]),
       ],
       email: [this.data?.email ?? null, Validators.compose([Validators.email])],
       phone_code: [this.data?.phone_code ?? '91'],
