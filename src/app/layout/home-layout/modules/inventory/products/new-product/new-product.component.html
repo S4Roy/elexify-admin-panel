@@ -338,6 +338,9 @@
               {{ hsn.invalid && hsn.touched ? 'Enter 4, 6 or 8 digits.' : 'GST HSN, 4, 6 or 8 digits. Shown on invoices and sent to Shiprocket.' }}
               <ng-container *ngIf="formGroup.getRawValue().product_type === 'variable'"> Variations use it unless they set their own.</ng-container>
             </p>
+            <button *ngIf="canSyncZoho" type="button" mat-stroked-button class="mt-2 zoho-sync-btn" (click)="openZohoHsnSync()">
+              <mat-icon aria-hidden="true">sync_alt</mat-icon>Sync HSN with Zoho
+            </button>
           </div>
         </div>
       </div>

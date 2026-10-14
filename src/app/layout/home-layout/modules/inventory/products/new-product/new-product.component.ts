@@ -40,6 +40,8 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ProductSpecificationsComponent } from './product-specifications/product-specifications.component';
 import { ProductSeoComponent } from './product-seo/product-seo.component';
+import { ZohoHsnSyncDialogComponent, ZohoHsnSyncResult } from './zoho-hsn-sync-dialog/zoho-hsn-sync-dialog.component';
+import { PermissionService } from 'app/core/services/permission.service';
 
 @Component({
   selector: 'app-new-product',
@@ -114,7 +116,8 @@ export class NewProductComponent {
     @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
     @Optional() private dialogRef: MatDialogRef<NewProductComponent>,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private access: PermissionService,
   ) {
     this.editor = new Editor();
     this.shortEditor = new Editor();
@@ -583,6 +586,26 @@ export class NewProductComponent {
   // ── Image arrangement (first image = main image) ─────────────────────────
   imageAnnouncement = '';
 
+  // Saved products only: Zoho matches on the stored SKU and item id.
+  get canSyncZoho(): boolean { return !!this.data?._id && this.access.can('zoho_sync.view'); }
+  openZohoHsnSync(): void {
+    this.dialog.open(ZohoHsnSyncDialogComponent, {
+      width: '760px', maxWidth: '96vw', autoFocus: 'dialog',
+      data: { productId: this.data._id, productName: this.formGroup.get('name')?.value || this.data.name,
+        unsaved: this.formGroup.dirty, canManage: this.access.can('zoho_sync.manage') },
+    }).afterClosed().subscribe((result?: ZohoHsnSyncResult) => {
+      // Pulled codes are already saved; show them so a later Save keeps them.
+      for (const pulled of result?.pulled ?? []) {
+        if (pulled.kind === 'item') this.formGroup.get('hsn_sac')?.setValue(pulled.own ?? '');
+        else {
+          const variations = this.formGroup.get('variations') as FormArray | null;
+          const row = variations?.controls.find((c) => String(c.get('_id')?.value) === pulled.entity_id);
+          row?.get('hsn_sac')?.setValue(pulled.own ?? '');
+        }
+      }
+      if (result?.pulled?.length) this.toastr.success(`Saved ${result.pulled.length} HSN code${result.pulled.length > 1 ? 's' : ''} from Zoho Books`);
+    });
+  }
   trackImage = (_: number, img: any) => img?._id ?? img?.url;
 
   dropImage(event: CdkDragDrop<unknown>) {

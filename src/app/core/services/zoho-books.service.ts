@@ -18,4 +18,8 @@ export class ZohoBooksService {
   retry(id: string) { return this.http.post(`${this.path}/jobs/${encodeURIComponent(id)}/retry`, {}); }
   order(id: string): Observable<any> { return this.http.get(`${this.path}/orders/${encodeURIComponent(id)}`); }
   accounting(metadata: unknown) { return this.http.put(`${this.path}/accounting`, metadata); }
+  productHsn(id: string): Observable<any> { return this.http.get(`${this.path}/products/${encodeURIComponent(id)}/hsn`); }
+  syncProductHsn(id: string, actions: { entity_id: string; direction: 'push' | 'pull' }[]): Observable<any> {
+    return this.http.post(`${this.path}/products/${encodeURIComponent(id)}/hsn`, { actions });
+  }
 }

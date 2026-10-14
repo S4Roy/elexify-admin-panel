@@ -1,0 +1,91 @@
+<h2 mat-dialog-title>Sync HSN with Zoho Books</h2>
+<mat-dialog-content class="hsn-sync">
+  <p class="lead">{{ data.productName }}</p>
+  <p *ngIf="data.unsaved" class="note note-warn" role="status">
+    <mat-icon aria-hidden="true">info</mat-icon>
+    This uses the saved product. Save your changes first if you edited the HSN.
+  </p>
+
+  <p *ngIf="loading" class="state">Reading Zoho Books…</p>
+  <p *ngIf="error" class="note note-error" role="alert">
+    <mat-icon aria-hidden="true">error_outline</mat-icon>{{ error }}
+    <button *ngIf="!rows.length && !loading" type="button" class="link" (click)="load()">Retry</button>
+  </p>
+
+  <ng-container *ngIf="!loading && rows.length">
+    <div class="bulk" *ngIf="!applied && data.canManage && rows.length > 1">
+      <span>Set all:</span>
+      <button type="button" class="link" (click)="chooseAll('pull')">Pull from Zoho</button>
+      <button type="button" class="link" (click)="chooseAll('push')">Push to Zoho</button>
+      <button type="button" class="link" (click)="chooseAll('skip')">Skip</button>
+    </div>
+
+    <div class="table-scroll">
+      <table class="sync-table">
+        <thead>
+          <tr>
+            <th scope="col">Item</th>
+            <th scope="col">Our HSN</th>
+            <th scope="col">Zoho HSN</th>
+            <th scope="col">{{ applied ? 'Result' : 'Action' }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td>
+              <div class="item-name">{{ row.name }}</div>
+              <div class="item-meta">{{ row.sku || 'No SKU' }} · <span class="chip" [ngClass]="'chip-' + status(row).tone">{{ status(row).label }}</span></div>
+            </td>
+            <td class="code">
+              {{ row.ours || '—' }}
+              <span *ngIf="row.inherited" class="sub">from product</span>
+            </td>
+            <td class="code">{{ row.in_zoho ? (row.zoho || '—') : 'No item' }}</td>
+            <td>
+              <ng-container *ngIf="!applied; else outcome">
+                <div class="segmented" role="radiogroup" [attr.aria-label]="'Action for ' + row.name">
+                  <button type="button" role="radio" [attr.aria-checked]="row.choice === 'pull'" [class.active]="row.choice === 'pull'"
+                    [disabled]="!canPull(row) || !data.canManage || applying" (click)="choose(row, 'pull')"
+                    title="Save Zoho's HSN in our store">
+                    <mat-icon aria-hidden="true">south_west</mat-icon>Pull
+                  </button>
+                  <button type="button" role="radio" [attr.aria-checked]="row.choice === 'push'" [class.active]="row.choice === 'push'"
+                    [disabled]="!canPush(row) || !data.canManage || applying" (click)="choose(row, 'push')"
+                    [title]="row.in_zoho ? 'Update the Zoho item from this product' : 'Create the item in Zoho from this product'">
+                    <mat-icon aria-hidden="true">north_east</mat-icon>Push
+                  </button>
+                  <button type="button" role="radio" [attr.aria-checked]="row.choice === 'skip'" [class.active]="row.choice === 'skip'"
+                    [disabled]="!data.canManage || applying" (click)="choose(row, 'skip')">Skip</button>
+                </div>
+              </ng-container>
+              <ng-template #outcome>
+                <span *ngIf="!row.result" class="sub">Skipped</span>
+                <span *ngIf="row.result?.ok" class="ok"><mat-icon aria-hidden="true">check_circle</mat-icon>{{ row.result?.direction === 'pull' ? 'Saved here' : 'Sent to Zoho' }}</span>
+                <span *ngIf="row.result && !row.result.ok" class="fail"><mat-icon aria-hidden="true">error</mat-icon><span [title]="row.result.error || ''">{{ errorText(row.result.error) }}</span></span>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p *ngIf="!applied && count('push')" class="note">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      Push updates the whole Zoho item from this product (name, SKU, price, unit and HSN), and creates it if Zoho has none.
+    </p>
+    <p *ngIf="!data.canManage" class="note">You can view the comparison. Syncing needs the Zoho sync manage permission.</p>
+    <p *ngIf="applied" class="state" role="status">
+      {{ failures ? failures + ' of ' + (count('push') + count('pull')) + ' failed.' : 'Done.' }}
+    </p>
+  </ng-container>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <ng-container *ngIf="!applied; else done">
+    <span class="summary" *ngIf="pending">{{ count('pull') }} to pull · {{ count('push') }} to push</span>
+    <button mat-button type="button" (click)="close()" [disabled]="applying">Cancel</button>
+    <button mat-flat-button color="primary" type="button" (click)="apply()" [disabled]="!pending || applying || !data.canManage || loading">
+      {{ applying ? 'Syncing…' : 'Apply' }}
+    </button>
+  </ng-container>
+  <ng-template #done><button mat-flat-button color="primary" type="button" (click)="close()">Close</button></ng-template>
+</mat-dialog-actions>
