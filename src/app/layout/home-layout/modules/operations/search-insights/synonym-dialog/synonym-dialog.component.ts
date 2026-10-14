@@ -1,7 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Subject, debounceTime, switchMap, takeUntil, of, catchError } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
 
@@ -19,21 +19,30 @@ const separatorless = (value: string) => value.trim().toLowerCase().replace(/[\s
 
 @Component({
   selector: 'app-synonym-dialog',
-  imports: [FormsModule, NgIf, NgFor, DecimalPipe, MatDialogModule],
-  template: `<form (ngSubmit)="save()">
-    <h2 mat-dialog-title>{{ data.id ? 'Edit synonym' : 'Add synonym' }}</h2>
-    <mat-dialog-content>
-      <p class="mb-4 text-sm text-gray-500">When a shopper's whole search matches the term, products matching any alternative are shown too. Changes reach web and mobile within a minute.</p>
-      <label class="block mb-1">
-        <span class="block text-sm font-medium mb-1">Search term</span>
+  imports: [FormsModule, NgIf, NgFor, DecimalPipe],
+  // Own layout instead of mat-dialog-content/actions: those only size and scroll correctly as
+  // direct children of the dialog surface, and the <form> wrapper broke that (content overflowed the panel).
+  template: `<form class="dialog" (ngSubmit)="save()">
+    <header class="dialog-head">
+      <h2 id="synonym-title" class="dialog-title">{{ data.id ? 'Edit synonym' : 'Add synonym' }}</h2>
+      <p class="hint">When a shopper's whole search matches the term, products matching any alternative are shown too. Changes reach web and mobile within a minute.</p>
+    </header>
+    <div class="dialog-body">
+      <label class="block">
+        <span class="label">Search term</span>
         <input class="field" name="term" [(ngModel)]="term" (ngModelChange)="schedulePreview()" maxlength="100" required />
       </label>
-      <p class="hint mb-4" *ngIf="termCount !== null">
-        Today “{{ normalizedTerm }}” finds <b>{{ termCount | number }}</b> {{ termCount === 1 ? 'product' : 'products' }}.
+      <p class="note" *ngIf="termCount === 0">
+        Today “{{ normalizedTerm }}” finds <b>no products</b>. Add the words your catalog uses for it.
       </p>
-      <label class="block">
-        <span class="block text-sm font-medium mb-1">Also search for</span>
-        <textarea class="field" name="alternatives" rows="4" [(ngModel)]="alternatives" (ngModelChange)="schedulePreview()"
+      <p class="note note-ok" *ngIf="termCount">
+        Today “{{ normalizedTerm }}” already finds <b>{{ termCount | number }}</b> {{ termCount === 1 ? 'product' : 'products' }}.
+        Add alternatives only to include products listed under other names.
+      </p>
+
+      <label class="block mt-4">
+        <span class="label">Also search for</span>
+        <textarea class="field" name="alternatives" rows="3" [(ngModel)]="alternatives" (ngModelChange)="schedulePreview()"
           placeholder="One word or phrase per line" aria-describedby="alt-hint"></textarea>
       </label>
       <p id="alt-hint" class="hint mt-1">Up to {{ maxAlternatives }}. Spaces and hyphens already match each other, so “li-ion” isn't needed for “li ion”.</p>
@@ -49,13 +58,25 @@ const separatorless = (value: string) => value.trim().toLowerCase().replace(/[\s
       </ul>
       <p *ngIf="tooMany" class="mt-2 text-sm text-red-600">Keep it to {{ maxAlternatives }} alternatives.</p>
       <p *ngIf="error" class="mt-3 text-sm text-red-600" role="alert">{{ error }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button type="button" class="px-4 py-2" (click)="dialogRef.close()">Cancel</button>
+    </div>
+    <footer class="dialog-foot">
+      <button type="button" class="cancel-btn" (click)="dialogRef.close()">Cancel</button>
       <button type="submit" class="save-btn" [disabled]="saving || !canSave">{{ saving ? 'Saving…' : 'Save' }}</button>
-    </mat-dialog-actions>
+    </footer>
   </form>`,
   styles: [`
+    :host { display: block; }
+    .dialog { display: flex; flex-direction: column; max-height: min(640px, 85vh); color: var(--text-primary); }
+    .dialog-head { padding: 22px 24px 12px; }
+    .dialog-title { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+    .dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 24px 16px; }
+    .dialog-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 24px 18px; border-top: 1px solid var(--border-color); }
+    .label { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 500; }
+    .note { margin-top: 6px; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: #92400e; background: #fffbeb; }
+    .note-ok { color: #065f46; background: #ecfdf5; }
+    :host-context(.dark) .note { color: #fcd34d; background: rgba(245, 158, 11, .12); }
+    :host-context(.dark) .note-ok { color: #6ee7b7; background: rgba(16, 185, 129, .12); }
+    .cancel-btn { padding: 8px 14px; border-radius: 6px; }
     .field { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); font-size: 14px; }
     .field::placeholder { color: var(--text-secondary); opacity: .6; font-style: italic; }
     .hint { font-size: 12px; color: var(--text-secondary); }

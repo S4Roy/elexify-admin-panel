@@ -82,7 +82,7 @@ export class SearchSynonymsComponent implements OnInit, OnDestroy {
 
   openEditor(item?: any): void {
     const data: SynonymDialogData = item ? { id: item._id, term: item.term, alternatives: item.alternatives } : { term: '' };
-    this.dialog.open(SynonymDialogComponent, { width: '480px', data }).afterClosed().subscribe(saved => {
+    this.dialog.open(SynonymDialogComponent, { width: '480px', maxWidth: '94vw', ariaLabelledBy: 'synonym-title', data }).afterClosed().subscribe(saved => {
       if (!saved) return;
       this.toastr.success(item ? 'Synonym updated' : 'Synonym added');
       this.fetchList();

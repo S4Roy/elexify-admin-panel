@@ -263,7 +263,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const existing = res?.data;
         const data = existing ? { id: existing._id, term: existing.term, alternatives: existing.alternatives } : { term: query };
-        this.dialog.open(SynonymDialogComponent, { width: '480px', data }).afterClosed().subscribe(saved => {
+        this.dialog.open(SynonymDialogComponent, { width: '480px', maxWidth: '94vw', ariaLabelledBy: 'synonym-title', data }).afterClosed().subscribe(saved => {
           if (saved) this.toastr.success(`Synonym saved. New searches for "${query}" will include the alternatives.`);
         });
       },
