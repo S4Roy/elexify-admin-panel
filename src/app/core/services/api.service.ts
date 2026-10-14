@@ -332,6 +332,9 @@ export class ApiService {
   searchSynonymByTerm(term: string) {
     return this.httpService.get(`admin/operations/search-synonyms/lookup?term=${encodeURIComponent(term)}`);
   }
+  previewSearchSynonym(terms: string[]) {
+    return this.httpService.post(`admin/operations/search-synonyms/preview`, { terms });
+  }
   createSearchSynonym(payload: { term: string; alternatives: string[] }) {
     return this.httpService.post(`admin/operations/search-synonyms`, payload);
   }
