@@ -149,3 +149,29 @@
 @media (prefers-reduced-motion: reduce) {
   .tile-actions, .image-grid.cdk-drop-list-dragging .image-tile { transition: none; }
 }
+
+// Inline SEO problem + one-click fix under the meta fields.
+.meta-fix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: -8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+  span { flex: 1 1 200px; }
+}
+.meta-fix-info {
+  color: #1e40af;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+:host-context(.dark) {
+  .meta-fix { color: #fcd34d; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+  .meta-fix-info { color: #93c5fd; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
+}

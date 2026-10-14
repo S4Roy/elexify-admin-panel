@@ -531,6 +531,53 @@ export class NewProductComponent {
     this.announceImages(index === 0 && this.images.length ? 'Image removed. The next image is now the main image.' : 'Image removed.');
   }
 
+  // ── SEO meta fields: detect and fix pasted HTML / over-long values ───────
+  readonly metaLimits = { meta_title: 60, meta_description: 160 } as const;
+
+  // Plain one-line text: strips editor HTML, decodes entities (via the browser's
+  // parser, which never executes scripts), collapses whitespace, cuts at a word.
+  toMetaText(value: unknown, maxLength: number): string {
+    // Block boundaries (paragraphs, line breaks, list items, headings) become sentence breaks.
+    const raw = String(value ?? '').replace(/<\/(p|div|li|h[1-6])>|<br\s*\/?>/gi, '\n');
+    const text = (new DOMParser().parseFromString(raw, 'text/html').body.textContent ?? '')
+      .replace(/[·•]/g, ' ')
+      .split('\n')
+      .map((line) => line.replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+      .map((line, i, lines) => (i < lines.length - 1 && !/[.!?:;]$/.test(line) ? `${line}.` : line))
+      .join(' ');
+    if (text.length <= maxLength) return text;
+    const cut = text.slice(0, maxLength);
+    const space = cut.lastIndexOf(' ');
+    return (space > 0 ? cut.slice(0, space) : cut).replace(/[\s,;:–-]+$/, '').trim();
+  }
+
+  metaIssue(field: 'meta_title' | 'meta_description'): string | null {
+    const value = String(this.formGroup?.get(field)?.value ?? '');
+    const max = this.metaLimits[field];
+    const hasHtml = /<[a-z!/][^>]*>|&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(value);
+    if (hasHtml && value.length > max) return `Contains HTML from the product description and is ${value.length - max} characters too long.`;
+    if (hasHtml) return 'Contains HTML code, which search engines show as plain text.';
+    if (value.length > max) return `${value.length - max} characters over the ${max}-character limit; search engines cut it off.`;
+    return null;
+  }
+
+  fixMeta(field: 'meta_title' | 'meta_description') {
+    const control = this.formGroup.get(field);
+    control?.setValue(this.toMetaText(control.value, this.metaLimits[field]));
+    control?.markAsDirty();
+    control?.markAsTouched();
+  }
+
+  // Fills an empty meta description from the short description, else the full description.
+  writeMetaDescriptionFromProduct() {
+    const source = this.formGroup.get('short_description')?.value || this.formGroup.get('description')?.value || '';
+    const control = this.formGroup.get('meta_description');
+    control?.setValue(this.toMetaText(source, this.metaLimits.meta_description));
+    control?.markAsDirty();
+    control?.markAsTouched();
+  }
+
   // ── Image arrangement (first image = main image) ─────────────────────────
   imageAnnouncement = '';
 

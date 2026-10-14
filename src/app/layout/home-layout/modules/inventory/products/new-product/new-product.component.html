@@ -875,6 +875,11 @@
                   >Meta title should be 60 characters or fewer (Google truncates longer titles)</mat-error
                 >
               </mat-form-field>
+              <div *ngIf="metaIssue('meta_title') as issue" class="meta-fix lg:col-start-1" role="status">
+                <mat-icon aria-hidden="true">warning_amber</mat-icon>
+                <span>{{ issue }}</span>
+                <button type="button" mat-stroked-button (click)="fixMeta('meta_title')">Fix it</button>
+              </div>
 
               <mat-form-field>
                 <mat-label>Meta Description</mat-label>
@@ -906,6 +911,19 @@
                   >Meta description should be 160 characters or fewer (Google truncates longer snippets)</mat-error
                 >
               </mat-form-field>
+              <div *ngIf="metaIssue('meta_description') as issue; else noDescriptionIssue" class="meta-fix lg:col-start-2" role="status">
+                <mat-icon aria-hidden="true">warning_amber</mat-icon>
+                <span>{{ issue }}</span>
+                <button type="button" mat-stroked-button (click)="fixMeta('meta_description')">Fix it</button>
+              </div>
+              <ng-template #noDescriptionIssue>
+                <div *ngIf="!formGroup.get('meta_description')?.value && (formGroup.get('short_description')?.value || formGroup.get('description')?.value)"
+                  class="meta-fix meta-fix-info lg:col-start-2">
+                  <mat-icon aria-hidden="true">auto_fix_high</mat-icon>
+                  <span>No meta description yet.</span>
+                  <button type="button" mat-stroked-button (click)="writeMetaDescriptionFromProduct()">Write from product description</button>
+                </div>
+              </ng-template>
 
               <mat-form-field class="lg:col-span-2">
                 <mat-label>Meta Keywords</mat-label>
