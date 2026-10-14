@@ -26,6 +26,11 @@
 .insights-table { table-layout: fixed; width: 100%; }
 .insights-table .col-query { width: 36%; }
 .insights-table .col-platform { width: 150px; }
+.insights-table .col-products { width: 34%; }
+.product-list { margin: 0; padding: 0; list-style: none; }
+.product-list li { display: flex; gap: 6px; min-width: 0; line-height: 1.5; }
+.product-list a, .product-list li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.product-count { flex-shrink: 0; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .platform-cell { white-space: nowrap; color: var(--text-secondary); }
 .platform-cell span { display: inline-flex; align-items: center; gap: 3px; margin-right: 12px; }
 .platform-cell mat-icon { font-size: 15px; width: 15px; height: 15px; }

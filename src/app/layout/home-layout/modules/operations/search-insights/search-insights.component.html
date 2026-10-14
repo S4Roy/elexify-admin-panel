@@ -61,6 +61,7 @@
           <col />
           <col *ngIf="showsResults" />
           <col *ngIf="showsPlatforms" class="col-platform" />
+          <col *ngIf="showsProducts" class="col-products" />
           <col />
         </colgroup>
         <thead><tr>
@@ -71,6 +72,7 @@
             <button type="button" class="sort-btn sort-alt" [class.active]="sort === 'zero_rate'" (click)="setSort('zero_rate')" title="Sort by share of searches with no results">%</button>
           </th>
           <th scope="col" *ngIf="showsPlatforms">Web · Mobile</th>
+          <th scope="col" *ngIf="showsProducts">Products chosen</th>
           <th scope="col" [attr.aria-sort]="sort === 'last_searched' ? 'descending' : null"><button type="button" class="sort-btn" [class.active]="sort === 'last_searched'" (click)="setSort('last_searched')">Last searched (IST)<mat-icon aria-hidden="true">arrow_downward</mat-icon></button></th>
         </tr></thead>
         <tbody>
@@ -86,6 +88,16 @@
             <td *ngIf="showsPlatforms" class="platform-cell">
               <span [attr.aria-label]="(item.web || 0) + ' on web'" title="Web"><mat-icon aria-hidden="true">language</mat-icon>{{ item.web || 0 | number }}</span>
               <span [attr.aria-label]="(item.mobile || 0) + ' on mobile'" title="Mobile"><mat-icon aria-hidden="true">smartphone</mat-icon>{{ item.mobile || 0 | number }}</span>
+            </td>
+            <td *ngIf="showsProducts">
+              <ul class="product-list">
+                <li *ngFor="let product of item.products">
+                  <a *ngIf="canViewProducts && product.name && !product.deleted; else plainProduct" [routerLink]="['/inventory/products/update', product.product_id]" [title]="product.name">{{ product.name }}</a>
+                  <ng-template #plainProduct><span [title]="product.product_id" [class.text-gray-500]="!product.name || product.deleted">{{ productLabel(product) }}{{ product.deleted ? ' (deleted)' : '' }}</span></ng-template>
+                  <span class="product-count">× {{ product.count | number }}</span>
+                </li>
+                <li *ngIf="item.distinct_products > item.products?.length" class="text-xs text-gray-500">+{{ item.distinct_products - item.products.length }} more</li>
+              </ul>
             </td>
             <td>{{ item.last_searched | date:'medium':'+0530' }}</td>
           </tr>

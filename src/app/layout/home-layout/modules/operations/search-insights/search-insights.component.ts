@@ -39,6 +39,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   error = false;
   exporting = false;
   canEditSynonyms = false;
+  canViewProducts = false;
   trendDays: TrendDay[] = [];
   trendOptions: Highcharts.Options = {};
   trendError = false;
@@ -79,6 +80,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         this.fetchTrend();
       });
     this.canEditSynonyms = this.helperService.can('operations.update');
+    this.canViewProducts = this.helperService.can('products.view');
     this.updateFilterButton();
     this.fetchList();
     this.fetchTrend();
@@ -155,7 +157,15 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   }
 
   get columnCount(): number {
-    return 3 + (this.showsResults ? 1 : 0) + (this.showsPlatforms ? 1 : 0);
+    return 3 + (this.showsResults ? 1 : 0) + (this.showsPlatforms ? 1 : 0) + (this.showsProducts ? 1 : 0);
+  }
+
+  get showsProducts(): boolean {
+    return this.filterValues['event_type'] === 'suggestion';
+  }
+
+  productLabel(product: any): string {
+    return product.name ?? 'Unknown product';
   }
 
   get showsResults(): boolean {
@@ -376,8 +386,10 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         if (!res?.data?.hasNextPage) break;
       }
       const platforms = this.showsPlatforms;
-      const header = ['query', 'searches', ...(this.showsResults ? ['no_results', 'confirmed_counts'] : []), ...(platforms ? ['web', 'mobile'] : []), 'last_searched'];
-      const lines = rows.map(r => [r._id, r.searches, ...(this.showsResults ? [r.zero_results, r.measured] : []), ...(platforms ? [r.web, r.mobile] : []), r.last_searched]
+      const products = this.showsProducts;
+      const productList = (r: any) => (r.products ?? []).map((p: any) => `${this.productLabel(p)} (${p.count})`).join('; ');
+      const header = ['query', 'searches', ...(this.showsResults ? ['no_results', 'confirmed_counts'] : []), ...(platforms ? ['web', 'mobile'] : []), ...(products ? ['top_products', 'distinct_products'] : []), 'last_searched'];
+      const lines = rows.map(r => [r._id, r.searches, ...(this.showsResults ? [r.zero_results, r.measured] : []), ...(platforms ? [r.web, r.mobile] : []), ...(products ? [productList(r), r.distinct_products] : []), r.last_searched]
         .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
       const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
