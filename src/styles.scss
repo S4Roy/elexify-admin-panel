@@ -167,7 +167,12 @@ body {
   top: 0.5rem;
 }
 
+// `position: relative` makes the scrolling outlet the containing block for
+// absolutely positioned content (e.g. Tailwind's `sr-only` live regions).
+// Without it they anchor to the page, stretch the document past 100vh and
+// let the whole shell scroll away, leaving blank space below.
 .outlet {
+  position: relative;
   margin: 0;
   padding: 10px;
   background-color: var(--bg-page);
