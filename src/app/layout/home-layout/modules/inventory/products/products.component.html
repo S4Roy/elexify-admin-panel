@@ -374,6 +374,8 @@
               (initStockModal)="stockItem($event)"
               (deleteItem)="deleteItem($event)"
               [delete]="permissions.includes('delete') ? item : null"
+              [actions]="canSyncZoho ? zohoActions : []"
+              (actionSelected)="onRowAction($event, item)"
             ></app-menu>
           </td>
         </tr>

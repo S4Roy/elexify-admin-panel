@@ -30,6 +30,7 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { TruncateListDirective } from 'app/core/directives/truncate-list.directive';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
+import { ZohoSyncDialogComponent, ZohoSyncDialogResult } from './new-product/zoho-sync-dialog/zoho-sync-dialog.component';
 @Component({
   selector: 'app-products',
   imports: [
@@ -466,6 +467,21 @@ export class ProductsComponent {
   }
   private readonly access = injectPermissions(PermissionService);
   get permissions(): string[] { return this.access.actions('products'); }
+  readonly zohoActions = [{ label: 'Sync with Zoho', icon: 'sync', action: 'zoho_sync' }];
+  get canSyncZoho(): boolean { return this.access.can('zoho_sync.view'); }
+  onRowAction(action: string, item: any) {
+    if (action === 'zoho_sync') this.openZohoSync(item);
+  }
+  openZohoSync(item: any) {
+    if (!item?._id) return;
+    this.dialog.open(ZohoSyncDialogComponent, {
+      width: '820px', maxWidth: '96vw', autoFocus: 'dialog',
+      data: { productId: item._id, productName: item.name, unsaved: false, canManage: this.access.can('zoho_sync.manage') },
+    }).afterClosed().subscribe((result?: ZohoSyncDialogResult) => {
+      // Pulled values are saved server-side; refresh so the row shows them.
+      if (result?.pulled?.length) this.fetchProductList();
+    });
+  }
   checkPermission() {
     // this.settingService.checkPermission({ sec: 'award' }).subscribe({
     //   next: (res: any) => {
