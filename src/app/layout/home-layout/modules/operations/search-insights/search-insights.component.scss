@@ -56,3 +56,8 @@
 .row-action mat-icon { font-size: 18px; width: 18px; height: 18px; }
 .row-action.text-red-600 { color: #dc2626; }
 .query-cell { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.query-cell.is-ignored > span:first-child { color: var(--text-secondary); }
+.row-actions { display: inline-flex; flex-shrink: 0; }
+.row-action:disabled { opacity: .4; cursor: wait; }
+.ignored-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 600; border-radius: 999px; color: var(--text-secondary); background: var(--bg-surface-alt); }
+.link-btn { color: var(--nav-primary); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }

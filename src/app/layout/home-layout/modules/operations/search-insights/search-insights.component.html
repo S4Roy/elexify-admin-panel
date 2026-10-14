@@ -54,7 +54,10 @@
       <mat-icon aria-hidden="true">download</mat-icon>{{ exporting ? 'Exporting…' : 'Export CSV' }}
     </button>
   </div>
-  <p class="text-xs text-gray-500 mb-2">Showing: {{ scopeLabel }}</p>
+  <p class="text-xs text-gray-500 mb-2">Showing: {{ scopeLabel }}
+    <ng-container *ngIf="!showIgnored && ignoredHidden"> · {{ ignoredHidden | number }} ignored {{ ignoredHidden === 1 ? 'query' : 'queries' }} hidden <button type="button" class="link-btn" (click)="setShowIgnored(true)">Show</button></ng-container>
+    <ng-container *ngIf="showIgnored"> · Including ignored queries <button type="button" class="link-btn" (click)="setShowIgnored(false)">Hide</button></ng-container>
+  </p>
 
   <div *ngIf="loading" class="text-center py-6">Loading…</div>
   <ng-container *ngIf="!loading">
@@ -81,8 +84,13 @@
         </tr></thead>
         <tbody>
           <tr *ngFor="let item of itemList">
-            <td><div class="query-cell"><span class="break-all">{{ item._id }}</span>
-              <button *ngIf="canEditSynonyms && filterValues['event_type'] !== 'legacy'" type="button" class="row-action" title="Add synonym" [attr.aria-label]="'Add synonym for ' + item._id" (click)="addSynonym(item._id)"><mat-icon>swap_horiz</mat-icon></button>
+            <td><div class="query-cell" [class.is-ignored]="item.ignored">
+              <span class="break-all">{{ item._id }}<span *ngIf="item.ignored" class="ignored-badge">Ignored</span></span>
+              <span class="row-actions" *ngIf="canEditSynonyms">
+                <button *ngIf="filterValues['event_type'] !== 'legacy' && !item.ignored" type="button" class="row-action" title="Add synonym" [attr.aria-label]="'Add synonym for ' + item._id" (click)="addSynonym(item._id)"><mat-icon>swap_horiz</mat-icon></button>
+                <button *ngIf="!item.ignored" type="button" class="row-action" title="Ignore: hide this query from the list" [attr.aria-label]="'Ignore ' + item._id" [disabled]="isPending(item._id)" (click)="ignoreQuery(item)"><mat-icon>visibility_off</mat-icon></button>
+                <button *ngIf="item.ignored" type="button" class="row-action" title="Undo ignore" [attr.aria-label]="'Stop ignoring ' + item._id" [disabled]="isPending(item._id)" (click)="restoreQuery(item)"><mat-icon>undo</mat-icon></button>
+              </span>
             </div></td>
             <td>{{ item.searches | number }}</td>
             <td *ngIf="showsResults">

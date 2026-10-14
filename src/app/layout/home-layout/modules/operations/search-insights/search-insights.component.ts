@@ -39,6 +39,9 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   error = false;
   exporting = false;
   checking = false;
+  showIgnored = false;
+  ignoredHidden = 0;
+  private pendingIgnore = new Set<string>();
   // Today's storefront result count per query, from the re-check. Kept across pages and filters.
   nowCounts = new Map<string, number>();
   canEditSynonyms = false;
@@ -227,6 +230,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
     if (f['to_date']) params.set('to', f['to_date']);
     if (this.searchText) params.set('q', this.searchText);
     params.set('sort', this.sort);
+    if (this.showIgnored) params.set('show_ignored', 'true');
     return params;
   }
 
@@ -242,6 +246,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         this.summary = { ...this.emptySummary(), ...res?.data?.summary };
         this.itemList = res?.data?.docs ?? [];
         this.paginationOption = { ...res?.data };
+        this.ignoredHidden = res?.data?.ignored_hidden ?? 0;
         this.loading = false;
       },
       error: () => {
@@ -258,6 +263,55 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
 
   get zeroResultRate(): string {
     return this.summary.measured ? (100 * this.summary.zero_results / this.summary.measured).toFixed(1) + '%' : '—';
+  }
+
+  setShowIgnored(show: boolean): void {
+    this.showIgnored = show;
+    this.paginationOption.page = 1;
+    this.fetchList();
+  }
+
+  isPending(query: string): boolean {
+    return this.pendingIgnore.has(query);
+  }
+
+  // Hides a reviewed query (junk, or something we don't stock). Totals above the table are unchanged.
+  ignoreQuery(item: any): void {
+    if (this.pendingIgnore.has(item._id)) return;
+    this.pendingIgnore.add(item._id);
+    this.apiService.ignoreSearchQuery(item._id).subscribe({
+      next: () => {
+        this.pendingIgnore.delete(item._id);
+        if (this.showIgnored) {
+          item.ignored = true;
+        } else {
+          this.itemList = this.itemList.filter(row => row !== item);
+          this.ignoredHidden++;
+          this.paginationOption = { ...this.paginationOption, totalDocs: Math.max(0, this.paginationOption.totalDocs - 1) };
+        }
+        this.toastr.success(`"${item._id}" ignored. Use "Show" next to the ignored count to undo.`);
+      },
+      error: () => {
+        this.pendingIgnore.delete(item._id);
+        this.toastr.error('Could not ignore the query');
+      },
+    });
+  }
+
+  restoreQuery(item: any): void {
+    if (this.pendingIgnore.has(item._id)) return;
+    this.pendingIgnore.add(item._id);
+    this.apiService.unignoreSearchQuery(item._id).subscribe({
+      next: () => {
+        this.pendingIgnore.delete(item._id);
+        item.ignored = false;
+        this.toastr.success(`"${item._id}" is back in the list.`);
+      },
+      error: () => {
+        this.pendingIgnore.delete(item._id);
+        this.toastr.error('Could not restore the query');
+      },
+    });
   }
 
   get uncheckedFailures(): string[] {

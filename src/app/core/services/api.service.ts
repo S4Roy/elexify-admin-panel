@@ -348,6 +348,13 @@ export class ApiService {
     return this.httpService.delete(`admin/operations/search-synonyms/${id}`);
   }
 
+  ignoreSearchQuery(query: string) {
+    return this.httpService.post(`admin/operations/search-insights/ignored`, { query });
+  }
+  unignoreSearchQuery(query: string) {
+    return this.httpService.delete(`admin/operations/search-insights/ignored?query=${encodeURIComponent(query)}`);
+  }
+
   checkoutFailures(params: URLSearchParams) {
     return this.httpService.get(`admin/operations/checkout-failures?${params.toString()}`);
   }
