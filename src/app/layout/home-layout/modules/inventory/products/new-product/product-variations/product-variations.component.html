@@ -183,11 +183,16 @@
 
               <td style="width: 80px">
                 <mat-form-field class="baseweb-no-border-table">
+                  <!-- Opening stock for a new variation; saved variations
+                       change stock through Adjust stock (ledger). -->
                   <input
                     matInput
                     type="number"
+                    min="0"
                     (change)="emitChanges()"
                     formControlName="stock_quantity"
+                    [readonly]="!!attribute.get('_id')?.value"
+                    [matTooltip]="attribute.get('_id')?.value ? 'Use Adjust stock on the product list to change saved variations' : ''"
                     placeholder="Stock Quantity"
                   />
                 </mat-form-field>

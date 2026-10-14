@@ -91,12 +91,18 @@ export class InventoryService {
       `admin/inventory/stock/transactions?${params.toString()}`
     );
   }
-  submitStock(payload: any, add: boolean = true) {
-    if (add) {
-      return this.httpService.post(`admin/inventory/stock/add`, payload);
-    } else {
-      return this.httpService.put(`admin/inventory/product/edit`, payload);
-    }
+  // On-hand / reserved / available per SKU.
+  stockLevels(params: URLSearchParams) {
+    return this.httpService.get(`admin/inventory/stock/levels?${params.toString()}`);
+  }
+  // Manual adjustment with a reason code: mode "delta" (signed change) or
+  // "set" (counted on-hand). expected_on_hand guards against overwriting a
+  // sale made since the figures were loaded (409).
+  adjustStock(payload: {
+    product: string; variation?: string | null; mode: 'delta' | 'set';
+    quantity: number; reason: string; note?: string | null; expected_on_hand?: number | null;
+  }) {
+    return this.httpService.post(`admin/inventory/stock/adjust`, payload);
   }
   submitAttribute(payload: any) {
     if (payload?._id) {

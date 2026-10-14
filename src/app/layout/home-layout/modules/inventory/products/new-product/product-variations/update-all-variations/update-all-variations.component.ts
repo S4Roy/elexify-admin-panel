@@ -30,7 +30,8 @@ export class UpdateAllVariationsComponent {
       regular_price: ['', [Validators.min(0)]],
       sale_price: ['', [Validators.min(0)]],
       sku: [''],
-      stock_quantity: ['', [Validators.required, Validators.min(0)]],
+      // Applied to unsaved variations only (opening stock).
+      stock_quantity: ['', [Validators.min(0)]],
       weight: [''],
     });
   }

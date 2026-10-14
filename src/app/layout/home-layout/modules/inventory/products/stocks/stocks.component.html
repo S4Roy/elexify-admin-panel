@@ -1,142 +1,180 @@
 <div class="fixed inset-0 overflow-hidden">
   <div class="absolute inset-0 overflow-hidden">
-    <div
-      class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10"
-    >
-      <div class="pointer-events-auto relative w-screen max-w-2xl">
-        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+    <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div class="pointer-events-auto relative w-screen max-w-3xl">
+        <div class="stock-panel flex h-full flex-col overflow-y-auto shadow-xl">
           <h2 class="header" id="slide-over-title">
-            {{ data?.name }}
-            <button color="warn" mat-dialog-close mat-icon-button>
+            Stock · {{ data?.name }}
+            <button color="warn" mat-icon-button (click)="close()" aria-label="Close">
               <mat-icon class="text-red-700">close</mat-icon>
             </button>
           </h2>
-          <div class="add-wrapper relative my-3 flex-1 px-4 sm:px-6">
-            <div class="table-wrapper">
-              <table class="table-base">
-                <thead>
-                  <tr class="sticky">
-                    <th scope="col">Type</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">MRP</th>
-                    <th scope="col">Cost price</th>
-                    <th scope="col">Selling price</th>
-                    <th scope="col">
-                      <div class="flex items-center justify-between">
-                        By
-                        <mat-icon
-                          class="text-red-700 cursor-pointer"
-                          (click)="initAddForm()"
-                          >add</mat-icon
-                        >
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <ng-container *ngIf="stockAddForm">
-                    <tr [formGroup]="formGroup" class="input-form">
-                      <td>
-                        <mat-form-field class="baseweb-no-border-table">
-                          <mat-select
-                            placeholder="Select"
-                            formControlName="type"
-                            matInput
-                            [class.is-invalid]="
-                              !Global.isInputValid(formGroup, 'type')
-                            "
-                          >
-                            <mat-option value="in">IN</mat-option>
-                            <mat-option value="out">OUT</mat-option>
-                          </mat-select>
-                        </mat-form-field>
-                      </td>
-                      <td>
-                        <mat-form-field class="baseweb-no-border-table">
-                          <input
-                            formControlName="quantity"
-                            matInput
-                            [class.is-invalid]="
-                              !Global.isInputValid(formGroup, 'quantity')
-                            "
-                            placeholder="Type Here"
-                          />
-                        </mat-form-field>
-                      </td>
-                      <td>
-                        <mat-form-field class="baseweb-no-border-table">
-                          <input
-                            formControlName="mrp"
-                            matInput
-                            [class.is-invalid]="
-                              !Global.isInputValid(formGroup, 'mrp')
-                            "
-                            placeholder="Type Here"
-                          />
-                        </mat-form-field>
-                      </td>
-                      <td>
-                        <mat-form-field class="baseweb-no-border-table">
-                          <input
-                            formControlName="cost_price"
-                            matInput
-                            [class.is-invalid]="
-                              !Global.isInputValid(formGroup, 'cost_price')
-                            "
-                            placeholder="Type Here"
-                          />
-                        </mat-form-field>
-                      </td>
-                      <td>
-                        <mat-form-field class="baseweb-no-border-table">
-                          <input
-                            formControlName="selling_price"
-                            matInput
-                            [class.is-invalid]="
-                              !Global.isInputValid(formGroup, 'selling_price')
-                            "
-                            placeholder="Type Here"
-                          />
-                        </mat-form-field>
-                      </td>
-                      <td>
-                        <button
-                          [disabled]="formGroup.disabled"
-                          (click)="onSubmit()"
-                          class="btn-primary p-0 py-2.5 text-xs uppercase"
-                        >
-                          {{
-                            formGroup.disabled ? "Please wait..." : " Add Stock"
-                          }}
-                        </button>
-                      </td>
-                    </tr>
-                  </ng-container>
 
-                  <ng-container *ngFor="let item of transactions">
+          <div class="flex-1 space-y-6 px-4 py-4 sm:px-6">
+            <!-- Levels -->
+            <section>
+              <div class="section-title">
+                Stock levels
+                <span class="hint">Available = on hand − reserved for orders awaiting payment</span>
+              </div>
+              <div class="table-wrapper">
+                <table class="table-base">
+                  <thead>
                     <tr>
-                      <td>{{ item?.type }}</td>
-                      <td>{{ item?.quantity }}</td>
-                      <td>{{ item?.mrp }}</td>
-                      <td>{{ item?.cost_price }}</td>
-                      <td>{{ item?.selling_price }}</td>
-                      <td>{{ item?.created_by?.name }}</td>
+                      <th scope="col">SKU</th>
+                      <th scope="col" class="num">On hand</th>
+                      <th scope="col" class="num">Reserved</th>
+                      <th scope="col" class="num">Available</th>
+                      <th scope="col">Status</th>
+                      <th scope="col"></th>
                     </tr>
-                  </ng-container>
-                  <ng-container *ngIf="!transactions?.length">
+                  </thead>
+                  <tbody>
+                    <ng-container *ngFor="let level of levels">
+                      <tr [class.is-active]="adjusting && skuKey(adjusting) === skuKey(level)">
+                        <td>
+                          <div class="sku-name">{{ skuLabel(level) }}</div>
+                          <div class="sku-code" *ngIf="level.sku">{{ level.sku }}</div>
+                        </td>
+                        <td class="num">{{ level.manage_stock ? level.stock_quantity : '—' }}</td>
+                        <td class="num">
+                          <span [matTooltip]="level.reserved_quantity ? 'Held for unpaid online orders; released automatically if payment does not arrive' : ''">
+                            {{ level.manage_stock ? level.reserved_quantity : '—' }}
+                          </span>
+                        </td>
+                        <td class="num font-semibold">
+                          {{ level.manage_stock ? level.available_quantity : 'Not tracked' }}
+                        </td>
+                        <td>
+                          <span class="stock-chip" [ngClass]="level.stock_status">{{ statusLabels[level.stock_status] ?? level.stock_status }}</span>
+                          <span *ngIf="level.allow_backorders" class="sku-code block">Backorders allowed</span>
+                        </td>
+                        <td class="actions">
+                          <button type="button" mat-icon-button matTooltip="Movement history" aria-label="Movement history"
+                            [class.is-on]="historySku && skuKey(historySku) === skuKey(level)" (click)="filterHistory(level)">
+                            <mat-icon>history</mat-icon>
+                          </button>
+                          <button *ngIf="canAdjust && level.manage_stock" type="button" mat-icon-button matTooltip="Adjust stock"
+                            aria-label="Adjust stock" (click)="openAdjust(level)">
+                            <mat-icon>tune</mat-icon>
+                          </button>
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <tr *ngIf="!levels.length">
+                      <td colspan="6" class="text-center"><app-empty-state message="No stock-keeping units"></app-empty-state></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Adjust -->
+            <section *ngIf="adjusting" class="adjust-card" [formGroup]="formGroup">
+              <div class="section-title">
+                Adjust {{ skuLabel(adjusting) }}
+                <button type="button" mat-icon-button (click)="closeAdjust()" aria-label="Cancel adjustment"><mat-icon>close</mat-icon></button>
+              </div>
+
+              <div class="mode-toggle" role="radiogroup" aria-label="Adjustment type">
+                <label [class.selected]="formGroup.value.mode === 'add'">
+                  <input type="radio" formControlName="mode" value="add" (change)="onModeChange()" /> Add units
+                </label>
+                <label [class.selected]="formGroup.value.mode === 'remove'">
+                  <input type="radio" formControlName="mode" value="remove" (change)="onModeChange()" /> Remove units
+                </label>
+                <label [class.selected]="formGroup.value.mode === 'set'">
+                  <input type="radio" formControlName="mode" value="set" (change)="onModeChange()" /> Set counted quantity
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ formGroup.value.mode === 'set' ? 'Counted on hand' : 'Quantity' }}</mat-label>
+                  <input matInput type="number" min="0" step="1" formControlName="quantity" />
+                  <mat-error *ngIf="!Global.isInputValid(formGroup, 'quantity')">Enter a whole number</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Reason</mat-label>
+                  <mat-select formControlName="reason">
+                    <mat-option *ngFor="let reason of reasons" [value]="reason.value">
+                      {{ reason.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Note (optional)</mat-label>
+                <input matInput formControlName="note" maxlength="500" placeholder="e.g. PO number, who counted" />
+              </mat-form-field>
+
+              <p class="preview" *ngIf="previewOnHand !== null">
+                On hand {{ adjusting.stock_quantity }} → <strong>{{ previewOnHand }}</strong>
+                <ng-container *ngIf="adjusting.reserved_quantity"> · {{ adjusting.reserved_quantity }} reserved</ng-container>
+              </p>
+              <p class="error" *ngIf="belowReserved">
+                {{ adjusting.reserved_quantity }} unit(s) are reserved for orders awaiting payment, so on hand can't go below that.
+              </p>
+
+              <div class="flex justify-end">
+                <button type="button" class="btn-primary w-auto px-6 text-xs uppercase"
+                  [disabled]="formGroup.disabled || belowReserved" (click)="onSubmit()">
+                  {{ formGroup.disabled ? 'Saving…' : 'Save adjustment' }}
+                </button>
+              </div>
+            </section>
+
+            <!-- History -->
+            <section>
+              <div class="section-title">
+                Movement history
+                <span class="hint" *ngIf="historySku">
+                  {{ skuLabel(historySku) }} ·
+                  <button type="button" class="link" (click)="filterHistory(historySku)">show all</button>
+                </span>
+              </div>
+              <div class="table-wrapper">
+                <table class="table-base">
+                  <thead>
                     <tr>
-                      <td class="text-center" colspan="6"><app-empty-state message="No Items Found"></app-empty-state></td>
+                      <th scope="col">When</th>
+                      <th scope="col">Movement</th>
+                      <th scope="col" class="num">Change</th>
+                      <th scope="col" class="num">Balance</th>
+                      <th scope="col">By</th>
                     </tr>
-                  </ng-container>
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of transactions">
+                      <td class="whitespace-nowrap">{{ item.created_at | date: 'd MMM y, h:mm a' }}</td>
+                      <td>
+                        <div>{{ movementLabel(item) }}
+                          <a *ngIf="item.order_number" class="link" [routerLink]="['/inventory/orders/details', item.reference_id]" (click)="close()">
+                            #{{ item.order_number }}
+                          </a>
+                        </div>
+                        <div class="sku-code" *ngIf="item.variation?.name || levels.length > 1">{{ item.variation?.name || item.variation?.sku || item.product?.sku }}</div>
+                        <div class="sku-code" *ngIf="item.note">{{ item.note }}</div>
+                      </td>
+                      <td class="num font-semibold" [class.pos]="(item.delta ?? 0) > 0" [class.neg]="(item.delta ?? 0) < 0">
+                        {{ item.delta === undefined || item.delta === null ? item.quantity : (item.delta > 0 ? '+' + item.delta : item.delta) }}
+                      </td>
+                      <td class="num">{{ item.balance_after ?? '—' }}</td>
+                      <td>{{ item.created_by?.name || (item.actor_type === 'customer' ? 'Customer' : 'System') }}</td>
+                    </tr>
+                    <tr *ngIf="!transactions.length">
+                      <td colspan="5" class="text-center"><app-empty-state message="No stock movements yet"></app-empty-state></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
+
           <div class="p-1">
-            <pagination
-              [pagination]="paginationOption"
-              (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"
-            ></pagination>
+            <pagination [pagination]="paginationOption"
+              (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)"
+              (pageChange)="onPageChange($event)"></pagination>
           </div>
         </div>
       </div>

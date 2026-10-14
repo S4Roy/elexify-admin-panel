@@ -469,6 +469,17 @@ export class ProductsComponent {
   get permissions(): string[] { return this.access.actions('products'); }
   readonly zohoActions = [{ label: 'Sync with Zoho', icon: 'sync', action: 'zoho_sync' }];
   get canSyncZoho(): boolean { return this.access.can('zoho_sync.view'); }
+  get canViewStock(): boolean { return this.access.can('inventory.view'); }
+  // "available (reserved)" — available = on hand minus units held for
+  // orders awaiting payment.
+  stockText(sku: any): string {
+    if (!sku) return '0';
+    if (sku.manage_stock === false) return 'Not tracked';
+    const onHand = Number(sku.stock_quantity ?? 0);
+    const reserved = Number(sku.reserved_quantity ?? 0);
+    const available = Math.max(0, onHand - reserved);
+    return reserved > 0 ? `${available} available (${reserved} reserved)` : String(available);
+  }
   onRowAction(action: string, item: any) {
     if (action === 'zoho_sync') this.openZohoSync(item);
   }

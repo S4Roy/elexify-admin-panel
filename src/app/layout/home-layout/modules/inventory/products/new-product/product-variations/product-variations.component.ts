@@ -191,7 +191,7 @@ export class ProductVariationsComponent implements OnInit {
           [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)],
         ],
         hsn_sac: [attr.hsn_sac ?? '', [Validators.pattern(HSN_PATTERN)]],
-        stock_status: [attr?.stock_status ?? 'in_stock', [Validators.required]],
+        stock_status: [attr?.stock_status ?? 'in_stock'],
         stock_quantity: [attr?.stock_quantity ?? null, [Validators.min(0)]],
       });
 
@@ -301,7 +301,7 @@ export class ProductVariationsComponent implements OnInit {
             [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)],
           ],
           hsn_sac: ['', [Validators.pattern(HSN_PATTERN)]],
-          stock_status: ['in_stock', [Validators.required]],
+          stock_status: ['in_stock'],
           stock_quantity: [null, [Validators.min(0), Validators.required]],
           ask_for_price: [this.data?.ask_for_price ?? false],
           enable_enquiry: [this.data?.enable_enquiry ?? false],
@@ -464,7 +464,9 @@ export class ProductVariationsComponent implements OnInit {
             // if (res.sku !== '') {
             //   variationGroup.get('sku')?.setValue(res.sku);
             // }
-            if (res.stock_quantity !== '') {
+            // Only unsaved variations take an opening quantity; saved
+            // ones change stock through adjustments.
+            if (res.stock_quantity !== '' && res.stock_quantity !== null && !variationGroup.get('_id')?.value) {
               variationGroup
                 .get('stock_quantity')
                 ?.setValue(res.stock_quantity);

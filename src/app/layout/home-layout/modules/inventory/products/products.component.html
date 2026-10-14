@@ -153,9 +153,7 @@
 
                         <div class="text-xs text-gray-600">
                           Stock:
-                          <span class="font-medium">{{
-                            item.variations[0]?.stock_quantity || 0
-                          }}</span>
+                          <span class="font-medium">{{ stockText(item.variations[0]) }}</span>
                         </div>
                       </div>
                     </div>
@@ -265,9 +263,7 @@
 
                             <div class="text-xs text-gray-600">
                               Stock:
-                              <span class="font-medium">{{
-                                variant?.stock_quantity || 0
-                              }}</span>
+                              <span class="font-medium">{{ stockText(variant) }}</span>
                             </div>
                           </div>
                         </div>
@@ -353,9 +349,7 @@
 
                     <div class="text-xs text-gray-600">
                       Stock:
-                      <span class="font-medium">{{
-                        item?.stock_quantity || 0
-                      }}</span>
+                      <span class="font-medium">{{ stockText(item) }}</span>
                     </div>
                   </div>
                 </div>
@@ -371,6 +365,7 @@
             <app-menu
               [modalItem]="permissions.includes('edit') ? item : null"
               (initModal)="addItem($event)"
+              [stockItem]="canViewStock ? item : null"
               (initStockModal)="stockItem($event)"
               (deleteItem)="deleteItem($event)"
               [delete]="permissions.includes('delete') ? item : null"

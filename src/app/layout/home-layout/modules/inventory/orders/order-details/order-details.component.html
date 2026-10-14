@@ -551,6 +551,29 @@
           Generated: {{ data?.invoice?.generated_at | date : 'medium' }}
         </p>
       </section>
+      <!-- Payment captured after the stock hold lapsed and the items sold
+           out: the order was cancelled and a refund started automatically. -->
+      <section class="side-card stock-flag-card" *ngIf="data?.stock_flag === 'late_capture_oos'" role="alert">
+        <h3 class="side-card-title">Paid after sell-out</h3>
+        <p class="text-sm">
+          The customer's payment arrived after their stock hold expired and the items had sold out.
+          The order was cancelled and a refund started automatically — check the Refund status below
+          and retry it if it failed.
+        </p>
+      </section>
+      <section class="side-card stock-flag-card" *ngIf="data?.stock_flag === 'capture_after_cancel'" role="alert">
+        <h3 class="side-card-title">Paid after cancellation</h3>
+        <p class="text-sm">
+          A payment arrived after this order was cancelled. The order stays cancelled and a refund started
+          automatically — check the Refund status below and retry it if it failed.
+        </p>
+      </section>
+      <section class="side-card" *ngIf="data?.order_status === 'pending' && data?.stock_state === 'reserved' && data?.reservation_expires_at">
+        <h3 class="side-card-title">Stock hold</h3>
+        <p class="text-gray-700 text-sm">
+          Items are reserved until {{ data?.reservation_expires_at | date : 'medium' }} while payment is pending.
+        </p>
+      </section>
       <section class="side-card" *ngIf="data?.cancellation?.reason">
         <h3 class="side-card-title">Cancellation</h3>
         <p class="text-gray-700 text-sm">Reason: {{ data?.cancellation?.reason }}</p>

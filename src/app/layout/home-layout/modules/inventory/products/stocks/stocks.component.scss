@@ -1,0 +1,116 @@
+.stock-panel {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+
+  .hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sku-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.sku-code {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+tr.is-active td {
+  background-color: var(--active-tint-bg);
+}
+
+.actions {
+  white-space: nowrap;
+  text-align: right;
+
+  .is-on {
+    color: var(--nav-primary);
+  }
+}
+
+// Status chips keep light saturated colours in both themes (see styles.scss).
+.stock-chip {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.in_stock { background: #dcfce7; color: #166534; }
+  &.out_of_stock { background: #fee2e2; color: #991b1b; }
+  &.on_backorder { background: #fef3c7; color: #92400e; }
+}
+
+.adjust-card {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background-color: var(--bg-surface-alt);
+}
+
+.mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--border-color-strong);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &.selected {
+      border-color: var(--nav-primary);
+      background-color: var(--active-tint-bg);
+    }
+  }
+}
+
+.preview {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: #dc2626;
+  margin: 0 0 0.5rem;
+}
+
+.pos { color: #15803d; }
+.neg { color: #dc2626; }
+
+.link {
+  color: var(--nav-primary);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}

@@ -1,3 +1,4 @@
+import { StocksComponent } from '../stocks/stocks.component';
 import { NgFor, NgIf } from '@angular/common';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
 import { Component, Inject, Optional } from '@angular/core';
@@ -193,19 +194,16 @@ export class NewProductComponent {
         this.data?.sku ?? '',
         [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)],
       ],
-      stock_status: [
-        this.data?.stock_status ?? 'in_stock',
-        [Validators.required],
-      ],
+      // Derived by the server from stock levels; kept for older payloads.
+      stock_status: [this.data?.stock_status ?? 'in_stock'],
       stock_quantity: [
         this.data?.stock_quantity ?? null,
         [Validators.min(0), Validators.required],
       ],
-      allow_backorders: [
-        this.data?.allow_backorders ?? false,
-        [Validators.required],
-      ],
-      manage_stock: [this.data?.manage_stock ?? false, [Validators.required]],
+      allow_backorders: [this.data?.allow_backorders ?? false],
+      // Stock is tracked unless explicitly turned off.
+      manage_stock: [this.data?.manage_stock ?? true],
+      low_stock_threshold: [this.data?.low_stock_threshold ?? null, [Validators.min(0)]],
       sold_individually: [
         this.data?.sold_individually ?? false,
         [Validators.required],
@@ -587,6 +585,24 @@ export class NewProductComponent {
   imageAnnouncement = '';
 
   // Saved products only: Zoho matches on the stored SKU and item id.
+  // Stock levels / adjustments / history for this product.
+  openStock() {
+    this.dialog
+      .open(StocksComponent, { data: { _id: this.data?._id, name: this.data?.name }, disableClose: true })
+      .afterClosed()
+      .subscribe((changed: boolean) => {
+        if (!changed) return;
+        if (this.product_id) {
+          this.fetchProductList();
+        } else {
+          const params = new URLSearchParams({ product: this.data._id, limit: '1' });
+          this.inventoryService.stockLevels(params).subscribe((res: any) => {
+            const level = res?.data?.docs?.[0];
+            if (level && !level.variation) this.formGroup.patchValue({ stock_quantity: level.stock_quantity });
+          });
+        }
+      });
+  }
   get canSyncZoho(): boolean { return !!this.data?._id && this.access.can('zoho_sync.view'); }
   openZohoSync(): void {
     this.dialog.open(ZohoSyncDialogComponent, {
@@ -705,7 +721,6 @@ export class NewProductComponent {
       Validators.required,
       Validators.pattern(/^[a-zA-Z0-9_-]+$/),
     ]);
-    this.setControlValidators('stock_status', [Validators.required]);
     this.setControlValidators('stock_quantity', [Validators.min(0)]);
 
     // optional: dimension validators if you use them

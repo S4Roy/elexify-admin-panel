@@ -531,26 +531,60 @@
                     >This field is required</mat-error
                   >
                 </mat-form-field> -->
-                <!-- Stock Quantity -->
+                <!-- Stock Quantity: the opening quantity on create. After
+                     that, stock only changes through adjustments (ledger),
+                     so a sale made while this form is open isn't overwritten. -->
+                <div>
+                  <mat-form-field class="w-full">
+                    <mat-label>{{ data?._id ? 'Stock on hand' : 'Opening stock' }}</mat-label>
+                    <input
+                      matInput
+                      type="number"
+                      min="0"
+                      formControlName="stock_quantity"
+                      [readonly]="!!data?._id"
+                      placeholder="Stock Quantity"
+                    />
+                    <button
+                      *ngIf="data?._id"
+                      matSuffix
+                      type="button"
+                      mat-icon-button
+                      matTooltip="Adjust stock"
+                      aria-label="Adjust stock"
+                      (click)="openStock()"
+                    >
+                      <mat-icon>tune</mat-icon>
+                    </button>
+                    <mat-error
+                      *ngIf="
+                        !Global.isInputRuleValid(
+                          formGroup,
+                          'stock_quantity',
+                          'required'
+                        )
+                      "
+                      >This field is required</mat-error
+                    >
+                  </mat-form-field>
+                  <!-- Help sits outside the field: the global form-field style hides mat-hint. -->
+                  <p *ngIf="data?._id" class="-mt-1 text-xs text-gray-500">Read-only — use Adjust stock to change it.</p>
+                </div>
+                <!-- Low stock alert threshold (blank = site default) -->
                 <mat-form-field>
-                  <mat-label>Stock Quantity</mat-label>
+                  <mat-label>Low stock alert at</mat-label>
                   <input
                     matInput
                     type="number"
-                    formControlName="stock_quantity"
-                    placeholder="Stock Quantity"
+                    min="0"
+                    formControlName="low_stock_threshold"
+                    placeholder="Site default"
                   />
-                  <mat-error
-                    *ngIf="
-                      !Global.isInputRuleValid(
-                        formGroup,
-                        'stock_quantity',
-                        'required'
-                      )
-                    "
-                    >This field is required</mat-error
-                  >
                 </mat-form-field>
+                <div class="flex flex-col justify-center">
+                  <mat-checkbox formControlName="manage_stock">Track stock</mat-checkbox>
+                  <mat-checkbox formControlName="allow_backorders">Allow backorders</mat-checkbox>
+                </div>
                 <!-- Allow Backorders -->
                 <!-- <mat-form-field>
                   <mat-label>Allow Backorders</mat-label>
