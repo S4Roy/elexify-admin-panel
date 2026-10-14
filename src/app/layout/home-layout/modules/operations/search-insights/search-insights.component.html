@@ -25,6 +25,7 @@
       <mat-icon aria-hidden="true">search</mat-icon>
       <input type="search" placeholder="Filter queries" aria-label="Filter queries" maxlength="100" (input)="onSearchInput($any($event.target).value)" />
     </label>
+    <a routerLink="/search-insights/synonyms" class="export-btn ml-auto"><mat-icon aria-hidden="true">swap_horiz</mat-icon>Synonyms</a>
     <button type="button" class="export-btn" [disabled]="exporting || !itemList.length" (click)="exportCsv()">
       <mat-icon aria-hidden="true">download</mat-icon>{{ exporting ? 'Exporting…' : 'Export CSV' }}
     </button>
@@ -52,7 +53,9 @@
         </tr></thead>
         <tbody>
           <tr *ngFor="let item of itemList">
-            <td class="break-all">{{ item._id }}</td>
+            <td><div class="query-cell"><span class="break-all">{{ item._id }}</span>
+              <button *ngIf="canEditSynonyms && filterValues['event_type'] !== 'legacy'" type="button" class="row-action" title="Add synonym" [attr.aria-label]="'Add synonym for ' + item._id" (click)="addSynonym(item._id)"><mat-icon>swap_horiz</mat-icon></button>
+            </div></td>
             <td>{{ item.searches | number }}</td>
             <td *ngIf="showsResults">
               <span [title]="item.measured ? 'No-result searches / searches with a confirmed count' : 'No confirmed result count'">{{ noResultLabel(item) }}</span>

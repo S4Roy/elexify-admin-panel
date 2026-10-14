@@ -321,6 +321,23 @@ export class ApiService {
     return this.httpService.get(`admin/operations/search-insights?${params.toString()}`);
   }
 
+  // Whole-query synonyms that widen storefront product search.
+  searchSynonyms(params: URLSearchParams) {
+    return this.httpService.get(`admin/operations/search-synonyms?${params.toString()}`);
+  }
+  searchSynonymByTerm(term: string) {
+    return this.httpService.get(`admin/operations/search-synonyms/lookup?term=${encodeURIComponent(term)}`);
+  }
+  createSearchSynonym(payload: { term: string; alternatives: string[] }) {
+    return this.httpService.post(`admin/operations/search-synonyms`, payload);
+  }
+  updateSearchSynonym(id: string, payload: { term: string; alternatives: string[] }) {
+    return this.httpService.put(`admin/operations/search-synonyms/${id}`, payload);
+  }
+  deleteSearchSynonym(id: string) {
+    return this.httpService.delete(`admin/operations/search-synonyms/${id}`);
+  }
+
   checkoutFailures(params: URLSearchParams) {
     return this.httpService.get(`admin/operations/checkout-failures?${params.toString()}`);
   }

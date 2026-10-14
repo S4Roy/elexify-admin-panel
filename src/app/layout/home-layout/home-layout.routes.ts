@@ -1,5 +1,6 @@
 import { EmailCampaignsComponent } from "./modules/email-campaigns/email-campaigns.component";
 import { SearchInsightsComponent } from './modules/operations/search-insights/search-insights.component';
+import { SearchSynonymsComponent } from './modules/operations/search-insights/search-synonyms/search-synonyms.component';
 import { CampaignsComponent } from './modules/notifications/campaigns/campaigns.component';
 import { Routes } from '@angular/router';
 import { HomeLayoutComponent } from './home-layout.component';
@@ -112,6 +113,11 @@ export const routes: Routes = [
         path: 'search-insights',
         component: SearchInsightsComponent,
         data: { pageTitle: 'Search Insights', breadcrumb: 'Search Insights' },
+      },
+      {
+        path: 'search-insights/synonyms',
+        component: SearchSynonymsComponent,
+        data: { pageTitle: 'Search Synonyms', breadcrumb: 'Search Synonyms' },
       },
       {
         path: 'checkout-failures',

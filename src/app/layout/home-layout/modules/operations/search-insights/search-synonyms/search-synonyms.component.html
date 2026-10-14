@@ -1,0 +1,31 @@
+<p class="text-sm text-gray-500 mb-4">When a shopper's whole search matches a term, products matching any alternative are shown too. Use this for typos (cuter → cutter), spacing (e cycle → ecycle) and other names (li ion → lithium). Changes reach the store within a minute.</p>
+<div class="insights-toolbar mb-3">
+  <a routerLink="/search-insights" class="export-btn"><mat-icon aria-hidden="true">arrow_back</mat-icon>Search Insights</a>
+  <label class="query-search">
+    <mat-icon aria-hidden="true">search</mat-icon>
+    <input type="search" placeholder="Filter synonyms" aria-label="Filter synonyms" maxlength="100" (input)="onSearchInput($any($event.target).value)" />
+  </label>
+  <button *ngIf="canEdit" type="button" class="export-btn" (click)="openEditor()"><mat-icon aria-hidden="true">add</mat-icon>Add synonym</button>
+</div>
+<div *ngIf="error" class="text-center py-6">Could not load synonyms. <button type="button" (click)="fetchList()" class="text-primary">Retry</button></div>
+<div *ngIf="loading && !error" class="text-center py-6">Loading…</div>
+<ng-container *ngIf="!loading && !error">
+  <div class="table-wrapper">
+    <table class="table-base insights-table">
+      <colgroup><col style="width: 30%" /><col /><col *ngIf="canEdit" style="width: 120px" /></colgroup>
+      <thead><tr><th scope="col">Search term</th><th scope="col">Also searches for</th><th scope="col" *ngIf="canEdit"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of itemList">
+          <td class="break-all">{{ item.term }}</td>
+          <td class="break-all">{{ item.alternatives.join(', ') }}</td>
+          <td *ngIf="canEdit" class="whitespace-nowrap">
+            <button type="button" class="row-action" (click)="openEditor(item)" [attr.aria-label]="'Edit synonym ' + item.term"><mat-icon>edit</mat-icon></button>
+            <button type="button" class="row-action text-red-600" (click)="remove(item)" [attr.aria-label]="'Delete synonym ' + item.term"><mat-icon>delete</mat-icon></button>
+          </td>
+        </tr>
+        <tr *ngIf="!itemList.length"><td [attr.colspan]="canEdit ? 3 : 2"><app-empty-state message="No synonyms yet. Add one from a no-result query on Search Insights."></app-empty-state></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <pagination [pagination]="paginationOption" (pageSizeChange)="paginationOption.limit = $event; onPageChange(1)" (pageChange)="onPageChange($event)"></pagination>
+</ng-container>

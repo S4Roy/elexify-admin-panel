@@ -302,7 +302,7 @@ export class SideNavComponent {
           url: '/audit-logs',
           exact: true,
         },
-        { label: 'Search Insights', icon: 'search', url: '/search-insights', exact: true },
+        { label: 'Search Insights', icon: 'search', url: '/search-insights', exact: false },
         {
           label: 'Checkout Failures',
           icon: 'production_quantity_limits',

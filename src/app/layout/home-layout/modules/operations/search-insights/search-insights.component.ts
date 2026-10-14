@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { ToastrService } from 'ngx-toastr';
+import { RouterLink } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, takeUntil } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
 import { HelpersService } from 'app/core/services/helpers.service';
@@ -12,13 +13,14 @@ import PaginationOptions from 'app/core/models/PaginationOptions';
 import { FilterDrawerComponent } from '../../../includes/filter-drawer/filter-drawer.component';
 import { PaginationComponent } from '../../../includes/pagination/pagination.component';
 import { EmptyStateComponent } from '../../../includes/empty-state/empty-state.component';
+import { SynonymDialogComponent } from './synonym-dialog/synonym-dialog.component';
 
 
 type SortKey = 'searches' | 'zero_results' | 'zero_rate' | 'last_searched';
 
 @Component({
   selector: 'app-search-insights',
-  imports: [NgIf, NgFor, DatePipe, DecimalPipe, MatIcon, PaginationComponent, EmptyStateComponent],
+  imports: [NgIf, NgFor, DatePipe, DecimalPipe, MatIcon, RouterLink, PaginationComponent, EmptyStateComponent],
   templateUrl: './search-insights.component.html',
   styleUrl: './search-insights.component.scss',
 })
@@ -28,6 +30,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
   loading = true;
   error = false;
   exporting = false;
+  canEditSynonyms = false;
   summary = this.emptySummary();
   sort: SortKey = 'searches';
   searchText = '';
@@ -63,6 +66,7 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
         this.paginationOption.page = 1;
         this.fetchList();
       });
+    this.canEditSynonyms = this.helperService.can('operations.update');
     this.updateFilterButton();
     this.fetchList();
   }
@@ -218,6 +222,20 @@ export class SearchInsightsComponent implements OnInit, OnDestroy {
 
   get zeroResultRate(): string {
     return this.summary.measured ? (100 * this.summary.zero_results / this.summary.measured).toFixed(1) + '%' : '—';
+  }
+
+  // Opens the existing rule for this query when there is one, so edits never hit the duplicate-term conflict.
+  addSynonym(query: string): void {
+    this.apiService.searchSynonymByTerm(query).subscribe({
+      next: (res: any) => {
+        const existing = res?.data;
+        const data = existing ? { id: existing._id, term: existing.term, alternatives: existing.alternatives } : { term: query };
+        this.dialog.open(SynonymDialogComponent, { width: '480px', data }).afterClosed().subscribe(saved => {
+          if (saved) this.toastr.success(`Synonym saved. New searches for "${query}" will include the alternatives.`);
+        });
+      },
+      error: () => this.toastr.error('Could not load synonyms'),
+    });
   }
 
   // Pages through the API so the export matches the table's filters and sort.
