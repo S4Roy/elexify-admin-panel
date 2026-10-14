@@ -325,6 +325,19 @@
                 >This field is required</mat-error
               >
             </div>
+            <!-- HSN: printed on GST invoices and sent to Shiprocket and Zoho Books. -->
+            <!-- Help sits outside the field: the global form-field style hides mat-hint/mat-error. -->
+            <mat-form-field class="mt-4 w-full">
+              <mat-label>HSN code</mat-label>
+              <input matInput formControlName="hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 85437099"
+                autocomplete="off" aria-describedby="hsn-help"
+                [class.is-invalid]="!Global.isInputValid(formGroup, 'hsn_sac')" />
+            </mat-form-field>
+            <p *ngIf="formGroup.get('hsn_sac') as hsn" id="hsn-help" class="-mt-1 text-xs"
+              [class.text-red-600]="hsn.invalid && hsn.touched" [class.text-gray-500]="!(hsn.invalid && hsn.touched)">
+              {{ hsn.invalid && hsn.touched ? 'Enter 4, 6 or 8 digits.' : 'GST HSN, 4, 6 or 8 digits. Shown on invoices and sent to Shiprocket.' }}
+              <ng-container *ngIf="formGroup.getRawValue().product_type === 'variable'"> Variations use it unless they set their own.</ng-container>
+            </p>
           </div>
         </div>
       </div>

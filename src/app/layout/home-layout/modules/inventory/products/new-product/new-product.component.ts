@@ -28,6 +28,7 @@ import PaginationOptions from 'app/core/models/PaginationOptions';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Editor, NgxEditorModule } from 'ngx-editor';
+import { HSN_PATTERN } from './hsn';
 import { MatButtonModule } from '@angular/material/button';
 import { MediaComponent } from '../../../settings/media/media.component';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -147,6 +148,7 @@ export class NewProductComponent {
       classifications: [null],
       sub_category: [null],
       brand: [this.data?.brand?._id ?? null],
+      hsn_sac: [this.data?.hsn_sac ?? '', [Validators.pattern(HSN_PATTERN)]],
       status: [this.data?.status ?? 'active', [Validators.required]],
       images: this.fb.array([]),
       // Industry-standard SEO length caps — see backend

@@ -24,6 +24,7 @@
         <th scope="col">Regular Price*</th>
         <th scope="col">Sale Price *</th>
         <th scope="col">SKU *</th>
+        <th scope="col" title="Leave blank to use the product's HSN code">HSN</th>
         <th scope="col" class="text-center">Stock *</th>
         <th scope="col" class="text-center">Weight(Kg)</th>
         <th scope="col" class="text-center">(L x W x H) in CM</th>
@@ -160,6 +161,21 @@
                     (change)="emitChanges()"
                     formControlName="sku"
                     placeholder="SKU"
+                  />
+                </mat-form-field>
+              </td>
+              <!-- HSN: blank inherits the product's code -->
+              <td style="width: 110px">
+                <mat-form-field class="baseweb-no-border-table">
+                  <input
+                    matInput
+                    (change)="emitChanges()"
+                    formControlName="hsn_sac"
+                    inputmode="numeric"
+                    maxlength="8"
+                    placeholder="Product's"
+                    aria-label="HSN code, 4, 6 or 8 digits (blank uses the product's)"
+                    title="4, 6 or 8 digits. Leave blank to use the product's HSN code."
                   />
                 </mat-form-field>
               </td>

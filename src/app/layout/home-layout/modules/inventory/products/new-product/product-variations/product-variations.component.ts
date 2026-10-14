@@ -38,6 +38,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { UpdateAllVariationsComponent } from './update-all-variations/update-all-variations.component';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { HSN_PATTERN } from '../hsn';
 
 @Component({
   selector: 'app-product-variations',
@@ -189,6 +190,7 @@ export class ProductVariationsComponent implements OnInit {
           attr.sku ?? null,
           [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)],
         ],
+        hsn_sac: [attr.hsn_sac ?? '', [Validators.pattern(HSN_PATTERN)]],
         stock_status: [attr?.stock_status ?? 'in_stock', [Validators.required]],
         stock_quantity: [attr?.stock_quantity ?? null, [Validators.min(0)]],
       });
@@ -298,6 +300,7 @@ export class ProductVariationsComponent implements OnInit {
             sku,
             [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)],
           ],
+          hsn_sac: ['', [Validators.pattern(HSN_PATTERN)]],
           stock_status: ['in_stock', [Validators.required]],
           stock_quantity: [null, [Validators.min(0), Validators.required]],
           ask_for_price: [this.data?.ask_for_price ?? false],
