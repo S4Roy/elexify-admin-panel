@@ -99,6 +99,7 @@ const PROMO_LAYOUTS: { value: string; label: string; max: number; sizes: string 
   { value: 'grid_3', label: '3 across (swipe row on phones)', max: 3, sizes: '1200×900 (4:3)' },
   { value: 'grid_4', label: '4 across (swipe row on phones)', max: 4, sizes: '1000×1000 (1:1)' },
   { value: 'feature_left', label: '1 large + 2 small', max: 3, sizes: 'Banner 1: 1200×1200 (1:1) · Banners 2–3: 1200×600 (2:1)' },
+  { value: 'carousel', label: 'Carousel (5 visible on desktop, scrolls)', max: 12, sizes: '1000×1000 (1:1), or 1000×500 transparent PNG art' },
 ];
 
 const TEXT_POSITIONS = [
@@ -237,6 +238,7 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
       case 'grid_3':
         return '4 / 3';
       case 'grid_4':
+      case 'carousel':
         return '1 / 1';
       case 'feature_left':
         return index === 0 ? '1 / 1' : '2 / 1';
