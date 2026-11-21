@@ -47,6 +47,9 @@ const TRUST_BADGE_ICONS: string[] = [
   'package',
   'headset',
   'clock',
+  'badge-check',
+  'receipt',
+  'rotate-ccw',
 ];
 
 const PRODUCT_SOURCE_MODES: { value: string; label: string; hint: string }[] = [
@@ -405,6 +408,16 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
         );
         this.formGroup.addControl('body', this.fb.control(config.body ?? ''));
         break;
+      case 'reviews':
+        this.formGroup.addControl(
+          'min_rating',
+          this.fb.control(config.min_rating ?? 4, [Validators.min(1), Validators.max(5)])
+        );
+        this.formGroup.addControl(
+          'reviews_limit',
+          this.fb.control(config.limit ?? 8, [Validators.min(1), Validators.max(20)])
+        );
+        break;
     }
   }
 
@@ -700,6 +713,11 @@ export class SectionEditorComponent implements OnInit, OnDestroy {
         return {
           heading: raw.content_heading || '',
           body: raw.body || '',
+        };
+      case 'reviews':
+        return {
+          min_rating: Number(raw.min_rating) || 4,
+          limit: Number(raw.reviews_limit) || 8,
         };
       default:
         return {};

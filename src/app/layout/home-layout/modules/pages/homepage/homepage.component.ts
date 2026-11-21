@@ -41,6 +41,7 @@ const SECTION_TYPES: SectionTypeDef[] = [
   { type: 'trust_badges', label: 'Trust Badges', icon: 'verified_user' },
   { type: 'promo_banners', label: 'Promo Banners', icon: 'dashboard' },
   { type: 'cta_banner', label: 'CTA Banner', icon: 'campaign' },
+  { type: 'reviews', label: 'Customer Reviews', icon: 'reviews' },
   { type: 'content_section', label: 'Content Section', icon: 'article' },
 ];
 

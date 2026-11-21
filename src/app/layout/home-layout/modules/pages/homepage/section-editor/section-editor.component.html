@@ -577,6 +577,28 @@
         >
       </div>
 
+      <!-- CUSTOMER REVIEWS -->
+      <div
+        *ngSwitchCase="'reviews'"
+        class="rounded-lg p-4 sm:p-5"
+        style="background-color: var(--bg-surface); border: 1px solid var(--border-color)"
+      >
+        <h3 class="text-sm font-semibold mb-1" style="color: var(--text-primary)">Customer reviews</h3>
+        <p class="text-xs mb-3" style="color: var(--text-secondary)">
+          Shows the latest approved product reviews. The section hides itself when none qualify.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <mat-form-field>
+            <mat-label>Minimum star rating</mat-label>
+            <input matInput type="number" min="1" max="5" formControlName="min_rating" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Number of reviews</mat-label>
+            <input matInput type="number" min="1" max="20" formControlName="reviews_limit" />
+          </mat-form-field>
+        </div>
+      </div>
+
       <!-- CONTENT SECTION -->
       <div
         *ngSwitchCase="'content_section'"
